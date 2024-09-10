@@ -220,7 +220,6 @@ public:
 int main(int argc, char const *argv[])
 {
     string given_expr = "(0|1&0|1|1|(1|1))&(0&1&(1|0)|0|1|0)&0";
-    std::cin >> given_expr;
     ExprNode *root = new ExprNode(given_expr);
     root->evaluate();
     std::cout << (root->value ? 1 : 0) << std::endl;

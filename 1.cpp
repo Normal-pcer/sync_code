@@ -2,7 +2,7 @@
 #define Infinity 1000005
 #define debug false
 
-int N;
+int _;
 //// int inputQueue[Infinity];
 long long inputQueueSigma[Infinity];
 long long contributionAmountOf[Infinity];
@@ -19,11 +19,11 @@ long long getSumBetween(int left_contains, int right_contains) {
 }
 
 int main(int argc, char const* argv[]) {
-    scanf("%d", &N);
+    scanf("%d", &_);
 
     //// for (int i = 1; i <= N; i++)  inputQueueSigma[i] = inputQueueSigma[i - 1] + inputQueue[i];
 
-    for (int personId = 1; personId <= N; personId++) {
+    for (int personId = 1; personId <= _; personId++) {
         int team = getInt();
 #if debug
         printf("^%d\n", personId);
