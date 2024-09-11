@@ -1,3 +1,4 @@
+"use strict";
 // ==UserScript==
 // @name         New User Script
 // @namespace    http://tampermonkey.net/
@@ -10,90 +11,92 @@
 // @grant        none
 // ==/UserScript==
 var _a;
-var wordsList = JSON.parse((_a = window.localStorage.getItem("fav-words")) !== null && _a !== void 0 ? _a : "[]");
-var fastSendButton = null;
-var WordIndexManager = /** @class */ (function () {
-    function WordIndexManager() {
+const wordsList = JSON.parse((_a = window.localStorage.getItem("fav-words")) !== null && _a !== void 0 ? _a : "[]");
+let fastSendButton = null;
+class WordIndexManager {
+    static set currentWordIndex(value) {
+        WordIndexManager._currentWordIndex = value % wordsList.length;
+        if (fastSendButton) {
+            fastSendButton.innerHTML = wordsList[this._currentWordIndex];
+        }
     }
-    Object.defineProperty(WordIndexManager, "currentWordIndex", {
-        get: function () {
-            return WordIndexManager._currentWordIndex;
-        },
-        set: function (value) {
-            WordIndexManager._currentWordIndex = value % wordsList.length;
-            if (fastSendButton) {
-                fastSendButton.innerHTML = wordsList[this._currentWordIndex];
-            }
-        },
-        enumerable: false,
-        configurable: true
-    });
-    WordIndexManager._currentWordIndex = 0;
-    return WordIndexManager;
-}());
+    static get currentWordIndex() {
+        return WordIndexManager._currentWordIndex;
+    }
+}
+WordIndexManager._currentWordIndex = 0;
 (function () {
     "use strict";
     if (wordsList.length === 0)
         wordsList.push("喵~");
-    var getUserId = function () {
-        var userAElementSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.top-container > div.title > span > span > a";
-        var userAElement = document.querySelector(userAElementSelector);
+    const getUserId = () => {
+        const userAElementSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.top-container > div.title > span > span > a";
+        const userAElement = document.querySelector(userAElementSelector);
         if (!userAElement) {
             console.log("获取用户信息失败！");
             return 0;
         }
-        var link = userAElement.href; // 类似"https://www.luogu.com.cn/user/114514"
-        var uid = link.substring(link.length - 6);
+        const link = userAElement.href; // 类似"https://www.luogu.com.cn/user/114514"
+        const uid = link.substring(link.length - 6);
         return Number(uid);
     };
-    var onPageModifyCallback = function () {
+    const onPageModifyCallback = () => {
         var _a, _b;
         console.log("test");
-        var sendButtonSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.editor > div > button";
-        var sendButton = document.querySelector(sendButtonSelector);
-        var textAreaSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.editor > textarea";
-        var textArea = document.querySelector(textAreaSelector);
+        const sendButtonSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.editor > div > button";
+        const sendButton = document.querySelector(sendButtonSelector);
+        const textAreaSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.editor > textarea";
+        const textArea = document.querySelector(textAreaSelector);
         if (sendButton && sendButton.getAttribute("modified") !== "true") {
             // 存在“发送”按钮，判定为处于私信界面
             sendButton.setAttribute("modified", "true");
             fastSendButton = sendButton.cloneNode();
-            var addFavButton = sendButton.cloneNode();
+            const addFavButton = sendButton.cloneNode();
             fastSendButton.innerHTML = wordsList[WordIndexManager.currentWordIndex];
             (_a = sendButton.parentElement) === null || _a === void 0 ? void 0 : _a.insertBefore(fastSendButton, sendButton);
-            fastSendButton.addEventListener("click", function () {
-                var httpRequest = new XMLHttpRequest();
+            fastSendButton.addEventListener("click", () => {
+                const httpRequest = new XMLHttpRequest();
                 httpRequest.open("POST", "https://www.luogu.com.cn/api/chat/new", true);
                 httpRequest.setRequestHeader("Content-type", "application/json");
                 //// httpRequest.setRequestHeader("referer", "https://www.luogu.com.cn/chat");
                 httpRequest.setRequestHeader("x-csrf-token", document.querySelector("head > meta[name=csrf-token]").content);
-                httpRequest.send(JSON.stringify({ user: getUserId(), content: wordsList[WordIndexManager.currentWordIndex] }));
+                httpRequest.send(JSON.stringify({
+                    user: getUserId(),
+                    content: wordsList[WordIndexManager.currentWordIndex],
+                }));
             });
-            fastSendButton.addEventListener("contextmenu", function (event) {
+            fastSendButton.addEventListener("contextmenu", (event) => {
                 // 下一个收藏项
-                WordIndexManager.currentWordIndex = (1 + WordIndexManager.currentWordIndex);
+                WordIndexManager.currentWordIndex = 1 + WordIndexManager.currentWordIndex;
                 event.preventDefault(); // 阻止弹出右键菜单
             });
             addFavButton.innerHTML = "收藏文字";
-            addFavButton.addEventListener("click", function () {
-                var text = textArea === null || textArea === void 0 ? void 0 : textArea.value;
+            addFavButton.addEventListener("click", () => {
+                let text = textArea === null || textArea === void 0 ? void 0 : textArea.value;
                 if (text && text.length > 0) {
+                    if (wordsList.includes(text)) {
+                        alert(`您已经收藏过 "${text}" 了！`);
+                    }
                     wordsList.push(text);
                     localStorage.setItem("fav-words", JSON.stringify(wordsList));
                 }
             });
-            addFavButton.addEventListener("contextmenu", function (event) {
-                if (wordsList.length === 1)
-                    return;
+            addFavButton.addEventListener("contextmenu", (event) => {
                 alert('删除常用语 "' + wordsList.splice(WordIndexManager.currentWordIndex, 1)[0] + '"');
+                if (wordsList.length === 0) {
+                    wordsList.push("喵~");
+                    alert("所有常用语均已删除，恢复默认状态。");
+                }
                 WordIndexManager.currentWordIndex = 0;
+                localStorage.setItem("fav-words", JSON.stringify(wordsList));
                 event.preventDefault();
             });
             (_b = sendButton.parentElement) === null || _b === void 0 ? void 0 : _b.insertBefore(addFavButton, fastSendButton);
         }
     };
-    window.onload = function () {
-        var observer = new MutationObserver(onPageModifyCallback);
-        var targetNode = document.body;
+    window.onload = () => {
+        const observer = new MutationObserver(onPageModifyCallback);
+        const targetNode = document.body;
         observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
     };
 })();

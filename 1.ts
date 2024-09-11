@@ -69,27 +69,38 @@ class WordIndexManager {
                     "x-csrf-token",
                     (document.querySelector("head > meta[name=csrf-token]") as HTMLMetaElement).content
                 );
-                httpRequest.send(JSON.stringify({ user: getUserId(), content: wordsList[WordIndexManager.currentWordIndex] }));
+                httpRequest.send(
+                    JSON.stringify({
+                        user: getUserId(),
+                        content: wordsList[WordIndexManager.currentWordIndex],
+                    })
+                );
             });
             fastSendButton.addEventListener("contextmenu", (event) => {
                 // 下一个收藏项
-                WordIndexManager.currentWordIndex = (1 + WordIndexManager.currentWordIndex);
+                WordIndexManager.currentWordIndex = 1 + WordIndexManager.currentWordIndex;
                 event.preventDefault(); // 阻止弹出右键菜单
             });
             addFavButton.innerHTML = "收藏文字";
             addFavButton.addEventListener("click", () => {
                 let text = textArea?.value;
                 if (text && text.length > 0) {
+                    if (wordsList.includes(text)) {
+                        alert(`您已经收藏过 "${text}" 了！`);
+                    }
                     wordsList.push(text);
                     localStorage.setItem("fav-words", JSON.stringify(wordsList));
                 }
             });
 
             addFavButton.addEventListener("contextmenu", (event) => {
-                if (wordsList.length === 1)  return;
                 alert('删除常用语 "' + wordsList.splice(WordIndexManager.currentWordIndex, 1)[0] + '"');
+                if (wordsList.length === 0) {
+                    wordsList.push("喵~");
+                    alert("所有常用语均已删除，恢复默认状态。");
+                }
                 WordIndexManager.currentWordIndex = 0;
-
+                localStorage.setItem("fav-words", JSON.stringify(wordsList));
                 event.preventDefault();
             });
             sendButton.parentElement?.insertBefore(addFavButton, fastSendButton);
