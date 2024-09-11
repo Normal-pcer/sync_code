@@ -1,48 +1,45 @@
 #include <cstdio>
-#include <algorithm>
 #include <string>
-#define Infinity 1002
+#include <algorithm>
 
-int memory[Infinity];  // 存储 dfs(n) 的值
-int numbers[21];  // 递增
-int minNumberIndex = 0;
-int N, t;
+//// int usedNumbers[21];  // 递增排列
+int usableNumbers[21];  // 递增排列
+int minUsable = 0;  // 0 表示暂无此限制
+int N, TARGET;
+long long totallyCount;  // 结果总数
 
-inline std::string addSpace(int count, std::string base) {
-    std::string result = base;
-    for (int i = 1; i <= count; i++)  result = "    " + result;
-    return (result);
-}
+// bool isUsed(int number) {
+//     for (int i=1; i<=TARGET; i++) 
+//         if (usedNumbers[i] == number)
+//             return true;
+//     return false;
+// }
 
-inline int getInt() {
-    int temp;
-    scanf("%d", &temp);
-    return temp;
-}
+std::string repeatString(const std::string& str, int n) {  
+    std::string result;
+    for (int i = 0; i < n; ++i) {  
+        result += str;  
+    }  
+    return result;  
+}  
 
-long long dfs(int n, int depth) {  // n的拆分方式数量
-    if (n <= 0)  return 0;
-    if (n == numbers[1])  return 1;
-    long long answer = 1;
-    for (int i = minNumberIndex ? minNumberIndex : n;
-        i >= 1; i--) {
-        int copy = minNumberIndex;
-        minNumberIndex = i;
-        long long delta = dfs(n - numbers[i], depth + 1);
-        answer += delta;
-        printf(addSpace(depth, "[%d] %d %d\n").c_str(), n, i, delta);
-        minNumberIndex = copy;
+void dfs(int target, int depth) {  // 获取target的拆分方式数量
+    if (target == 0)    totallyCount++;
+    if (target <= 0)     return;
+    int copy = minUsable;
+    for (int i=(minUsable? minUsable+1: 1); i<=N; i++) {
+        minUsable = i;
+        //// printf( (repeatString("  ", depth)+"[%d]%d\n").c_str(), target, usableNumbers[i] );
+        dfs( target - usableNumbers[i], depth+1 );
     }
-    printf(addSpace(depth, ":[%d]=>%lld\n").c_str(), n, answer);
-    return answer;
+    minUsable = copy;
 }
 
-int main(int argc, char const* argv[]) {
-    N = getInt();
-    t = getInt();
-    for (int i = 1; i <= N; i++)
-        numbers[i] = getInt();
-    std::sort(numbers + 1, numbers + 1 + N);
-    printf("%lld\n", dfs(t, 0));
-    return 1;
+int main() {
+    scanf("%d%d", &N, &TARGET);
+    for (int i=1; i<=N; i++)  scanf("%d", usableNumbers+i);
+    std::sort(usableNumbers+1, usableNumbers+1+N);
+    dfs(TARGET, 0);
+    printf("%lld\n", totallyCount);
+    return 0;
 }

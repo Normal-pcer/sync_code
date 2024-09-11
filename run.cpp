@@ -15,7 +15,7 @@ inline std::string join(std::string connector, char** begin, char** end) {
 
 int main(int argc, char const* argv[]) {
     std::string filename = std::string(argv[1]);
-    std::string command = "g++ " + filename + ".cpp -o " + filename + ".exe -std=c++20 -O2 -Wall";
+    std::string command = "g++ " + filename + ".cpp -o " + filename + ".exe -std=c++20 -O2 -Wall -Wextra";
     system(command.c_str());
     printf("===========================\n");
     int statusCode = system((".\\" + filename + ".exe").c_str());
