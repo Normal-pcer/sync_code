@@ -1,7 +1,8 @@
 #include <bits/stdc++.h>
 #define Infinity 10
 
-bool isNumberAvailable[Infinity];  // 忽略其中所有的0
+//// bool isNumberAvailable[Infinity];
+std::vector<int> availableNumbers;
 int stack[Infinity];
 int stack_depth = 0;
 int N;
@@ -15,9 +16,8 @@ inline std::string joinNumbers(std::string connector, int* begin, int* end) {
 }
 
 void generateArray() {
-    for (int i = 1; i < Infinity; i++) {
-        if (!isNumberAvailable[i])  continue;
-        isNumberAvailable[i] = false;
+    for (int i = 0; i < availableNumbers.size(); i++) {
+        availableNumbers.erase(availableNumbers.begin() + i);
         stack[stack_depth++] = i;
 
         if (stack_depth == N) {
@@ -26,13 +26,15 @@ void generateArray() {
         else {
             generateArray();
         }
-        isNumberAvailable[ stack[--stack_depth] ] = true;
+        availableNumbers.insert(availableNumbers.begin()+i, stack[--stack_depth]);
     }
 }
 
 int main(int argc, char const* argv[]) {
     std::cin >> N;
-    for (int i=1; i<=N; i++)  isNumberAvailable[i] = true;
+    for (int i=1; i<=N; i++) {
+        availableNumbers.push_back(i);
+    }
     generateArray();
     return 0;
 }
