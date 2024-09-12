@@ -12,7 +12,7 @@ int N;
 ////bool map[15][15];           // x, y
 bool columnOccupied[15];    // 第i列(x=i)是否被占用
 bool b1Occupied[30];        // y=x+(i-15)的常数项是否被占用
-bool b2Occupied[30];        // y=-x+(i-15)的常数项是否被占用
+bool b2Occupied[30];        // y=-x+(i)的常数项是否被占用
 int result[15];
 
 void dfs(int y) {           // 在y上放置棋子
@@ -27,7 +27,7 @@ void dfs(int y) {           // 在y上放置棋子
         int x=i;
         if (columnOccupied[x])  continue;
         int b1 = y-x+15;
-        int b2 = y+x+15;
+        int b2 = y+x;
         if (b1Occupied[b1])     continue;
         if (b2Occupied[b2])     continue;
 
