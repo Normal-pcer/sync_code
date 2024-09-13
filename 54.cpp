@@ -1,6 +1,7 @@
-#include <bits/stdc++.h>
+#include <cstdio>
+#include <queue>
 #define upto(i, n) for(int i=1;i<=n;i++)
-#define DEBUG_MODE false
+#define DEBUG_MODE true
 #define debug if(DEBUG_MODE)
 #define MAX_SIZE 102
 
@@ -17,16 +18,29 @@ struct Position {
     inline bool operator==(const Position& p) const { return this->x==p.x && this->y == p.y; }
 };
 
-Position target;
 std::deque<Position> Q;
+inline void printQueue() {
+    upto(i, Q.size()) {
+        auto p=Q.front();
+        Q.pop_front();
+        Q.push_back(p);
+        if (p.waiting)  printf("%d[%d, %d], ", p.coins, p.x, p.y);
+        else            printf("%d(%d, %d), ", p.coins, p.x, p.y);
+    }
+}
+
+Position target;
 int search() {
     Q.push_back({1, 1, 0});
     while ( Q.size() ) {
+        debug printQueue();
+        debug printf("\n");
         auto p=Q.front();       Q.pop_front();
         if (walked[p.x][p.y])   continue;
-        debug printf("(%d, %d) %d %d\n", p.x, p.y, p.coins, p.waiting);
+        // debug printf("(%d, %d) %d %d\n", p.x, p.y, p.coins, p.waiting);
         if (p.waiting) {
             p.waiting = false;
+            p.coins += 1;
             Q.push_back(p);
             continue;
         }
@@ -39,12 +53,12 @@ int search() {
                 if (map[p.x][p.y] == '\0')  { continue; }
                 else { n.coins--; Q.push_front(n); continue; }
             }
-            if (map[p.x][p.y] == '\0') {
+            if (map[p.x][p.y] == '\0') {  // 在空格上
                 if (map[n.x][n.y] == '\0')  continue;
                 else { n.coins-=( p.from == map[n.x][n.y] ); Q.push_front(n); continue; }
             } else {
                 if (map[n.x][n.y] == '\0') { 
-                    n.coins++;
+                ////    n.coins++;
                     n.waiting = true;
                     n.from = map[p.x][p.y];
                     Q.push_back(n); 
@@ -81,3 +95,21 @@ int main() {
 4 4 1
 5 5 0
 */
+
+/*
+5 14
+1 1 1
+1 2 0
+2 2 1
+2 3 1
+3 2 1
+3 5 0
+4 1 0
+4 3 0
+4 5 0
+5 4 1
+5 2 0
+3 4 1
+5 1 0
+3 1 0
+ */

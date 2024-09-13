@@ -39,6 +39,19 @@ class Card:
     @abstractmethod
     def apply():  pass
 
+class Damage:
+    amount: int
+    source: Player
+    target: Player
+
+    def __init__(self, amount, source, target):
+        self.amount = amount
+        self.source = source
+        self.target = target
+    
+    def apply(self):
+        self.target.power -= self.amount
+
 players: List[Player]
 playersOperationsQueue: List[Player]  # 将要进行操作的玩家
 
@@ -65,8 +78,25 @@ class K_KillingCard(Card):
     @property
     def name():  return "K"
 
-    def apply(attackTarget: Player):
+    def apply(self, attackTarget: Player):
         attackTarget.power -= 1
+
+class D_EvadeCard(Card):
+    """ "闪" """
+    @property
+    def name():  return "D"
+
+    def apply(self):
+        if self.owner.status == PlayerStatus.ToBeKilled:
+            self.owner.power += 1    # 抵消"杀"的伤害
+
+class F_DuelingCard(Card):
+    """ "决斗" """
+    @property
+    def name():  return "F"
+
+    def apply(self, duelingTarget: Player):
+        pass
 
 def generateCard(nameChar: str, owner: Player) -> Card:
     CARD_MAP = {
