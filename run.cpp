@@ -5,6 +5,7 @@
 #include <regex>
 #include <cstdio>
 #include <ctime>
+std::string configFilePath = std::string(getenv("APPDATA")) + "/RunCpp/config.txt";
 
 inline std::string join(std::string connector, char** begin, char** end) {
     std::string result = *begin;
@@ -15,8 +16,9 @@ inline std::string join(std::string connector, char** begin, char** end) {
 }
 
 int main(int argc, char const* argv[]) {
+    ////printf(configFilePath.c_str());
     bool defaultDebug = false;
-    std::ifstream configIn ("config.txt");
+    std::ifstream configIn (configFilePath.c_str());
     configIn >> defaultDebug;
     bool noDebug = (argc-2) && !(strcmp("-nd", argv[2]) && strcmp("--nd", argv[2]));
     bool debug = (argc-2) && !(strcmp("-d", argv[2]) && strcmp("--d", argv[2]));
@@ -30,14 +32,14 @@ int main(int argc, char const* argv[]) {
         command += " "+std::string(argv[i]);
     }
     system(command.c_str());
-    if (debug)  printf("============DEBUG==========\n");
-    else        printf("===========================\n");
+    if (finalDebug)     printf("============DEBUG==========\n");
+    else                printf("===========================\n");
     std::string cmd = ".\\" + filename + ".exe";
     if (finalDebug)  cmd+=" -d";
     int statusCode = system(cmd.c_str());
     printf("==== Stopped with code %d ====\n", statusCode);
     if (setNoDebug || setDebug) {
-        std::ofstream configOut ("config.txt");
+        std::ofstream configOut (configFilePath.c_str());
         configOut << (debug?"1":"0");
     }
     return 0;
