@@ -3,6 +3,8 @@ from abc import abstractmethod
 from typing import List
 
 PLAYER_POWER_LIMIT = 4
+playersCount: int
+cardsCount: int
 
 class PlayerType(Enum):
     Master = "M"
@@ -54,6 +56,7 @@ class Damage:
 
 players: List[Player]
 playersOperationsQueue: List[Player]  # 将要进行操作的玩家
+cardsQueue: List[Card]
 
 class TestCard(Card):
     @property
@@ -101,9 +104,19 @@ class F_DuelingCard(Card):
 def generateCard(nameChar: str, owner: Player) -> Card:
     CARD_MAP = {
         "P": P_PeachCard,
+        "K": K_KillingCard,
+        "D": D_EvadeCard,
+        "F": F_DuelingCard,
     }
 
 
 
 if __name__ == "__main__":
-    pass
+    playersCount, cardsCount = map(int, input().split())
+    for playerId in range(playersCount):
+        line = input().split()
+        player = Player(playerId, line[0])
+        for cardChar in line[1:]:
+            card = generateCard(cardChar, player)
+            player.cards.append(card)
+    cardsQueue += [generateCard(c) for c in input().split()]
