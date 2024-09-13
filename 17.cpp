@@ -2,21 +2,21 @@
 
 class Position {
 public:
-    int x;
+    int r;
     int y;
 
-    Position(int x, int y) { this->x = x;  this->y = y; }
+    Position(int x, int y) { this->r = x;  this->y = y; }
 
     bool operator==(const Position& that) {
-        return this->x == that.x && this->y == that.y;
+        return this->r == that.r && this->y == that.y;
     }
 
     Position operator+(const Position& that) {
-        return Position(this->x + that.x, this->y + that.y);
+        return Position(this->r + that.r, this->y + that.y);
     }
 
     void operator+=(const Position& that) {
-        this->x += that.x;
+        this->r += that.r;
         this->y += that.y;
     }
 };
@@ -35,7 +35,7 @@ long long getWays(int x, int y) {
     else  return 0;
 }
 
-long long getWays(Position pos) { return getWays(pos.x, pos.y); }
+long long getWays(Position pos) { return getWays(pos.r, pos.y); }
 bool isOccupied(Position pos) {
     for (int i = 0; i < 9; i++)
         if (pos == occupiedPositions[i])
