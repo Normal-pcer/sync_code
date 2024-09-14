@@ -16,7 +16,7 @@ int main(int argc, char const *argv[]) {
     upto(i, N)  scanf("%d", a+i);
     dp[1] = a[1];
     for (int i=2; i<=N; i++) {
-        dp[i] = 2147483647;
+        dp[i] = a[i];
         upto(j, i-1)  dp[i] = std::min(dp[j]+a[i-j], dp[i]);
         log("%4lld", dp[i]);
     }

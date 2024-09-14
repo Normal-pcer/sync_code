@@ -20,6 +20,7 @@ int main(int argc, char const *argv[]) {
         dp[r][c] = std::min({dp[r-1][c], dp[r][c-1], dp[r-1][c-1]}) + 1;
         ans = std::max(ans, dp[r][c]);
     }
+    std::memset(dp, 0, sizeof(dp));
     upto(r, N)  upto(c, M)  if (!map[r][c]) {
         dp[r][c] = std::min({dp[r-1][c], dp[r][c-1], dp[r-1][c-1]}) + 1;
         ans = std::max(ans, dp[r][c]);
