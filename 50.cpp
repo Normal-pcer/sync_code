@@ -63,7 +63,6 @@ public:
         return true;
     }
 };
-
 // “杀”
 class K_KillingCard: public Card {
 public:
@@ -74,7 +73,6 @@ public:
         return true;
     }
 };
-
 // “闪”
 class D_EvadeCard: public Card {
 public:
@@ -85,6 +83,7 @@ public:
             this->owner.power += 1;
             return true;
         }
+        debug printf("!!!!\n");
         return false;
     }
 };
@@ -134,7 +133,6 @@ Card generateCard(char description, Player& owner) {
     }
     return P_PeachCard(owner);
 }
-
 PlayerType parsePlayerType(char typeChar) {
     switch (typeChar) {
     case 'M':
@@ -145,3 +143,23 @@ PlayerType parsePlayerType(char typeChar) {
         return PlayerType::Enemy;
     }
 }
+
+
+int main() {
+    std::cin >> playersCount >> cardsCount;
+    char typeString[2], card1, card2, card3, card4;
+    for (int playerId = 0; playerId < playersCount; playerId++) {
+        scanf("%s %c %c %c %c", typeString, &card1, &card2, &card3, &card4);
+        auto newPlayer = Player();
+        newPlayer.type = parsePlayerType(typeString[0]);
+        newPlayer.cards.push_back(generateCard(card1, newPlayer));
+        newPlayer.cards.push_back(generateCard(card2, newPlayer));
+        newPlayer.cards.push_back(generateCard(card3, newPlayer));
+        newPlayer.cards.push_back(generateCard(card4, newPlayer));
+        players.push_back(newPlayer);
+    }
+    players[0].cards[0].apply();
+    (new D_EvadeCard(players[0]))->apply();
+    return 0;
+}
+
