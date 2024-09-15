@@ -13,6 +13,7 @@ const int maxN = 302;
 int values[maxN][maxN];
 int sigma[maxN][maxN];  // 从(1, 1)到(i, j)矩形范围内的求和，即“前缀和”
 Corner dp[maxN][maxN];     // (i, j)为右下角总数最大的合法矩形
+int ans;
 
 int main(int argc, char const *argv[]) {
     initDebug;
@@ -60,10 +61,13 @@ int main(int argc, char const *argv[]) {
                 dp[r][c] = {newSum1, height, width};
             else 
                 dp[r][c] = {newSum2, height2, 1};
+            ans = std::max(ans, dp[r][c].value);
             log("(%2d, %1d, %1d)[%2d, %2d] ", dp[r][c].value, dp[r][c].height, dp[r][c].width, newSum1, newSum2);
         }
         log("\n")
     }
+    printf("%d\n", ans);
+    return 0;
 }
 
 /*
