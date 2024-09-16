@@ -1,0 +1,5 @@
+#include "lib"
+
+int main() {
+
+}

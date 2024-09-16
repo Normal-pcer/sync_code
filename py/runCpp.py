@@ -39,7 +39,7 @@ class DebugOption(Option):
 
 class ReplaceOption(Option):
     def __init__(self):
-        super().__init__("debugEnabled", "r", "nr")
+        super().__init__("replaceEnabled", "r", "nr")
 
     def apply(self):
         code = ""
