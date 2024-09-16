@@ -9,10 +9,10 @@ bool DEBUG_MODE=false;
 struct Corner {int value, height, width;};
 
 int N, M;
-const int maxN = 302;
+const int maxN = 305;
 int values[maxN][maxN];
-int sigma[maxN][maxN];  // 从(1, 1)到(i, j)矩形范围内的求和，即“前缀和”
-Corner dp[maxN][maxN];     // (i, j)为右下角总数最大的合法矩形
+int sigma[maxN][maxN];      // 从(1, 1)到(i, j)矩形范围内的求和，即“前缀和”
+Corner dp[maxN][maxN];      // (i, j)为右下角总数最大的合法矩形
 int ans;
 
 int main(int argc, char const *argv[]) {
@@ -48,11 +48,13 @@ int main(int argc, char const *argv[]) {
             // 计算新的最高矩形的总和
             int newSum1 = sigma[r][c] - sigma[r-height][c] - sigma[r][c-width] + sigma[r-height][c-width];
             // 或者可以选择只包含单列
+            if (realTop == dest) {
             realTop = 0;
-            for (int i=r; i>0; i--) {
-                if (values[i][c] == 0) {  // 这个点不可用
-                    realTop = i;  // 记录为下方一个点
-                    break;
+                for (int i=dest; i>0; i--) {
+                    if (values[i][c] == 0) {  // 这个点不可用
+                        realTop = i;  // 记录为下方一个点
+                        break;
+                    }
                 }
             }
             int height2 = r - realTop;
