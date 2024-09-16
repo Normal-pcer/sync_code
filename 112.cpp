@@ -12,6 +12,8 @@ int main() {
     std::cin >> N >> K;
     upto(i, N)  std::cin >> a[i];
     upto(i, N) {
+        if (i<K && a[i]>=a[K])  continue;
+        if (i>K && a[i]<=a[K])  continue;
         if (a[i] >= tail[top]) {
             tail[++top] = a[i];
         } else {
@@ -22,5 +24,7 @@ int main() {
     upto(i, N) {
         log("%3d", tail[i]);
     }
+    log("\n")
+    printf("%d\n", top);
     return 0;
 }
