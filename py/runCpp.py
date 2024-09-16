@@ -1,17 +1,18 @@
 import os, sys, time
-from typing import Dict, List
+from typing import Dict, List, Optional
 from abc import abstractmethod
 import re
 import json
 
 class Option:
     switch: List[str]
-    switchNone: List[str] | None
+    switchNone: Optional[List[str]]
     name: str
     data: str | bool
     noAttachedData: bool
 
-    def __init__(self, name: str, switch: List[str] | str, switchNone: List[str] | str | None, noAttachedData = True):
+    def __init__(self, name: str, switch: List[str] | str, switchNone: Optional[List[str] | str], 
+                    noAttachedData = True):
         self.name = name
         if isinstance(switch, list):
             self.switch = switch
