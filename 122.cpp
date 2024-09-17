@@ -16,3 +16,22 @@
 #define never if(0)
 #define always if(1)
 bool DEBUG_MODE=false;
+
+typedef long long ll;
+
+
+const int mod = 998244353;
+
+int N, M;
+int dp[5002][5002];
+int main() {
+    initDebug;
+    scanf("%d%d", &N, &M);
+    dp[1][1] = 1;
+    upto(i, N)  upto(j, M)
+    dp[i][j] += ((long long)dp[i][j-1]/*空一格*/+(long long)dp[i-j][j]/*填充一行*/)%mod;
+    int ans=dp[N][M];
+    // upto(j, M)  ans=(ans+dp[N][j])%mod;
+    printf("%d\n", ans);
+    return 0;
+}
