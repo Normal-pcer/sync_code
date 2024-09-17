@@ -55,7 +55,7 @@ class ReplaceOption(Option):
 
 options: Dict[str, Option] = {
     "debugEnabled": DebugOption(),
-    "replaceOption": ReplaceOption()
+    "replaceEnabled": ReplaceOption()
 }
 switchMap: Dict[str, Option] = {}
 switchNoneMap: Dict[str, Option] = {}

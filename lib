@@ -10,4 +10,5 @@
 #define chkMax(base,cmp) base=std::max(base,cmp)
 #define chkMin(base,cmp) base=std::min(base,cmp)
 #define update(base,op,modify) base=op(base,modify)
+#define ensure(con,v) if(!(con))v=false;
 bool DEBUG_MODE=false;
