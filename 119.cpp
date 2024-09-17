@@ -16,3 +16,28 @@
 #define always if(1)
 #define rollback(v, bak) ((v)?(v):(bak))
 bool DEBUG_MODE=false;
+
+
+const int maxN = 100005;
+long long h[maxN];
+int t[maxN], top=1;
+int N;
+
+int main() {
+    optimizeIO;
+    initDebug;
+    // std::cin >> N;
+    while(~scanf("%d",&h[++N])); --N;
+    reverse(i, N, 1) {
+        if (h[i] >= t[top])     t[++top] = h[i];
+        else    *std::lower_bound(t+1, t+top+1, h[i]) = h[i];
+    }
+    printf("%d\n", top-1);
+    top = 0; std::memset(t, 0, sizeof(t));
+    upto(i, N) {
+        if (h[i] >= t[top])     t[++top] = h[i];
+        else    *std::lower_bound(t+1, t+top+1, h[i]) = h[i];
+    }
+    printf("%d\n", top);
+    return 0;
+}
