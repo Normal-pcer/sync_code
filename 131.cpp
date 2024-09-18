@@ -33,13 +33,13 @@ ll init[maxN];
 struct Node {
     int l, r, len;
     ll sum=0;  // 区间内求和
-    ll tag=0;  // 需要下传的更改
+    ll add=0;  // 需要下传的更改
 } tr[maxN<<2];
 
 void output(int l, int r) {
     from(i, l, r) {
         Node &n=tr[i];
-        printf("[%d]{%2d, %2d, %2d, %2lld, %2lld} ", i, n.l, n.r, n.len, n.sum, n.tag);
+        printf("[%d]{%2d, %2d, %2d, %2lld, %2lld} ", i, n.l, n.r, n.len, n.sum, n.add);
     }
     printf("\n");
 }
@@ -49,13 +49,13 @@ void pushUp(int i) {  // 向上合并信息
 }
 
 void pushDown(int i) {  // 向下推送更改
-    if (tr[i].tag){
+    if (tr[i].add){
         log("Push Down: %d\n", i)
-        tr[lc(i)].sum += tr[i].tag * tr[lc(i)].len;
-        tr[rc(i)].sum += tr[i].tag * tr[rc(i)].len;
-        tr[lc(i)].tag += tr[i].tag;
-        tr[rc(i)].tag += tr[i].tag;
-        tr[i].tag = 0;
+        tr[lc(i)].sum += tr[i].add * tr[lc(i)].len;
+        tr[rc(i)].sum += tr[i].add * tr[rc(i)].len;
+        tr[lc(i)].add += tr[i].add;
+        tr[rc(i)].add += tr[i].add;
+        tr[i].add = 0;
         debug output(1, 4*N);
     }
 }
@@ -82,7 +82,7 @@ ll sum(int p, int l, int r) {
 
 void add(int p, int l, int r, int val) {
     log("Add: %d, [%d, %d], %d\n", p, l, r, val);
-    if (tr[p].l >= l && tr[p].r <= r)  { tr[p].sum += val * tr[p].len;tr[p].tag += val; return; }
+    if (tr[p].l >= l && tr[p].r <= r)  { tr[p].sum += val * tr[p].len;tr[p].add += val; return; }
     pushDown(p);
     if (tr[lc(p)].r >= l)   add(lc(p), l, r, val);
     if (tr[rc(p)].l <= r)   add(rc(p), l, r, val);
