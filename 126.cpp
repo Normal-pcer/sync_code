@@ -17,33 +17,31 @@
 #define always if(1)
 bool DEBUG_MODE=false;
 
-typedef long long ll;
+template <class T=int>
+inline T read() { T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
+const int maxN=103, maxW=10002;
+int N, T;
+int w[maxN][2], v[maxN][2];
+int f[maxN][maxW];  // 前i个物品，重量为j，最大价值
 
-const int mod = 998244353;
-
-int N, M;
-int dp[5002][5002];
 int main() {
     initDebug;
-    int temp;
-    scanf("%d%d", &temp, &M);
-    N=temp-M;
-    if (N<0) {
-        printf("0\n"); return 0;
-    }  
-
-    upto(j, M)  dp[0][j] = 1;
-    upto(i, N)  upto(j, M){
-        if (i<j)    dp[i][j]=dp[i][i];
-        else dp[i][j] = ((long long)dp[i][j-1]/*空一格*/+(long long)dp[i-j][j]/*填充一行*/)%mod;
+    N = read(); T = read();
+    upto(i, N) {
+        w[i][0] = read(); v[i][0] = read(); w[i][1] = read(); v[i][1] = read();
     }
-    debug upto(i, N)  {
-        upto(j, M)  log("%4d", dp[i][j])
+
+    upto(j, T) {
+        upto(i, N) {
+            f[i][j] = f[i-1][j];  // 不装
+            if (j>=w[i][0])  chkMax(f[i][j], f[i-1][ j-w[i][0] ] + v[i][0]);      // 装[0]
+            if (j>=w[i][1])  chkMax(f[i][j], f[i-1][ j-w[i][1] ] + v[i][1]);      // 装[1]
+            log("%4d", f[i][j])
+        }
         log("\n")
     }
-    int ans=dp[N][M];
-    // upto(j, M)  ans=(ans+dp[N][j])%mod;
-    printf("%d\n", ans);
+
+    printf("%d\n", f[N][T]);
     return 0;
 }
