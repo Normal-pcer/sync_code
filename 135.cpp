@@ -29,8 +29,6 @@ void output(int l, int r) {
 void pushUp(int p) {
     log("pushUp %d\n", p)
     merge(tr[p], tr[ls], tr[rs]);
-
-    // printf("%d %d %d %d\n", tr[rs].rc, (tr[rs].rc == tr[rs].r-tr[rs].l+1), tr[ls].rc, tr[p].rc);
 }
 
 void build(int p, int l, int r) {
