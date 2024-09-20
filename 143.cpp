@@ -7,10 +7,8 @@
 #define reverse(i,e,b) for(int i=(e);i>=(b);i--)
 #define main() main(int argc, char const *argv[])
 #define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
-#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
-#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
-#define chkMaxEx(base,exchange,other,cmp...) auto __b__=base;if(__b__!=chkMax(base,##cmp))exchange else other;
-#define chkMinEx(base,exchange,other,cmp...) auto __b__=base;if(__b__!=chkMin(base,##cmp))exchange else other;
+#define chkMax(base,cmp) base=std::max((base),(cmp))
+#define chkMin(base,cmp) base=std::min((base),(cmp))
 #define update(base,op,modify) base=op((base),(modify))
 #define ensure(con, otw) ((con)? (con): (otw))
 #define check(v, con, otw) (((v) con)? v: otw)
@@ -21,3 +19,24 @@ bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int **begin, int rows, int cols, const char *format){upto(i, rows){upto(j, cols)printf(format, begin[i][j]);printf("\n");}} inline void batchOutput(int**begin, int rows, int cols) {batchOutput(begin,rows,cols,"%3d");}
 template <class T=int>inline T read() { T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
+  
+int N, V;
+const int maxN = 10002;
+int v[maxN];
+int w[maxN];
+int dp[maxN];
+  
+  
+int main() {
+    initDebug;
+    std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
+    std::cin >> V >> N;
+    upto(i, N)  std::cin >> w[i] >> v[i];
+    upto(j, V) {
+        upto(i, N) {
+            dp[j] = std::max(dp[j], j>=v[i]?dp[j-v[i]]+w[i]:0);
+        }
+    }
+    std::cout << dp[V] << std::endl;
+    return 0;
+}
