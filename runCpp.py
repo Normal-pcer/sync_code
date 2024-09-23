@@ -1,5 +1,5 @@
 import os, sys, time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from abc import abstractmethod
 import re
 import json
@@ -68,6 +68,94 @@ class CompileOption(Option):
             elif arg.startswith("~"):
                 compileArgs = [x for x in compileArgs if not x.startswith(arg[1:])]
 
+class AutoInputOption(Option):  # 自动生成输入语句
+    def __init__(self):
+        super().__init__("autoInput", "i", "ni")
+
+    def apply(self):
+        TYPE_KEYS = {"int": "%d", "float": "%f", "ll": "%lld", "double": "%lf", "char": "%c", "long long": "%lld"}
+
+        code = ""
+        # 匹配需要输入的注释
+        with open(fileName, "r", encoding="UTF-8") as f:
+            code = f.read()
+        blocks = re.finditer(r"//.*input:.*\n(//.*\n)*", code)
+        for block in blocks:
+            words = block.group().replace("//", '').split(';')
+            if len(words)>=1:  words[0] = words[0].replace("input:", '')
+            words = [i.replace("\n", "") for i in words]
+            initial: List[str] = []
+            inMain: List[str] = []
+            for line in words:
+                # 推测变量类型
+                varType = "int"
+                line = line.strip()
+                for key in TYPE_KEYS:
+                    if line.startswith(key):
+                        varType = key
+                        break
+                # 解析接下来的内容
+                line = line[len(varType)+1:]
+                lis = line.split(',')
+
+                listInput = False
+                fmt = ""
+                args = []
+                listLen = 0
+
+                # 可能出现：
+                # a - 单个变量
+                # a<=100 - 有上限变量
+                # a=100 - 有初值变量
+                # a[n] - 数组
+                # a[n]=v... - 有初值数组
+                for item in lis:
+                    item = item.replace(' ', '').replace('\n', '')
+                    if '<=' in item:
+                        name, limit = item.split('<=')
+                        initial.append(f"const {varType} _{name} = {limit}")
+                        initial.append(f"{varType} {name} = {limit}")
+                        inMain.append(f'scanf("{TYPE_KEYS[varType]}", &{name})')
+                    elif '[' in item:
+                        if '=' in item:
+                            name, count, init = re.findall("(.*)\[(.*)\]=(.*)", item.replace(' ', ''))[0]
+                        else:
+                            print(item.replace(' ', ''))
+                            name, count = re.findall("(.*)\[(.*)\]", item.replace(' ', ''))[0]
+                            init = None
+
+                        try: 
+                            count = int(count)
+                            initial.append(f"{varType} {name}[{count}]")
+                        except ValueError:
+                            count = '_' + count
+                            initial.append(f"{varType} {name}[{count}]")
+
+                        if init is not None:
+                            inMain.append(f"std::fill({name}, {name}+{count}, {init})")
+                        else:
+                            listInput = True
+                            fmt += f"{TYPE_KEYS[varType]}"
+                            args.append(f"{name}+i")
+                            listLen = count
+                    elif '=' in item:
+                        initial.append(f"{varType} "+item)
+                    else:
+                        if len(item.strip()) == 0:  continue
+                        name = item
+                        initial.append(f"{varType} {name} = {limit}")
+                        inMain.append(f'scanf("{TYPE_KEYS[varType]}", &{name})')
+                if listInput:
+                    inMain.append(f'upto(i, {listLen}) scanf("{fmt}", {','.join(args)})')
+            #print('; '.join(initial)+';\n')
+            #print('; '.join(inMain)+';\n')
+            code = (code[:block.span()[0]] + '; '.join(initial)+';\n' + code[block.span()[1]+1:])
+            code = (re.sub("main.*\{", lambda p:p[0]+'; '.join(inMain)+';\n', code))
+            with open(fileName, "w", encoding="UTF-8") as f:
+                f.write(code)
+
+
+
 class LogOption(Option):
     def __init__(self):
         super().__init__("log", "l", "nl")
@@ -80,7 +168,8 @@ options: Dict[str, Option] = {
     "debug": DebugOption(),
     "replace": ReplaceOption(),
     "compile": CompileOption(),
-    "log": LogOption()
+    "log": LogOption(),
+    "autoInput": AutoInputOption()
 }
 switchMap: Dict[str, Option] = {}
 switchNoneMap: Dict[str, Option] = {}
