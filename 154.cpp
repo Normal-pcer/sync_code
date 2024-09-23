@@ -27,8 +27,11 @@ typedef long long ll; typedef unsigned long long ull;
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
 
-const int _N = 100; int N = 100; const int _M = 100; int M = 100; int a[_N]; int b[_M];
+// input:
+// int N<=100, M<=100;
+// int a[N], b[N];
+// int c[M];
 
-int main() {scanf("%d", &N); scanf("%d", &M); upto(i, _N) scanf("%d", a+i); upto(i, _M) scanf("%d", b+i);
 
+int main() {
 }
