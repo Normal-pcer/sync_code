@@ -1,0 +1,14 @@
+	.file	"153.cpp"
+	.text
+	.p2align 4
+	.globl	_Z1fii
+	.def	_Z1fii;	.scl	2;	.type	32;	.endef
+	.seh_proc	_Z1fii
+_Z1fii:
+.LFB0:
+	.seh_endprologue
+	movl	%ecx, %eax
+	orl	%edx, %eax
+	ret
+	.seh_endproc
+	.ident	"GCC: (tdm64-1) 10.3.0"

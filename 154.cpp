@@ -25,3 +25,10 @@ typedef long long ll; typedef unsigned long long ull;
 // inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
+
+
+const int _N = 100; int N = 100; const int _M = 100; int M = 100; int a[_N]; int b[_M];
+
+int main() {scanf("%d", &N); scanf("%d", &M); upto(i, _N) scanf("%d", a+i); upto(i, _M) scanf("%d", b+i);
+
+}
