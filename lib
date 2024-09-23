@@ -17,7 +17,7 @@
 #define optional(ptr) if(ptr)ptr
 #define never if(0)
 #define always if(1)
-#define or(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
+#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int **begin, int rows, int cols, const char *format){upto(i, rows){upto(j, cols)printf(format, begin[i][j]);printf("\n");}} inline void batchOutput(int**begin, int rows, int cols) {batchOutput(begin,rows,cols,"%3d");}
