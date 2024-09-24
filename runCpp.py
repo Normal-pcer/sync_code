@@ -94,6 +94,8 @@ class AutoInputOption(Option):  # 自动生成输入语句
                     if line.startswith(key):
                         varType = key
                         break
+                else:
+                    line = "int " + line
                 # 解析接下来的内容
                 line = line[len(varType)+1:]
                 lis = line.split(',')
@@ -113,17 +115,18 @@ class AutoInputOption(Option):  # 自动生成输入语句
                     item = item.replace(' ', '').replace('\n', '')
                     if '<=' in item:
                         name, limit = item.split('<=')
+                        if '0'<=name[0]<='9':  name = '_' + name
                         initial.append(f"const {varType} _{name} = {limit}")
                         initial.append(f"{varType} {name} = {limit}")
                         inMain.append(f'scanf("{TYPE_KEYS[varType]}", &{name})')
                     elif '[' in item:
                         if '=' in item:
-                            name, count, init = re.findall("(.*)\[(.*)\]=(.*)", item.replace(' ', ''))[0]
+                            name, count, init = re.findall(r"(.*)\[(.*)\]=(.*)", item.replace(' ', ''))[0]
                         else:
                             print(item.replace(' ', ''))
-                            name, count = re.findall("(.*)\[(.*)\]", item.replace(' ', ''))[0]
+                            name, count = re.findall(r"(.*)\[(.*)\]", item.replace(' ', ''))[0]
                             init = None
-
+                        if '0'<=name[0]<='9':  name = '_' + name
                         try: 
                             count = int(count)
                             initial.append(f"{varType} {name}[{count}]")
@@ -132,7 +135,19 @@ class AutoInputOption(Option):  # 自动生成输入语句
                             initial.append(f"{varType} {name}[{count}]")
 
                         if init is not None:
-                            inMain.append(f"std::fill({name}, {name}+{count}, {init})")
+                            init: str
+                            initCode = ""
+                            if init == 0:
+                                initCode = f"std::memset({name}, 0, sizeof({name}))"
+                            elif init in {"inf", "0x3f3f3f3f"}:
+                                initCode = f"std::memset({name}, 0x3f, sizeof({name}))"
+                            elif init in {"-inf", "-0x3f3f3f3f"}:
+                                initCode = f"std::memset({name}, -0x3f, sizeof({name}))"
+                            elif init.startswith("..."):
+                                initCode = f"std::memset({name}, {init[3:]}, sizeof({name}))"
+                            else:
+                                initCode = f"std::fill({name}, {name}+{count}, {init})"
+                            inMain.append(initCode)
                         else:
                             listInput = True
                             fmt += f"{TYPE_KEYS[varType]}"
@@ -143,14 +158,15 @@ class AutoInputOption(Option):  # 自动生成输入语句
                     else:
                         if len(item.strip()) == 0:  continue
                         name = item
-                        initial.append(f"{varType} {name} = {limit}")
+                        if '0'<=name[0]<='9':  name = '_' + name
+                        initial.append(f"{varType} {name}")
                         inMain.append(f'scanf("{TYPE_KEYS[varType]}", &{name})')
                 if listInput:
                     inMain.append(f'upto(i, {listLen}) scanf("{fmt}", {','.join(args)})')
             #print('; '.join(initial)+';\n')
             #print('; '.join(inMain)+';\n')
             code = (code[:block.span()[0]] + '; '.join(initial)+';\n' + code[block.span()[1]+1:])
-            code = (re.sub("main.*\{", lambda p:p[0]+'; '.join(inMain)+';\n', code))
+            code = (re.sub(r"main.*\{", lambda p:p[0]+'; '.join(inMain)+';\n', code))
             with open(fileName, "w", encoding="UTF-8") as f:
                 f.write(code)
 
