@@ -117,7 +117,7 @@ class AutoInputOption(Option):  # 自动生成输入语句
                         name, limit = item.split('<=')
                         if '0'<=name[0]<='9':  name = '_' + name
                         initial.append(f"const {varType} _{name} = {limit}")
-                        initial.append(f"{varType} {name} = {limit}")
+                        initial.append(f"{varType} {name}")
                         inMain.append(f'scanf("{TYPE_KEYS[varType]}", &{name})')
                     elif '[' in item:
                         if '=' in item:
