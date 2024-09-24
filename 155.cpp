@@ -27,10 +27,24 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
-const int _N = 105; int N = 105; const int _T = 1002; int T = 1002; int f[_N]; int t[_N]; int dp[_N][_T];
-int main() {scanf("%d", &N); scanf("%d", &T); upto(i, _N) scanf("%d%d", f+i,t+i); ;
-
+const int _N = 42; int N = 42;
+ll dp[_N][(_N*_N)>>1];
+int sum = 0;
+int main() {
+    scanf("%d", &N);
     initDebug;
 
-    
+    dp[1][1] = 1;
+    upto(i, N) {
+        sum += i;
+        dp[i][0] = dp[i-1][i];
+        from(j, 1, sum) {
+            // dp[i][j] = (j>=i? dp[i-1][j-i]: dp[i-1][i-j]) + dp[i-1][j+i];
+            dp[i][j+i] += dp[i-1][j];
+            dp[i][abs(j-i)] += dp[i-1][j];
+        }
+    }
+    debug batchOutput2d(dp, 7, 30, "%4lld ")
+    printf("%lld\n", dp[N][0]);
+    return 0;
 }

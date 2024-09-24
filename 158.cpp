@@ -27,10 +27,29 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
-const int _N = 105; int N = 105; const int _T = 1002; int T = 1002; int f[_N]; int t[_N]; int dp[_N][_T];
-int main() {scanf("%d", &N); scanf("%d", &T); upto(i, _N) scanf("%d%d", f+i,t+i); ;
 
+const int _SZ=1e7+5;
+const int _N = 1005; int N = 1005; int w[_N]; int s[_N]; int v[_N]; ll dp[_SZ];
+struct obj {int w, s, v;} tmp[_N];
+int main() {scanf("%d", &N); upto(i, N) scanf("%d%d%d", w+i,s+i,v+i);
     initDebug;
-
-    
+    int sum = 0;
+    ll ans = 0;
+    upto(i, N)  tmp[i] = {w[i], s[i], v[i]};
+    std::sort(tmp+1, tmp+N+1, [](obj a, obj b){return a.s*a.w<b.s*b.w;});
+    upto(i, N) {
+        w[i]=tmp[i].w, s[i]=tmp[i].s, v[i]=tmp[i].v;
+    }
+    upto(i, N) {
+        chkMax(sum, s[i]);
+        rev(j, sum<<3, 1) {
+            chkMax(dp[j], dp[j-1]);
+            if (j-w[i]<=s[i] and j-w[i]>=0)  chkMax(dp[j], dp[j-w[i]]+v[i]);
+            if (j>=w[i])  chkMax(dp[j], (ll)v[i]);
+            chkMax(ans, dp[j]);
+        }
+        // never batchOutput(dp, sum);
+    }
+    printf("%lld\n", ans);
+    return 0;
 }

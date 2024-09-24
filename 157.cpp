@@ -26,11 +26,43 @@ typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
-
-const int _N = 105; int N = 105; const int _T = 1002; int T = 1002; int f[_N]; int t[_N]; int dp[_N][_T];
-int main() {scanf("%d", &N); scanf("%d", &T); upto(i, _N) scanf("%d%d", f+i,t+i); ;
-
+#define val(x) ((x).v*(x).p)
+struct obj {int v, p;};
+const int _N = 32005; int N = 32005; const int _M = 65; int M = 65; int f[_N], c[_N][_M] /*必包含j的最好取法*/;
+std::vector<obj> s[_M];
+int main() {scanf("%d", &N); scanf("%d", &M); 
+    upto(i, M) {
+        int v, p, q;
+        scanf("%d%d%d", &v, &p, &q);
+        q? s[q].push_back({v, p}): s[i].push_back({v, p});
+    }
     initDebug;
-
-    
+    memset(c, -0x3f, sizeof(c));
+    upto(i, M) {
+        if (s[i].empty())  continue;
+        rev(j, N, 1) {
+            if (j>=s[i][0].v)
+                c[j][i] = f[j-s[i][0].v] + val(s[i][0]);
+        }
+        never log("i=%d\n", i);
+        never batchOutput2d(c, N, M, "%4d")
+        from(t, 1, (int)s[i].size()-1) {
+            rev(j, N, 1) {
+                if (j>=s[i][t].v)
+                    chkMax(c[j][i], c[j-s[i][t].v][i] + val(s[i][t]));
+            }
+        }
+        rev(j, N, 1)  chkMax(f[j], c[j][i]);
+    }
+    printf("%d\n", f[N]);
+    return 0;
 }
+
+/*
+10 5
+8 2 0
+4 5 1
+3 5 1 
+4 3 0
+5 2 0
+*/

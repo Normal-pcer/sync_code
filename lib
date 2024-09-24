@@ -20,6 +20,7 @@
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
 #define Infinity 2147483647
 #define putInt(n) printf("%d\n",(n))
+#define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}

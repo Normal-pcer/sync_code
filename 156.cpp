@@ -27,10 +27,15 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
-const int _N = 105; int N = 105; const int _T = 1002; int T = 1002; int f[_N]; int t[_N]; int dp[_N][_T];
-int main() {scanf("%d", &N); scanf("%d", &T); upto(i, _N) scanf("%d%d", f+i,t+i); ;
-
+const int _N = 105; int N = 105; const int _T = 1002; int T = 1002; int f[_N]; int t[_N]; int dp[_T];
+int main() {scanf("%d", &N); scanf("%d", &T); upto(i, N) scanf("%d%d", f+i,t+i);
     initDebug;
-
-    
+    upto(i, N) {
+        rev(j, T, 1) {
+            if (j>=t[i])
+                chkMax(dp[j], dp[j-t[i]]+f[i]);
+        }
+    }
+    printf("%d\n", dp[T]);
+    return 0;
 }

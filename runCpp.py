@@ -121,24 +121,26 @@ class AutoInputOption(Option):  # 自动生成输入语句
                         inMain.append(f'scanf("{TYPE_KEYS[varType]}", &{name})')
                     elif '[' in item:
                         if '=' in item:
-                            name, count, init = re.findall(r"(.*)\[(.*)\]=(.*)", item.replace(' ', ''))[0]
+                            name, count, init = re.findall(r"(.*?)(\[.*\])=(.*)", item.replace(' ', ''))[0]
                         else:
                             print(item.replace(' ', ''))
-                            name, count = re.findall(r"(.*)\[(.*)\]", item.replace(' ', ''))[0]
+                            name, count = re.findall(r"(.*?)(\[.*\])", item.replace(' ', ''))[0]
                             init = None
+                        def callback(index):
+                            try:
+                                index = int(index)
+                            except ValueError:
+                                index = '_' + index
+                            return index
+                        count: str = re.sub(r"\[(.*?)\]", lambda m: f'[{callback(m[1])}]', count)
                         if '0'<=name[0]<='9':  name = '_' + name
-                        try: 
-                            count = int(count)
-                            initial.append(f"{varType} {name}[{count}]")
-                        except ValueError:
-                            count = '_' + count
-                            initial.append(f"{varType} {name}[{count}]")
+                        initial.append(f"{varType} {name}{count}")
 
                         if init is not None:
                             init: str
                             initCode = ""
-                            if init == 0:
-                                initCode = f"std::memset({name}, 0, sizeof({name}))"
+                            if init == "0":
+                                initCode = ""
                             elif init in {"inf", "0x3f3f3f3f"}:
                                 initCode = f"std::memset({name}, 0x3f, sizeof({name}))"
                             elif init in {"-inf", "-0x3f3f3f3f"}:
@@ -147,12 +149,12 @@ class AutoInputOption(Option):  # 自动生成输入语句
                                 initCode = f"std::memset({name}, {init[3:]}, sizeof({name}))"
                             else:
                                 initCode = f"std::fill({name}, {name}+{count}, {init})"
-                            inMain.append(initCode)
+                            if initCode: inMain.append(initCode)
                         else:
                             listInput = True
                             fmt += f"{TYPE_KEYS[varType]}"
                             args.append(f"{name}+i")
-                            listLen = count
+                            listLen = count[1:-1]
                     elif '=' in item:
                         initial.append(f"{varType} "+item)
                     else:
@@ -162,7 +164,7 @@ class AutoInputOption(Option):  # 自动生成输入语句
                         initial.append(f"{varType} {name}")
                         inMain.append(f'scanf("{TYPE_KEYS[varType]}", &{name})')
                 if listInput:
-                    inMain.append(f'upto(i, {listLen}) scanf("{fmt}", {','.join(args)})')
+                    inMain.append(f'upto(i, {listLen[1:]}) scanf("{fmt}", {','.join(args)})')
             #print('; '.join(initial)+';\n')
             #print('; '.join(inMain)+';\n')
             code = (code[:block.span()[0]] + '; '.join(initial)+';\n' + code[block.span()[1]+1:])

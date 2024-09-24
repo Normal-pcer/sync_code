@@ -14,6 +14,8 @@ const backgroundURL = "https://cdn.luogu.com.cn/upload/image_hosting/n1yvs9t8.pn
 const blankBackgroundStyle = "linear-gradient(156deg, rgb(51, 51, 51), rgb(71, 176, 223), rgb(244, 226, 250), rgb(227, 245, 255)); filter: blur(3px) brightness(87%);";
 function modifyMainPage() {
     var _a, _b, _c;
+    if (window.location.href !== "https://www.luogu.com.cn/")
+        return;
     (_a = document
         .querySelector("#app-old > div.lg-index-content.am-center > div:nth-child(1) > div > div > div > div.am-u-md-8")) === null || _a === void 0 ? void 0 : _a.remove();
     let rightBar = document.querySelector("#app-old > div.lg-index-content.am-center > div:nth-child(3) > div.am-u-lg-3.am-u-md-4.lg-right");
