@@ -71,14 +71,13 @@ function readingSolution() {
     codes[0].scrollIntoView();
 }
 
-(function() {
+(function () {
     'use strict';
-    console.log("闪击题解")
-    window.onload = () => {
-        setTimeout(()=>{
-            problemsIndex()
-            readingSolution()
-        }, 500)
-    }
+    console.log("闪击题解");
+
+    setInterval(() => {
+        problemsIndex();
+        readingSolution();
+    }, 3000);
     // Your code here...
 })();

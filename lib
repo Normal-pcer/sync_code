@@ -18,7 +18,6 @@
 #define never if(0)
 #define always if(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define bitGE(x,y) (bitOr((x), ~(y)))
 #define Infinity 2147483647
 #define putInt(n) printf("%d\n",(n))
 #define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))

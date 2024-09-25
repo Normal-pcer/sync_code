@@ -3,17 +3,31 @@
 // @name         New User Script
 // @namespace    http://tampermonkey.net/
 // @version      2024-09-11
-// @description  try to take over the world!
+// @description  Favor-words and Encryption For LUOGU
 // @author       You
 // @match        https://www.luogu.com.cn
 // @match        https://www.luogu.com.cn/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=luogu.com.cn
 // @grant        none
 // ==/UserScript==
-var _a;
-const wordsList = JSON.parse((_a = window.localStorage.getItem("fav-words")) !== null && _a !== void 0 ? _a : "[]");
+const base64 = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+const blankChars = ["\u200b", "\u200d", "\u200e", "\u202a", "\u202b", "\u202c", "\u202d", "喵"];
+const wordsList = JSON.parse(window.localStorage.getItem("fav-words") ?? "[]");
 let fastSendButton = null;
+function getUserId() {
+    const userAElementSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.top-container > div.title > span > span > a";
+    const userAElement = document.querySelector(userAElementSelector);
+    if (!userAElement) {
+        console.log("获取用户信息失败！");
+        return 0;
+    }
+    const link = userAElement.href; // 类似"https://www.luogu.com.cn/user/114514"
+    const uid = link.substring(link.length - 6);
+    return Number(uid);
+}
+;
 class WordIndexManager {
+    static _currentWordIndex = 0;
     static set currentWordIndex(value) {
         WordIndexManager._currentWordIndex = value % wordsList.length;
         if (fastSendButton) {
@@ -24,24 +38,41 @@ class WordIndexManager {
         return WordIndexManager._currentWordIndex;
     }
 }
-WordIndexManager._currentWordIndex = 0;
+function encryptMessage(msg) {
+    let result = msg;
+    let arr = Array.from(window.btoa(window.encodeURI(msg))).filter((element) => element != '=');
+    arr = arr.map((element) => {
+        const index = base64.indexOf(element);
+        return blankChars[index >>> 3] + blankChars[index % 8];
+    });
+    result = blankChars[0] + blankChars[0] + blankChars[0] + blankChars[7] + arr.reduce((a, b) => a + b); // 放入0007表示由本插件生成
+    return result;
+}
+function decryptMessage(msg) {
+    let result = "";
+    for (let i = 0; i < msg.length; i += 2)
+        result += base64[(blankChars.indexOf(msg[i]) << 3) + (blankChars.indexOf(msg[i + 1]))];
+    if (result.substring(0, 2) !== "AH")
+        return false;
+    result = result.substring(2);
+    return window.decodeURI(window.atob(result));
+}
+function sendMessage(msg) {
+    const httpRequest = new XMLHttpRequest();
+    httpRequest.open("POST", "https://www.luogu.com.cn/api/chat/new", true);
+    httpRequest.setRequestHeader("Content-type", "application/json");
+    //// httpRequest.setRequestHeader("referer", "https://www.luogu.com.cn/chat");
+    httpRequest.setRequestHeader("x-csrf-token", document.querySelector("head > meta[name=csrf-token]").content);
+    httpRequest.send(JSON.stringify({
+        user: getUserId(),
+        content: msg,
+    }));
+}
 (function () {
     "use strict";
     if (wordsList.length === 0)
         wordsList.push("喵~");
-    const getUserId = () => {
-        const userAElementSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.top-container > div.title > span > span > a";
-        const userAElement = document.querySelector(userAElementSelector);
-        if (!userAElement) {
-            console.log("获取用户信息失败！");
-            return 0;
-        }
-        const link = userAElement.href; // 类似"https://www.luogu.com.cn/user/114514"
-        const uid = link.substring(link.length - 6);
-        return Number(uid);
-    };
     const onPageModifyCallback = () => {
-        var _a, _b;
         console.log("test");
         const sendButtonSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.editor > div > button";
         const sendButton = document.querySelector(sendButtonSelector);
@@ -53,17 +84,9 @@ WordIndexManager._currentWordIndex = 0;
             fastSendButton = sendButton.cloneNode();
             const addFavButton = sendButton.cloneNode();
             fastSendButton.innerHTML = wordsList[WordIndexManager.currentWordIndex];
-            (_a = sendButton.parentElement) === null || _a === void 0 ? void 0 : _a.insertBefore(fastSendButton, sendButton);
+            sendButton.parentElement?.insertBefore(fastSendButton, sendButton);
             fastSendButton.addEventListener("click", () => {
-                const httpRequest = new XMLHttpRequest();
-                httpRequest.open("POST", "https://www.luogu.com.cn/api/chat/new", true);
-                httpRequest.setRequestHeader("Content-type", "application/json");
-                //// httpRequest.setRequestHeader("referer", "https://www.luogu.com.cn/chat");
-                httpRequest.setRequestHeader("x-csrf-token", document.querySelector("head > meta[name=csrf-token]").content);
-                httpRequest.send(JSON.stringify({
-                    user: getUserId(),
-                    content: wordsList[WordIndexManager.currentWordIndex],
-                }));
+                sendMessage(wordsList[WordIndexManager.currentWordIndex]);
             });
             fastSendButton.addEventListener("contextmenu", (event) => {
                 // 下一个收藏项
@@ -72,7 +95,7 @@ WordIndexManager._currentWordIndex = 0;
             });
             addFavButton.innerHTML = "收藏文字";
             addFavButton.addEventListener("click", () => {
-                let text = textArea === null || textArea === void 0 ? void 0 : textArea.value;
+                let text = textArea?.value;
                 if (text && text.length > 0) {
                     if (wordsList.includes(text)) {
                         alert(`您已经收藏过 "${text}" 了！`);
@@ -91,12 +114,35 @@ WordIndexManager._currentWordIndex = 0;
                 localStorage.setItem("fav-words", JSON.stringify(wordsList));
                 event.preventDefault();
             });
-            (_b = sendButton.parentElement) === null || _b === void 0 ? void 0 : _b.insertBefore(addFavButton, fastSendButton);
+            sendButton.parentElement?.insertBefore(addFavButton, fastSendButton);
+            sendButton.addEventListener("contextmenu", (event) => {
+                const inputText = (textArea?.value);
+                console.log(inputText);
+                if (inputText) {
+                    sendMessage(encryptMessage(inputText));
+                    event.preventDefault();
+                }
+            });
         }
+    };
+    const intervalCallback = () => {
+        document.querySelectorAll(".message").forEach((element) => {
+            if (element instanceof HTMLElement && element.getAttribute("decryptionPrepared") !== "1") {
+                element.addEventListener("click", () => {
+                    let decrypted = decryptMessage(element.innerText);
+                    if (decrypted)
+                        element.innerText = decrypted;
+                    else
+                        console.log("无法解密消息");
+                });
+                element.setAttribute("decryptionPrepared", "1");
+            }
+        });
     };
     window.onload = () => {
         const observer = new MutationObserver(onPageModifyCallback);
         const targetNode = document.body;
         observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
+        setInterval(intervalCallback, 500);
     };
 })();

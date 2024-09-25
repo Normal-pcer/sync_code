@@ -18,7 +18,6 @@
 #define never if(0)
 #define always if(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define bitGE(x,y) (bitOr((x), ~(y)))
 #define Infinity 2147483647
 #define putInt(n) printf("%d\n",(n))
 #define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
@@ -28,17 +27,32 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
-const int _N = 1e5+5; int N = 1e5+5; const int _M = 1e5+5; int M = 1e5+5; int T[_N]; int V[_N];
-
-int limit[150];  // 11*T+V
-
-int main() {scanf("%d", &N); scanf("%d", &M); 
-    int T, V;
-    upto(i, N) {
-        scanf("%d%d", &T, &V);
-        limit[11*T+V]++;
-    }
+  
+const int maxN = 100005;
+int h[maxN];
+int t[maxN], top=0;
+int N = 1;
+  
+int main() {
+    optimizeIO;
     initDebug;
-    
+    never {
+        freopen("160.in", "r", stdin);
+    }
+    // while (std::cin >> h[N])  N++;
+    // N--;
+    N=read();
+    upto(i, N)  h[i]=read();
+    rev(i, N, 1) {
+        if (h[i] >= t[top])     t[++top] = h[i];
+        else    *std::upper_bound(t+1, t+top+1, h[i]) = h[i];
+    }
+    printf("%d\n", top);
+    top = 0; std::memset(t, 0, sizeof(t));
+    upto(i, N) {
+        if (h[i] > t[top])     t[++top] = h[i];
+        else    *std::lower_bound(t+1, t+top+1, h[i]) = h[i];
+    }
+    printf("%d\n", top);
     return 0;
 }
