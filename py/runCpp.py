@@ -1,4 +1,4 @@
-import os, sys, time
+import os, sys, time, shutil
 from typing import Dict, List, Optional, Tuple
 from abc import abstractmethod
 import re
@@ -123,7 +123,6 @@ class AutoInputOption(Option):  # 自动生成输入语句
                         if '=' in item:
                             name, count, init = re.findall(r"(.*?)(\[.*\])=(.*)", item.replace(' ', ''))[0]
                         else:
-                            print(item.replace(' ', ''))
                             name, count = re.findall(r"(.*?)(\[.*\])", item.replace(' ', ''))[0]
                             init = None
                         def callback(index):
@@ -172,6 +171,12 @@ class AutoInputOption(Option):  # 自动生成输入语句
             with open(fileName, "w", encoding="UTF-8") as f:
                 f.write(code)
 
+class AutoInitializeOption(Option):  # 自动创建和填充模板
+    def __init__(self):
+        super().__init__("autoInitialize", "autoinit", "noautoinit")
+    def apply():
+        global autoInitialize
+        autoInitialize = True
 
 
 class LogOption(Option):
@@ -182,16 +187,25 @@ class LogOption(Option):
         global log
         log = True
 
+def isInt(n: str):
+    try:
+        int(n)
+        return True
+    except ValueError:
+        return False
+
 options: Dict[str, Option] = {
     "debug": DebugOption(),
     "replace": ReplaceOption(),
     "compile": CompileOption(),
     "log": LogOption(),
-    "autoInput": AutoInputOption()
+    "autoInput": AutoInputOption(),
+    "autoInitialize": AutoInitializeOption()
 }
 switchMap: Dict[str, Option] = {}
 switchNoneMap: Dict[str, Option] = {}
 log: bool = False
+autoInitialize = False
 
 baseDir = os.path.join( os.getenv("localAppdata"), "RunCpp/" )
 
@@ -205,9 +219,6 @@ if __name__ == '__main__':
     if not os.path.exists(baseDir):
         os.makedirs(baseDir)
 
-    if len(sys.argv) <= 1:
-        raise Exception("未指定文件")
-
     defaultConfig = {}
     try:
         defaultConfig = json.load(open( os.path.join(baseDir, 'config.json'), "r", encoding="UTF-8" ))
@@ -218,16 +229,13 @@ if __name__ == '__main__':
         option = options.get(cfg)
         if option is not None:  option.data = defaultConfig[cfg]
 
-    fileName = sys.argv[1]
-    if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
-
     for name in options:
         for s in options[name].switch:
             switchMap[s] = options[name]
 
         for s in options[name].switchNone:
             switchNoneMap[s] = options[name]
-    index = 2
+    index = 1
     while index < len(sys.argv):
         arg = sys.argv[index]
         setDefault = False
@@ -264,14 +272,29 @@ if __name__ == '__main__':
                 defaultConfig[negativeOption.name] = negativeOption.data
         
         else:
+            if index == 1:  continue
             print("无法解析的参数: ", arg)
         index += 1
+
+    fileName = sys.argv[1] if len(sys.argv)>=2 else ""
+    print(autoInitialize)
+    if not os.path.exists(fileName):
+        if not options["autoInitialize"].data:
+            raise FileNotFoundError("未找到文件")
+        maxIndex = max(map( lambda s:int(s[:-4]) , filter(lambda s: s.endswith(".cpp") and isInt(s[:-4]), os.listdir()) ))
+        maxIndex += 1
+        fileName = str(maxIndex) + '.cpp'
+        shutil.copyfile("init.cpp", fileName)
+        os.system(" ".join(["code", fileName]))
+        sys.exit()
+    if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
 
     for name in options:
         option = options[name]
         if option.data != False:
             option.apply()
     
+
     if log:
         print(">", f"g++ {fileName} -o {fileName[:-4]}.exe " + ' '.join(compileArgs))
     print("正在编译...", end='\r')
