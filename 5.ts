@@ -52,11 +52,11 @@ class PrimeChecking {
 }
 
 function dfs(element: Element) {
+    if (! (element instanceof HTMLElement) )  return;
+    if (element.parentElement?.getAttribute("marked-prime") === "1") {
+        return;
+    }
     if (element.children.length==0){
-        if (element.parentElement?.getAttribute("marked-prime") === "1") {
-            return;
-        }
-        if (! (element instanceof HTMLElement) )  return;
         element.innerText = element.innerText.replaceAll(/[0-9]*([0-9]+.{0,1})*[0-9]/g, (s) => {
             const num = BigInt(
                 Array
@@ -69,13 +69,31 @@ function dfs(element: Element) {
                 element.setAttribute("marked-prime", "1");
                 return `<prime>${s}</prime>`;
             } else {
-                return s
+                return `<noprime>${s}</noprime>`
             }
         })
         element.innerHTML = element.innerHTML.replaceAll(/&lt;prime&gt;(.*?)&lt;\/prime&gt;/g, `<span style="color:red">$1</span>`)
+        element.innerHTML = element.innerHTML.replaceAll(/&lt;noprime&gt;(.*?)&lt;\/noprime&gt;/g, `<span style="color:darkgreen">$1</span>`)
     } else{
         for (let i=0;i<element.children.length;i++){
             dfs(element.children[i]);
+            element.innerText = element.innerText.replaceAll(/[0-9]*([0-9]+.{0,1})*[0-9]/g, (s) => {
+                const num = BigInt(
+                    Array
+                        .from(s)
+                        .filter(  e => ( 48<=e.charCodeAt(0) && e.charCodeAt(0)<58 )  )
+                        .reduce( (a,b) => a + b )
+                )
+                console.log(num)
+                if ( PrimeChecking.isPrime( num ) ) {
+                    element.setAttribute("marked-prime", "1");
+                    return `<prime>${s}</prime>`;
+                } else {
+                    return `<noprime>${s}</noprime>`
+                }
+            })
+            element.innerHTML = element.innerHTML.replaceAll(/&lt;prime&gt;(.*?)&lt;\/prime&gt;/g, `<span style="color:red">$1</span>`)
+            element.innerHTML = element.innerHTML.replaceAll(/&lt;noprime&gt;(.*?)&lt;\/noprime&gt;/g, `<span style="color:red">$1</span>`)
         }
     }
 }
