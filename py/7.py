@@ -1,0 +1,1 @@
+(lambda x:[print(i,end=' ')if x%i==0 else 0 for i in[3,5,7]]if(x%3==0)+(x%5==0)+(x%7==0)else print('n'))(int(input()))
