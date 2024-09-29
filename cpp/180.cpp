@@ -28,39 +28,92 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
 
-const int _N = 105; int N; int a[_N*2];
-int min[_N*2][_N*2]; int max[_N*2][_N*2];  // 令 i, j 之间为空获取的最多/最少分数
-int minAns = Infinity, maxAns = 0;
-int main() {scanf("%d", &N); upto(i, N) scanf("%d", a+i); std::memset(min, 0x3f, sizeof(min));
-    std::memcpy(a+N+1, a+1, N*4);
-    initDebug;
-    debug batchOutput(a, N*2);
+const int _N = 725; int N;
+struct Point {
+    double x;
+    double y;
 
-    upto(j, 2*N) {  // [j, j+1]
-        min[j][j+1] = min[j][j] = 0;
-        min[j-1][j+1] = a[j-1] * a[j] * a[j+1];
+    Point operator- (Point const other) const {
+        return { this->x - other.x, this->y - other.y };
+    }
+}p[_N*2];
+double abs(Point p) { return sqrt( p.x * p.x + p.y * p.y ); }
+
+double F[_N*2][_N*2], G[_N*2][_N*2];
+
+void display(double arr[_N*2][_N*2]) {
+    upto(i, N*2) {
+        upto(j, N*2) {
+            printf(arr[i][j]<1000000?"%11.2lf":"        INF", arr[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    initDebug;
+    debug {
+        freopen("180.in", "r", stdin);
+        freopen("180.out", "w", stdout);
+    }
+    scanf("%d", &N);
+    upto(i, N) {
+        scanf("%lf%lf", &p[i].x, &p[i].y);
+        p[i+N] = p[i];
     }
 
-    upto(i, N-1) {  // 区间长度
-        upto(j, 2*N) {  // [j, j+i]
-            if (j+i > 2*N)  break;
-            int thisMax = 0;
-            int thisMin = Infinity;
-            from(k, j+1, j+i-1) {  // [j, k] & k & [k, j+i]
-                chkMax(thisMax, max[j][k] + max[k][j+i] + a[j]*a[k]*a[j+i]);
-                chkMin(thisMin, min[j][k] + min[k][j+i] + a[j]*a[k]*a[j+i]);
-            }
-            chkMax(max[j][j+i], thisMax);
-            chkMin(min[j][j+i], thisMin);
+    std::memset(F, 0x59, sizeof(F));
+    std::memset(G, 0x59, sizeof(G));
+
+    // from(i, 0, 2*N+5) {
+    //     from(j, 0, 2*N+5) {
+    //         F[i][j] = G[i][j] = 1e100;
+    //     }
+    // }
+
+    F[1][N] = 0;
+    G[2][N] = abs(p[1]-p[N]);
+
+    rev(l, N-1, 1) {
+        from(i, 2, N*2) {
+            auto j = l+i-1;
+            if (j>N*2)  break;
+
+            // chkMin( F[i][j], F[i-1][j] + abs(p[i]-p[i-1]), G[i-1][j] + abs(p[j]-p[i-1]) );
+            // chkMin( G[i][j], F[i][j+1] + abs(p[i]-p[j+1]), G[i][j+1] + abs(p[j]-p[j+1]) );
+
+            chkMin(F[i][j], F[i-1][j] + abs(p[i]-p[i-1]));
+            chkMin(G[i][j], G[i][j+1] + abs(p[j]-p[j+1]));
+            chkMin(G[i][j], F[i-1][j] + abs(p[i-1]-p[j]));
+            chkMin(F[i][j], G[i][j+1] + abs(p[i]-p[j+1]));
         }
     }
 
-    debug batchOutput2d(min, N*2, N*2, "%20d");
+    double ans = 1e300;
+    upto(i, N) {
+        chkMin(ans, F[i][i], G[i][i]);
+    }
+    // chkMin(ans, F[N][N], G[N][N]);
 
-    upto(j, N)  chkMax(maxAns, max[j][j+N-1]);
-    upto(j, N)  chkMin(minAns, min[j][j+N-1]);
+    // debug display(F);
+    // debug puts("");
+    // debug display(G);
 
-    log("%d %d\n", maxAns, minAns);
-    printf("%d\n", maxAns - minAns);
+    printf("%.3lf\n", ans);
     return 0;
 }
+
+/*
+5
+0 0
+0 1
+1 1
+2 1
+1 0
+
+4
+0 0
+2 2
+4 2
+2 0
+*/

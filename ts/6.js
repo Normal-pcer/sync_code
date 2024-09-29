@@ -1,6 +1,6 @@
 "use strict";
 // ==UserScript==
-// @name         Favor-words and Encryption For LUOGU
+// @name         New User Script
 // @namespace    http://tampermonkey.net/
 // @version      2024-09-11
 // @description  Favor-words and Encryption For LUOGU
@@ -10,8 +10,8 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=luogu.com.cn
 // @grant        none
 // ==/UserScript==
-var _1;
-(function (_1) {
+var _6;
+(function (_6) {
     const base64 = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
     const blankChars = ["\u200b", "\u200d", "\u200e", "\u202a", "\u202b", "\u202c", "\u202d", "喵"];
     const wordsList = JSON.parse(window.localStorage.getItem("fav-words") ?? "[]");
@@ -47,16 +47,15 @@ var _1;
             const index = base64.indexOf(element);
             return blankChars[index >>> 3] + blankChars[index % 8];
         });
-        result = blankChars[0] + blankChars[0] + blankChars[0] + blankChars[7] + arr.reduce((a, b) => a + b); // 放入0007表示由本插件生成
+        result = /* blankChars[0] + blankChars[0] + blankChars[0] + blankChars[7] + */ arr.reduce((a, b) => a + b); // 放入0007表示由本插件生成
         return result;
     }
     function decryptMessage(msg) {
         let result = "";
         for (let i = 0; i < msg.length; i += 2)
             result += base64[(blankChars.indexOf(msg[i]) << 3) + (blankChars.indexOf(msg[i + 1]))];
-        if (result.substring(0, 2) !== "AH")
-            return false;
-        result = result.substring(2);
+        // if (result.substring(0, 2) !== "AH")  return false
+        // result = result.substring(2)
         return window.decodeURI(window.atob(result));
     }
     function sendMessage(msg) {
@@ -75,6 +74,7 @@ var _1;
         if (wordsList.length === 0)
             wordsList.push("喵~");
         const onPageModifyCallback = () => {
+            console.log("test");
             const sendButtonSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.editor > div > button";
             const sendButton = document.querySelector(sendButtonSelector);
             const textAreaSelector = "#app > div.main-container > main > div > div.card.wrapper.padding-none > div.main > div > div.editor > textarea";
@@ -128,18 +128,15 @@ var _1;
         };
         const intervalCallback = () => {
             document.querySelectorAll(".message").forEach((element) => {
-                if (element instanceof HTMLElement /* && element.getAttribute("decryptionPrepared") !== "1"*/) {
+                if (element instanceof HTMLElement && element.getAttribute("decryptionPrepared") !== "1") {
                     element.addEventListener("click", () => {
                         let decrypted = decryptMessage(element.innerText);
-                        if (decrypted) {
+                        if (decrypted)
                             element.innerText = decrypted;
-                            element.setAttribute("decryptionPrepared", "1");
-                        }
-                        else if (element.getAttribute("decryptionPrepared") === "1") {
-                            element.innerText = encryptMessage(element.innerText);
-                            element.setAttribute("decryptionPrepared", "0");
-                        }
+                        else
+                            console.log("无法解密消息");
                     });
+                    element.setAttribute("decryptionPrepared", "1");
                 }
             });
         };
@@ -150,4 +147,4 @@ var _1;
             setInterval(intervalCallback, 500);
         };
     })();
-})(_1 || (_1 = {}));
+})(_6 || (_6 = {}));

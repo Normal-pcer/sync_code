@@ -19,10 +19,13 @@ code = ""
 with open("input.cpp", "r", encoding="UTF-8") as f:
     code = f.read()
 
+symbol0 = "[\"\'].*?[\"\']"
 symbol = "[a-zA-Z_0-9]+"
 symbol2 = "([^a-zA-Z_0-9<]){}([^a-zA-Z_0-9>])"
 
-symbolList = list(set(re.findall(symbol, code)))
+tmpCode = re.sub(r'([^\\])".*?[^\\]"', "$1\"\"", code)
+
+symbolList = list(set(re.findall(symbol0, tmpCode))) + list(set(re.findall(symbol, tmpCode)))
 # print(symbolList)
 symbolMap = dict()
 count = 1

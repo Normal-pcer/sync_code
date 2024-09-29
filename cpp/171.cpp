@@ -28,39 +28,75 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
 
-const int _N = 105; int N; int a[_N*2];
-int min[_N*2][_N*2]; int max[_N*2][_N*2];  // 令 i, j 之间为空获取的最多/最少分数
-int minAns = Infinity, maxAns = 0;
-int main() {scanf("%d", &N); upto(i, N) scanf("%d", a+i); std::memset(min, 0x3f, sizeof(min));
-    std::memcpy(a+N+1, a+1, N*4);
-    initDebug;
-    debug batchOutput(a, N*2);
 
-    upto(j, 2*N) {  // [j, j+1]
-        min[j][j+1] = min[j][j] = 0;
-        min[j-1][j+1] = a[j-1] * a[j] * a[j+1];
+const int _N = 53; int N; int max[_N*2][_N*2], min[_N*2][_N*2];
+
+int v[_N*2];
+char e[_N*2];
+
+int eval(char c, int a, int b) {
+    return ((c=='t') ? (a+b) : (a*b));
+}
+
+int main() {
+    optimizeIO;
+    initDebug;
+
+    std::cin >> N;
+
+    debug {
+        freopen("171.out", "w", stdout);
     }
 
-    upto(i, N-1) {  // 区间长度
-        upto(j, 2*N) {  // [j, j+i]
-            if (j+i > 2*N)  break;
-            int thisMax = 0;
-            int thisMin = Infinity;
-            from(k, j+1, j+i-1) {  // [j, k] & k & [k, j+i]
-                chkMax(thisMax, max[j][k] + max[k][j+i] + a[j]*a[k]*a[j+i]);
-                chkMin(thisMin, min[j][k] + min[k][j+i] + a[j]*a[k]*a[j+i]);
+    upto(i, N) {
+        std::cin >> e[i] >> v[i];
+    }
+
+    memcpy(e+1+N, e+1, sizeof(e[0])*N);
+    memcpy(v+1+N, v+1, sizeof(v[0])*N);
+
+    debug upto(i, 2*N)  printf("%c", e[i]);
+    debug batchOutput(v, 2*N);
+
+    memset(max, -0x3f, sizeof(max));
+    memset(min, 0x3f, sizeof(min));
+    upto(i, N*2) {
+        max[i][i] = min[i][i] = v[i];
+        max[i][i+1] = min[i][i+1] = eval(e[i+1], v[i], v[i+1]);
+    }
+
+    from(l, 2, N-1) {  // 区间长度
+        upto(i, N*2) {  // 区间起点
+            int j = i+l;  // 区间终点
+            if (j>N*2)  break;
+            from(k, i+1, j) {  // 合并线段
+                chkMax(max[i][j], 
+                    eval(e[k], max[i][k-1], max[k][j]),
+                    eval(e[k], min[i][k-1], min[k][j])
+                );
+                chkMin(min[i][j],
+                    eval(e[k], max[i][k-1], max[k][j]), 
+                    eval(e[k], min[i][k-1], min[k][j])
+                );
             }
-            chkMax(max[j][j+i], thisMax);
-            chkMin(min[j][j+i], thisMin);
         }
     }
-
-    debug batchOutput2d(min, N*2, N*2, "%20d");
-
-    upto(j, N)  chkMax(maxAns, max[j][j+N-1]);
-    upto(j, N)  chkMin(minAns, min[j][j+N-1]);
-
-    log("%d %d\n", maxAns, minAns);
-    printf("%d\n", maxAns - minAns);
+    debug batchOutput2d(max, N*2, N*2, "%13d")
+    debug batchOutput2d(min, N*2, N*2, "%13d")
+    int ans = 0;
+    upto(i, N) {
+        chkMax(ans, max[i][i+N-1]);
+        chkMax(ans, min[i][i+N-1]);
+    }
+    printf("%d\n", ans);
+    bool flag = false;
+    upto(i, N) {
+        if (ans == max[i][i+N-1] || ans == min[i][i+N-1]) {
+            if (flag)  printf(" ");
+            printf("%d", i);
+            flag = true;
+        }
+    }
+    printf("\n");
     return 0;
 }

@@ -23,7 +23,7 @@ function problemsIndex() {
     document.querySelectorAll(".status").forEach( (element) => {
         const link = element.querySelector("a")
         const accepted = element.querySelector(".fa-check")
-        if (accepted === null && link) {
+        if (accepted === null && link && link.getAttribute("QuickSolutionModified") === null) {
             const unaccepted = element.querySelector(".fa-xmark")
             if (unaccepted)  link.style.color = "rgb(231, 76, 60)"
             console.log(link.href)
@@ -32,6 +32,7 @@ function problemsIndex() {
             link.innerHTML = "闪"
             link.style.fontWeight = "bold"
             link.href = "https://www.luogu.com.cn/problem/solution/"+pid
+            link.setAttribute("QuickSolutionModified", "");
         }
     } );
 }
