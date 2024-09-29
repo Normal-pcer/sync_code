@@ -26,41 +26,38 @@ typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
-
-
-const int _N = 105; int N; int a[_N*2];
-int min[_N*2][_N*2]; int max[_N*2][_N*2];  // 令 i, j 之间为空获取的最多/最少分数
-int minAns = Infinity, maxAns = 0;
-int main() {scanf("%d", &N); upto(i, N) scanf("%d", a+i); std::memset(min, 0x3f, sizeof(min));
-    std::memcpy(a+N+1, a+1, N*4);
+#define val(x) ((x).v*(x).p)
+struct obj {int v, p;};
+const int _N = 32005; int N = 32005; const int _M = 65; int M = 65; int f[_N], c[_N][_M] /*必包含j的最好取法*/;
+std::vector<obj> s[_M];
+int main() {scanf("%d", &N); scanf("%d", &M); 
+    upto(i, M) {
+        s[i].push_back({});
+    }
+    upto(i, M) {
+        int v, p, q;
+        scanf("%d%d%d", &v, &p, &q);
+        if(q)  s[q].push_back({v, p});
+        else   s[i][0] = obj({v, p});
+    }
     initDebug;
-    debug batchOutput(a, N*2);
-
-    upto(j, 2*N) {  // [j, j+1]
-        min[j][j+1] = min[j][j] = 0;
-        min[j-1][j+1] = a[j-1] * a[j] * a[j+1];
-    }
-
-    upto(i, N-1) {  // 区间长度
-        upto(j, 2*N) {  // [j, j+i]
-            if (j+i > 2*N)  break;
-            int thisMax = 0;
-            int thisMin = Infinity;
-            from(k, j+1, j+i-1) {  // [j, k] & k & [k, j+i]
-                chkMax(thisMax, max[j][k] + max[k][j+i] + a[j]*a[k]*a[j+i]);
-                chkMin(thisMin, min[j][k] + min[k][j+i] + a[j]*a[k]*a[j+i]);
-            }
-            chkMax(max[j][j+i], thisMax);
-            chkMin(min[j][j+i], thisMin);
+    memset(c, -0x3f, sizeof(c));
+    upto(i, M) {
+        if (s[i].empty())  continue;
+        rev(j, N, 1) {
+            if (j>=s[i][0].v)
+                c[j][i] = f[j-s[i][0].v] + val(s[i][0]);
         }
+        never log("i=%d\n", i);
+        never batchOutput2d(c, N, M, "%4d")
+        from(t, 1, (int)s[i].size()-1) {
+            rev(j, N, 1) {
+                if (j>=s[i][t].v)
+                    chkMax(c[j][i], c[j-s[i][t].v][i] + val(s[i][t]));
+            }
+        }
+        rev(j, N, 1)  chkMax(f[j], c[j][i]);
     }
-
-    debug batchOutput2d(min, N*2, N*2, "%20d");
-
-    upto(j, N)  chkMax(maxAns, max[j][j+N-1]);
-    upto(j, N)  chkMin(minAns, min[j][j+N-1]);
-
-    log("%d %d\n", maxAns, minAns);
-    printf("%d\n", maxAns - minAns);
+    printf("%d\n", f[N]);
     return 0;
 }

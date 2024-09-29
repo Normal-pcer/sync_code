@@ -147,7 +147,7 @@ class AutoInputOption(Option):  # 自动生成输入语句
                             elif init.startswith("..."):
                                 initCode = f"std::memset({name}, {init[3:]}, sizeof({name}))"
                             else:
-                                initCode = f"std::fill({name}, {name}+{count}, {init})"
+                                initCode = f"std::fill({name}, {name}+{count[1:-1]}, {init})"
                             if initCode: inMain.append(initCode)
                         else:
                             listInput = True
@@ -156,6 +156,8 @@ class AutoInputOption(Option):  # 自动生成输入语句
                             listLen = count[1:-1]
                     elif '=' in item:
                         initial.append(f"{varType} "+item)
+                        if '===' in item:
+                            initial[-1] = "const "+ initial[-1]
                     else:
                         if len(item.strip()) == 0:  continue
                         name = item
@@ -174,10 +176,9 @@ class AutoInputOption(Option):  # 自动生成输入语句
 class AutoInitializeOption(Option):  # 自动创建和填充模板
     def __init__(self):
         super().__init__("autoInitialize", "autoinit", "noautoinit")
-    def apply():
+    def apply(self):
         global autoInitialize
         autoInitialize = True
-
 
 class LogOption(Option):
     def __init__(self):
@@ -244,7 +245,7 @@ if __name__ == '__main__':
             arg = arg[2:]
         elif arg.startswith('-'):
             arg = arg[1:]
-        else:
+        elif index != 1:
             print("无法解析的参数: ", arg)
         positiveOption = switchMap.get(arg)
         negativeOption = switchNoneMap.get(arg)
@@ -272,12 +273,12 @@ if __name__ == '__main__':
                 defaultConfig[negativeOption.name] = negativeOption.data
         
         else:
-            if index == 1:  continue
-            print("无法解析的参数: ", arg)
+            if index != 1:  
+                print("无法解析的参数: ", arg)
         index += 1
 
     fileName = sys.argv[1] if len(sys.argv)>=2 else ""
-    print(autoInitialize)
+    if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
     if not os.path.exists(fileName):
         if not options["autoInitialize"].data:
             raise FileNotFoundError("未找到文件")
@@ -287,7 +288,6 @@ if __name__ == '__main__':
         shutil.copyfile("init.cpp", fileName)
         os.system(" ".join(["code", fileName]))
         sys.exit()
-    if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
 
     for name in options:
         option = options[name]

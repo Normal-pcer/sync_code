@@ -4,5 +4,6 @@
 // 
 
 int main() {
-
+    initDebug;
+    return 0;
 }

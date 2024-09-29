@@ -27,93 +27,105 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
+const int _N = 43; int N; const int _M = 43; int M; double p[_N*2];
+const double R = 1, PI = 3.1415926535897932384626433832795028841971;
+double dp[_N][_N][_M];  // [i, j] 区间内最大的 k 边形面积(k<=M)
+double ans = 0.0;
 
-const int _N = 725; int N;
-struct Point {
-    double x;
-    double y;
+double area(double A, double B, double C) {
+    // 计算圆周上三点 A, B, C 围成三角形的面积
+    // 传入为弧度，且 C>B>A
+    return (pow(R, 2) / 2) * ( sin(B-A) + sin(C-B) - sin(C-A) );
+}
 
-    Point operator- (Point const other) const {
-        return { this->x - other.x, this->y - other.y };
-    }
-}p[_N*2];
-double abs(Point p) { return sqrt( p.x * p.x + p.y * p.y ); }
-
-double F[_N*2][_N*2], G[_N*2][_N*2];
-
-void display(double arr[_N*2][_N*2]) {
+void displayDp() {
     upto(i, N*2) {
+        printf("\n-------i=%d---\n\n", i);
         upto(j, N*2) {
-            printf(arr[i][j]<1000000?"%11.2lf":"        INF", arr[i][j]);
+            upto(k, M) {
+                printf("%10.2lf", dp[i][j][k]);
+            }
+            printf("\n");
         }
-        printf("\n");
     }
 }
 
-int main() {
+int main() {scanf("%d", &N); scanf("%d", &M); upto(i, N) scanf("%lf", p+i);
     initDebug;
-    debug {
-        freopen("180.in", "r", stdin);
-        freopen("180.out", "w", stdout);
-    }
-    scanf("%d", &N);
     upto(i, N) {
-        scanf("%lf%lf", &p[i].x, &p[i].y);
-        p[i+N] = p[i];
+        p[i] *= 2 * PI;
     }
-
-    std::memset(F, 0x59, sizeof(F));
-    std::memset(G, 0x59, sizeof(G));
-
-    // from(i, 0, 2*N+5) {
-    //     from(j, 0, 2*N+5) {
-    //         F[i][j] = G[i][j] = 1e100;
-    //     }
-    // }
-
-    F[1][N] = 0;
-    G[2][N] = abs(p[1]-p[N]);
-
-    rev(l, N-1, 1) {
-        from(i, 2, N*2) {
-            auto j = l+i-1;
-            if (j>N*2)  break;
-
-            // chkMin( F[i][j], F[i-1][j] + abs(p[i]-p[i-1]), G[i-1][j] + abs(p[j]-p[i-1]) );
-            // chkMin( G[i][j], F[i][j+1] + abs(p[i]-p[j+1]), G[i][j+1] + abs(p[j]-p[j+1]) );
-
-            chkMin(F[i][j], F[i-1][j] + abs(p[i]-p[i-1]));
-            chkMin(G[i][j], G[i][j+1] + abs(p[j]-p[j+1]));
-            chkMin(G[i][j], F[i-1][j] + abs(p[i-1]-p[j]));
-            chkMin(F[i][j], G[i][j+1] + abs(p[i]-p[j+1]));
+    std::memset(dp, 0xf0, sizeof(dp));
+    // 初始化，预先计算所有三角形
+    upto(i, N) {  // 最小
+        from(j, i+2, N) {  // 最大
+            from(k, i+1, j-1) {  // 中间
+                chkMax(dp[i][j][3], area(p[i], p[k], p[j]));
+                // chkMax(ans, dp[i][j][k]);
+                chkMax(ans, dp[i][j][3]);
+            }
         }
     }
 
-    double ans = 1e300;
-    upto(i, N) {
-        chkMin(ans, F[i][i], G[i][i]);
+    from(l, 4, N+1) {  // 区间长度
+        upto(i, N) {  // 区间起点
+            int j = i+l-1;  // 区间终点
+            if (j > N)  break;
+
+            from(k, i+1, j-1) {  // 对区间 [k, j] 上的原有 p-1 边形追加一个三角形(i, k, j)面积
+                from(q, 1, M) {
+                    chkMax(dp[i][j][q], dp[k][j][q-1] + area(p[i], p[k], p[j]));
+                    chkMax(ans, dp[i][j][q]);
+                }
+            }
+        }
     }
-    // chkMin(ans, F[N][N], G[N][N]);
+    never displayDp();
 
-    // debug display(F);
-    // debug puts("");
-    // debug display(G);
-
-    printf("%.3lf\n", ans);
+    printf("%.6f\n", ans);
     return 0;
 }
 
-/*
-5
-0 0
-0 1
-1 1
-2 1
-1 0
-
-4
-0 0
-2 2
-4 2
-2 0
-*/
+/**
+40
+0.0
+0.02
+0.04
+0.06
+0.08
+0.1
+0.12
+0.14
+0.16
+0.18
+0.2
+0.22
+0.24
+0.26
+0.28
+0.3
+0.32
+0.34
+0.36
+0.38
+0.4
+0.42
+0.44
+0.46
+0.48
+0.5
+0.52
+0.54
+0.56
+0.58
+0.6
+0.62
+0.64
+0.66
+0.68
+0.7
+0.72
+0.74
+0.76
+0.78
+ */
