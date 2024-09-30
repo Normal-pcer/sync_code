@@ -56,7 +56,7 @@ int main() {
     scanf("%d", &N);
     initDebug;
 
-    double tx, ty, maxY; int maxYOwner;
+    double tx, ty, maxY=-1e300; int maxYOwner=0;
     upto(i, N) {
         scanf("%lf%lf", &tx, &ty);
         tempPoints[i] = {tx, ty};
@@ -65,10 +65,9 @@ int main() {
 
     std::memset(F, 0x70, sizeof(F));
     std::memset(G, 0x70, sizeof(G));
-    debug {
-        std::memset(FF, '.', sizeof(FF));
-        std::memset(GG, '.', sizeof(GG));
-    }
+
+    std::memset(FF, '.', sizeof(FF));
+    std::memset(GG, '.', sizeof(GG));
 
     int pIndex = 0;
     from(i, maxYOwner, N) {
@@ -84,7 +83,7 @@ int main() {
     F[1][N] = 0;
     G[2][N] = abs(p[1]-p[N]);
 
-    from(i, 1, N) {
+    from(i, 2, N) {
         rev(j, N, i) {
             FF[i][j] = GG[i][j] = '.';
             chkMinEx(F[i][j], FF[i][j]='<', {}, F[i-1][j] + abs(p[i-1]-p[i]));
@@ -93,6 +92,8 @@ int main() {
             chkMinEx(F[i][j], FF[i][j]='$', {}, G[i][j+1] + abs(p[j+1]-p[i]));
         }
     }
+
+    GG[2][N] = '$';
 
     double ans = 1e305;
     double ansIndex = 0;
@@ -124,7 +125,7 @@ int main() {
             results.push_back(j);
             if (GG[i][j] == '<') {
                 j++;
-            } else if (FF[i][j] == '$') {
+            } else if (GG[i][j] == '$') {
                 in = 'F';
                 i--;
             }
