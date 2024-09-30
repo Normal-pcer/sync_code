@@ -46,7 +46,9 @@ void push_down(int p) {
     if (tr[p].tag) {
         tr[ls].cnt = tr[ls].r - tr[ls].l + 1 - tr[ls].cnt;
         tr[rs].cnt = tr[rs].r - tr[rs].l + 1 - tr[rs].cnt;
-        tr[ls].tag = tr[rs].tag = true;
+        tr[ls].tag ^= true;
+        tr[rs].tag ^= true;
+        tr[p].tag = false;
     }
 }
 
