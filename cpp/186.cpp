@@ -22,9 +22,60 @@
 #define putInt(n) printf("%d\n",(n))
 #define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
 bool DEBUG_MODE=false;
-typedef long long ll; typedef unsigned long long ull;
+typedef long long ll; typedef unsigned long long ull; typedef unsigned ui;
 inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
 
+int const _N=11; int N; const int _K = 85; int K;
+ull F[20][170][2048];
+
+std::vector<ui> singleLine[20];
+void dfs(int p /*最右侧选点*/, int count /*已有点数*/, ui left /*左侧编码*/) {  // 向右搜索
+    singleLine[count].push_back(left);  // 不再选
+    from(i, p+2, N-1) {  // 选择点 i
+        dfs(i, count+1, left + (1<<i));
+    }
+}
+
+void pre_process() {
+    dfs(-2, 0, 0);  // 预处理单行的可能选择
+}
+
+int main() {
+    initDebug;
+
+    debug {
+        freopen("186.in", "r", stdin);
+        freopen("186.out", "w", stdout);
+    }
+
+    scanf("%d", &N); scanf("%d", &K);
+
+    pre_process();
+
+    F[0][0][0] = 1;
+    upto(i, N) {  // 行号
+        from(j, 0, K) {  // 已经放置过的棋子数
+            from(t, 0, K-j) {  // 这次要放置的棋子数
+                from(p, 0, 1<<N) {  // 上一次的放置方案
+                    for (auto q: singleLine[t]) {  // 这次的放置方案
+                        bool unavailable = false;
+                        unavailable |= (bool)( q & p );
+                        unavailable |= (bool)( q & (p<<1) );
+                        unavailable |= (bool)( q & (p>>1) );
+                        if (!unavailable)
+                            F[i][j+t][q] += F[i-1][j][p];
+                    }
+                }
+            }
+        }
+    }
+
+    ull ans = 0;
+    from(i, 0, 1<<N)  ans += F[N][K][i];
+
+    printf("%lld\n", ans);
+    return 0;
+}

@@ -1,2 +1,1 @@
-(lambda x:[print(i,end=' ')if x%i==0 else 0 for i in[3,5,7]]if(x%3==0)+(x%5==0)+(x%7==0)else print('n'))(int(input()))
-(lambda x:0 if[print(i,end=' ')for i in[3,5,7]if x%i==0]else print('n'))(int(input()))
+print(' '.join([i[::-1]if'/'<i[0]<':'else i.swapcase()for i in input().split()][::-1]))

@@ -27,4 +27,40 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
+const int _N = 200005; int N; int v[_N]; const int _M = 10005; int M; int F[_N][20];
 
+void pre() {
+    int logN = std::__lg(N);
+    std::memset(F, 0x3f, sizeof(F));
+    from(i, 1, N) {
+        F[i][0] = v[i];
+    }
+    from(logL, 1, logN) {
+        from(i, 1, N) {
+            if (i+(1<<(logL-1)) > N)  break;
+            F[i][logL] = std::min(F[i][logL-1], F[i+(1<<(logL-1))][logL-1]);
+        }
+    }
+}
+
+int query(int l, int r) {
+    int logL = std::__lg(r-l+1);
+    return std::min( F[l][logL], F[r-(1<<logL)+1][logL] );
+}
+
+int main() {scanf("%d", &N); scanf("%d", &M); upto(i, N) scanf("%d", v+i);
+    initDebug;
+
+    pre();
+
+    int a, b;
+    bool first = true;
+    while (M-->0) {
+        scanf("%d%d", &a, &b);
+        if (!first)  printf(" ");
+        printf("%d", query(a, b));
+        first = false;
+    }
+
+    return 0;
+}
