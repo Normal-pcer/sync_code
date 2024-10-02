@@ -1,5 +1,6 @@
 import os, sys, time, shutil
 from typing import Dict, List, Optional, Tuple
+from traceback import print_exc
 from abc import abstractmethod
 import re
 import json
@@ -217,96 +218,106 @@ fileName = ""
 debug = False
 
 if __name__ == '__main__':
-    if not os.path.exists(baseDir):
-        os.makedirs(baseDir)
-
-    defaultConfig = {}
     try:
-        defaultConfig = json.load(open( os.path.join(baseDir, 'config.json'), "r", encoding="UTF-8" ))
-    except Exception:
-        pass
+        if not os.path.exists(baseDir):
+            os.makedirs(baseDir)
 
-    for cfg in defaultConfig:
-        option = options.get(cfg)
-        if option is not None:  option.data = defaultConfig[cfg]
+        defaultConfig = {}
+        try:
+            defaultConfig = json.load(open( os.path.join(baseDir, 'config.json'), "r", encoding="UTF-8" ))
+        except Exception:
+            pass
 
-    for name in options:
-        for s in options[name].switch:
-            switchMap[s] = options[name]
+        for cfg in defaultConfig:
+            option = options.get(cfg)
+            if option is not None:  option.data = defaultConfig[cfg]
 
-        for s in options[name].switchNone:
-            switchNoneMap[s] = options[name]
-    index = 1
-    while index < len(sys.argv):
-        arg = sys.argv[index]
-        setDefault = False
-        if arg.startswith('--'):
-            setDefault = True
-            arg = arg[2:]
-        elif arg.startswith('-'):
-            arg = arg[1:]
-        elif index != 1:
-            print("无法解析的参数: ", arg)
-        positiveOption = switchMap.get(arg)
-        negativeOption = switchNoneMap.get(arg)
-        
-        def getAttached(start: int):
-            # 从argIndex向后读取argv，直到遇到"-"或"--"开头的参数
-            attached = []
-            index = start
-            while index < len(sys.argv) and not sys.argv[index].startswith('-'):
-                attached.append(sys.argv[index])
-                index += 1
-            return attached, index
+        for name in options:
+            for s in options[name].switch:
+                switchMap[s] = options[name]
 
-        if positiveOption is not None:
-            if positiveOption.noAttachedData:
-                positiveOption.data = True
-            else:
-                positiveOption.data, index = getAttached(index+1)
-            if setDefault:
-                defaultConfig[positiveOption.name] = positiveOption.data
-
-        elif negativeOption is not None:
-            negativeOption.data = False
-            if setDefault:
-                defaultConfig[negativeOption.name] = negativeOption.data
-        
-        else:
-            if index != 1:  
+            for s in options[name].switchNone:
+                switchNoneMap[s] = options[name]
+        index = 1
+        while index < len(sys.argv):
+            arg = sys.argv[index]
+            setDefault = False
+            if arg.startswith('--'):
+                setDefault = True
+                arg = arg[2:]
+            elif arg.startswith('-'):
+                arg = arg[1:]
+            elif index != 1:
                 print("无法解析的参数: ", arg)
-        index += 1
+            positiveOption = switchMap.get(arg)
+            negativeOption = switchNoneMap.get(arg)
+            
+            def getAttached(start: int):
+                # 从argIndex向后读取argv，直到遇到"-"或"--"开头的参数
+                attached = []
+                index = start
+                while index < len(sys.argv) and not sys.argv[index].startswith('-'):
+                    attached.append(sys.argv[index])
+                    index += 1
+                return attached, index
 
-    fileName = sys.argv[1] if len(sys.argv)>=2 else ""
-    if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
-    if not os.path.exists(fileName):
-        if not options["autoInitialize"].data:
-            raise FileNotFoundError("未找到文件")
-        maxIndex = max(map( lambda s:int(s[:-4]) , filter(lambda s: s.endswith(".cpp") and isInt(s[:-4]), os.listdir()) ))
-        maxIndex += 1
-        fileName = str(maxIndex) + '.cpp'
-        shutil.copyfile("init.cpp", fileName)
-        os.system(" ".join(["code", fileName]))
-        sys.exit()
+            if positiveOption is not None:
+                if positiveOption.noAttachedData:
+                    positiveOption.data = True
+                else:
+                    positiveOption.data, index = getAttached(index+1)
+                if setDefault:
+                    defaultConfig[positiveOption.name] = positiveOption.data
 
-    for name in options:
-        option = options[name]
-        if option.data != False:
-            option.apply()
-    
+            elif negativeOption is not None:
+                negativeOption.data = False
+                if setDefault:
+                    defaultConfig[negativeOption.name] = negativeOption.data
+            
+            else:
+                if index != 1:  
+                    print("无法解析的参数: ", arg)
+            index += 1
 
-    if log:
-        print(">", f"g++ {fileName} -o {fileName[:-4]}.exe " + ' '.join(compileArgs))
-    print("正在编译...", end='\r')
-    os.system(f"g++ {fileName} -o {fileName[:-4]}.exe " + ' '.join(compileArgs))
+        fileName = sys.argv[1] if len(sys.argv)>=2 else ""
+        if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
+        if not os.path.exists(fileName):
+            if not options["autoInitialize"].data:
+                raise FileNotFoundError("未找到文件")
+            if fileName == ".cpp":
+                maxIndex = max(map( lambda s:int(s[:-4]) , filter(lambda s: s.endswith(".cpp") and isInt(s[:-4]), os.listdir()) ))
+                maxIndex += 1
+                maxIndex = str(maxIndex)
+            else:
+                maxIndex = fileName[:-4]
+            fileName = str(maxIndex) + '.cpp'
+            shutil.copyfile("init.cpp", fileName)
+            os.system(" ".join(["code", fileName]))
+            sys.exit()
 
-    tm = time.perf_counter()
-    if log: 
-        print(">", f".\\{fileName[:-4]}.exe ".replace('/', '\\') + ' '.join(runArgs))
-    print("="*8 + ("DEBUG" if debug else "=====") + "="*8)
-    returns = os.system(f".\\{fileName[:-4]}.exe ".replace('/', '\\') + ' '.join(runArgs))
-    print("="*21)
-    print("Exited after {:.4f}s, with code {}.".format(time.perf_counter()-tm, returns))
+        for name in options:
+            option = options[name]
+            if option.data != False:
+                option.apply()
+        
+
+        if log:
+            print(">", f"g++ {fileName} -o {fileName[:-4]}.exe " + ' '.join(compileArgs))
+        print("正在编译...", end='\r')
+        os.system(f"g++ {fileName} -o {fileName[:-4]}.exe " + ' '.join(compileArgs))
+
+        tm = time.perf_counter()
+        if log: 
+            print(">", f".\\{fileName[:-4]}.exe ".replace('/', '\\') + ' '.join(runArgs))
+        print("="*8 + ("DEBUG" if debug else "=====") + "="*8)
+        returns = os.system(f".\\{fileName[:-4]}.exe ".replace('/', '\\') + ' '.join(runArgs))
+        print("="*21)
+        print("Exited after {:.4f}s, with code {}.".format(time.perf_counter()-tm, returns))
 
 
-    json.dump(defaultConfig, open( os.path.join(baseDir, 'config.json'), "w", encoding="UTF-8" ))
+        json.dump(defaultConfig, open( os.path.join(baseDir, 'config.json'), "w", encoding="UTF-8" ))
+    except KeyboardInterrupt:
+        print("终止")
+    except Exception as e:
+        print("未捕获的错误:", e)
+        print_exc()
