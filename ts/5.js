@@ -16,17 +16,20 @@ const ONE = BigInt("1");
 const TWO = BigInt("2");
 function quickPow(a, b, p) {
     let res = ONE;
-    for (; b != ZERO; b /= TWO, a = a * a % p)
+    for (; b != ZERO; b /= TWO, a = (a * a) % p)
         if (b % TWO == ONE)
-            res = res * a % p;
+            res = (res * a) % p;
     return res;
+}
+function equals(a, b) {
+    return a == b;
 }
 class PrimeChecking {
     static check(a, n, x, t) {
         let res = quickPow(a, x, n);
         let lst = res;
         for (let i = 0; i < t; i++) {
-            res = res * res % n;
+            res = (res * res) % n;
             if (res == ONE && lst != ONE && lst != n - ONE)
                 return true;
             lst = res;
@@ -47,7 +50,7 @@ class PrimeChecking {
             t++;
         }
         for (let i = 0; i < S; i++) {
-            let a = BigInt(Math.floor(Math.random() * 1e6) + 1) % (n - TWO) + TWO;
+            let a = (BigInt(Math.floor(Math.random() * 1e6) + 1) % (n - TWO)) + TWO;
             if (PrimeChecking.check(a, n, x, t))
                 return false;
         }
@@ -62,9 +65,8 @@ function dfs(element) {
         if (!(element instanceof HTMLElement))
             return;
         element.innerText = element.innerText.replaceAll(/[0-9]*([0-9]+.{0,1})*[0-9]/g, (s) => {
-            const num = BigInt(Array
-                .from(s)
-                .filter(e => (48 <= e.charCodeAt(0) && e.charCodeAt(0) < 58))
+            const num = BigInt(Array.from(s)
+                .filter((e) => 48 <= e.charCodeAt(0) && e.charCodeAt(0) < 58)
                 .reduce((a, b) => a + b));
             console.log(num);
             if (PrimeChecking.isPrime(num)) {
@@ -84,8 +86,8 @@ function dfs(element) {
     }
 }
 (function () {
-    'use strict';
-    // window.onload = () => 
+    "use strict";
+    // window.onload = () =>
     //     document
     //         .body
     //         .innerText
