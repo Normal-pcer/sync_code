@@ -1,19 +1,20 @@
 #include <string>
+#include <vector>
 
 namespace lib {
-    typedef std::iterator<std::random_access_iterator_tag, char> charIter;
     class string: public std::string {
     public:
-        string (char const *v) { std::string(v); };
-        string join(charIter begin, charIter end) {
-            bool flag = false;
-            string result = "";
-            for (auto pt = begin; pt != end; pt++;) {
-                if (flag)  result += *this;
-                result += *pt;
-                flag = true;
+        string() = default;
+        string(const char* s) : std::string(s) {}
+        string(std::string s) : std::string(s) {}
+        string join(std::vector<std::string> s, int reserve=0) {
+            string res = "";
+            if (reserve)  res.reserve(reserve);
+            for (auto& i : s) {
+                res += i;
+                res += *this;
             }
+            return res;
         }
     };
-    typedef string str;
 }

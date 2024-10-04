@@ -211,7 +211,7 @@ autoInitialize = False
 
 baseDir = os.path.join( os.getenv("localAppdata"), "RunCpp/" )
 
-compileArgs = ['-std=c++20', '-O2', '-Wall', '-Wextra']
+compileArgs = ['-std=c++20', '-O2', '-Wall', '-Wextra', '-finput-charset=utf-8']
 runArgs = []
 
 fileName = ""
@@ -288,6 +288,7 @@ if __name__ == '__main__':
         json.dump(defaultConfig, open( os.path.join(baseDir, 'config.json'), "w", encoding="UTF-8" ))
 
         fileName = sys.argv[1] if len(sys.argv)>=2 else previousFile
+        fileName = fileName.replace(' ', '_')
         if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
         if not os.path.exists(fileName):
             if not options["autoInitialize"].data:
@@ -298,7 +299,10 @@ if __name__ == '__main__':
                 maxIndex = str(maxIndex)
             else:
                 maxIndex = fileName[:-4]
+                previousFile = fileName.replace(' ', '_')
             fileName = str(maxIndex) + '.cpp'
+            with open( os.path.join(baseDir, 'previousFile.txt'), "w", encoding="UTF-8" ) as f:
+                f.write(previousFile)
             shutil.copyfile("init.cpp", fileName)
             os.system(" ".join(["code", '"' + fileName + '"']))
             sys.exit()
@@ -308,17 +312,21 @@ if __name__ == '__main__':
             if option.data != False:
                 option.apply()
         
+        previousFile = fileName
+        with open( os.path.join(baseDir, 'previousFile.txt'), "w", encoding="UTF-8" ) as f:
+            f.write(previousFile)
+        
 
         if log:
-            print(">", f"g++ {fileName} -o {fileName[:-4]}.exe " + ' '.join(compileArgs))
+            print(">", f"g++ \"{fileName}\" -o \"{fileName[:-4]}.exe\" " + ' '.join(compileArgs))
         print("正在编译...", end='\r')
-        os.system(f"g++ {fileName} -o {fileName[:-4]}.exe " + ' '.join(compileArgs))
+        os.system(f"g++ \"{fileName}\" -o \"{fileName[:-4]}.exe\" " + ' '.join(compileArgs))
 
         tm = time.perf_counter()
         if log: 
-            print(">", f".\\{fileName[:-4]}.exe ".replace('/', '\\') + ' '.join(runArgs))
+            print(">", f"\".\\{fileName[:-4]}.exe\" ".replace('/', '\\') + ' '.join(runArgs))
         print("="*8 + ("DEBUG" if debug else "=====") + "="*8)
-        returns = os.system(f".\\{fileName[:-4]}.exe ".replace('/', '\\') + ' '.join(runArgs))
+        returns = os.system(f"\".\\{fileName[:-4]}.exe\" ".replace('/', '\\') + ' '.join(runArgs))
         print("="*21)
         print("Exited after {:.4f}s, with code {}.".format(time.perf_counter()-tm, returns))
     except KeyboardInterrupt:

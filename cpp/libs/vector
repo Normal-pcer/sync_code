@@ -1,0 +1,46 @@
+#include <vector>
+
+namespace lib {
+    template <typename T>
+    class vector: public std::vector<T> {
+    public:
+        vector() = default;
+        vector(const std::initializer_list<T>& list): std::vector<T>(list) {}
+
+        vector<T> filter(const std::function <bool(const T&)>& f) {
+            vector<T> res;
+            for (auto& i: *this) {
+                if (f(i)) {
+                    res.push_back(i);
+                }
+            }
+            return res;
+        }
+
+        template <class ret>
+        std::vector<ret> map(const std::function <ret(const T&)>& f) {
+            std::vector<ret> res;
+            for (auto& i: *this) {
+                res.push_back(f(i));
+            }
+            return res;
+        }
+
+        bool all(const std::function <bool(const T&)>& f) {
+            for (auto& i: *this) {
+                if (!f(i)) {
+                    return false;
+                }
+            }
+        }
+
+        bool some(const std::function <bool(const T&)>& f) {
+            for (auto& i: *this) {
+                if (f(i)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
+}
