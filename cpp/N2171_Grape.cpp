@@ -3,7 +3,7 @@
  */
 
 #include <bits/stdc++.h>
-#pragma GCC optimize(3, "Ofast", "inline")
+// #pragma GCC optimize(3, "Ofast", "inline")
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
 #define debug if(DEBUG_MODE)
 #define log(f, a...) debug printf(f, ##a);
@@ -44,7 +44,7 @@ typedef uint16_t status;
 namespace Solution {
     const int _N = 10005, _K=10;
     int N, K, A, B;
-    int v[_N];  // !从 0 开始存
+    ll v[_N];  // !从 0 开始存
     ll sum = 0;
 
     // 考虑状态压缩，用一个整数的二进制位表示对应的葡萄是否被选择
@@ -102,14 +102,19 @@ namespace Solution {
             for(status j=0; j<(1<<K); j++) {  // 一种可能的情况
                 chkMax(max, F[i][j]);
                 if (A <= one[j] && one[j] < B) {
+                    debug {
+                        if (i==1 && j==3) {
+                            printf("\n%d\n", K-B+one[j]);
+                        }
+                    }
                     // 可以再取一个
                     // 易知 至多取最靠后（大端）的 几 个
-                    // one[i] = B-1 时 取 1 个
-                    // x = B-one[i]
-                    from(k, K-B+one[i], K-1) {  // 取第 k 个
+                    // one[j] = B-1 时 取 1 个
+                    // x = B-one[j]
+                    from(k, K-B+one[j], K-1) {  // 取第 k 个
                         if ( !(j & (1<<k)) ) {  // 没有被取过
-                            log("(%lld)F[%d][%d]+(%d)v[%d] -> (%lld)F[%d][%d]  {%d %d %d}\n", F[i][j], i, j, v[i+k], 
-                                i+k, F[i][j | (1<<k)], i, j|(1<<k), i, j, k);
+                            // log("(%lld)F[%d][%d]+(%d)v[%d] -> (%lld)F[%d][%d]  {%d %d %d}\n", F[i][j], i, j, v[i+k], 
+                            //     i+k, F[i][j | (1<<k)], i, j|(1<<k), i, j, k);
                             chkMax(F[i][j | (1<<k)], F[i][j] + v[i+k]);
                         }
                     }
@@ -141,7 +146,8 @@ namespace Solution {
         // printf("%lld\n", ans);
         // 从最大值计算最大差值
         ll remain = sum - max;
-        printf("%lld\n", max - remain);
+        // printf("%lld\n", max - remain);
+        std::cout << max - remain << std::endl;
     }
 }
 
