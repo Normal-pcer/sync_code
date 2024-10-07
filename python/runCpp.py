@@ -48,8 +48,12 @@ class ReplaceOption(Option):
         with open(fileName, "r", encoding="UTF-8") as f:
             code = f.read()
         def callback(s):
-            with open(os.path.join( os.path.split(fileName)[0], s[1] ), "r", encoding="UTF-8") as f:
-                return f.read()
+            try:
+                with open(os.path.join( os.path.split(fileName)[0], s[1] ), "r", encoding="UTF-8") as f:
+                    return f.read()
+            except FileNotFoundError:
+                with open(os.path.join( os.path.split(fileName)[0], s[1]+'.hpp' ), "r", encoding="UTF-8") as f:
+                    return f.read()
         code = re.sub("#include \"(.*)\"", callback, code)
         with open(fileName, "w", encoding="UTF-8") as f:
             f.write(code)
