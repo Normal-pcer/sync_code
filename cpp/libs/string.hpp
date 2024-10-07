@@ -7,10 +7,12 @@ namespace lib {
         string() = default;
         string(const char* s) : std::string(s) {}
         string(std::string s) : std::string(s) {}
-        string join(std::vector<std::string> s, int reserve=0) {
+        string join(std::vector<std::string> s) {
             string res = "";
-            if (reserve)  res.reserve(reserve);
-            for (auto& i : s) {
+            size_t size = 0;
+            for (auto& i: s)  size += i.size();
+            res.reserve(size);
+            for (auto& i: s) {
                 res += i;
                 res += *this;
             }

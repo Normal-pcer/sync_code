@@ -4,6 +4,12 @@
 // 
 
 namespace Solution {
+
+    
+    void init() {
+
+    }
+
     void solve() {
         // Your code here...
     }
