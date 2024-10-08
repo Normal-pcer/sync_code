@@ -1,6 +1,4 @@
-#include <string>
-#include <vector>
-
+#include <bits/stdc++.h>
 namespace lib {
     class string: public std::string {
     public:
@@ -17,6 +15,23 @@ namespace lib {
                 res += *this;
             }
             return res;
+        }
+        vector<string> split(std::vector<char> c={' ', '\n', '\t'}) {
+            vector<string> res;
+            size_t start = 0;
+            for (size_t i = 0; i < this->size(); i++) {
+                if (std::find(c.begin(), c.end(), (*this)[i]) != c.end()) {
+                    if (i - start > 0)
+                        res.push_back(this->substr(start, i - start));
+                    start = i + 1;
+                }
+            }
+            if (start < this->size())
+                res.push_back(this->substr(start, this->size()));
+            return res;
+        }
+        vector<string> split(char c) {
+            return split(vector<char>{c});
         }
     };
 }

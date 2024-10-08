@@ -1,3 +1,4 @@
+#include <bits/stdc++.h>
 namespace lib{
 	// template <const size_t MAXSIZE>
 	struct IO {
@@ -12,7 +13,15 @@ namespace lib{
         }
 		inline bool blank(char ch) { return ch==' ' or ch=='\n' or ch=='\r' or ch=='\t'; }
 		inline bool isd(char x) {return (x>='0' and x<='9');}
-
+        std::string input() {
+            char c = gc();
+            std::string res="";
+            while((c&&!blank(c)) || c==' ') {
+                res.push_back(c);
+                c = gc();
+            }
+            return res;
+        }
 		template <class T>
 		inline void scan(T &x) {
 			double tmp=1;
@@ -85,9 +94,6 @@ namespace lib{
             T x;
             scan(x);
             return x;
-        }
-        inline std::string input() {
-            return read<std::string>();
         }
 
         // 流式输入输出

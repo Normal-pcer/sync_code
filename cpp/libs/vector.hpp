@@ -1,5 +1,4 @@
-#include <vector>
-
+#include <bits/stdc++.h>
 namespace lib {
     template <typename T>
     class vector: public std::vector<T> {
@@ -7,6 +6,7 @@ namespace lib {
         vector() = default;
         vector(const std::initializer_list<T>& list): std::vector<T>(list) {}
         vector(const vector<T>& other): std::vector<T>(other) {}
+        vector(const size_t size): std::vector<T>(size) {}
 
         void filtered(const std::function <bool(const T&)>& f) {
             auto ptr1 = this->begin();

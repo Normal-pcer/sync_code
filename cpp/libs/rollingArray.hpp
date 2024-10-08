@@ -1,3 +1,4 @@
+#include <bits/stdc++.h>
 namespace lib {
     template <typename T, const long long sz>
     class RollingArray {  // 滚动数组

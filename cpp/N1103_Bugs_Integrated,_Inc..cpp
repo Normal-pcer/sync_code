@@ -1,3 +1,7 @@
+/**
+ * @link https://neooj.com:8082/oldoj/problem.php?id=1103
+ */
+
 #include <bits/stdc++.h>
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
 #define debug if(DEBUG_MODE)
@@ -251,7 +255,6 @@ namespace lib{
 	IO io;
     const char endl = '\n';
 }
-
 #include <bits/stdc++.h>
 namespace lib {
     namespace bit {
@@ -341,12 +344,9 @@ namespace lib {
     template <typename T, const unsigned long long sz>
     class MapArray {
     public:
-        T arr[sz];
+        const T arr[sz];
         MapArray() = default;
         MapArray(const MapArray<T, sz>&) = default;
-        MapArray(std::initializer_list<T>& il) {
-            std::copy(il.begin(), il.end(), arr);
-        }
 
         T& operator[](const unsigned long long idx) {
             return arr[idx];
@@ -363,27 +363,148 @@ namespace lib {
     };
 }
 using namespace lib;
+
+/*
+Bugs Integrated, Inc. is a major manufacturer of advanced memory chips. 
+Bugs Integrated, Inc. 是一个制造内存芯片的主要厂商。
+They are launching production of a new six terabyte Q-RAM chip. 
+他们正在启动一个新的 6TB Q-RAM 芯片制造项目。
+Each chip consists of six unit squares arranged in a form of a 2 × 3 rectangle. 
+每一个芯片由六个排列成 2*3 矩形的的单位方块组成。
+The way Q-RAM chips are made is such that one takes a rectangular plate of silicon 
+制造 Q-RAM 芯片的方法是把矩形硅片分割成
+divided into N × M unit squares. Then all squares are tested carefully and the bad ones 
+N*M 的单位方块。接下来小心地测试所有的方块并
+are marked with a black marker.  Finally, the plate of silicon is cut into memory chips. 
+将坏块标黑。最终，硅片被切割成了若干个芯片。
+Each chip consists of 2 × 3 (or 3 × 2) unit squares. Of course, no chip can contain any 
+每一个芯片包含 2*3 或 3*2 的单位方块。当然，芯片不能包括
+bad (marked) squares. It might not be possible to cut the plate so that every good unit 
+坏块。可能不存在切割方案使得所有的好块
+square is a part of some memory chip. The corporation wants to waste as little good squares 
+都被制造成芯片。公司希望尽可能少地浪费好块。
+as possible. Therefore they would like to know how to cut the plate to make the maximum 
+因此，他们想知道如何切割硅片才能制造出尽可能多的芯片。
+number of chips possible. [Task] You are given the dimensions of several silicon plates 
+你将被告知几个硅片的尺寸
+and a list of all bad unit squares for each plate. Your task is to write a program that 
+和每个硅片上所有坏块的位置。你的任务是编写一个程序，
+computes for each plate the maximum number of chips that can be cut out of the plate.
+可以计算每块硅片上可以切割出多少个芯片。
+#Input
+The first line of the input file consists of a single integer D (1 <= D<= 5), denoting the 
+输入文件的第一行包含一个整数 D (1 <= D<= 5)，表示
+number of silicon plates. D blocks follow, each describing one silicon plate. The first line 
+硅片的数量。接下来的 D 部分，描述了每个硅片。
+of each block contains three integers N (1 <= N<= 150), M (1 <= M<= 10), K (0 <= K<= MN) 
+每块的第一行包含三个空格分割的整数 N, M, K，
+separated by single spaces. N is the length of the plate, M is its height and K is the number 
+N 是硅片的长度，M 是其高度，K 是坏块的数量。
+of bad squares in the plate. The following K lines contain a list of bad squares. Each line 
+接下来的 K 行包含坏块的列表。每行
+consists of two integers x and y (1 <= x<= N, 1<= y<= M) – coordinates of one bad square 
+包含两个整数 x 和 y (1 <= x<= N, 1<= y<= M) - 坏块的坐标。
+(the upper left square has coordinates [1, 1], the bottom right is [N,M]).
+（左上角是[1, 1]，右下角是[N, M]）
+#Output
+For each plate in the input file output a single line containing the maximum number of 
+对于输入文件中的每个硅片，输出一行，包含可以切割出
+memory chips that can be cut out of the plate.
+的芯片的最大数量。
+*/
+
+
+int D = io.read();
+
 namespace Solution {
+    const MapArray<int, 16> pow3 = {1, 3, 9, 27, 81, 243, 729, 2187, 6561, 
+                    19683, 59049, 177147, 531441, 1594323, 4782969, 14348907};
+    const int _N=155, _M=10, _K=1505;
+    int N, M, K;  // 长度，高度和坏块数量
+    // 状态压缩
+    // 连续 表示 i, i-1, i-2
+    // 三进制，2 表示连续三行本位没被占用，1 表示两行，0 表示一行或零行。
+    RollingArray2<int[59049], 4> F;  // F[i][j] ~ 第 i 行状态为 j，芯片数量最大值
+    std::bitset<_M> bad[_N];  // bad[i][j] 表示第 i 行第 j 列是否为坏块，0 开始存
 
-    
+    // 对于一个三进制状态 src，从第 pos 位开始向右搜索所有子集
+    // 对于能够保证三进制下每一位不大于 lmt 的子集，调用回调函数 f
+    void subset(
+        int pos,  // 当前的数位
+        int pst,  // 先前的数字和（不包含pos位）
+        int src,  // 要搜索的超集（三进制）
+        int lmt,  // 限制条件；子集每一位必须大于等于 lmt
+        const std::function<void(int)>& f  // 回调函数，传入子集
+    ) {
+        // 先前搜索到的一定是一个正解
+        f(pst);
+        if (pos >= M) {
+            // 结束递归
+            return;
+        }
+
+        // 枚举向后的每一位
+        from(i, pos, M-1) {
+            int digit = src / pow3(i) % 3;
+            // 如果这位符合要求
+            if (digit >= lmt) {
+                subset(i+1, pst + digit * pow3(i), src, lmt, f);
+            }
+        }
+    }
+
     void init() {
-
+        std::memset(bad, 0, sizeof(bad));
+        std::memset(F.arr, 0, sizeof(F.arr));
+        io >> N >> M >> K;
+        int x, y;
+        from(i, 0, K-1) {
+            io >> x >> y;
+            bad[x-1][y-1] = true;
+        }
     }
 
     void solve() {
         init();
-        string s = io.input();
-        std::cout << s << std::endl;
-        for(auto &s0: s.split()) {
-            std::cout << s0;
+        
+        // DP 
+        from(i, 2, N-1) {  // 行号
+            // 对于这个行中的每一个状态
+            // 从左到右枚举列号作为左下角
+            // 如果一行有连续的三个大于等于 1，可以放置一个横排
+            // 如果一行有连续的两个等于 2，可以放置一个竖排
+
+            // 需要先处理这个行的初始状态
+            int prev = 0;
+            from(j, 0, M-1) {  // 第 j 列
+                int digit=0;
+                if (!bad[i-1][j]) {
+                    digit=1;
+                    if (!bad[i-2][j]) {
+                        digit=2;
+                    }
+                }
+                prev += pow3(j) * digit;
+            }
+
+            // 这一行的初始状态处理完毕
+            // 对于这一行所有的可能状态，都是初始状态的若干位设 0
+            // 枚举所有可能的未来状态
+
+            // 尝试加一个横块
+            subset(0, 0, prev, 2, [&](int st){
+                for (int k=0; k+2<M; k++) {  // 左下角
+                    // if (prev)
+                }
+            });
         }
     }
 }
 
 
-int main() {;
-
+int main() {
     initDebug;
-    Solution::solve();
+    while (D --> 0)
+        Solution::solve();
     return 0;
 }
