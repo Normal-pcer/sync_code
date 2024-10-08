@@ -417,7 +417,7 @@ memory chips that can be cut out of the plate.
 int D = io.read();
 
 namespace Solution {
-    const MapArray<int, 16> pow3 = {1, 3, 9, 27, 81, 243, 729, 2187, 6561, 
+    const int pow3[] = {1, 3, 9, 27, 81, 243, 729, 2187, 6561, 
                     19683, 59049, 177147, 531441, 1594323, 4782969, 14348907};
     const int _N=155, _M=10, _K=1505;
     int N, M, K;  // 长度，高度和坏块数量
@@ -445,17 +445,17 @@ namespace Solution {
 
         // 枚举向后的每一位
         from(i, pos, M-1) {
-            int digit = src / pow3(i) % 3;
+            int digit = src / pow3[i] % 3;
             // 如果这位符合要求
             if (digit >= lmt) {
-                subset(i+1, pst + digit * pow3(i), src, lmt, f);
+                subset(i+1, pst + digit * pow3[i], src, lmt, f);
             }
         }
     }
 
     void init() {
-        std::memset(bad, 0, sizeof(bad));
         std::memset(F.arr, 0, sizeof(F.arr));
+        from(i, 0, N-1)  bad[i].reset();
         io >> N >> M >> K;
         int x, y;
         from(i, 0, K-1) {
@@ -484,7 +484,7 @@ namespace Solution {
                         digit=2;
                     }
                 }
-                prev += pow3(j) * digit;
+                prev += pow3[j] * digit;
             }
 
             // 这一行的初始状态处理完毕
@@ -492,11 +492,34 @@ namespace Solution {
             // 枚举所有可能的未来状态
 
             // 尝试加一个横块
-            subset(0, 0, prev, 2, [&](int st){
+            #define digitAt(x, p) (x / pow3[p] % 3)
+            subset(0, 0, prev, 1, [&i](int st){
                 for (int k=0; k+2<M; k++) {  // 左下角
-                    // if (prev)
+                    // 判断连续三位是否均可行
+                    if (digitAt(st, k) >= 1 && digitAt(st, k+1) >= 1 && digitAt(st, k+2) >= 1) {
+                        // 说明可以在这里放一个横块
+                        int after = st + pow3[k] + pow3[k+1] + pow3[k+2];
+                        // 可以转移
+                        chkMax(F[i][after], F[i-1][st] + 1);
+                    }
                 }
             });
+
+            // 尝试加一个竖块
+            subset(0, 0, prev, 2, [&i](int st){
+                for (int k=0; k+1<M; k++) {  // 右下角
+                    // 判断连续两位是否均可行
+                    if (digitAt(st, k) >= 2 && digitAt(st, k+1) >= 2) {
+                        // 说明可以在这里放一个竖块
+                        int after = st + pow3[k] + pow3[k+1];
+                        // 可以转移
+                        chkMax(F[i][after], F[i-1][st] + 1);
+                    }
+                }
+            });
+
+
+            #undef digitAt
         }
     }
 }
