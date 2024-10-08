@@ -1,3 +1,7 @@
+/**
+ * 
+ */
+
 #include "lib"
 
 // input:
@@ -11,7 +15,8 @@ namespace Solution {
     }
 
     void solve() {
-        // Your code here...
+        init();
+
     }
 }
 

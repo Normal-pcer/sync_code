@@ -1,0 +1,2 @@
+#include<bits/stdc++.h>
+int64_t q,i,a[1<<19];void f(int l,int r){if(l^r){int m=l+r>>1,i,j;for(f(j=l,m),f(i=m+1,r);i<=r;i++,q+=m-j+1)for(;j<=m&a[j]<=a[i];j++);std::sort(a+l,a+r+1);}}main(){for(;std::cin>>a[i++];);f(1,*a);std::cout<<q;}
