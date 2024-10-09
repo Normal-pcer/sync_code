@@ -31,118 +31,6 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 
 #include <bits/stdc++.h>
-namespace lib {
-    template <typename T>
-    class vector: public std::vector<T> {
-    public:
-        vector() = default;
-        vector(const std::initializer_list<T>& list): std::vector<T>(list) {}
-        vector(const vector<T>& other): std::vector<T>(other) {}
-        vector(const size_t size): std::vector<T>(size) {}
-
-        void filtered(const std::function <bool(const T&)>& f) {
-            auto ptr1 = this->begin();
-            auto ptr2 = this->begin();
-
-            for (; ptr1!=this->end(); ptr1++) {
-                if (f(*ptr1))  *(ptr2++) = *ptr1;
-            }
-
-            this->resize(ptr2 - this->begin());
-        }
-
-        vector<T> filter(const std::function <bool(const T&)>& f) {
-            vector<T> res;
-            for (auto& i: *this) {
-                if (f(i)) {
-                    res.push_back(i);
-                }
-            }
-            return res;
-        }
-
-        template <typename Func>  
-        auto map(Func&& f) const {  
-            vector<decltype(std::invoke(std::forward<Func>(f), std::declval<const T&>()))> result;
-            for (auto &i: *this) {
-                result.push_back(std::invoke(std::forward<Func>(f), i));
-            }
-            return result;  
-        }
-
-        template <typename Func>
-        auto reduce(Func&& f) const { 
-            auto result = this->front();
-            for (size_t i=1; i<this->size(); i++) {
-                result = f(result, this->at(i));
-            }
-            return result;
-        }
-        
-        bool all(const std::function <bool(const T&)>& f) {
-            for (auto& i: *this) {
-                if (!f(i)) {
-                    return false;
-                }
-            }
-        }
-
-        bool some(const std::function <bool(const T&)>& f) {
-            for (auto& i: *this) {
-                if (f(i)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        inline void push(T&& t) {
-            this->push_back(t);
-        }
-    };
-}
-
-#define lambda(expr, args...) [&](args) {return expr;}
-#define select_func(ret, name, args...) static_cast<ret(*)args>(name)
-
-#include <bits/stdc++.h>
-namespace lib {
-    class string: public std::string {
-    public:
-        string() = default;
-        string(const char* s) : std::string(s) {}
-        string(std::string s) : std::string(s) {}
-        string join(std::vector<std::string> s) {
-            string res = "";
-            size_t size = 0;
-            for (auto& i: s)  size += i.size();
-            res.reserve(size);
-            for (auto& i: s) {
-                res += i;
-                res += *this;
-            }
-            return res;
-        }
-        vector<string> split(std::vector<char> c={' ', '\n', '\t'}) {
-            vector<string> res;
-            size_t start = 0;
-            for (size_t i = 0; i < this->size(); i++) {
-                if (std::find(c.begin(), c.end(), (*this)[i]) != c.end()) {
-                    if (i - start > 0)
-                        res.push_back(this->substr(start, i - start));
-                    start = i + 1;
-                }
-            }
-            if (start < this->size())
-                res.push_back(this->substr(start, this->size()));
-            return res;
-        }
-        vector<string> split(char c) {
-            return split(vector<char>{c});
-        }
-    };
-}
-#include <bits/stdc++.h>
 namespace lib{
 	// template <const size_t MAXSIZE>
 	struct IO {
@@ -255,113 +143,6 @@ namespace lib{
 	IO io;
     const char endl = '\n';
 }
-#include <bits/stdc++.h>
-namespace lib {
-    namespace bit {
-        template <class T, class Func>
-        inline void traverse1(T x, Func&& f) {  // 按位遍历所有的 1
-            for (; x; x&=x-1)  f(x&-x);
-        }
-        template <class T>
-        inline bool greater(T x, T y) {  // 按位大于
-            return x & ~y;
-        }
-    }
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const int p>
-    class mod {
-    public:
-        T data;
-
-        mod() = default;
-        mod(T num) : data(positive(num % p)) {}
-
-        T positive(T num) { 
-            if (num>=0)  return num;
-            if (num+p>=0)  return num+p;
-            return num + p * ((-num) / p + 1);
-        }
-
-        mod operator+(const mod &other) { return mod(positive(data + other.data) % p); }
-        mod operator-(const mod &other) { return mod(positive(data - other.data) % p); }
-        mod operator*(const mod &other) { return mod(positive(data * other.data) % p); }
-        mod operator/(const mod &other) { return mod((data * other.data)); }
-    };
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const long long sz>
-    class RollingArray {  // 滚动数组
-    public: 
-        T arr[sz];
-        long long first = 0;  // arr[0] 对应的原下标
-        
-
-        void forward() {
-            for (long long i=0; i<sz-1; i++) {
-                std::memcpy(arr+i, arr+i+1, sizeof(T));
-            }
-            first++;
-        }
-
-        void backward() {
-            for (long long i=sz-1; i>0; i--) {
-                std::memcpy(arr+i, arr+i-1, sizeof(T));
-            }
-            first--;
-        }
-
-        T& operator[](long long i) {
-            long long real = i - first;
-            while (real >= sz) {
-                real--;
-                this->forward();
-            }
-            while (real < 0LL) {
-                real++;
-                this->backward();
-            }
-            return arr[real];
-        }
-    };
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const long long sz>
-    class RollingArray2 {  // 滚动数组 - 另一种实现思路
-    public: 
-        T arr[sz];
-
-        T &operator[](long long idx) {
-            return arr[idx % sz];
-        }
-    };
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const unsigned long long sz>
-    class MapArray {
-    public:
-        const T arr[sz];
-        MapArray() = default;
-        MapArray(const MapArray<T, sz>&) = default;
-
-        T& operator[](const unsigned long long idx) {
-            return arr[idx];
-        }
-        const T& operator[](const unsigned long long idx) const {
-            return arr[idx];
-        }
-        T& operator()(const unsigned long long idx) {
-            return arr[idx];
-        }
-        const T& operator()(const unsigned long long idx) const {
-            return arr[idx];
-        }
-    };
-}
 using namespace lib;
 
 /*
@@ -413,120 +194,155 @@ memory chips that can be cut out of the plate.
 的芯片的最大数量。
 */
 
-
-int D = io.read();
+int D;
 
 namespace Solution {
-    const int pow3[] = {1, 3, 9, 27, 81, 243, 729, 2187, 6561, 
-                    19683, 59049, 177147, 531441, 1594323, 4782969, 14348907};
-    const int _N=155, _M=10, _K=1505;
-    int N, M, K;  // 长度，高度和坏块数量
-    // 状态压缩
-    // 连续 表示 i, i-1, i-2
-    // 三进制，2 表示连续三行本位没被占用，1 表示两行，0 表示一行或零行。
-    RollingArray2<int[59049], 4> F;  // F[i][j] ~ 第 i 行状态为 j，芯片数量最大值
-    std::bitset<_M> bad[_N];  // bad[i][j] 表示第 i 行第 j 列是否为坏块，0 开始存
 
-    // 对于一个三进制状态 src，从第 pos 位开始向右搜索所有子集
-    // 对于能够保证三进制下每一位不大于 lmt 的子集，调用回调函数 f
-    void subset(
-        int pos,  // 当前的数位
-        int pst,  // 先前的数字和（不包含pos位）
-        int src,  // 要搜索的超集（三进制）
-        int lmt,  // 限制条件；子集每一位必须大于等于 lmt
-        const std::function<void(int)>& f  // 回调函数，传入子集
-    ) {
-        // 先前搜索到的一定是一个正解
-        f(pst);
-        if (pos >= M) {
-            // 结束递归
-            return;
-        }
+    const int _N = 153, _M = 11;
+    int N, M, K;
 
-        // 枚举向后的每一位
-        from(i, pos, M-1) {
-            int digit = src / pow3[i] % 3;
-            // 如果这位符合要求
-            if (digit >= lmt) {
-                subset(i+1, pst + digit * pow3[i], src, lmt, f);
-            }
+    const int pow3[] = {1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147};
+
+
+    #define COLUMN_WIDTH_LIMIT (M)
+
+    /*
+    状态压缩。压了个寂寞。
+    用三进制数表示两行——i, i-1 中对应列的占用状态。
+    0 : 均未占用
+    1 : 仅 i-1 行占用
+    2 : i 行被占用。此时无论 i-1 行是否被占用。
+
+    用若干个三进制位构成一个“压缩状态”整数。其中，低位数代表靠左的块。
+    */
+
+    int F[_N][59049];  // 遍历到前 i 行，且第 i 行的“压缩状态”为 j，此时的最大数量
+    int prev[_M];  // 前一行的状态数组
+    int cur[_M];  // 当前行的状态数组
+    bool broken[_N][_M];  // 是否为坏块
+
+    /**
+     * 将一个整数转为三进制数组。数组靠前的项表示低位。
+     * 总会对数组 COLUMN_WIDTH_LIMIT 之前的项进行处理。多余的位会置 0。
+     * @param n - 将被转换的整数
+     * @param result - 存储结果的数组
+     */
+    void integerToTernaryDigits(int n, int *result) {
+        from(i, 0, COLUMN_WIDTH_LIMIT-1) {
+            result[i] = n % 3;
+            n /= 3;
         }
     }
 
+    /**
+     * 将一个三进制数组转为整数。规则参考 void integerToTernaryDigits(int, int*)
+     * @param digits - 将被转换的数组
+     * @return - 转换后的整数
+     */
+    int ternaryDigitsToInteger(int *digits) {
+        int res = 0;
+        from(i, 0, COLUMN_WIDTH_LIMIT-1) {
+            res += digits[i] * pow3[i];
+        }
+        return res;
+    }
+
+    /**
+     * 搜索，在给定状态下放置若干个芯片。
+     * 将会自动记录结果。
+     * 
+     * @param ptr - 指针位置。这个位置并未被遍历过
+     * @param row_index - 当前行的下标。
+     * @param prs_count - 当前*整个地图上*已经放置的芯片数量
+     *
+     */
+    void dfs_setBlocksInStatus(
+        int ptr,
+        int row_index,
+        int prs_count
+    ) {
+        // 更新状态
+        // 边界条件
+        if (ptr >= COLUMN_WIDTH_LIMIT) {
+            chkMax(F[row_index][ternaryDigitsToInteger(cur)], prs_count);
+            return;
+        }
+
+        // 竖向放置
+        if (
+            ptr + 1 < COLUMN_WIDTH_LIMIT    &&  // 横向不溢出
+            !prev[ptr]    &&  // 先前行不占用 
+            !prev[ptr+1]  &&
+            !cur[ptr]     &&  // 当前行不占用
+            !cur[ptr+1]
+        ) {
+            // 修改状态——这些格子被完全占用
+            cur[ptr] = cur[ptr+1] = 2;
+
+            // 进一步搜索
+            dfs_setBlocksInStatus(ptr+2, row_index, prs_count+1);
+
+            // 解除占用
+            cur[ptr] = cur[ptr+1] = 2;
+        }
+
+        // 横向放置
+        if (
+            ptr + 2 < COLUMN_WIDTH_LIMIT            &&  // 横向不溢出
+            !cur[ptr] && !cur[ptr+1] && !cur[ptr+2]     // 不占用
+        ) {
+            cur[ptr] = cur[ptr+1] = cur[ptr+2] = 2;
+            dfs_setBlocksInStatus(ptr+3, row_index, prs_count+1);
+            cur[ptr] = cur[ptr+1] = cur[ptr+2] = 0;
+        }
+
+        dfs_setBlocksInStatus(ptr+1, row_index, prs_count);
+    }
+
     void init() {
-        std::memset(F.arr, 0, sizeof(F.arr));
-        from(i, 0, N-1)  bad[i].reset();
         io >> N >> M >> K;
+        std::memset(broken, false, sizeof(broken));
+
+        std::memset(F, -1, sizeof(F));
+
         int x, y;
         from(i, 0, K-1) {
             io >> x >> y;
-            bad[x-1][y-1] = true;
+            broken[x][y-1] = true;
         }
     }
 
     void solve() {
         init();
         
-        // DP 
-        from(i, 2, N-1) {  // 行号
-            // 对于这个行中的每一个状态
-            // 从左到右枚举列号作为左下角
-            // 如果一行有连续的三个大于等于 1，可以放置一个横排
-            // 如果一行有连续的两个等于 2，可以放置一个竖排
+        // 第一行的状态
+        from(i, 0, M-1)  prev[i] = broken[1][i]? 2: 1;
 
-            // 需要先处理这个行的初始状态
-            int prev = 0;
-            from(j, 0, M-1) {  // 第 j 列
-                int digit=0;
-                if (!bad[i-1][j]) {
-                    digit=1;
-                    if (!bad[i-2][j]) {
-                        digit=2;
-                    }
+        F[1][ternaryDigitsToInteger(prev)] = 0;
+        from(i, 2, N) {  // 行号
+            from(s, 0, pow3[M]-1) {  // 上一行的状态
+                // 上一行对应项不可达，跳过
+                if (F[i-1][s] == -1)  continue;
+
+                integerToTernaryDigits(s, prev);  // 上一行
+                from(k, 0, M-1) {  // 当前行的初始状态
+                    if (broken[i][k])  cur[k] = 2;
+                    else  cur[k] = std::max(prev[k]-1, 0);
                 }
-                prev += pow3[j] * digit;
+
+                dfs_setBlocksInStatus(0, i, F[i-1][s]);  // 在此基础上添加芯片
             }
-
-            // 这一行的初始状态处理完毕
-            // 对于这一行所有的可能状态，都是初始状态的若干位设 0
-            // 枚举所有可能的未来状态
-
-            // 尝试加一个横块
-            #define digitAt(x, p) (x / pow3[p] % 3)
-            subset(0, 0, prev, 1, [&i](int st){
-                for (int k=0; k+2<M; k++) {  // 左下角
-                    // 判断连续三位是否均可行
-                    if (digitAt(st, k) >= 1 && digitAt(st, k+1) >= 1 && digitAt(st, k+2) >= 1) {
-                        // 说明可以在这里放一个横块
-                        int after = st + pow3[k] + pow3[k+1] + pow3[k+2];
-                        // 可以转移
-                        chkMax(F[i][after], F[i-1][st] + 1);
-                    }
-                }
-            });
-
-            // 尝试加一个竖块
-            subset(0, 0, prev, 2, [&i](int st){
-                for (int k=0; k+1<M; k++) {  // 右下角
-                    // 判断连续两位是否均可行
-                    if (digitAt(st, k) >= 2 && digitAt(st, k+1) >= 2) {
-                        // 说明可以在这里放一个竖块
-                        int after = st + pow3[k] + pow3[k+1];
-                        // 可以转移
-                        chkMax(F[i][after], F[i-1][st] + 1);
-                    }
-                }
-            });
-
-
-            #undef digitAt
         }
+        int ans = 0;
+        from(i, 0, pow3[M]-1)  chkMax(ans, F[N][i]);
+        io << ans << endl;
     }
 }
 
 
 int main() {
     initDebug;
+    io.scan(D);
     while (D --> 0)
         Solution::solve();
     return 0;
