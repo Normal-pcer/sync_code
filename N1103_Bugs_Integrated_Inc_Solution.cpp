@@ -112,6 +112,8 @@ void Bugs_Integrated()
 }
 int main()
 {
+    freopen("N1103.in", "r", stdin);
+    freopen("N1103.out", "w", stdout);
     for (int t = read<int>(); t--;)
         Bugs_Integrated();
     return 0;

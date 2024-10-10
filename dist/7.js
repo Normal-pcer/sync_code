@@ -60,7 +60,8 @@ var _7;
         }
     }
     function main() {
-        let i = BigInt("500000000000000000");
+        // 找几个略小于 1e18 的素数
+        let i = BigInt("1000000000000000000");
         for (;; i--) {
             if (PrimeChecking.isPrime(i)) {
                 console.log(i);

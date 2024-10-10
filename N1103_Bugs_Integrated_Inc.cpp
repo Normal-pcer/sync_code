@@ -143,6 +143,18 @@ namespace lib{
 	IO io;
     const char endl = '\n';
 }
+#include <bits/stdc++.h>
+namespace lib {
+    template <typename T, const long long sz>
+    class RollingArray2 {  // 滚动数组 - 另一种实现思路
+    public: 
+        T arr[sz];
+
+        T &operator[](long long idx) {
+            return arr[idx % sz];
+        }
+    };
+}
 using namespace lib;
 
 /*
@@ -216,10 +228,11 @@ namespace Solution {
     用若干个三进制位构成一个“压缩状态”整数。其中，低位数代表靠左的块。
     */
 
-    int F[_N][59049];  // 遍历到前 i 行，且第 i 行的“压缩状态”为 j，此时的最大数量
+    RollingArray2<int[59049], 2> F;  // 遍历到前 i 行，且第 i 行的“压缩状态”为 j，此时的最大数量
     int prev[_M];  // 前一行的状态数组
     int cur[_M];  // 当前行的状态数组
     bool broken[_N][_M];  // 是否为坏块
+
 
     /**
      * 将一个整数转为三进制数组。数组靠前的项表示低位。
@@ -268,6 +281,16 @@ namespace Solution {
             return;
         }
 
+        // 剪枝
+        // 如果 2*2 范围非空——直接跳过
+        if (
+            ptr+1 < COLUMN_WIDTH_LIMIT &&
+            (cur[ptr] || cur[ptr+1])
+        ) {
+            dfs_setBlocksInStatus(ptr+1, row_index, prs_count);
+            return;
+        }
+
         // 竖向放置
         if (
             ptr + 1 < COLUMN_WIDTH_LIMIT    &&  // 横向不溢出
@@ -283,7 +306,7 @@ namespace Solution {
             dfs_setBlocksInStatus(ptr+2, row_index, prs_count+1);
 
             // 解除占用
-            cur[ptr] = cur[ptr+1] = 2;
+            cur[ptr] = cur[ptr+1] = 0;
         }
 
         // 横向放置
@@ -303,7 +326,7 @@ namespace Solution {
         io >> N >> M >> K;
         std::memset(broken, false, sizeof(broken));
 
-        std::memset(F, -1, sizeof(F));
+        std::memset(F[1], -1, sizeof(F[1]));
 
         int x, y;
         from(i, 0, K-1) {
@@ -320,6 +343,7 @@ namespace Solution {
 
         F[1][ternaryDigitsToInteger(prev)] = 0;
         from(i, 2, N) {  // 行号
+            std::memset(F[i], -1, sizeof(F[i]));
             from(s, 0, pow3[M]-1) {  // 上一行的状态
                 // 上一行对应项不可达，跳过
                 if (F[i-1][s] == -1)  continue;
@@ -342,6 +366,8 @@ namespace Solution {
 
 int main() {
     initDebug;
+    freopen("N1103.in", "r", stdin);
+    freopen("N1103.out", "w", stdout);
     io.scan(D);
     while (D --> 0)
         Solution::solve();
