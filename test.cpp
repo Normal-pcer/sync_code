@@ -19,8 +19,8 @@
 #define ensure(con, otw) ((con)? (con): (otw))
 #define check(v, con, otw) (((v) con)? (v): (otw))
 #define optional(ptr) if(ptr)ptr
-#define never if(0)
-#define always if(1)
+#define never if constexpr(0)
+#define always if constexpr(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
 #define Infinity 2147483647
 #define putInt(n) printf("%d\n",(n))
@@ -30,7 +30,6 @@ typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 
-typedef __int128 lll;
 
 ;
 namespace Solution {
@@ -42,9 +41,10 @@ namespace Solution {
 
     void solve() {
         init();
-        lll a=1;
-        a<<=32;
-        std::cout << (ll)a << std::endl;
+        int a=0;
+        int &b=a;
+        b=1;
+        std::cout << a << std::endl;
     }
 }
 

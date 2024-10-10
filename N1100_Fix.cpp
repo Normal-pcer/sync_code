@@ -168,7 +168,7 @@ namespace Solution {
     // 小位对应小的编号
     typedef uint32_t status; 
 
-    const int _N = 18;
+    const int _N = 19;
     int N;
     struct Point {
         int x, y;
@@ -201,7 +201,7 @@ namespace Solution {
     double best(status s, int cur) {
         // 找到距离的最小值和次小值
         double best = 1e300, second = 1e300;
-        from(i, 0, cur-1) {
+        from(i, 0, N-1) {
             if (s&(1<<i)) {
                 if (distance[cur][i] < best) {
                     second = best;
@@ -218,15 +218,25 @@ namespace Solution {
     void solve() {
         init();
         pre();
+        if (N==1 && p[0].fixed) {
+            printf("0.000000\n");
+            return;
+        }
         from(i, 0, N) 
             from(j, i+1, N)
-                if (p[i].fixed && p[j].fixed)
-                    from(k, j+1, N) 
-                        chkMin(F[(1<<i) | (1<<j) | (1<<k)], distance[i][j] + distance[j][k]);  // 两条线
+                if (p[i].fixed && p[j].fixed) {
+                    F[(1<<i) | (1<<j)] = 0;
+                    from(k, 1, N) 
+                        chkMin(F[(1<<i) | (1<<j) | (1<<k)], distance[i][k] + distance[j][k]);  // 两条线
+                }
 
-        from(i, 0, N-1) {  // 枚举要连接的点
-            rev(j, (1<<N)-1, 0) {  // 连接前的状态
-                if (p[i].fixed)  continue;  // 定点不需要连接
+        from(j, 0, (1<<N)-1) {  // 连接前的状态
+            if (F[j] > 1e200)  continue;
+            from(i, 0, N-1) {  // 枚举要连接的点
+                if (p[i].fixed) {
+                    chkMin(F[j | (1<<i)], F[j]);
+                    continue;
+                }
                 if (j&(1<<i)) {  // 如果已经连接了，则不需要再连
                     continue;
                 }
@@ -246,6 +256,10 @@ namespace Solution {
 
 int main() {
     initDebug;
+    debug {
+            freopen("N1100_input.in", "r", stdin);
+        freopen("N1100_output.out", "w", stdout);
+    }
     while( (Solution::N = io.read()) ) {
         Solution::solve();
     }

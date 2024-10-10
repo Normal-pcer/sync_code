@@ -29,7 +29,20 @@ typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
-
+#include <bits/stdc++.h>
+namespace lib {
+    namespace bit {
+        template <class T, class Func>
+        inline void traverse1(T x, Func&& f) {  // 按位遍历所有的 1
+            for (; x; x&=x-1)  f(x&-x);
+        }
+        template <class T>
+        inline bool greater(T x, T y) {  // 按位大于
+            return x & ~y;
+        }
+    }
+}
+using namespace lib;
 
 /*
 　　给定一些岛屿和一些连接岛屿的桥梁，大家都知道汉密尔顿路是访问每个岛屿一次的路线，
@@ -52,11 +65,12 @@ bool conn[_N][_N];  // 第 i 个岛和第 j 个岛之间是否有桥
 
 typedef uint16_t path;  // 路径状态码；二进制位表示是否经过第 i 个岛屿
 typedef int32_t value;  // 路径价值
-value F[1<<_N];  // 状态码为 i 的路径的最大价值
+value F[1<<_N][_N][_N];  // 状态码为 i 的路径的最大价值，并且这条路径的后两个点是 i-1 和 i-2
+int C[1<<_N][_N][_N];  // 计数
 
 
 namespace Solution {
-    inline int __lg(int x) {
+    inline int lg2(int x) {
         if (x == 0) return -1;
         return std::__lg(x);
     }
@@ -64,34 +78,46 @@ namespace Solution {
     void solve() {
         int ans = 0;
         int cnt = 0;
+        #define f(x) (w[lg2(x)])
 
-        from(p, 1, (1<<(N))-1) {  // 遍历可能的路径
-            // log("%d\n", p);
-            if (p == 7) 
-                int debugger = true;
-            int high1 = __lg(p);  // 最新的岛屿
-            F[p] = F[p^(1<<high1)] + w[high1];  //   (1)加上最新岛屿的价值
-            int high2 = __lg(p^(1<<high1));  // 倒数第二个岛屿
-            if (high2!=-1) { // 如果存在
-                F[p] += w[high2] * w[high1];  // (2)加上相邻岛屿的价值之积
+        from(i, 0, N-1) {
+            from(j, 0, N-1) {
+                if (i==j)  F[1<<i][i][i] = w[i];
+                else  F[1<<i|1<<j][j][i] = F[1<<i|1<<j][i][j] = w[i]+w[j] + w[i]*w[j];
+                C[1<<i|1<<j][j][i] = C[1<<i|1<<j][i][j] = 1;
             }
-            int high3 = __lg(p^(1<<high1)^(1<<high2));  // 倒数第三个岛屿
-            if (high3!=-1) {  // 如果存在
-                if (conn[high3][high1])  // 如果倒数第三个岛屿和最新岛屿之间有桥
-                    F[p] += w[high3] * w[high2] * w[high1];  // (3)加上三个岛屿的价值之积
-            }
-            // int high4 = __lg(p^(1<<high1)^(1<<high2)^(1<<high3));
-            // if (high4 != -1) {
-                
-            // }
-            chkMax(ans, F[p]);
         }
 
-        from(p, 0b10, 1<<(N+1)) { 
-            if (F[p] == ans)  cnt++;
+        from(p, 0, (1<<(N))-1) {  // 遍历可能的路径
+            bit::traverse1(p, [&](int i) {
+                bit::traverse1(p^i, [&](int j) {
+                    // i, j 是倒数第一个和第二个到达的点（带位值）
+                    bit::traverse1(~p&((1<<N)-1), [&](int n) {  // 新到达的点
+                        int &np = F[p|n][lg2(n)][lg2(i)];
+                        int tmp = F[p][lg2(i)][lg2(j)] + f(n);
+                        tmp += f(n) * f(i);
+                        if (conn[j][n])  tmp += f(n) * f(i) * f(j);
+                        log("F[%d][%d][%d] <(%d)- F[%d][%d][%d]\n", p|n, lg2(n), lg2(i), tmp, p, lg2(i), lg2(j));
+
+                        compare(np, tmp, 
+                            0, 
+                            C[p|n][lg2(n)][lg2(i)] += C[p][lg2(i)][lg2(j)],
+                            (np = tmp, C[p|n][lg2(n)][lg2(i)] = C[p][lg2(i)][lg2(j)])
+                        );
+                        chkMax(ans, np);
+                    });
+                });
+            });
         }
 
-        debug batchOutput(F, 1<<(N+1), "%3d ");
+        from(p, 1, (1<<N)-1) {
+            bit::traverse1(p, [&](int i){
+                bit::traverse1(p^i, [&](int j) {
+                    if (F[p][i][j] == ans)  cnt += C[p][i][j];
+                });
+            });
+        }
+        #undef f
 
         printf("%d %d\n", ans, cnt);
     }

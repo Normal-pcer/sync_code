@@ -40,40 +40,45 @@ typedef uint8_t status;
 
 namespace Solution {
     const int _N = 8; int N, K;
-    int F[_N][1<<_N][1<<_N][10];  // 前 i 行中：第 i-1 行的状态为 j，第 i 行的状态为 k，其它行放满，总共放了 l 个马的方案数
+    int F[_N][1<<_N][1<<_N][20];  // 前 i 行中：第 i-1 行的状态为 j，第 i 行的状态为 k，其它行放满，总共放了 l 个马的方案数
     // std::vector<std::vector<status>> singleLine(10);  // 一行中放了 i 个马的所有可能方案
-    uint8_t popcount[1<<_N];
+    // struct {
+    //     inline int operator[] (int num) {
+    //         return __builtin_popcount(num);
+    //     }
+    // } popcount;
 
     void pre() {
-        // 预处理 singleLine
-        for (status s=0; s<(1<<N); s++) {
-            int cnt = std::bitset<_N>(s).count();
-            popcount[s] = cnt;
-            // singleLine[cnt].push_back(s);
-        }
+        // 预处理 popcount
+        // for (status s=0; s<(1<<N); s++) {
+        //     int cnt = std::bitset<_N>(s).count();
+        //     __builtin_popcount(s) = cnt;
+        //     singleLine[cnt].push_back(s);
+        // }
     }
+    
     void solve() {
-        if (K>=9) {
+        if (K>=10) {
             printf("0\n");
             return;
         }
-        pre();
+        // pre();
         ll ans = 0;
-        for (status j=0; j<(1<<N); j++)  F[1][0][j][popcount[j]] = 1;
+        for (status j=0; j<(1<<N); j++)  F[1][j][0][__builtin_popcount(j)] = 1;
         from(i, 2, N) {  // 在第 i 行放置
             for (status j=0; j<(1<<N); j++) {  // 本行状态
-                for (status c=popcount[j]; c<=K; c++) {  // 本行马的数量
+                for (status l=0; l<(1<<N); l++) {  // 前行
+                    if ((j & (l<<2)) || (j & (l>>2)))  continue;
                     for (status k=0; k<(1<<N); k++) {  // 前前行
-                        for (status l=0; l<(1<<N); l++) {  // 前行
-                            if (!(
-                                (j & (k<<1)) ||
-                                (j & (k>>1)) ||
-                                (j & (l<<2)) ||
-                                (j & (l>>2)) ||
-                                (l & (k<<2)) ||
-                                (l & (k>>2))
-                            )) 
-                                F[i][l][j][c] += F[i-1][k][l][c-popcount[j]];
+                        if (!(
+                            (j & (k<<1)) ||
+                            (j & (k>>1)) ||
+                            (l & (k<<2)) ||
+                            (l & (k>>2))
+                        )) {
+                            for (status c=__builtin_popcount(j); c<=K; c++) {  // 本行马的数量
+                                F[i][j][l][c] += F[i-1][l][k][c-__builtin_popcount(j)];
+                            }
                         }
                     }
                 }
@@ -83,7 +88,7 @@ namespace Solution {
         // 计算答案
         for (status i=0; i<(1<<N); i++) {
             for (status j=0; j<(1<<N); j++) {
-                ans += F[N][i][j][K];
+                ans += F[N][j][i][K];
             }
         }
         printf("%lld\n", ans);
