@@ -1,4 +1,4 @@
-A = "N2171_Grape.exe"
+A = "N2171_Grape.exe -d"
 B = "N2171.Solution.exe"
 
 import os
@@ -9,7 +9,7 @@ for i in range(114514):
 
     with open("N2171.in", "w", newline='\n') as f:
         
-        b, c, d, a = sorted([randint(0, 5),randint(0, 5),randint(0, 5), randint(0, 5)])
+        b, c, d, a = sorted([randint(0, 5),randint(0, 5),randint(1, 5), randint(1, 5)])
         v = [randint(-10, 10) for _ in range(a)]
         f.write(f"{a} {d} {b} {c}\n")
         f.write(" ".join(map(str, v)))
@@ -41,9 +41,9 @@ for i in range(114514):
     elif la != lb:
         print(f"Wrong Answer on Test {i}({timerA:.4f}/{timerB:.4f} sec)")
 
-        if len(la) < len(lb):
+        if len(la) > len(lb):
             print(f"Read: {la[len(lb)]}\nExpected: None\nin line {len(la)}")
-        elif len(lb) < len(la):
+        elif len(lb) > len(la):
             print(f"Read: None\nExpected {lb[len(la)]}\nin line {len(lb)}")
         else:
             for i in range(len(la)):

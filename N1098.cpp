@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://neooj.com:8082/oldoj/problem.php?id=1098
  */
 
 #include <bits/stdc++.h>
@@ -27,8 +27,9 @@
 #define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
-inline void batchOutput(int *begin, int n, const char *format){from(i, 0, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
+inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
+namespace lib{}
 
 #include <bits/stdc++.h>
 namespace lib{
@@ -145,6 +146,19 @@ namespace lib{
 }
 #include <bits/stdc++.h>
 namespace lib {
+    namespace bit {
+        template <class T, class Func>
+        inline void traverse1(T x, Func&& f) {  // 按位遍历所有的 1
+            for (; x; x&=x-1)  f(x&-x);
+        }
+        template <class T>
+        inline bool greater(T x, T y) {  // 按位大于
+            return x & ~y;
+        }
+    }
+}
+#include <bits/stdc++.h>
+namespace lib {
     template <typename T, const long long sz>
     class RollingArray2 {  // 滚动数组 - 另一种实现思路
     public: 
@@ -155,78 +169,73 @@ namespace lib {
         }
     };
 }
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const unsigned long long sz>
-    class MapArray {
-    public:
-        T arr[sz];
-        MapArray() = default;
-        MapArray(const MapArray<T, sz>&) = default;
-        MapArray(std::initializer_list<T>& il) {
-            std::copy(il.begin(), il.end(), arr);
-        }
-
-        T& operator[](const unsigned long long idx) {
-            return arr[idx];
-        }
-        T& operator()(const unsigned long long idx) {
-            return arr[idx];
-        }
-    };
-}
 using namespace lib;
 
 namespace Solution {
-    const int _N = 10005, _K=10;
-    int N, K, A, B;
-    int sum=0;
-    #define max_st ((1<<K)-1)
 
-    RollingArray2<int[1<<_K], 2> F;
-    
+    const int _N = 14, _M = 20;
+    int N, M;
+    int T[_N], D[_N];
+    int G[_M], EX[_M];
+    RollingArray2<int[1<<_N], 4> F;
+
     void init() {
-        // std::memset(&F, -0x3f, sizeof(F));
-        io >> N >> K >> A >> B;
+        std::memset(T, 0, sizeof(T));
+        std::memset(D, 0, sizeof(T));
+        std::memset(G, 0, sizeof(T));
+        std::memset(EX, 0, sizeof(T));
+
+        std::memset(&F, -0x3f, sizeof(F));
+
+        from(i, 0, N-1)  io >> T[i] >> D[i];
+        io >> M;
+        from(i, 0, M-1) {
+            auto K = io.read<int>();
+            io >> EX[i];
+            upto(_, K)  G[i] |= 1<<(io.read<int>()-1);
+            log("%d\n", G[i]);
+        }
     }
 
     void solve() {
         init();
 
-        int cur;
-        from(i, 1, N) {  // 挪动 N 次
-            io >> cur;
-            sum += cur;
-            std::memset(F[i], -0x3f, sizeof(F[i]));
+        F[0][0] = 0;
+        int max_st = (1<<M)-1;
+        int ans = 0;
+        upto(i, M) {
             from(j, 0, max_st) {
-                if (A<=__builtin_popcount(j) && __builtin_popcount(j)<=B) {
-                    never log("(%d)F[%d][%d] <- (%d)F[%d][%d] / (%d)F[%d][%d]+%d\n", F[i][j], i, j, 
-                    F[i-1][j>>1], i-1, j>>1, F[i-1][(j>>1) | (1<<(K-1))], i-1, 
-                    (j>>1) | (1<<(K-1)), ((j&1)? cur: 0))
-                    F[i][j] = std::max( 
-                        F[i-1][j>>1],
-                        F[i-1][(j>>1) | (1<<(K-1))]
-                    ) + ((j&1)? cur: 0);
+                from(gp, 0, M-1) {  // 取了第 gp 组转移到 j
+                    if (bit::greater(gp, j))  continue;  // 有不在 j 中的位
+                    int val = EX[gp];
+                    bit::traverse1(G[gp], [&](int p) {
+                        int q = T[std::__lg(p)];
+                        if (q < 0) {
+                            val = -Infinity;
+                            return;
+                        }
+                        val += q;
+                    });
+                    log("(%d)F[%d][%d] <- (%d)F[%d][%d] + %d\n", F[i][j], i, j, F[i-1][j^gp], i-1,
+                        j^gp, val);
+                    chkMax(F[i][j], F[i-1][j^gp] + val);
                 }
+                chkMax(ans, F[i][j]);
             }
-            never batchOutput(F[i], max_st);
+
+            from(it, 0, N-1) {
+                T[it] -= D[it];
+            }
         }
-
-        int ans = -Infinity;
-        from(i, 0, max_st)  chkMax(ans, F[N][i]);
-
-        int remain = sum - ans;
-        printf("%d\n", ans - remain);
+        printf("%d\n", ans);
     }
 }
 
+using namespace Solution;
 
 int main() {
     initDebug;
-    debug {
-        freopen("N2171.in", "r", stdin);
-        freopen("N2171.out", "w", stdout);
-    }
-    Solution::solve();
+    while ((N = io.read<int>()) != 0)
+        Solution::solve();
     return 0;
 }

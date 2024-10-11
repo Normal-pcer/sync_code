@@ -13,13 +13,7 @@ namespace lib {
         T& operator[](const unsigned long long idx) {
             return arr[idx];
         }
-        const T& operator[](const unsigned long long idx) const {
-            return arr[idx];
-        }
         T& operator()(const unsigned long long idx) {
-            return arr[idx];
-        }
-        const T& operator()(const unsigned long long idx) const {
             return arr[idx];
         }
     };

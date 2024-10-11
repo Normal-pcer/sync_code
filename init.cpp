@@ -3,6 +3,7 @@
  */
 
 #include "lib"
+using namespace lib;
 
 // input:
 // 
