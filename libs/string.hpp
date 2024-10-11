@@ -33,5 +33,14 @@ namespace lib {
         vector<string> split(char c) {
             return split(vector<char>{c});
         }
+        string repeat(int times) const {
+            string result = *this;
+            result.reserve(times * this->size());
+            for (int i=1; i<times; i++)  result += *this;
+            return result;
+        }
+        string operator* (int times) const {
+            return this->repeat(times);
+        }
     };
 }

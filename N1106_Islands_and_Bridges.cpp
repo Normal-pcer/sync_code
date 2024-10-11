@@ -29,7 +29,6 @@ bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
-
 #include <bits/stdc++.h>
 namespace lib{
 	// template <const size_t MAXSIZE>
@@ -168,18 +167,22 @@ namespace Solution {
 
     // 一条路径的“二进制状态”
     // 用一位表示一个岛屿是否被经过
-    int F[1<<_N][_N][_N];  // 状态为 i 的路，其中最后经过的一个点是 j，倒数第二个是 k —— 最大的价值
+    ll F[1<<_N][_N][_N];  // 状态为 i 的路，其中最后经过的一个点是 j，倒数第二个是 k —— 最大的价值
     int C[1<<_N][_N][_N];  // 上述情况的方案数
 
     const auto lg2 = static_cast<int(*)(int)>(std::__lg);
     
     void init() {
+        std::memset(F, -0x3f, sizeof(F));
+        std::memset(C, 0, sizeof(C));
+        from(i, 0, _N-1)  conn[i]=0;
+        std::memset(v, 0, sizeof(v));
         io >> N >> M;
         from(i, 0, N-1)  io >> v[i];
         int s, t;
         upto(i, M) {
             io >> s >> t;
-            conn[s][t] = conn[t][s] = true;
+            conn[s-1][t-1] = conn[t-1][s-1] = true;
         }
     }
 
@@ -188,67 +191,108 @@ namespace Solution {
 
         C[0][0][0] = 1;
         int max_st = (1<<N)-1;
+        ll ans = 0, cnt = 0;
         from(i, 0, N-1) {
             F[1<<i][i][0] = v[i];
             C[1<<i][i][0] = 1;
+
+            log("cnt %lld->", cnt);
+            if (F[1<<i][i][0] > ans)  ans=F[1<<i][i][0], cnt=C[1<<i][i][0];
+            else if (F[1<<i][i][0] == ans)  cnt += C[1<<i][i][0];
+            log("%lld\n", cnt)
+        }
+        if (N==1) {
+            printf("%lld %lld\n", ans, cnt);
+            return;
+        } else {
+            ans = cnt = 0;
         }
         from(st, 0, max_st) {  // 转移前的状态
             // 接下来，依次枚举可能的末点
             bit::traverse1(st, [&](int last) {  // 倒数第一个点
+                debug io.write("  ",last,"\n");
+                int lg_last = lg2(last);
                 bit::traverse1(~st&max_st, [&](int future) {  // 一个新的点
-                    int delta = v[lg2(future)];
-                    delta += v[lg2(future)] * v[lg2(last)];
-                    int &target = F[st|future][lg2(future)][lg2(last)];
+                    debug io.write("    ",future,"\n");
+                    int lg_ftr = lg2(future);
+                    if (not conn[lg_ftr][lg_last]) {
+                        log("%d %d not connected\n", lg_ftr, lg_last)
+                        return;
+                    }
+                    ll delta = v[lg_ftr];
+                    delta += v[lg_ftr] * v[lg_last];
+                    // log("%d ", delta)
+                    auto &target = F[st|future][lg_ftr][lg_last];
 
                     if (__builtin_popcount(st^last) == 0) {
                         // 倒数第二个点不存在
-                        if (F[st|future][lg2(future)][lg2(last)] < delta) {
-                            target = delta;
-                            C[st|future][lg2(future)][lg2(last)] = C[st][lg2(last)][0];
+                        // 限制第一步只能正向走
+                        // if (future < last)  return;
+                    log("(%lld)F[%d][%d][%d] <-(%lld)- (%lld)F[%d][%d][%d]\n", F[st|future][lg_ftr][lg_last], 
+                                st|future, lg_ftr, lg_last, delta+ F[st][lg_last][0], F[st][lg_last][0], 
+                                st, lg_last, 0)
+                        if (F[st|future][lg_ftr][lg_last] < delta + F[st][lg_last][0]) {
+                            target = delta + F[st][lg_last][0];
+                            C[st|future][lg_ftr][lg_last] = C[st][lg_last][0];
+                        } else {
+                            C[st|future][lg_ftr][lg_last] += C[st][lg_last][0];
                         }
-                    } else {
-                        C[st|future][lg2(future)][lg2(last)] += C[st][lg2(last)][0];
-                    }
+                    } 
 
                     bit::traverse1(st^last, [&](int second) {  // 倒数第二个点（可能不存在）
-                        log("%d %d %d %d %d\n", st, future, last, second, delta)
-                        int tmp = delta;
-                        if (conn[lg2(future)][lg2(second)]) {
+                        debug printf("      %d %lld\n", second, delta);
+                        int lg_sec = lg2(second);
+                        if (not conn[lg_sec][lg_last])  return;
+                        ll tmp = delta;
+                        if (conn[lg_ftr][lg_sec]) {
                             log("!")
-                            tmp += v[lg2(future)]*v[lg2(last)]*v[lg2(second)];
+                            tmp += v[lg_ftr]*v[lg_last]*v[lg_sec];
                         }
-                        tmp += F[st][lg2(last)][lg2(second)];
-                        log("(%d)F[%d][%d][%d] <-(%d)- (%d)F[%d][%d][%d]\n", C[st|future][lg2(future)][lg2(last)], 
-                            st|future, lg2(future), lg2(last), tmp, F[st][lg2(last)][lg2(second)], 
-                            st, lg2(last), lg2(second))
+                        tmp += F[st][lg_last][lg_sec];
+                        log("(%lld)F[%d][%d][%d] <-(%lld)- (%lld)F[%d][%d][%d]\n", F[st|future][lg_ftr][lg_last], 
+                            st|future, lg_ftr, lg_last, tmp, F[st][lg_last][lg_sec], 
+                            st, lg_last, lg_sec)
                         if (target < tmp) {
                             target = tmp;
-                            C[st|future][lg2(future)][lg2(last)] = C[st][lg2(last)][lg2(second)];
+                            C[st|future][lg_ftr][lg_last] = C[st][lg_last][lg_sec];
                         } else if (target == tmp) {
-                            C[st|future][lg2(future)][lg2(last)] += C[st][lg2(last)][lg2(second)];
+                            C[st|future][lg_ftr][lg_last] += C[st][lg_last][lg_sec];
                         }
-                    });
+                    });                    
                 });
             });
         }
 
-        int ans = 0;
-        from(i, 0, N-1) {
-            from(j, 0, N-1) {
-                chkMax(ans, F[max_st][i][j]);
+        from(lg_ftr, 0, N-1) {
+            from (lg_last, 0, N-1) {
+                if (F[max_st][lg_ftr][lg_last] > ans)  ans=F[max_st][lg_ftr][lg_last], cnt=C[max_st][lg_ftr][lg_last];
+                else if (F[max_st][lg_ftr][lg_last] == ans)  cnt +=C[max_st][lg_ftr][lg_last];
             }
         }
-
-        printf("%d\n", ans);
+        if (ans == 0)  cnt=0;
+        printf("%lld %lld\n", ans, cnt/2);
     }
 }
 
 
 int main() {
     initDebug;
-
+    always {
+        freopen("N1106.in", "r", stdin);
+        freopen("N1106.out", "w", stdout);
+    }
     io >> T;
     while (T --> 0)
         Solution::solve();
     return 0;
 }
+
+/*
+1
+4 4
+1 2 3 4
+1 4
+4 2
+2 3
+1 3
+*/

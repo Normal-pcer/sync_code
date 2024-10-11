@@ -1,57 +1,29 @@
-/**
- * 
- */
-
 #include <bits/stdc++.h>
-#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
-#define debug if(DEBUG_MODE)
-#define log(f, a...) debug printf(f, ##a);
-#define upto(i,n) for(int i=1;i<=(n);i++)
-#define from(i,b,e) for(int i=(b);i<=(e);i++)
-#define rev(i,e,b) for(int i=(e);i>=(b);i--)
-#define main() main(int argc, char const *argv[])
-#define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
-#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
-#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
-#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
-#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
-#define update(base,op,modify...) base=op((base),##modify)
-#define ensure(con, otw) ((con)? (con): (otw))
-#define check(v, con, otw) (((v) con)? (v): (otw))
-#define optional(ptr) if(ptr)ptr
-#define never if constexpr(0)
-#define always if constexpr(1)
-#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define Infinity 2147483647
-#define putInt(n) printf("%d\n",(n))
-#define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
-bool DEBUG_MODE=false;
-typedef long long ll; typedef unsigned long long ull;
-inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
-#define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
-
-
-;
-namespace Solution {
-
-    
-    void init() {
-
-    }
-
-    void solve() {
-        init();
-        int a=0;
-        int &b=a;
-        b=1;
-        std::cout << a << std::endl;
-    }
-}
-
-
-int main() {;
-
-    initDebug;
-    Solution::solve();
-    return 0;
+using namespace std;
+typedef long long ll;
+const int mod = 1e9 + 7;
+const int mxn = 100, mxm = 1 <<8;
+const int N = mxn + 10, M = mxm + 10;
+int n, m, K, num[M], dp[N][M][M][30], ans;
+int get_val(int x) {
+	int sum = 0;
+	while(x) sum += x & 1, x >>= 1;
+	return sum;
+} // 求出马的个数
+signed main() {
+	ios::sync_with_stdio(0); cin.tie(0); cout.tie(0);
+	cin >> n >> m >> K;
+	for(int i = 0; i ^ (1 << n); ++ i) num[i] = get_val(i), dp[1][0][i][num[i]] = 1; // 预处理马的个数
+	for(int i = 2; i <= m; ++ i) // 列
+		for(int j = 0; j ^ (1 << n); ++ j) // 本列状态
+			for(int h = num[j]; h <= K; ++ h) // 马的个数
+				for(int k = 0; k ^ (1 << n); ++ k) // 前前列状态
+					for(int l = 0; l ^ (1 << n); ++ l) // 前列状态
+						if(! ((j & (k << 1)) || (j & (k >> 1)) || (j & (l << 2)) || (j & (l >> 2)) || (l & (k << 2)) || (l & (k >> 2)))) // 判断条件是否满足
+							dp[i][l][j][h] = (dp[i][l][j][h] + dp[i - 1][k][l][h - num[j]]) % mod; //进行转移
+	for(int i = 0; i ^ (1 << n); ++ i)
+		for(int j = 0; j ^ (1 << n); ++ j)
+			ans = (ans + dp[m][i][j][K]) % mod;
+	cout << ans << '\n';
+	return 0;
 }

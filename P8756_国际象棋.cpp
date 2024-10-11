@@ -1,7 +1,6 @@
 /**
  * https://neooj.com:8082/oldoj/problem.php?id=1668
  */
-#pragma GCC optimize(3, "Ofast", "inline")
 #include <bits/stdc++.h>
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
 #define debug if(DEBUG_MODE)
@@ -66,7 +65,8 @@ namespace Solution {
         T *begin() { return arr; }
         T *end() { return arr+sz; }
     };  
-    const int _N = 8; int N, K;
+    const int _N = 8, _M = 100; int N, K, M;
+    const int mod = 1e9 + 7;
     sizedArray<short, 1<<_N> after[1<<_N];  // i 后面可以接的状态
     RollingArray2<ll[1<<_N][1<<_N][32], 2> F;  // 前 i 行中：第 i-1 行的状态为 j，第 i 行的状态为 k，其它行放满，总共放了 l 个马的方案数
     // std::vector<std::vector<status>> singleLine(10);  // 一行中放了 i 个马的所有可能方案
@@ -100,7 +100,7 @@ namespace Solution {
         for (status j=0; j<(1<<N); j++) { 
             F[1][j][0][__builtin_popcount(j)] = 1;
         }
-        from(i, 2, N) {  // 在第 i 行放置
+        from(i, 2, M) {  // 在第 i 行放置
             std::memset(F[i], 0, sizeof(F[i]));
             for (status j=0; j<(1<<N); j++) {  // 本行状态
                 // for (status l=0; l<(1<<N); l++) {  // 前行
@@ -116,6 +116,7 @@ namespace Solution {
                         )) {
                             for (status c=__builtin_popcount(j); c<=K; c++) {  // 本行马的数量
                                 F[i][j][l][c] += F[i-1][l][k][c-__builtin_popcount(j)];
+                                F[i][j][l][c] %= mod;
                             }
                         }
                     }
@@ -126,7 +127,8 @@ namespace Solution {
         // 计算答案
         for (status i=0; i<(1<<N); i++) {
             for (status j=0; j<(1<<N); j++) {
-                ans += F[N][j][i][K];
+                ans += F[M][j][i][K];
+                ans %= mod;
             }
         }
         printf("%lld\n", ans);
@@ -136,7 +138,7 @@ namespace Solution {
 using namespace Solution;
 
 int main() {
-    scanf("%d%d", &N, &K);
+    scanf("%d%d%d", &N, &M, &K);
     initDebug;
     Solution::solve();
     return 0;
