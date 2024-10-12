@@ -12,8 +12,7 @@
 #define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
 #define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
 #define update(base,op,modify...) base=op((base),##modify)
-#define ensure(con, otw) ((con)? (con): (otw))
-#define check(v, con, otw) (((v) con)? (v): (otw))
+#define ensure(v, con, otw) (((v) con)? (v): (otw))
 #define optional(ptr) if(ptr)ptr
 #define never if constexpr(0)
 #define always if constexpr(1)

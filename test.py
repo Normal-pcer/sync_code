@@ -1,7 +1,1 @@
-N=int(input())
-for _ in range(N):
-    x, m=input().split()
-    if int(x)%2==0:
-        print(m, 1)
-    else:
-        print(1, m)
+input(), print( '\n'.join(map({True:"YES", False:"NO"}.get, (lambda s,q: [i in s for i in q])(set(input().split()), input().split()))) )
