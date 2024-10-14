@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "runcpp",
+            "command": "run",
+            "args": [
+                "${fileBasename}",
+                "-b"
+            ],
+            "type": "shell",
+        }
+    ]
+}

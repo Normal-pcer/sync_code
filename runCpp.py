@@ -337,7 +337,7 @@ if __name__ == '__main__':
         os.system(f"g++ \"{fileName}\" -o \"{fileName[:-4]}.exe\" " + ' '.join(compileArgs))
 
         if breakBeforeExecute:
-            exit(0)
+            sys.exit(0)
 
         tm = time.perf_counter()
         if log: 
