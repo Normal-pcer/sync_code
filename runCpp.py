@@ -193,6 +193,14 @@ class LogOption(Option):
         global log
         log = True
 
+class BreakOption(Option):
+    def __init__(self):
+        super().__init__("break", "b", "nb")
+    
+    def apply(self):
+        global breakBeforeExecute
+        breakBeforeExecute = True
+
 def isInt(n: str):
     try:
         int(n)
@@ -206,7 +214,8 @@ options: Dict[str, Option] = {
     "compile": CompileOption(),
     "log": LogOption(),
     "autoInput": AutoInputOption(),
-    "autoInitialize": AutoInitializeOption()
+    "autoInitialize": AutoInitializeOption(),
+    "break": BreakOption()
 }
 switchMap: Dict[str, Option] = {}
 switchNoneMap: Dict[str, Option] = {}
@@ -220,6 +229,7 @@ runArgs = []
 
 fileName = ""
 debug = False
+breakBeforeExecute = False
 
 if __name__ == '__main__':
     try:
@@ -326,11 +336,14 @@ if __name__ == '__main__':
         print("正在编译...", end='\r')
         os.system(f"g++ \"{fileName}\" -o \"{fileName[:-4]}.exe\" " + ' '.join(compileArgs))
 
+        if breakBeforeExecute:
+            exit(0)
+
         tm = time.perf_counter()
         if log: 
-            print(">", f"\".\\{fileName[:-4]}.exe\" ".replace('/', '\\') + ' '.join(runArgs))
+            print(">", f"\"{fileName[:-4]}.exe\" ".replace('/', '\\') + ' '.join(runArgs))
         print("="*8 + ("DEBUG" if debug else "=====") + "="*8)
-        returns = os.system(f"\".\\{fileName[:-4]}.exe\" ".replace('/', '\\') + ' '.join(runArgs))
+        returns = os.system(f"\"{fileName[:-4]}.exe\" ".replace('/', '\\') + ' '.join(runArgs))
         print("="*21)
         print("Exited after {:.4f}s, with code {}.".format(time.perf_counter()-tm, returns))
     except KeyboardInterrupt:
