@@ -12,14 +12,17 @@
 #define main() main(int argc, char const *argv[])
 #define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
 #define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
-#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
+template <typename T>
+T chkMin(T &base, T cmp) {
+    return (base = std::min(base, cmp));
+}
 #define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
 #define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
 #define update(base,op,modify...) base=op((base),##modify)
 #define ensure(v, con, otw) (((v) con)? (v): (otw))
 #define optional(ptr) if(ptr)ptr
-#define never if constexpr(0)
-#define always if constexpr(1)
+#define never if(0)
+#define always if(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
 #define Infinity 2147483647
 #define putInt(n) printf("%d\n",(n))
@@ -186,70 +189,106 @@ namespace lib {
 }
 using namespace lib;
 
-;
+#define ls (p<<1)
+#define rs (p<<1|1)
+
 namespace Solution {
 
-    int N, M, S;
-    const int _N = 2e5+5;
-    int l[_N], r[_N], w[_N], v[_N];
-    int max_w = 0;
+    int N, M;
+    const int _N = 1e6+5;
+
+    int r[_N];
+    int d[_N], s[_N], t[_N];
+
+    struct Node {
+        int l, r;
+        int min;  // 区间最小值
+        int t;  // 减法标记
+    } tr[_N<<2];
+
+    void push_up(int p) {
+        tr[p].min = std::min(tr[ls].min, tr[rs].min);
+    }
+
+    void push_down(int p) {
+        if (tr[p].t) {
+            tr[ls].min -= tr[p].t;
+            tr[rs].min -= tr[p].t;
+            tr[ls].t += tr[p].t;
+            tr[rs].t += tr[p].t;
+            tr[p].t = 0;
+        }
+    }
+
+    void build(int p, int l, int r) {
+        tr[p].l = l, tr[p].r = r;
+        if (l == r) {
+            tr[p].min = Solution::r[l];
+            return;
+        }
+        int mid = (l+r)>>1;
+        build(ls, l, mid);
+        build(rs, mid+1, r);
+        push_up(p);
+    }
+
+    int query(int p, int l, int r) {
+        if (tr[p].l >= l and tr[p].r <= r) {
+            return tr[p].min;
+        }
+        push_down(p);
+        int min = Infinity;
+        if (tr[ls].r >= l)  chkMin(min, query(ls, l, r));
+        if (tr[rs].l <= r)  chkMin(min, query(rs, l, r));
+        return min;
+    }
+
+    void reduce(int p, int l, int r, int val) {
+        if (tr[p].l >= l and tr[p].r <= r) {
+            tr[p].min -= val;
+            tr[p].t += val;
+            return;
+        }
+        push_down(p);
+        if (tr[ls].r >= l)  reduce(ls, l, r, val);
+        if (tr[rs].l <= r)  reduce(rs, l, r, val);
+        push_up(p);
+    }
     
     void init() {
-        io >> N >> M >> S;
-        upto(i, N) {
-            io >> w[i] >> v[i];
-            chkMax(max_w, w[i]);
-        }
-        upto(i, M) {
-            io >> l[i] >> r[i];
-        }
-    }
-
-    template <class preT>
-    auto range_sum(int l, int r, preT&& prev) {
-        return prev[r] - prev[l-1];
-    }
-
-    ll mapping(int W) {
-        std::vector<ll> pre1;
-        pre1.push_back(0);
-        from(i, 1, N) {
-            pre1.push_back( w[i]>=W? 1: 0 );
-        }
-        std::vector<ll> pre2;
-        pre2.push_back(0);
-        from(i, 1, N) {
-            pre2.push_back( w[i]>=W? v[i]: 0 );
-        }
-
-        ll res = 0;
-        upto(i, M) {
-            ll cur = range_sum(l[i], r[i], pre1);
-            cur *= range_sum(l[i], r[i], pre2);
-
-            res += cur;
-        }
-
-        return -res;
+        io >> N >> M;
+        from(i, 1, N)
+            io >> r[i];
+        from(i, 1, M)
+            io >> d[i] >> s[i] >> t[i];
+        build(1, 1, N);
     }
 
     void solve() {
         init();
 
-        auto res = binary::lower_bound_mapping(1, max_w+5, -S, mapping);
-        auto res2 = binary::upper_bound_mapping(1, max_w+5, -S, mapping);
+        from(i, 1, M) {
+            reduce(1, s[i], t[i], d[i]);
 
-        auto ans = abs( mapping(res) - (-S) );
-        auto ans2 = abs( mapping(res2) - (-S) );
-        log("%lld %d\n", mapping(res), mapping(res2));
-        printf("%lld\n", std::min(ans, ans2));
+            if (query(1, 1, N) < 0) {
+                printf("-1\n");
+                printf("%d\n", i);
+                return;
+            }
+        }
+
+        printf("0\n");
     }
 }
 
 
-int main() {;
-
+int main() {
     initDebug;
+
+    never {
+        freopen("P1083.in", "r", stdin);
+        freopen("P1083.out", "w", stdout);
+    }
     Solution::solve();
     return 0;
 }
