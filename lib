@@ -11,14 +11,11 @@
 #define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
 #define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
 #define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
-#define update(base,op,modify...) base=op((base),##modify)
 #define ensure(v, con, otw) (((v) con)? (v): (otw))
-#define optional(ptr) if(ptr)ptr
 #define never if constexpr(0)
 #define always if constexpr(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
 #define Infinity 2147483647
-#define putInt(n) printf("%d\n",(n))
 #define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
