@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 namespace lib {
     template <typename T>
     class vector: public std::vector<T> {
@@ -19,6 +18,8 @@ namespace lib {
             this->resize(ptr2 - this->begin());
         }
 
+#if __cplusplus >= 201702L
+
         vector<T> filter(const std::function <bool(const T&)>& f) {
             vector<T> res;
             for (auto& i: *this) {
@@ -29,6 +30,7 @@ namespace lib {
             return res;
         }
 
+
         template <typename Func>  
         auto map(Func&& f) const {  
             vector<decltype(std::invoke(std::forward<Func>(f), std::declval<const T&>()))> result;
@@ -37,6 +39,8 @@ namespace lib {
             }
             return result;  
         }
+
+#endif
 
         template <typename Func>
         auto reduce(Func&& f) const { 
@@ -53,7 +57,10 @@ namespace lib {
                     return false;
                 }
             }
+            return true;
         }
+
+        bool all() { return all([](auto&x){return x;}); }
 
         bool some(const std::function <bool(const T&)>& f) {
             for (auto& i: *this) {
@@ -64,6 +71,8 @@ namespace lib {
             return false;
         }
 
+        bool some() { return some([](auto&x){return x;}); }
+
         inline void push(T&& t) {
             this->push_back(t);
         }
@@ -71,4 +80,4 @@ namespace lib {
 }
 
 #define lambda(expr, args...) [&](args) {return expr;}
-#define select_func(ret, name, args...) static_cast<ret(*)args>(name)
+#define select_func(ret, name, args...) static_cast<ret(*)(args)>(name)

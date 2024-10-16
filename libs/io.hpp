@@ -109,5 +109,5 @@ namespace lib{
         }
 	};
 	IO io;
-    const char endl = '\n';
+    const std::string endl = "\n";
 }

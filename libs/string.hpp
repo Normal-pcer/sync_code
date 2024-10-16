@@ -10,9 +10,12 @@ namespace lib {
             size_t size = 0;
             for (auto& i: s)  size += i.size();
             res.reserve(size);
+            bool first = true;
             for (auto& i: s) {
+                if (!first)
+                    res += *this;
                 res += i;
-                res += *this;
+                first = false;
             }
             return res;
         }

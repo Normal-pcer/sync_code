@@ -13,8 +13,8 @@ namespace lib {
         }
         // 枚举子集
         template <class T, class Func>
-        inline void subset(T x, Func&& F) {  
-            for (status t=s; t; t=(t-1)&s)  f(t);
+        inline void subset(T s, Func&& F) {  
+            for (auto t=s; t; t=(t-1)&s)  f(t);
         }
     }
 }
