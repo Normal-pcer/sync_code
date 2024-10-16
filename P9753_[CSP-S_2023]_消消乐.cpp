@@ -142,28 +142,33 @@ namespace lib{
 }
 using namespace lib;
 
-const int _N = 2e6+5;
-int N;
-int F[_N], H[_N][26];
-std::string S;
+
 
 namespace Solution {
 
-    
+    const int _N = 10;
+	int N;
+	int F[_N], H[_N][26], C[_N];
+	std::string S;
+
     void init() {
         io >> N;
         io >> S;
-        S = "\0" + S;
+        S = "0" + S;
     }
 
     void solve() {
         init();
         ll ans = 0;
-        from(i, 1, (int)S.length()) {
-            int G = H[i][S[i]-'a'];
-            F[i] = F[G] + 1;
-            chkMax(H[i][S[i]-'a'], H[G-1][S[i]-'a']);
-            log("%d %d %d %d %d\n", F[i], G, H[i][0], H[i][1], H[i][2])
+		F[0] = 0;
+        from(i, 1, (int)S.length()-1) {
+            C[i] = i;
+            int G = H[ C[i-1] ][S[i]-'a'];
+            if (G) {  // [G, i] 是新找到的合法子串
+                C[i] = C[G-1];
+                F[i] = F[G-1] + 1;
+            }
+            H[C[i]][S[i]-'a'] = i;
             ans += F[i];
         }
         printf("%lld\n", ans);
