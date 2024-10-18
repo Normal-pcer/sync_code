@@ -1,5 +1,5 @@
 /**
- * @link https://www.luogu.com.cn/problem/P1948
+ * @link https://www.luogu.com.cn/problem/P4667
  */
 
 #include <bits/stdc++.h>
@@ -140,122 +140,77 @@ namespace lib{
 	IO io;
     const std::string endl = "\n";
 }
-namespace lib {
-    namespace binary {  // 二分
-        template <class T, class U, class Func>
-        T lower_bound_mapping(
-            T begin,
-            T end,
-            U val,
-            Func &&mapping,
-            T eps = 1
-        ) {
-            while (end-begin >= eps) {
-                T mid = begin + (end-begin)/2;
-                log("%d -> %d\n", mid, mapping(mid))
-                auto mapped = mapping(mid);
-                if (mapped >= Infinity)
-                    return -1;
-                if (mapped < val) {
-                    begin = mid + eps;
-                } else {
-                    end = mid;
-                }
-            }
-            return begin;
-        }
-
-        template <class T, class U, class Func>
-        T upper_bound_mapping(
-            T begin,
-            T end,
-            U val,
-            Func &&mapping,
-            T eps = 1
-        ) {
-            while (end-begin >= eps) {
-                T mid = begin + (end-begin)/2;
-                auto mapped = mapping(mid);
-                if (mapped >= Infinity)
-                    return -1;
-                if (mapped <= val) {
-                    begin = mid + eps;
-                } else {
-                    end = mid;
-                }
-            }
-            return begin;
-        }
-    }
-}
 using namespace lib;
 
-;
+
 namespace Solution {
 
-    int N, M, K;
+    int N, M;
+    const int _N = 505;
     struct Node {
-        int to, val;
+        int x, y, val=0;
+    }; 
 
-        bool operator< (Node other) const {
-            return val>other.val;
-        }
-    };
-    const int _N = 1005;
-    std::vector<Node> conn[_N];
-
-    /**
-     * 大于等于 l0 的边权视为 1，否则视为 0；
-     * 返回从 begin 到 end 的最短路径的长度的相反数；
-     * 如果不存在通路，返回 Infinity。
-     */
-    int bfs(int l0) {
-        const int begin = 1;
-        const int end = N;
-        std::vector<uint8_t> vis(N+1);
-        std::deque<Node> q;
-        q.push_back({begin, 0});
-        while (not q.empty()) {
-            auto cur = q.front();  q.pop_front();
-            if (vis[cur.to])  continue;
-            if (cur.to == end)  return -cur.val;
-            vis[cur.to] = 1;
-            for (auto &dest: conn[cur.to]) {
-                if (dest.val < l0)
-                    q.push_front({dest.to, cur.val});
-                else 
-                    q.push_back({dest.to, cur.val+1});
-            }
-        }
-        return Infinity;
-    }
+    std::vector<Node> conn[_N][_N];
     
     void init() {
-        io >> N >> M >> K;
-        from(i, 1, M) {
-            int x, y, v;
-            io >> x >> y >> v;
-            conn[x].push_back({y, v});
-            if (x != y) 
-                conn[y].push_back({x, v});
+        io >> N >> M;
+        char line[_N];
+        from(r, 1, N) {
+            scanf("%s", line+1);
+            from(c, 1, M) {
+                if (line[c] == '\\') {
+                    conn[r][c].push_back({r+1, c+1});
+                    conn[r+1][c+1].push_back({r, c});
+                    conn[r][c+1].push_back({r+1, c, 1});
+                    conn[r+1][c].push_back({r, c+1, 1});
+                } else {
+                    conn[r][c].push_back({r+1, c+1, 1});
+                    conn[r+1][c+1].push_back({r, c, 1});
+                    conn[r][c+1].push_back({r+1, c});
+                    conn[r+1][c].push_back({r, c+1});
+                }
+            }
         }
-        
-        auto final_l0 = binary::lower_bound_mapping(1, 1000000, -K, bfs);
-        auto cost = final_l0-1;
-        
-        printf("%d\n", std::max(-1, cost));
-        return;
+    }
+
+
+    int bfs() {
+        std::deque<Node> q;
+        static bool vis[_N][_N];
+
+        q.push_back({1, 1});
+        while (not q.empty()) {
+            auto cur = q.front();  q.pop_front();
+            // if (cur.x<=0 or cur.y<=0 or cur.x>=N or cur.y>=M)  continue;
+            if (cur.x==N+1 and cur.y==M+1)  return cur.val;
+            if (vis[cur.x][cur.y])  continue;
+            vis[cur.x][cur.y] = 1;
+
+            for (auto &dest: conn[cur.x][cur.y]) {
+                if (dest.val == 1) {
+                    q.push_back({dest.x, dest.y, cur.val+1});
+                } else {
+                    q.push_front({dest.x, dest.y, cur.val});
+                }
+            }
+        }
+
+        return -1;
     }
 
     void solve() {
         init();
-
+        auto ans = bfs();
+        if (ans == -1)
+            printf("NO SOLUTION");
+        else
+            printf("%d\n", ans);
     }
 }
 
 
-int main() {;
-
+int main() {
     initDebug;
     Solution::solve();
     return 0;
