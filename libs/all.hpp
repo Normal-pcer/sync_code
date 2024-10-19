@@ -6,3 +6,4 @@
 #include "libs/rollingArray.hpp"
 #include "libs/rollingArray2.hpp"
 #include "libs/mapArray.hpp"
+#include "libs/binary.hpp"
