@@ -1,0 +1,53 @@
+/* ==UserStyle==
+@name           ?
+@namespace      github.com/openstyles/stylus
+@version        1.0.0
+@description    A new userstyle
+@author         Me
+@preprocessor   stylus
+
+@var    text BackgroundImage "背景" "none"
+@var    text TableOddBackgroundColor "表格奇数行背景色" "rgba(249, 249, 249, 0.8)"
+@var    text TableEvenBackgroundColor "表格偶数行背景色" "rgba(229, 236, 249, 0.8)"
+@var    text TableHeaderBackgroundColor "表头背景色" "rgba(102, 204, 255, 0.8)"
+@var    text fontColor "文字颜色" "black"
+==/UserStyle== */
+
+@-moz-document url-prefix("https://neooj.com:8082") {
+    /* 在此插入代码... */
+    /* 设置背景 */
+    body {
+        background-image: BackgroundImage;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
+    }
+
+    /* 表格 */
+    .table-striped>tbody>tr:nth-of-type(odd) {
+        background-color: TableOddBackgroundColor;
+    }
+    .table-striped>tbody>tr:nth-of-type(even) {
+        background-color: TableEvenBackgroundColor;
+    }
+    .toprow, .toprow>th {
+        background-color: TableHeaderBackgroundColor;
+    }
+
+    /* 消除头部 */
+    #head {
+        display: none;
+    }
+    #broadmsg {
+        display: none;
+    }
+
+    /* 标题 */
+    h2 {
+        color: fontColor;
+        font-weight: bold;
+    }
+
+    /*  */
+}
