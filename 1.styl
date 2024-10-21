@@ -6,11 +6,14 @@
 @author         Me
 @preprocessor   stylus
 
-@var    text BackgroundImage "背景" "none"
-@var    text TableOddBackgroundColor "表格奇数行背景色" "rgba(249, 249, 249, 0.8)"
-@var    text TableEvenBackgroundColor "表格偶数行背景色" "rgba(229, 236, 249, 0.8)"
-@var    text TableHeaderBackgroundColor "表头背景色" "rgba(102, 204, 255, 0.8)"
-@var    text fontColor "文字颜色" "black"
+    @var    text BackgroundImage "背景" "none"
+    @var    text TableOddBackgroundColor "表格奇数行背景色" "rgba(249, 249, 249, 0.8)"
+    @var    text TableEvenBackgroundColor "表格偶数行背景色" "rgba(229, 236, 249, 0.8)"
+    @var    text TableHeaderBackgroundColor "表头背景色" "rgba(102, 204, 255, 0.8)"
+    @var    text fontColor "文字颜色" "black"
+    @var    text mainBackgroundColor "主界面背景色" "rgba(255, 255, 255, 0.7)"
+    @var    text contentBackgroundColor "内容背景色" "rgba(228, 240, 248, 0.7)"
+    @var    text globalFontFamily "全局字体系列" ""Noto Sans SC", -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", "Noto Sans", "Noto Sans CJK SC", "Noto Sans CJK", "Source Han Sans", "PingFang SC", "Segoe UI", "Microsoft YaHei", sans-serif"
 ==/UserStyle== */
 
 @-moz-document url-prefix("https://neooj.com:8082") {
@@ -22,6 +25,9 @@
         background-size: cover;
         background-attachment: fixed;
         background-position: center;
+
+        /* 设置字体 */
+        font-family: globalFontFamily;
     }
 
     /* 表格 */
@@ -49,5 +55,36 @@
         font-weight: bold;
     }
 
-    /*  */
+    #main {
+        border: solid #aaa 1px;
+        width: 60%;    
+        margin: auto;
+        box-shadow: 0 0 8px black;
+        padding: 20px;
+        background-color: mainBackgroundColor;
+    }
+
+    p {
+        font-size: 17;
+    }
+
+    div.content {
+        background: none repeat scroll 0 0 contentBackgroundColor;
+        font-family: globalFontFamily;
+    }
+
+    /* 导航栏 */
+    div#menu {
+        background: none;
+    }
+
+    /* 用户面板 */
+    div.well {
+        background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .sampledata {
+        background: none;
+        font-family: globalFontFamily;  
+    }
 }

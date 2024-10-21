@@ -42,6 +42,13 @@ namespace lib {
 
 #endif
 
+        template <typename Func>  
+        void foreach(Func&& f) const {  
+            for (auto &i: *this) {
+                f(i);
+            }
+        }
+
         template <typename Func>
         auto reduce(Func&& f) const { 
             auto result = this->front();
