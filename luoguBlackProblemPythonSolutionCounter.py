@@ -36,7 +36,7 @@ def getUrl(url):
     return session.get(url, headers=HEADER).text
 
 if __name__ == '__main__':
-    for i in range(15, 114514):
+    for i in range(2, 114514):
         print(f"获取第 {i} 页", PROBLEM_LIST_BASE_URL.format(i), ' '*50)
         problemList = getUrl(PROBLEM_LIST_BASE_URL.format(i))
         problemItemRe = r'<a href="(P\d+)">.*</a>'
@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
         for i in range(len(solutions)):
             content = getUrl(solutions[i])
-            if content.find("print") != -1 and content.find("printf") == -1 and content.find("#include") == -1:
+            if re.search(r'print\s*\(', content) and re.search(r'input\s*\(', content):
                 print("找到 Python 题解:", problems[i])
         
                 with open("record.txt", "a") as f:
