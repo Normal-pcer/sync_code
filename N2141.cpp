@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://neooj.com:8082/oldoj/problem.php?id=2141
  */
 
 #include <bits/stdc++.h>
@@ -27,6 +27,7 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 namespace lib{}
 
+#define LIB_VECTOR
 namespace lib {
     template <typename T>
     class vector: public std::vector<T> {
@@ -119,6 +120,7 @@ namespace lib {
 #define select_func(ret, name, args...) static_cast<ret(*)(args)>(name)
 
 #include <bits/stdc++.h>
+#define LIB_STRING
 namespace lib {
     class string: public std::string {
     public:
@@ -168,139 +170,122 @@ namespace lib {
     };
 }
 #include <bits/stdc++.h>
-#define REQUIRE_EOF
-// #undef REQUIRE_EOF
+#define USE_FREAD
+// #undef USE_FREAD
+// 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
 namespace lib{
-#ifdef REQUIRE_EOF
-    template <const size_t MAXSIZE>
+#ifndef LIB_STRING
+    using string=std::string;
+#endif
+#ifdef USE_FREAD
+    template <const long long MAXSIZE, const long long MAX_ITEM_SZ=500>
 #endif
     struct IO {
-#ifdef REQUIRE_EOF
+#ifdef USE_FREAD
         char buf[MAXSIZE],*p1,*p2;
         char pbuf[MAXSIZE],*pp;
+        IO():p1(buf),p2(buf),pp(pbuf) {}
+        ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
         inline char gc() {
             if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
             return p1==p2?' ':*p1++;
         }
+        inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
 #endif
-#ifndef REQUIRE_EOF
-        inline char gc() {
-            return getchar();
-        }
+#ifndef USE_FREAD
+        inline void sync() {}
+        inline char gc() {  return getchar();  }
 #endif
+        char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
         inline bool blank(char ch) { return ch==' ' or ch=='\n' or ch=='\r' or ch=='\t'; }
         inline bool isd(char x) {return (x>='0' and x<='9');}
-        std::string input() {
-            char c = gc();
-            std::string res="";
-            while((c&&!blank(c)) || c==' ') {
-                res.push_back(c);
-                c = gc();
-            }
+        inline IO& setprecision(int d) {
+            sprintf(floatFormat, "%%.%df", d); sprintf(doubleFormat, "%%.%dlf", d);
+            return *this;
+        }
+        string input(int reserve=0) {
+            char c = gc(); string res=""; res.reserve(reserve);
+            while((c&&!blank(c)) || c==' ') {  res.push_back(c); c = gc(); }
             return res;
         }
         template <class T>
-        inline void scan(T &x) {
-            double tmp=1;
-            bool sign=0;
-            x=0;
-            char ch=gc();
+        inline void read(T &x) {
+            double tmp=1; bool sign=0; x=0; char ch=gc();
             for (; not isd(ch); ch=gc()) if (ch=='-') sign=1;
             for (; isd(ch); ch=gc()) x=x*10+(ch^48);
             if (ch=='.') for (ch=gc(); isd(ch); ch=gc()) tmp*=.1f,x+=tmp*(ch^48);
             if (sign) x=-x;
         }
-        inline void scan(char *s) {
+        inline void read(char *s) {
             char ch=gc();
             for (; blank(ch); ch=gc());
             for (; not blank(ch); ch=gc()) *s++=ch;
             *s=0;
         }
-        inline void scan(char &c) {
-            for (c=gc(); blank(c); c=gc());
+        inline void readln(char *s) {
+            char c = gc(); while((c&&!blank(c)) || c==' ') {  *(s++)=c; c = gc();  }
         }
-        inline void scan(std::string &s){
-            std::string().swap(s);
-            char ch=gc();
+        inline void read(char &c) {  for (c=gc(); blank(c); c=gc());  }
+        inline void read(string &s){
+            string().swap(s); char ch=gc();
             for (; blank(ch); ch=gc());
             for (; not blank(ch); ch=gc()) s.push_back(ch);
         }
-        template <class T,class... Types>
-        inline void scan(T &x,Types &...args){
-            scan(x);
-            scan(args...);
-        }
+        template <class T,class... Types> inline void read(T &x,Types &...args){  read(x); read(args...);  }
+        template <class T> inline void scan(const T &x) { read(*x); }
+        template <class T,class ...Types> inline void scan(const T &x,const Types &...args) {  read(*x); scan(args...);  }
         inline void push(const char &c) {
-            // if (pp-pbuf==MAXSIZE) fwrite(pbuf,1,MAXSIZE,stdout),pp=pbuf;
-            // *pp++=c;
+#ifdef USE_FREAD
+            if (pp-pbuf==MAXSIZE) sync();
+            *pp++=c;
+#endif
+#ifndef USE_FREAD
             putchar(c);
+#endif
         }
-        inline void write(double x) {
-            printf("%lf",x);
+        inline void write(const double x) {
+#ifdef USE_FREAD
+            if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
+            pp += sprintf(pp, doubleFormat, x);
+#endif
+#ifndef USE_FREAD
+            printf(doubleFormat, x);
+#endif
         }
-        inline void write(float x) {
-            printf("%f",x);
+        inline void write(const float x) {
+#ifdef USE_FREAD
+            if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
+#endif
+#ifndef USE_FREAD
+            printf(floatFormat, x);
+#endif
         }
-        inline void write(char c) {
-            push(c);
-        }
-        inline void write(std::string &s){
-            for (auto i:s) push(i);
-        }
-        inline void write(char *s){
-            for (; *s; ++s) push(*s);
-        }
-        inline void write(const char *s){
-            for (; *s; ++s) push(*s);
-        }
+        inline void write(const char c) {  push(c);  }
+        inline void write(const string &s){  for (auto i:s)  push(i);  }
+        inline void write(const char *s){  for (; *s; ++s) push(*s);  }
         template <class T>
         inline void write(T x) {
             if (x<0) x=-x,push('-');
-            static char sta[40];
-            int top=0;
-            do {
-                sta[top++]=x%10^48,x/=10;
-            } while (x);
+            static char sta[40]; int top=0;
+            do {  sta[top++]=x%10^48,x/=10;  } while (x);
             while (top) push(sta[--top]);
         }
-        template <class T,class... Types>
-        inline void write(T &x,Types &...args){
-            write(x);
-            write(' ');
-            write(args...);
-        }
-        template <class... Types>
-        inline void writeln(Types &...args){
-            write(args...);
-            write('\n');
-        }
-
-        template<class T=int>
-        inline T read() {
-            T x;
-            scan(x);
-            return x;
-        }
-
+        template <class T,class... Types>  inline void write(const T &x,const Types &...args){ write(x); write(' '); write(args...); }
+        template <class... Types> inline void writeln(const Types &...args){  write(args...); write('\n');  }
+        template<class T=int> inline T get() {  T x; read(x); return x;  }
         // 流式输入输出
-        template <class T>
-        inline IO& operator>>(T&x) {
-            scan(x);
-            return *this;
-        }
-        template <class T>
-        inline IO& operator<<(T&x) {
-            write(x);
-            return *this;
-        }
+        template <class T> inline IO& operator>>(T&x) {  read(x); return *this; }
+        template <class T> inline IO& operator<<(const T&x) {  write(x); return *this; }
     };
     IO
-#ifdef REQUIRE_EOF
+#ifdef USE_FREAD
     <1048576>
 #endif
     io;
     const char endl[] = "\n";
+
 }
+
 #include <bits/stdc++.h>
 namespace lib {
     namespace bit {
@@ -455,84 +440,38 @@ namespace lib {
 }
 using namespace lib;
 
-;
+
 namespace Solution {
 
     int N;
-    const int _N = 1e5+5;
+    const int _N = 725;
+    vector<int> conn[_N];
 
-    struct Node {
-        int to, val=0;
-    };
-
-    vector<Node> conn[_N];
-    int F[_N];
+    int F[_N][3];
+    int val[_N];
     
     void init() {
-        // std::memset(F, 0x3f, sizeof(F));
-
         io >> N;
-        int x, y;
-        from(_, 1, N-1) {
-            io >> x >> y;
-            conn[x].push_back({y});
-            conn[y].push_back({x});
+        upto(_, N) {
+            int i = io.get<int>();
+            io.read(val[i]);
+            int m; io.read(m);
+            conn[i] = io.input().split().map(lambda(std::stoi(s), auto s));
         }
     }
 
-    void dfs(int p, int prev, std::vector<Node>::iterator it_prev) {
-        int cnt = 1;
-        for (auto it=conn[p].begin(); it!=conn[p].end(); it++) {
-            if (it->to == prev)  continue;
-            dfs(it->to, p, it);
-            cnt += it->val;
-        }
-
-        if (prev) {
-            it_prev->val = cnt;
-        }
-        log("dfs %d->%d => %d\n", p, prev, cnt);
+    void dfs(int p, int pre) {
+        // F[p] = 
     }
-
-    void dfs2(int p, int prev) {
-        for (auto &dest: conn[p]) {
-            if (dest.to == prev)  continue;
-            for (auto &dzd: conn[dest.to]) {
-                if (dzd.to == p) {
-                    chkMax(dzd.val, dest.val);
-                    log("%d->%d %d\n", dest.to, dzd.to, dzd.val)
-                    break;
-                }
-            }
-        }
-    }
-
 
     void solve() {
         init();
-        from(i, 1, 1)
-            dfs(i, 0, conn[i].end());
-        from(i, 1, N) {
-            for (auto &dest: conn[i]) {
-                log("%d->%d %d\n", i, dest.to, dest.val)
-                chkMax(F[i], dest.val);
-                // chkMax(F[dest.to], dest.val);
-            }
-        }
-        bool none = true;
-        from(i, 1, N) {
-            if (F[i] <= N / 2) {
-                io.writeln(i);
-                none = false;
-            }
-        }
-        if (none)  io.writeln("NONE");
+
     }
 }
 
 
-int main() {;
-
+int main() {
     initDebug;
     Solution::solve();
     return 0;

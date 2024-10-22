@@ -1,3 +1,4 @@
+#define LIB_VECTOR
 namespace lib {
     template <typename T>
     class vector: public std::vector<T> {

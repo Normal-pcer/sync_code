@@ -14,6 +14,8 @@
     @var    text mainBackgroundColor "主界面背景色" "rgba(255, 255, 255, 0.7)"
     @var    text contentBackgroundColor "内容背景色" "rgba(228, 240, 248, 0.7)"
     @var    text globalFontFamily "全局字体系列" ""Noto Sans SC", -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", "Noto Sans", "Noto Sans CJK SC", "Noto Sans CJK", "Source Han Sans", "PingFang SC", "Segoe UI", "Microsoft YaHei", sans-serif"
+    @var    text mainColumnWidth "主界面宽度" "70%"
+    @var    text sampleFontFamily "样例字体系列" "consolas, monospace"
 ==/UserStyle== */
 
 @-moz-document url-prefix("https://neooj.com:8082") {
@@ -57,7 +59,7 @@
 
     #main {
         border: solid #aaa 1px;
-        width: 60%;    
+        width: mainColumnWidth;    
         margin: auto;
         box-shadow: 0 0 8px black;
         padding: 20px;
@@ -85,6 +87,6 @@
 
     .sampledata {
         background: none;
-        font-family: globalFontFamily;  
+        font-family: sampleFontFamily;  
     }
 }

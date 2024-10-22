@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#define LIB_STRING
 namespace lib {
     class string: public std::string {
     public:
