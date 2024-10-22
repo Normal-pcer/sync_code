@@ -144,6 +144,9 @@ namespace lib{
 
 }
 
+#define lambda(a, expr) [&](auto a){return (expr);}
+#define lambda(a, b, expr) [&](auto a, auto b){return (expr);}
+
 using namespace lib;
 
 ;
@@ -151,20 +154,25 @@ namespace Solution {
 
     
     void init() {
-        // optimizeIO;
-        freopen("test.in", "r", stdin);
+    }
+
+    template <class T, class = typename std::enable_if_t<std::is_integral_v<T>>>
+    auto func(T arg) {
+        return arg/2;
+    }
+    template <class T>
+    auto func(T arg) {
+        return floor(arg/2);
     }
 
     int N, s;
     void solve() {
         init();
-        int x;
-        io >> N;
-        upto(_, N) {
-            io.read(x);
-            s += x;
-        }
-        io << s;
+
+        std::vector<int> v = {1,2,3,4,5};
+        // int s = std::accumulate(v.begin(), v.end(), lambda(s,v, v%2==0?s+v:s));
+
+        io << s << endl;
     }
 }
 
