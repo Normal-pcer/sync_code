@@ -456,7 +456,7 @@ namespace Solution {
             int i = io.get<int>();
             io.read(val[i]);
             int m; io.read(m);
-            conn[i] = io.input().split().map(lambda(std::stoi(s), auto s));
+            if (m)  conn[i] = io.input().split().map(lambda(std::stoi(s), auto s));
         }
     }
 
