@@ -444,10 +444,10 @@ using namespace lib;
 namespace Solution {
 
     int N;
-    const int _N = 725;
+    const int _N = 1505;
     vector<int> conn[_N];
 
-    int F[_N][3];
+    int F[_N][3];  // 0~自己放 1~父亲放 2~儿子放
     int val[_N];
     
     void init() {
@@ -456,17 +456,40 @@ namespace Solution {
             int i = io.get<int>();
             io.read(val[i]);
             int m; io.read(m);
-            if (m)  conn[i] = io.input().split().map(lambda(std::stoi(s), auto s));
+            upto(__, m) {
+                int j = io.get<int>();
+                conn[i].push_back(j);
+                conn[j].push_back(i);
+            }
         }
     }
 
     void dfs(int p, int pre) {
-        // F[p] = 
+        F[p][0] = val[p];
+
+        int son_min_c = Infinity; bool setted = false;
+        for (auto &dest: conn[p]) {
+            if (dest == pre)  continue;
+            dfs(dest, p);
+
+            F[p][0] += std::min({F[dest][0], F[dest][1], F[dest][2]});
+            F[p][1] += std::min(F[dest][0], F[dest][2]);
+            if (F[dest][0] <= F[dest][2]) {
+                F[p][2] += F[dest][0]; setted = true;
+            } else {
+                F[p][2] += F[dest][2]; chkMin(son_min_c, F[dest][0]-F[dest][2]);
+            }
+        }
+        if (not setted) {
+            F[p][2] += son_min_c;
+        }
     }
 
     void solve() {
         init();
-
+        dfs(1, 0);
+        int ans = std::min(F[1][2], F[1][0]);
+        io << ans << endl;
     }
 }
 
