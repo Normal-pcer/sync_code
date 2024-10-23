@@ -54,6 +54,10 @@ namespace lib{
         inline void readln(char *s) {
             char c = gc(); while((c&&!blank(c)) || c==' ') {  *(s++)=c; c = gc();  }
         }
+        inline void readln(string &res, int reserve=0) {
+            char c = gc(); res.reserve(reserve);
+            while((c&&!blank(c)) || c==' ') {  res.push_back(c); c = gc(); }
+        }
         inline void read(char &c) {  for (c=gc(); blank(c); c=gc());  }
         inline void read(string &s){
             string().swap(s); char ch=gc();

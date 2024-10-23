@@ -87,5 +87,4 @@ namespace lib {
     };
 }
 
-#define lambda(expr, args...) [&](args) {return expr;}
 #define select_func(ret, name, args...) static_cast<ret(*)(args)>(name)

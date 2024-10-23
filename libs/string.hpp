@@ -6,7 +6,8 @@ namespace lib {
         string() = default;
         string(const char* s) : std::string(s) {}
         string(std::string s) : std::string(s) {}
-        string join(std::vector<std::string> s) {
+        template <class T>
+        string join(T&& s) {
             string res = "";
             size_t size = 0;
             for (auto& i: s)  size += i.size();
