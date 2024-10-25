@@ -1,0 +1,23 @@
+Invalid command
+Invalid command
+Invalid command
+Invalid command
+red guard;NA;yes;no
+Invalid command
+blue captain;NA;yes;no
+red soldier;NA;yes;no
+Invalid command
+Invalid command
+blue elephant;NA;yes;no
+red duck;NA;yes;no
+blue horse;NA;yes;no
+red duck;blue soldier;yes;no
+Invalid command
+blue captain;NA;yes;no
+red duck;blue captain;no;yes
+Invalid command
+> g++ "P5380_[THUPC2019]_Ñ¼Æå.cpp" -o "P5380_[THUPC2019]_Ñ¼Æå.exe" -std=c++20 -Wall -Wextra -finput-charset=utf-8 -g -Wl,-stack=2147483647
+ÕýÔÚ±àÒë...> "P5380_[THUPC2019]_Ñ¼Æå.exe" 
+=====================
+=====================
+Exited after 4.7362s, with code 0.

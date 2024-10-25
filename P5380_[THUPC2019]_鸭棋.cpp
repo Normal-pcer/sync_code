@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://www.luogu.com.cn/problem/P5380
  */
 
 #include <bits/stdc++.h>
@@ -98,7 +98,8 @@ namespace lib {
             return result;
         }
         
-        bool all(const std::function <bool(const T&)>& f) {
+        template <class Func>
+        bool all(Func&& f) {
             for (auto& i: *this) {
                 if (!f(i)) {
                     return false;
@@ -109,7 +110,8 @@ namespace lib {
 
         bool all() { return all([](auto&x){return x;}); }
 
-        bool some(const std::function <bool(const T&)>& f) {
+        template <class Func>
+        bool some(const Func&& f) {
             for (auto& i: *this) {
                 if (f(i)) {
                     return true;
@@ -300,226 +302,241 @@ namespace lib{
 
 }
 
-#include <bits/stdc++.h>
-namespace lib {
-    namespace bit {
-        // 按位遍历所有的 1
-        template <class T, class Func>
-        inline void traverse1(T x, Func&& f) {  
-            for (; x; x&=x-1)  f(x&-x);
-        }
-        // 按位大于
-        template <class T>
-        inline bool greater(T x, T y) {  
-            return x & ~y;
-        }
-        // 枚举子集
-        template <class T, class Func>
-        inline void subset(T s, Func&& F) {  
-            for (auto t=s; t; t=(t-1)&s)  f(t);
-        }
-    }
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const int p>
-    class mod {
-    public:
-        T data;
-
-        mod() = default;
-        mod(T num) : data(positive(num % p)) {}
-
-        T positive(T num) { 
-            if (num>=0)  return num;
-            if (num+p>=0)  return num+p;
-            return num + p * ((-num) / p + 1);
-        }
-
-        mod operator+(const mod &other) { return mod(positive(data + other.data) % p); }
-        mod operator-(const mod &other) { return mod(positive(data - other.data) % p); }
-        mod operator*(const mod &other) { return mod(positive(data * other.data) % p); }
-        mod operator/(const mod &other) { return mod((data * other.data)); }
-    };
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const long long sz>
-    class RollingArray {  // 滚动数组
-    public: 
-        T arr[sz];
-        long long first = 0;  // arr[0] 对应的原下标
-        
-
-        void forward() {
-            for (long long i=0; i<sz-1; i++) {
-                std::memcpy(arr+i, arr+i+1, sizeof(T));
-            }
-            first++;
-        }
-
-        void backward() {
-            for (long long i=sz-1; i>0; i--) {
-                std::memcpy(arr+i, arr+i-1, sizeof(T));
-            }
-            first--;
-        }
-
-        T& operator[](long long i) {
-            long long real = i - first;
-            while (real >= sz) {
-                real--;
-                this->forward();
-            }
-            while (real < 0LL) {
-                real++;
-                this->backward();
-            }
-            return arr[real];
-        }
-    };
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const long long sz>
-    class RollingArray2 {  // 滚动数组 - 另一种实现思路
-    public: 
-        T arr[sz];
-
-        T &operator[](long long idx) {
-            return arr[idx % sz];
-        }
-    };
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const unsigned long long sz>
-    class MapArray {
-    public:
-        T arr[sz];
-        MapArray() = default;
-        MapArray(const MapArray<T, sz>&) = default;
-        MapArray(std::initializer_list<T>& il) {
-            std::copy(il.begin(), il.end(), arr);
-        }
-
-        T& operator[](const unsigned long long idx) {
-            return arr[idx];
-        }
-        T& operator()(const unsigned long long idx) {
-            return arr[idx];
-        }
-    };
-}
-namespace lib {
-    namespace binary {  // 二分
-        template <class T, class U, class Func>
-        T lower_bound_mapping(
-            T begin,
-            T end,
-            U val,
-            Func &&mapping,
-            T eps = 1
-        ) {
-            while (end-begin >= eps) {
-                T mid = begin + (end-begin)/2;
-                if (mapping(mid) < val) {
-                    begin = mid + eps;
-                } else {
-                    end = mid;
-                }
-            }
-            return begin;
-        }
-
-        template <class T, class U, class Func>
-        T upper_bound_mapping(
-            T begin,
-            T end,
-            U val,
-            Func &&mapping,
-            T eps = 1
-        ) {
-            while (end-begin >= eps) {
-                T mid = begin + (end-begin)/2;
-                if (mapping(mid) <= val) {
-                    begin = mid + eps;
-                } else {
-                    end = mid;
-                }
-            }
-            return begin;
-        }
-    }
-}
 using namespace lib;
 
-;
-namespace Solution {
-    int N; const int _N = 1005;
-    int G_[_N][_N];
-    int G[_N][_N];
-    
-    void init() {
-        std::memset(G_, 0x3f, sizeof(G_));
-        io >> N;
-        upto(r, N) {
-            G_[r][r] = 0;
-            upto(c, N) {
-                int x = io.get();
-                if (x)
-                    G_[r][c] = x;
+
+
+
+
+const int _X = 9;
+const int _Y = 10;
+
+struct Vec2d {
+    int x, y;
+    Vec2d operator+(const Vec2d &other) const { return {x+other.x, y+other.y}; }
+    Vec2d operator-(const Vec2d &other) const { return {x-other.x, y-other.y}; }
+    int operator*(const Vec2d &other) const { return x*other.x + y*other.y; }
+    Vec2d operator*(const int other) const { return {x*other, y*other}; }
+    Vec2d operator/(const int other) const { return {x/other, y/other}; }
+    int cross(const Vec2d &other) const { return x*other.y - y*other.x; }
+    bool operator==(const Vec2d &other) const { return x==other.x and y==other.y; }
+    bool operator!=(const Vec2d &other) const { return x!=other.x or y!=other.y; }
+
+    // 两点间欧几里得距离的平方
+    int sqrDistance(const Vec2d &other) const { 
+        return (x-other.x)*(x-other.x)+(y-other.y)*(y-other.y); 
+    }
+    // 曼哈顿距离
+    int manhattan(const Vec2d &other) const { return abs(x-other.x)+abs(y-other.y); }
+    // 切比雪夫距离
+    int chebyshev(const Vec2d &other) const { return std::max(abs(x-other.x), abs(y-other.y)); }
+
+    int sqrAbs() const { return x*x+y*y; }
+};
+
+enum Team {
+    Red,
+    Blue,
+};
+
+struct Piece;
+
+vector<Piece> pieces;
+struct Piece {
+    string  name;
+    Vec2d   pos;
+    Team    team;
+
+    // 检查是否可以到达目标位置，但是只对位置进行判断
+    bool reachable_pos(Vec2d dest) {
+        if (name == "captain") {
+            return pos.sqrDistance(dest) == 1;
+        } else if (name == "guard") {
+            return pos.manhattan(dest) == 2 and pos.chebyshev(dest) == 1;
+        } else if (name == "elephant") {
+            return pos.manhattan(dest) == 4 and pos.chebyshev(dest) == 2 and 
+                not pieces.some(lambda(p, (p.pos-pos)*2==(dest-pos))); 
+        } else if (name == "horse") {
+            return pos.manhattan(dest) == 3 and pos.chebyshev(dest) == 2 and 
+                not pieces.some(lambda(p, 
+                    p.pos.sqrDistance(pos) == 1 and (p.pos-pos)*(dest-pos)==2));
+        } else if (name == "car") {
+            auto a = dest-pos;
+            if (pos.chebyshev(dest) != pos.manhattan(dest))  return false;
+            if (pos.manhattan(dest) == 0)  return false;
+            auto meta = a / pos.manhattan(dest);
+            for (auto p=pos+meta; p!=dest; p=p+meta) {
+                if (pieces.some(lambda(piece,piece.pos==p)))  return false;
             }
+            return true;
+        } else if (name == "soldier") {
+            return pos.chebyshev(dest) == 1;
+        } else {  // duck
+            auto a = dest-pos;
+            return pos.sqrDistance(dest) == 13 and not pieces.some([&](auto p) {
+                auto b = p.pos-pos;
+                return (a*b==8 and b.sqrAbs()==5) or (a*b==3 and b.sqrAbs()==1);
+            });
         }
     }
 
-    int F[_N][_N];
-    int E[_N][_N];
-    template <class matrix_t>
-    void Floyd(matrix_t&& G) {
+    bool reachable(Vec2d dest) {
+        return 1<=dest.x and dest.x<=_X and
+        1<=dest.y and dest.y<=_Y and
+        reachable_pos(dest) and 
+        not pieces.some(lambda(p, p.pos==dest and p.team==team));
+    }
+};
 
-        from (i, 1, N) {
-            from (j, 1, N) {
-                F[i][j] = G[i][j];
-            }
-        }
-        from(k, 1, N) {
-            from (i, 1, N) {
-                from (j, 1, N) {
-                    int res = F[i][k] + F[k][j];
-                    if (res < F[i][j]) {
-                        log("(%d)F[%d][%d] = (%d)F[%d][%d] + (%d)F[%d][%d]\n", F[i][j], i, j, F[i][k], i, k, F[k][j], k, j)
-                        F[i][j] = res;
-                        E[i][j] = k;
-                    }
-                }
-            }
-        }
+namespace Solution {
+
+    int Q;
+    
+    void init() {
+        pieces.push_back(Piece{"captain", {5, 1}, Team::Red});
+        pieces.push_back(Piece{"captain", {5, 10}, Team::Blue});
+        pieces.push_back(Piece{"car", {1, 1}, Team::Red});
+        pieces.push_back(Piece{"car", {9, 1}, Team::Red});
+        pieces.push_back(Piece{"car", {1, 10}, Team::Blue});
+        pieces.push_back(Piece{"car", {9, 10}, Team::Blue});
+        pieces.push_back(Piece{"horse", {2, 1}, Team::Red});
+        pieces.push_back(Piece{"horse", {8, 1}, Team::Red});
+        pieces.push_back(Piece{"horse", {2, 10}, Team::Blue});
+        pieces.push_back(Piece{"horse", {8, 10}, Team::Blue});
+        pieces.push_back(Piece{"elephant", {3, 1}, Team::Red});
+        pieces.push_back(Piece{"elephant", {7, 1}, Team::Red});
+        pieces.push_back(Piece{"elephant", {3, 10}, Team::Blue});
+        pieces.push_back(Piece{"elephant", {7, 10}, Team::Blue});
+        pieces.push_back(Piece{"guard", {4, 1}, Team::Red});
+        pieces.push_back(Piece{"guard", {6, 1}, Team::Red});
+        pieces.push_back(Piece{"guard", {4, 10}, Team::Blue});
+        pieces.push_back(Piece{"guard", {6, 10}, Team::Blue});
+        pieces.push_back(Piece{"duck", {1, 3}, Team::Red});
+        pieces.push_back(Piece{"duck", {9, 3}, Team::Red});
+        pieces.push_back(Piece{"duck", {1, 8}, Team::Blue});
+        pieces.push_back(Piece{"duck", {9, 8}, Team::Blue});
+        pieces.push_back(Piece{"soldier", {1, 4}, Team::Red});
+        pieces.push_back(Piece{"soldier", {3, 4}, Team::Red});
+        pieces.push_back(Piece{"soldier", {5, 4}, Team::Red});
+        pieces.push_back(Piece{"soldier", {7, 4}, Team::Red});
+        pieces.push_back(Piece{"soldier", {9, 4}, Team::Red});
+        pieces.push_back(Piece{"soldier", {1, 7}, Team::Blue});
+        pieces.push_back(Piece{"soldier", {3, 7}, Team::Blue});
+        pieces.push_back(Piece{"soldier", {5, 7}, Team::Blue});
+        pieces.push_back(Piece{"soldier", {7, 7}, Team::Blue});
+        pieces.push_back(Piece{"soldier", {9, 7}, Team::Blue});
+
+        io >> Q;
     }
 
     void solve() {
         init();
-        Floyd(G_);
-        upto(r, N) {
-            upto(c, N) {
-                io << F[r][c] << ' ';
-            }   
-            io << endl;
-        }
-        io << endl << endl << endl;
-        upto(r, N) {
-            upto(c, N) {
-                io << E[r][c] << ' ';
+        Piece& kingRed = pieces[0];
+        Piece& kingBlue = pieces[1];
+
+        bool round = 0;
+        bool gameOver = false;
+        from(_, 1, Q) {
+            // debug io.writeln("====", _, "====");
+            if (gameOver) {
+                io.writeln("Invalid command");
+                continue;
             }
-            io << endl;
+            never {
+                auto tmp = pieces.filter(lambda(fk, fk.pos.x==4 and fk.pos.y==7));
+                if (not tmp.empty())
+                    debug io.writeln((int)tmp[0].team, tmp[0].name);
+            }
+            int x1, y1, x2, y2;
+            io >> y1 >> x1 >> y2 >> x2;
+            x1+=1, y1+=1, x2+=1, y2+=1;
+            never io.writeln(x1 , y1 , x2 , y2);
+            auto src = Vec2d{x1, y1};
+            auto dest = Vec2d{x2, y2};
+
+            auto selected = std::find_if(pieces.begin(), pieces.end(), 
+                lambda(p, p.pos==src and p.team==round));
+            if (selected == pieces.end()) {
+                io.writeln("Invalid command");
+                continue;
+            }
+
+            bool available = selected->reachable(dest);
+            if (not available) {
+                io.writeln("Invalid command");
+                continue;
+            }
+            bool isKingKilled = false;
+            io.write(selected->team==Team::Red? "red": "blue", selected->name);
+            io.write(';');
+            auto attackedIter = std::find_if(pieces.begin(), pieces.end(), lambda(p, p.pos==dest));
+            selected->pos = dest;
+            if (attackedIter == pieces.end()) {
+                io.write("NA");
+            } else {
+                isKingKilled = (attackedIter->name=="captain");
+                io.write(attackedIter->team==Team::Red? "red": "blue", attackedIter->name);
+                pieces.erase(attackedIter);
+            }
+            io.write(';');
+            bool isKingInDanger = false;
+            isKingInDanger |= pieces.some(lambda(p, p.reachable(kingRed.pos) and p.team==Team::Blue));
+            isKingInDanger |= pieces.some(lambda(p, p.reachable(kingBlue.pos) and p.team==Team::Red));
+            isKingInDanger &= !isKingKilled;
+            io.write(isKingInDanger? "yes": "no");
+            io.write(';');
+            io.writeln(isKingKilled? "yes": "no");
+            gameOver |= isKingKilled;
+            round ^= 1;
         }
     }
 }
 
 
-int main() {;
-
+int main() {
     initDebug;
     Solution::solve();
     return 0;
 }
+
+/*
+18
+0 0 7 0
+9 0 8 0
+0 1 1 3
+0 2 2 0
+0 3 1 2
+0 4 0 3
+9 4 8 4
+3 2 2 3
+7 0 4 2
+7 0 5 3
+9 2 7 4
+2 0 4 3
+9 1 8 3
+4 3 6 6
+7 4 9 2
+8 4 9 4
+6 6 9 4
+9 8 8 8
+
+
+Invalid command
+Invalid command
+Invalid command
+Invalid command
+red guard;NA;no;no
+Invalid command
+blue captain;NA;no;no
+red soldier;NA;no;no
+Invalid command
+Invalid command
+blue elephant;NA;no;no
+red duck;NA;no;no
+blue horse;NA;no;no
+red duck;blue soldier;no;no
+Invalid command
+blue captain;NA;yes;no
+red duck;blue captain;no;yes
+Invalid command
+*/
