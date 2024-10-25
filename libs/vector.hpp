@@ -59,7 +59,8 @@ namespace lib {
             return result;
         }
         
-        bool all(const std::function <bool(const T&)>& f) {
+        template <class Func>
+        bool all(Func&& f) {
             for (auto& i: *this) {
                 if (!f(i)) {
                     return false;
@@ -70,7 +71,8 @@ namespace lib {
 
         bool all() { return all([](auto&x){return x;}); }
 
-        bool some(const std::function <bool(const T&)>& f) {
+        template <class Func>
+        bool some(const Func&& f) {
             for (auto& i: *this) {
                 if (f(i)) {
                     return true;

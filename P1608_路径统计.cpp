@@ -456,63 +456,73 @@ using namespace lib;
 
 ;
 namespace Solution {
-    int N; const int _N = 1005;
+
+    int N, M; const int _N = 2048;
     int G_[_N][_N];
-    int G[_N][_N];
+    struct Node {
+        int to, val;
+        bool operator< (const Node &other) const {
+            return this->val > other.val;
+        }
+    };
+    vector<Node> G[_N];
     
     void init() {
+        io >> N >> M;
         std::memset(G_, 0x3f, sizeof(G_));
-        io >> N;
-        upto(r, N) {
-            G_[r][r] = 0;
-            upto(c, N) {
-                int x = io.get();
-                if (x)
-                    G_[r][c] = x;
-            }
+        upto(_, M) {
+            int x, y, v;
+            io >> x >> y >> v;
+            chkMin(G_[x][y], v);
+            // chkMin(G_[y][x], v);
         }
-    }
-
-    int F[_N][_N];
-    int E[_N][_N];
-    template <class matrix_t>
-    void Floyd(matrix_t&& G) {
-
-        from (i, 1, N) {
-            from (j, 1, N) {
-                F[i][j] = G[i][j];
-            }
-        }
-        from(k, 1, N) {
-            from (i, 1, N) {
-                from (j, 1, N) {
-                    int res = F[i][k] + F[k][j];
-                    if (res < F[i][j]) {
-                        log("(%d)F[%d][%d] = (%d)F[%d][%d] + (%d)F[%d][%d]\n", F[i][j], i, j, F[i][k], i, k, F[k][j], k, j)
-                        F[i][j] = res;
-                        E[i][j] = k;
-                    }
+        upto(i, N) {
+            upto(j, N) {
+                if (G_[i][j] < 0x3f3f3f3f) {
+                    G[i].push_back({j, G_[i][j]});
                 }
             }
         }
     }
 
+
+    std::pair<int, int> path(int S, int T) {
+        static std::bitset<_N> vis;
+        std::priority_queue<Node> q;
+
+        std::vector<int> dis(N+1);
+        std::vector<int> cnt(N+1);
+
+        std::fill(dis.begin(), dis.end(), Infinity);
+
+        q.push({S, 0});
+        dis[S] = 0, cnt[S] = 1;
+
+        while (not q.empty()) {
+            auto p = q.top();  q.pop();
+            debug io.writeln(p.to, p.val);
+            if (vis[p.to])  continue;
+            
+            for (auto &dest: G[p.to]) {
+                if (p.val + dest.val == dis[dest.to]) {
+                    cnt[dest.to] += cnt[p.to];
+                }
+                if (dis[dest.to] > dis[p.to] + dest.val) {
+                    dis[dest.to] = dis[p.to] + dest.val;
+                    cnt[dest.to] = cnt[p.to]    ;
+                    q.push({dest.to, dis[dest.to]});
+                }
+            }
+        }
+
+        return {dis[T], cnt[T]};
+    }
+
     void solve() {
         init();
-        Floyd(G_);
-        upto(r, N) {
-            upto(c, N) {
-                io << F[r][c] << ' ';
-            }   
-            io << endl;
-        }
-        io << endl << endl << endl;
-        upto(r, N) {
-            upto(c, N) {
-                io << E[r][c] << ' ';
-            }
-            io << endl;
-        }
+        auto [ans, cnt] = path(1, N);
+        if (ans >= Infinity)  io.writeln("No answer");
+        else  io.writeln(ans, cnt);
     }
 }
 

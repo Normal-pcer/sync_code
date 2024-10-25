@@ -10,10 +10,10 @@ namespace lib {
         string join(T&& s) {
             string res = "";
             size_t size = 0;
-            for (auto& i: s)  size += i.size();
+            for (const auto& i: s)  size += i.size();
             res.reserve(size);
             bool first = true;
-            for (auto& i: s) {
+            for (const auto& i: s) {
                 if (!first)
                     res += *this;
                 res += i;
