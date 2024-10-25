@@ -500,7 +500,7 @@ namespace Solution {
         int add_query(int p, int l, int r, int val) {
             if (t[p].l>=l and t[p].r<=r) {
                 t[p].val += val * (t[p].r-t[p].l+1);
-                t[p].tag += val;
+                t[p].tag += 
                 return t[p].val;
             }
             int res = 0;
