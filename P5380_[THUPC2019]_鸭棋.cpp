@@ -362,13 +362,10 @@ struct Piece {
                     p.pos.sqrDistance(pos) == 1 and (p.pos-pos)*(dest-pos)==2));
         } else if (name == "car") {
             auto a = dest-pos;
-            if (pos.chebyshev(dest) != pos.manhattan(dest))  return false;
-            if (pos.manhattan(dest) == 0)  return false;
-            auto meta = a / pos.manhattan(dest);
-            for (auto p=pos+meta; p!=dest; p=p+meta) {
-                if (pieces.some(lambda(piece,piece.pos==p)))  return false;
-            }
-            return true;
+            return pos.chebyshev(dest) == pos.manhattan(dest) and not pieces.some([&](auto p) {
+                auto b = p.pos-pos;
+                return b.cross(a)==0 and b.sqrAbs()<a.sqrAbs() and b*a>0;
+            });
         } else if (name == "soldier") {
             return pos.chebyshev(dest) == 1;
         } else {  // duck
@@ -437,7 +434,6 @@ namespace Solution {
         bool round = 0;
         bool gameOver = false;
         from(_, 1, Q) {
-            // debug io.writeln("====", _, "====");
             if (gameOver) {
                 io.writeln("Invalid command");
                 continue;
