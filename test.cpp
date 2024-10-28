@@ -39,14 +39,20 @@ namespace lib{}
 
 using namespace lib;
 
-
 ;
 namespace Solution {
 
-    int printf=5;
+    
+    void init() {
+
+    }
+
+    int m;
+    int b[0][(int)1e6];
 
     void solve() {
-        ::printf("%d\n", printf);
+        init();
+        std::cout << sizeof(b) << std::endl;
     }
 }
 
