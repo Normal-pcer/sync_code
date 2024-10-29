@@ -317,6 +317,7 @@ namespace Solution {
 
         void damaged(const Damage& obj) {
             assert(not dead);
+            // 尝试避免伤害，否则正常造成伤害
             if (obj.type == Killing) {
                 auto dodge = rg::find_if(cards, lam(c, c.label==Label::D_Dodge));  // 尝试使用“闪”
                 if (dodge != cards.end())  dodge->abandon();
@@ -332,8 +333,11 @@ namespace Solution {
             } else {
                 strength -= obj.amount;  // 无法躲避伤害
             }
+
+            // 判定是否死亡
             if (strength <= 0)  dead = true;
 
+            // 判定“类反猪”
             if (character == M_Master) { 
                 if (dead)  winner = F_Thief;
                 if (obj.source.impression == _Undefined)
@@ -349,19 +353,22 @@ namespace Solution {
                 obj.source.impression = Z_Minister;
             }
             
-            if (character == F_Thief and dead) {
+            if (character == F_Thief and dead) {  // 判断反贼数量和主猪胜利
                 thiefCount--;
                 if (thiefCount <= 0)  winner = M_Master;
             }
 
-            if (winner != _Undefined)  return;
 
             if (dead) {  // 奖励和惩罚
                 if (character == F_Thief) {
+                    // 如果提前结束则不予发放奖励
+                    if (winner != _Undefined)  return;
+                    // 摸三张牌
                     obj.source.getCard(lootCard());
                     obj.source.getCard(lootCard());
                     obj.source.getCard(lootCard());
                 } else if (character == Z_Minister and obj.source.character == M_Master) {
+                    // 需要先执行完惩罚
                     obj.source.cards.clear();
                     obj.source.withWeapon = false;
                 }
@@ -381,7 +388,8 @@ namespace Solution {
         bool round() {
             drawCards();
 
-            int usedKillingCard = withWeapon? -Infinity: 0;
+            // 如果使用了武器猪哥连弩，没有杀的次数限制
+            int usedKillingCard = withWeapon? -Infinity: 0;  
             for (auto i=0; i!=(int)cards.size(); i++) {
                 auto& card = cards[i];
                 bool isKillingCard = (card.label == Label::K_Killing);
@@ -392,8 +400,9 @@ namespace Solution {
                     i--;  // 移除了元素，回退指针
                     if (isKillingCard)  usedKillingCard++;
                 }
-                if (winner != _Undefined)  return false;
-                if (dead)  return true;
+                // 如果胜负一定，强制中断游戏
+                if (winner != _Undefined)  return false;  
+                if (dead)  return true;  // 如果在回合中途被打死，强制结束回合
             }
             return true;
         }
@@ -484,13 +493,13 @@ namespace Solution {
         auto user = card.owner->character;
         auto target = card.owner->position;
 #define cur players[target]
-        if (user == M_Master) {
+        if (user == M_Master) {  // 主猪打反猪和类反猪
             for (++target; cur->impression!=F_Thief and cur->impression!=_Questionable
                 and target!=card.owner->position; ++target)
                     log("duel.cpp - %d\n", target.index);
-        } else if (user == Z_Minister) {
+        } else if (user == Z_Minister) {  // 忠猪打反猪
             for (++target; cur->impression!=F_Thief and target!=card.owner->position; ++target);
-        } else {
+        } else {  // 反猪优先打主猪
             for (++target; cur->character!=M_Master and target!=card.owner->position; ++target);
         }
 
@@ -565,6 +574,7 @@ namespace Solution {
      */
     bool round() {
         for (auto &player: players) {
+            if (player->dead)  continue;
             if (player->round() == false) {
                 return false;
             }
