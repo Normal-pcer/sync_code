@@ -36,6 +36,7 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
 #define lam lambda
 namespace lib{}
+
 #include <bits/stdc++.h>
 #define USE_FREAD
 // #undef USE_FREAD
@@ -64,7 +65,7 @@ namespace lib{
         inline char gc() {  return getchar();  }
 #endif
         char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
-        inline bool blank(char ch) { return ch==' ' or ch=='\n' or ch=='\r' or ch=='\t'; }
+        inline bool blank(char ch) { return ch<=' ' or ch==127; }
         inline bool isd(char x) {return (x>='0' and x<='9');}
         inline IO& setprecision(int d) {
             sprintf(floatFormat, "%%.%df", d); sprintf(doubleFormat, "%%.%dlf", d);
@@ -158,97 +159,58 @@ namespace lib{
 }
 
 using namespace lib;
-using std::vector;
 
 ;
 namespace Solution {
-
-    enum Character {
-        _Undefined = '\0',
-        M_Master = 'M',  // 主猪
-        Z_Minister = 'Z',  // 忠猪
-        F_Thief = 'F',  // 反猪
-    };
-    const vector<Character> Character_all = {_Undefined, M_Master, Z_Minister, F_Thief};
-
-    class Player;
-
-    class Card {
-    public:
-        typedef std::function<void(Card)> CardCallbackFunc;
-        Player *owner;
-        int id;
-        char label;
-
-        Card(Player* owner, int id, char label): 
-            owner(owner), id(id), label(label) {}
-
-        bool apply();
-    };
-    vector<Card> cards;
-    std::unordered_map<char, bool(*)(const Card)> cardActions;
-
-    template <class T, T& container>
-    class RollingIndex {
-        void _next() {
-            assert(index < (int)container.size());
-            index++;
-            if (index>=(int)container.size())  index=0;
-        }
-    public:
-        int index;
-        RollingIndex next() {
-            auto res = *this;
-            do { res._next(); } while (not container.at(res.index).dead);
-            return res;
-        }
-        operator int () {
-            return index;
-        }
-    };
-
-    const int MAX_STRENGTH = 4;
-    vector<Player> players;
-    class Player {
-    public:
-        Character character;
-        Character impression;
-        int strength = MAX_STRENGTH;
-        vector<Card> cards;
-        RollingIndex<decltype(players), players> position;
-        bool dead = false;
-    };
-
-    bool Card::apply() {
-        return cardActions[label](*this);
-    }
-
-    bool P_Peach(const Card card) {
-        if (card.owner->strength >= MAX_STRENGTH)  return false;
-        card.owner->strength++;
-        return true;
-    }
-
-    bool K_Kill(const Card card) {
-        Player& target = players.at(card.owner->position.next());
-        
-        return true;
-    }
-
-    void initCardTemplates() {
-        cardActions.insert({'P', P_Peach});
-        cardActions.insert({'K', K_Kill});
-        Card(nullptr, 5, 'T').apply();
-    }
-
+    int N; const int _N = 1e5+5;
+    struct Node { int to; ll val; };
+    std::vector<Node> conn[_N];
+    int cnt[_N];
+    ll a[_N];
+    int sonSize[_N];
+    ll sum;
     
     void init() {
-        initCardTemplates();
+        io >> N;
+        from(i, 1, N)  io >> cnt[i];
+        sum = std::accumulate(cnt+1, cnt+N+1, 0);
+        from(i, 2, N) {
+            int x, y, val;
+            io >> x >> y >> val;
+            conn[x].push_back({y, val});
+            conn[y].push_back({x, val});
+        }
+        // std::memset(a, 0x3f, sizeof(a));
+    }
+
+    ll dfs(int p, int prev) {
+        ll score = 0;
+        for (auto &dest: conn[p]) {
+            if (dest.to==prev)  continue;
+            auto s = dfs(dest.to, p);
+            a[p] += a[dest.to] + dest.val * s;
+            score += s;
+        }
+        return (sonSize[p]=score+cnt[p]);
+    }
+
+
+    void dfs_changeRoot(int p, int prev) {
+        for (auto &dest: conn[p]) {
+            if (dest.to == prev)  continue;
+            a[dest.to] = a[p] - sonSize[dest.to] * dest.val + (sum-sonSize[dest.to]) * dest.val;
+            dfs_changeRoot(dest.to, p);
+        }
     }
 
     void solve() {
         init();
+        dfs(1, 0);
+        dfs_changeRoot(1, 0);
 
+        ll ans = *std::min_element(a+1, a+N+1);
+        log("at %lld\n", std::min_element(a+1, a+N+1)-a);
+        io << ans << endl;
     }
 }
 
@@ -257,6 +219,5 @@ int main() {;
 
     initDebug;
     Solution::solve();
-
     return 0;
 }

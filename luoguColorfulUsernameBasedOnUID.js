@@ -30,7 +30,7 @@
             uid = uid.padStart(3, "0");
         }
 
-        console.log(`uid1: ${uid}`)
+        // console.log(`uid1: ${uid}`)
         if (brighten) {
             // 提取成 RGB 格式
             if (uid.length === 3) {
@@ -39,12 +39,12 @@
                     .map((c) => c.repeat(2))
                     .join("");
             }
-            console.log(`uid2: ${uid}`)
+            // console.log(`uid2: ${uid}`)
             for (let i = 0; i < 6; i += 2) {
                 let hex = parseInt(uid.slice(i, i + 2), 16);
-                hex = Math.min(255, Math.max(0, Math.round(hex*1.4)));
+                hex = Math.min(180, Math.max(0, Math.round(hex*1.4)));
                 uid = uid.slice(0, i) + hex.toString(16).padStart(2, "0") + uid.slice(i + 2);
-                console.log(`uid_i: ${uid}`)
+                // console.log(`uid_i: ${uid}`)
             }
         }
         return `#${uid}`;
@@ -56,7 +56,7 @@
         for (let link of links) {
             const uid = link.href.split("/").pop();
             const color = UidToColor(uid);
-            console.log(`${uid} -> ${color}`);
+            // console.log(`${uid} -> ${color}`);
 
             link.style.setProperty("color", color, "important");
             if (link.children) {
@@ -68,9 +68,7 @@
     }
 
     // Your code here...
-    window.onload = () => {
-        console.log("'UID 颜色显示'脚本开始运行");
+    console.log("'UID 颜色显示'脚本开始运行");
 
-        setInterval(work, 4000);
-    };
+    setInterval(work, 1000);
 })();
