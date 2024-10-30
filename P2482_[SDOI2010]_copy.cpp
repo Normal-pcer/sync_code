@@ -224,7 +224,6 @@ namespace Solution {
         Player* owner;
         int id;
         char label;
-        bool used = false;
 
         Card(Player* owner, int id, char label): 
             owner(owner), id(id), label(label) {}
@@ -239,7 +238,7 @@ namespace Solution {
         bool apply();
         void abandon();
 
-        Card* copy(Player* new_owner = nullptr) const { return new Card(new_owner, label); }
+        Card copy(Player* new_owner) const { return Card(new_owner, label); }
     };
 
     
@@ -288,7 +287,7 @@ namespace Solution {
         Character character;
         Character impression = _Undefined;
         int strength = MAX_STRENGTH;
-        std::vector<Card*> cards;
+        std::deque<Card> cards;
         RollingIndex<decltype(players), players> position = 0;
         bool withWeapon = false;
         bool dead = false;
@@ -301,12 +300,6 @@ namespace Solution {
             for (const auto ch: Character_all) {
                 if (ch == typeChar)  character = ch;
             }
-        }
-
-        Card* findCard(const char label) const { 
-            auto ptr = rg::find_if(cards, lam(ptr, ptr->label==label)); 
-            if (ptr == cards.end())  return nullptr;
-            return *ptr;
         }
 
         auto getCard(const Card& templ) {
@@ -322,12 +315,13 @@ namespace Solution {
                 return;
             }
             // 弃置一张杀
-            auto toBeAbandoned = findCard(Label::K_Killing);
-            if (not toBeAbandoned) {  // 没有杀可以弃置
-                damaged({enemy, 1, DuelingFailed});  // 决斗失败
+            auto toBeAbandoned = rg::find(cards, Label::K_Killing);
+            if (toBeAbandoned == cards.end()) {  // 没有杀可以弃置
+                damaged({enemy, 1, DuelingFailed});
             } else {
-                toBeAbandoned->abandon();  // 弃置
-                enemy.inDueling(*this);  // 轮到对面
+                cards.erase(toBeAbandoned);
+                // log("size %d\n", (int)cards.size())
+                enemy.inDueling(*this);
             }
         }
 
@@ -339,18 +333,18 @@ namespace Solution {
         void damaged(const Damage& obj) {
             assert(not dead);
             log("Damaged P%d<-%d. Strength %d -= %d.\n", index(), obj.source.index(), strength, obj.amount)
-            // 尝试减免伤害，否则正常造成伤害
+            // 尝试避免伤害，否则正常造成伤害
             if (obj.type == Killing) {
-                Card *dodge = findCard(Label::D_Dodge);  // 尝试使用“闪”
-                if (dodge)  dodge->abandon();
+                auto dodge = rg::find(cards, Label::D_Dodge);  // 尝试使用“闪”
+                if (dodge != cards.end())  dodge->abandon();
                 else  strength -= obj.amount;  // 无法躲避伤害
             } else if (obj.type == Invading) {  // 南猪入侵
-                auto killing = findCard(Label::K_Killing);  // 弃置杀
-                if (killing)  killing->abandon();
+                auto killing = rg::find(cards, Label::K_Killing);  // 弃置杀
+                if (killing != cards.end())  killing->abandon();
                 else  strength -= obj.amount;  // 无法躲避伤害
             } else if (obj.type == Shooting) {  // 万箭齐发
-                auto dodging = findCard(Label::D_Dodge);  // 弃置闪
-                if (dodging)  dodging->abandon();
+                auto dodging = rg::find(cards, Label::D_Dodge);  // 弃置闪
+                if (dodging != cards.end())  dodging->abandon();
                 else  strength -= obj.amount;  // 无法躲避伤害
             } else {
                 strength -= obj.amount;  // 无法躲避伤害
@@ -358,8 +352,8 @@ namespace Solution {
 
             // 没有血了，可以被动地吃桃救一下
             while (strength <= 0) {
-                auto peach = findCard(Label::P_Peach);
-                if (not peach)  break;  // 桃也没了
+                auto peach = rg::find(cards, Label::P_Peach);
+                if (peach == cards.end())  break;  // 桃也没了
                 else  peach->apply();
             }
 
@@ -368,10 +362,9 @@ namespace Solution {
                 dead = true;
             }
 
-            if (character == M_Master) {
-                if (dead)  winner = F_Thief;  // 主猪死亡，反方胜利
-
-                // 判定“类反猪”
+            // 判定“类反猪”
+            if (character == M_Master) { 
+                if (dead)  winner = F_Thief;
                 if (obj.source.impression == _Undefined and obj.type > DuelingFailed)  //* 决斗失败不算
                     obj.source.impression = _Questionable;
             }
@@ -455,13 +448,13 @@ namespace Solution {
             auto i = 0;
             while (i < (int)cards.size()) {
                 for (i=0; i<(int)cards.size(); i++) {
-                    auto& card = *cards[i];
+                    auto& card = cards[i];
                     bool isKillingCard = (card.label == Label::K_Killing);
                     if (isKillingCard and usedKillingCard >= 1) {
                         continue;  // 不能再次使用杀
                     }
                     if (card.apply()) {
-                        if (isKillingCard)  usedKillingCard++; 
+                        if (isKillingCard)  usedKillingCard++;
                         break;  // 跳到 while 循环里重新开始
                     }
                 }
@@ -469,32 +462,23 @@ namespace Solution {
                 if (winner != _Undefined)  return false;  
                 if (dead)  return true;  // 如果在回合中途被打死，强制结束回合
                 // 如果循环正常结束，i>=(int)cards.size()，结束 while 循环
+
                 debug {
-        from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
+                    from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
                     for (auto &pl: players) {
                         if (pl->dead) {
-                            printf("DEAD\n");
+                            log("DEAD");
                         } else {
-                            for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
-                            printf("\n");
+                            for (auto &cd: pl->cards)  log("%c#%d ", cd.label, cd.id);
+                            log("\n");
                         }
                     }
-                }
-            }
-            debug {
-                log("=========\n")
-    from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
-                for (auto &pl: players) {
-                    if (pl->dead) {
-                        printf("DEAD\n");
-                    } else {
-                        for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
-                        printf("\n");
-                    }
+                    log("\n\n")
                 }
             }
             return true;
         }
+
     };
 
     /**
@@ -528,50 +512,45 @@ namespace Solution {
             friendly = !tag; // 如果上一次是在献殷勤，这次就是在表敌意；反之亦然。
         }
         log("friendly = %d\n", friendly);
-
         // 接下来，给定所有人使用无懈可击的机会
         auto p = pos;
         do {
             log("Checking p=%d; ", p.index);
             auto& pl = *players.at(p);
-            Card* cardPtr = pl.findCard(Label::J_Unbreakable);
-            if (not cardPtr)  goto egg;  // 没有无懈可击，不可使用
-            if (cardPtr->used)  goto egg;
-
-            // 删除
-            cardPtr->used = true;
-            
+            auto cardIter = rg::find(pl.cards, Label::J_Unbreakable);
+            auto cardCopy = cardIter->copy(nullptr);
+            debug {
+                for(auto &i: pl.cards) printf("%c#%d ", i.label, i.id);
+                printf("\n");
+            }
+            if (cardIter == pl.cards.end())  goto egg;  // 没有无懈可击，不可使用
             if (friendly) {
                 auto character = original.team();
                 if (character == pl.team()) {  // 相同阵营，向对方献殷勤
-                    cardPtr->abandon();  // 无懈可击
+                    cardIter->abandon();  // 无懈可击
                     pl.showCharacter();
                     // 如果这次无懈可击没有被无效化，返回 true
-                    bool res = not tryExecutingUnbreakable(*cardPtr, original, p, friendly, depth+1);  
+                    bool res = not tryExecutingUnbreakable(cardCopy, original, p, friendly, depth+1);  
                     if (res == true)  log("This is unbreakable. \n")
                     return res;
                 }
             } else {  // 通过无懈表敌意
                 auto character = !original.team();
                 if (character == pl.team()) {  // 阵营正确
-                    cardPtr->abandon();  // 无懈可击
+                    cardIter->abandon();  // 无懈可击
                     pl.showCharacter();
                     // 如果这次无懈可击没有被无效化，返回 true
-                    bool res = not tryExecutingUnbreakable(*cardPtr, original, p, friendly, depth+1);  
+                    bool res = not tryExecutingUnbreakable(cardCopy, original, p, friendly, depth+1);  
                     if (res == true)  { log("This is unbreakable. -> 1\n") }
                     else  { log("Done. This is NOT unbreakable. -> 0 \n") }
                     return res;
                 }
             }
-
-            // 重新加入这张牌
-            cardPtr->used = false;
-
         egg:    // while 循环直接 continue 会炸，故致敬传奇 goto egg
             ++p;
         } while (p != pos);
-        // 没有人选择使用无懈可击
-        return false;  
+        log("Nothing. -> 0 \n")
+        return false;  // 没有人选择使用无懈可击
     }
 
     template <class List_t>
@@ -594,33 +573,21 @@ namespace Solution {
     bool Card::apply() {
         log("\nOwner %lld\n", rg::find_if(players, lam(pt, pt==owner)) - players.begin());
         log("Apply label: %c #%d?\n", label, id)
-
         bool success = cardActions[label](*this);
         if (not success)  return false;
         log("Apply label: %c #%d - Success\n", label, id)
-        abandon();
-        debug {
         from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
-                    for (auto &pl: players) {
-                        if (pl->dead) {
-                            printf("DEAD\n");
-                        } else {
-                            for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
-                            printf("\n");
-                        }
-                    }
-                }
+        abandon();
         return true;
     }
 
     // 弃置一张卡牌
     void Card::abandon() {
+        auto ptr = std::find(owner->cards.begin(), owner->cards.end(), *this);
         log("Abandon Card %c #%d\n", label, id);
-        auto ptr = std::find(owner->cards.begin(), owner->cards.end(), this);  // 玩家手牌
-        if (ptr != owner->cards.end()) {  // 如果存在指向这张牌的指针
-            owner->cards.erase(ptr);  // 删除指向自己的指针
+        if (ptr != owner->cards.end()) {
+            owner->cards.erase(ptr);
         }
-        delete this;
     }
 
 
@@ -736,6 +703,7 @@ namespace Solution {
     }
 
 
+
     void initCardTemplates() {
         cardActions.insert({'T', T_Test});
         cardActions.insert({Label::P_Peach, P_Peach});
@@ -792,7 +760,7 @@ namespace Solution {
             if (pl->dead) {
                 io.writeln("DEAD");
             } else {
-                for (auto &cd: pl->cards)  io << cd->label << ' ';
+                for (auto &cd: pl->cards)  io << cd.label << ' ';
                 io << endl;
             }
         }

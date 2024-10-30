@@ -51,6 +51,7 @@ int find(int cur,char aim) {
     return 0;
 }
 void adjust(int cur,int s,int t) {
+    printf("adjust %d %d %d - Removed %c\n", cur, s, t, a[cur].cards[s]);
     for (int i=s; i<t; i++) a[cur].cards[i]=a[cur].cards[i+1];
 }
 void respond_peach(int cur,int user) {
@@ -87,7 +88,7 @@ bool respond_wuxie(int cur,int user) {
         if (re) used[re]=rounds;
         return re;
     }
-    if (re) adjust(cur,re,a[cur].cnt),a[cur].cnt--;
+    if (re) {adjust(cur,re,a[cur].cnt),a[cur].cnt--;}
     return re;
 }
 void lose_blood(int cur,int user) {
@@ -98,9 +99,11 @@ void change_link(int cur) {
         if (!a[pre].dead&&a[pre].nxt==cur) {a[pre].nxt=a[cur].nxt; break;}
 }
 void do_peach(int cur) {
+    printf("Use P\n");
     a[cur].bloods++;
 }
 void do_kill(int cur) {
+    printf("Use K\n");
     int nxt=a[cur].nxt;
     a[cur].perfo=1;
     if (!respond_dodge(nxt)) {
@@ -111,6 +114,7 @@ void do_kill(int cur) {
     }
 }
 bool do_wuxie(int user,int cur,int aim,int now) {
+    printf("Use J\n");
     bool ret=now;
     for (int nxt=cur; ; ) if (!a[nxt].dead) {
         if (!now) {
@@ -125,6 +129,7 @@ bool do_wuxie(int user,int cur,int aim,int now) {
     return ret;
 }
 void do_fight(int cur,int aim,int user) {
+    printf("Use F\n");
     a[cur].perfo=1;
     if (a[aim].perfo==1) {
         if (do_wuxie(cur,cur,aim,0)) return;
@@ -154,6 +159,7 @@ void do_fight(int cur,int aim,int user) {
     }
 }
 void do_nanzhu(int cur) {
+    printf("Use N\n");
     for (int nxt=a[cur].nxt; nxt!=cur; nxt=a[nxt].nxt) if (!a[nxt].dead) {
         if (a[nxt].perfo==1) {
             if (do_wuxie(cur,cur,nxt,0)) continue;
@@ -167,6 +173,7 @@ void do_nanzhu(int cur) {
     }
 }
 void do_wanjian(int cur) {
+    printf("Use W\n");
     for (int nxt=a[cur].nxt; nxt!=cur; nxt=a[nxt].nxt) if (!a[nxt].dead) {
         if (a[nxt].perfo==1) {
             if (do_wuxie(cur,cur,nxt,0)) continue;
@@ -180,8 +187,10 @@ void do_wanjian(int cur) {
     }
 }
 void do_zhuge(int cur) {
+    printf("Use Z\n");
     a[cur].equip=1;
 }
+void _print();
 bool dis_cards(int cur) {
     memset(used,0,sizeof used);
     int i,cntused,totkill=0,counts,ret=-1,aim; char now;
@@ -189,6 +198,9 @@ bool dis_cards(int cur) {
         cntused=counts=0;
         for (i=1; i<=a[cur].cnt; i++) if (used[i]!=rounds) {
             now=a[cur].cards[i];
+            for (int i=1; i<=n; i++) printf("%d ", a[i].bloods);
+            printf("\n");
+            _print();printf("----\n");
             switch (now) {
                 case 'P':
                     if (a[cur].bloods<4) do_peach(cur),used[i]=rounds,cntused++,i=a[cur].cnt;
@@ -225,7 +237,10 @@ bool playing(int cur) {
     return dis_cards(cur);
 }
 void _duel() {
-    for (int i=1,event=0; !event&&fanzhu>0; i=a[i].nxt) if (!a[i].dead) event=playing(i);
+    for (int i=1,event=0; !event&&fanzhu>0; i=a[i].nxt) {
+        printf("While i-1=%d\n", i-1);
+        if (!a[i].dead) event=playing(i);
+    }
 }
 void _print() {
     printf("%s\n",a[1].dead?"FP":"MP");

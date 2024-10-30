@@ -65,7 +65,7 @@ namespace lib{
         inline char gc() {  return getchar();  }
 #endif
         char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
-        inline bool blank(char ch) { return ch<=' ' or ch==127; }
+        inline bool blank(char ch) { return ch==' ' or ch=='\n' or ch=='\r' or ch=='\t'; }
         inline bool isd(char x) {return (x>='0' and x<='9');}
         inline IO& setprecision(int d) {
             sprintf(floatFormat, "%%.%df", d); sprintf(doubleFormat, "%%.%dlf", d);
@@ -135,7 +135,7 @@ namespace lib{
         inline void write(const char c) {  push(c);  }
         inline void write(const string &s){  for (auto i:s)  push(i);  }
         inline void write(const char *s){  for (; *s; ++s) push(*s);  }
-        template <class T>
+        template <class T, class = typename std::enable_if_t<std::is_integral_v<T>>>
         inline void write(T x) {
             if (x<0) x=-x,push('-');
             static char sta[40]; int top=0;
@@ -163,16 +163,19 @@ using namespace lib;
 ;
 namespace Solution {
 
-    
-    void init() {
-
-    }
+    struct A;
+    std::vector<int> vec;
 
     void solve() {
-        init();
-        int a = 0;
-        int b = 1;
-        io << std::format("{} {}", a, b); 
+        vec.push_back(1);
+        vec.push_back(2);
+        vec.push_back(3);
+        vec.push_back(4);
+        vec.push_back(5);
+        auto it = std::find(vec.begin(), vec.end(), 3);
+        vec.erase(it);
+        vec.insert(it, 114514);
+        for (auto i: vec)  printf("%d ", i);
     }
 }
 

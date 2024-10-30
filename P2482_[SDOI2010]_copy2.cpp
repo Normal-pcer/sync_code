@@ -224,7 +224,6 @@ namespace Solution {
         Player* owner;
         int id;
         char label;
-        bool used = false;
 
         Card(Player* owner, int id, char label): 
             owner(owner), id(id), label(label) {}
@@ -469,29 +468,6 @@ namespace Solution {
                 if (winner != _Undefined)  return false;  
                 if (dead)  return true;  // 如果在回合中途被打死，强制结束回合
                 // 如果循环正常结束，i>=(int)cards.size()，结束 while 循环
-                debug {
-        from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
-                    for (auto &pl: players) {
-                        if (pl->dead) {
-                            printf("DEAD\n");
-                        } else {
-                            for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
-                            printf("\n");
-                        }
-                    }
-                }
-            }
-            debug {
-                log("=========\n")
-    from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
-                for (auto &pl: players) {
-                    if (pl->dead) {
-                        printf("DEAD\n");
-                    } else {
-                        for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
-                        printf("\n");
-                    }
-                }
             }
             return true;
         }
@@ -535,11 +511,11 @@ namespace Solution {
             log("Checking p=%d; ", p.index);
             auto& pl = *players.at(p);
             Card* cardPtr = pl.findCard(Label::J_Unbreakable);
+            auto insertPos = rg::find_if(pl.cards, lam(ptr, ptr->id == cardPtr->id));
             if (not cardPtr)  goto egg;  // 没有无懈可击，不可使用
-            if (cardPtr->used)  goto egg;
 
-            // 删除
-            cardPtr->used = true;
+            // 把这张牌先去掉，避免重复选中
+            pl.cards.erase(insertPos);
             
             if (friendly) {
                 auto character = original.team();
@@ -565,7 +541,7 @@ namespace Solution {
             }
 
             // 重新加入这张牌
-            cardPtr->used = false;
+            pl.cards.insert(insertPos, cardPtr);
 
         egg:    // while 循环直接 continue 会炸，故致敬传奇 goto egg
             ++p;
@@ -592,24 +568,14 @@ namespace Solution {
      * 返回 是否使用成功。
      */
     bool Card::apply() {
-        log("\nOwner %lld\n", rg::find_if(players, lam(pt, pt==owner)) - players.begin());
-        log("Apply label: %c #%d?\n", label, id)
+        // log("\nOwner %lld\n", rg::find_if(players, lam(pt, pt==owner)) - players.begin());
+        // log("Apply label: %c #%d?\n", label, id)
 
         bool success = cardActions[label](*this);
         if (not success)  return false;
-        log("Apply label: %c #%d - Success\n", label, id)
-        abandon();
-        debug {
+        // log("Apply label: %c #%d - Success\n", label, id)
         from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
-                    for (auto &pl: players) {
-                        if (pl->dead) {
-                            printf("DEAD\n");
-                        } else {
-                            for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
-                            printf("\n");
-                        }
-                    }
-                }
+        abandon();
         return true;
     }
 

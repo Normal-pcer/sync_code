@@ -1,18 +1,355 @@
-Invalid command
-Invalid command
-Invalid command
-Invalid command
-red guard;NA;no;no
-Invalid command
-blue captain;NA;no;no
-red soldier;NA;no;no
-Invalid command
-Invalid command
-blue elephant;NA;no;no
-red duck;NA;no;no
-blue horse;NA;no;no
-red duck;blue soldier;no;no
-Invalid command
-blue captain;NA;yes;no
-red duck;blue captain;no;yes
-Invalid command
+While i-1=0
+4 4 4 4 4 4 4 
+MP
+K W P J D N
+J K W J
+F F W D
+D K Z F
+J P K D
+K J J F
+K K J K
+----
+4 4 4 4 4 4 4 
+MP
+K W P J D N
+J K W J
+F F W D
+D K Z F
+J P K D
+K J J F
+K K J K
+----
+Use W
+adjust 3 4 4 - Removed D
+adjust 4 1 4 - Removed D
+adjust 5 4 4 - Removed D
+4 3 4 4 4 3 3 
+MP
+K P J D N
+J K W J
+F F W
+K Z F
+J P K
+K J J F
+K K J K
+----
+4 3 4 4 4 3 3 
+MP
+K P J D N
+J K W J
+F F W
+K Z F
+J P K
+K J J F
+K K J K
+----
+4 3 4 4 4 3 3 
+MP
+K P J D N
+J K W J
+F F W
+K Z F
+J P K
+K J J F
+K K J K
+----
+4 3 4 4 4 3 3 
+MP
+K P J D N
+J K W J
+F F W
+K Z F
+J P K
+K J J F
+K K J K
+----
+4 3 4 4 4 3 3 
+MP
+K P J D N
+J K W J
+F F W
+K Z F
+J P K
+K J J F
+K K J K
+----
+Use N
+adjust 2 2 4 - Removed K
+adjust 4 1 3 - Removed K
+adjust 5 3 3 - Removed K
+adjust 6 1 4 - Removed K
+adjust 7 1 4 - Removed K
+4 3 3 4 4 3 3 
+MP
+K P J D
+J W J
+F F W
+Z F
+J P
+J J F
+K J K
+----
+4 3 3 4 4 3 3 
+MP
+K P J D
+J W J
+F F W
+Z F
+J P
+J J F
+K J K
+----
+4 3 3 4 4 3 3 
+MP
+K P J D
+J W J
+F F W
+Z F
+J P
+J J F
+K J K
+----
+4 3 3 4 4 3 3 
+MP
+K P J D
+J W J
+F F W
+Z F
+J P
+J J F
+K J K
+----
+While i-1=1
+4 3 3 4 4 3 3 
+MP
+K P J D
+J W J F J
+F F W
+Z F
+J P
+J J F
+K J K
+----
+4 3 3 4 4 3 3 
+MP
+K P J D
+J W J F J
+F F W
+Z F
+J P
+J J F
+K J K
+----
+Use W
+Use J
+adjust 5 1 2 - Removed J
+Use J
+adjust 7 2 3 - Removed J
+Use J
+adjust 1 3 4 - Removed J
+Use J
+Use J
+adjust 6 1 3 - Removed J
+Use J
+Use J
+adjust 6 1 2 - Removed J
+Use J
+Use J
+adjust 1 3 3 - Removed D
+4 3 2 3 3 2 2 
+MP
+K P
+F
+F F W
+Z F
+P
+F
+K K
+----
+Use F
+Use J
+adjust 1 1 2 - Removed K
+While i-1=2
+4 2 2 3 3 2 2 
+MP
+P
+
+F F W K F
+Z F
+P
+F
+K K
+----
+Use F
+Use J
+3 2 2 3 3 2 2 
+MP
+P
+
+F W K F
+Z F
+P
+F
+K K
+----
+Use F
+Use J
+2 2 2 3 3 2 2 
+MP
+P
+
+W K F
+Z F
+P
+F
+K K
+----
+Use W
+Use J
+Use J
+Use J
+Use J
+Use J
+1 1 2 2 2 1 1 
+MP
+P
+
+K F
+Z F
+P
+F
+K K
+----
+1 1 2 2 2 1 1 
+MP
+P
+
+K F
+Z F
+P
+F
+K K
+----
+Use F
+Use J
+adjust 1 1 1 - Removed P
+1 1 2 2 2 1 1 
+MP
+
+
+K
+Z F
+P
+F
+K K
+----
+While i-1=3
+1 1 2 2 2 1 1 
+MP
+
+
+K
+Z F J W
+P
+F
+K K
+----
+Use Z
+1 1 2 2 2 1 1 
+MP
+
+
+K
+F J W
+P
+F
+K K
+----
+Use F
+Use J
+adjust 7 1 2 - Removed K
+1 1 2 1 2 1 1 
+MP
+
+
+K
+J W
+P
+F
+K
+----
+1 1 2 1 2 1 1 
+MP
+
+
+K
+J W
+P
+F
+K
+----
+Use W
+Use J
+Use J
+Use J
+Use J
+Use J
+Use J
+Use J
+Use J
+1 0 1 1 2 0 0 
+MP
+
+DEAD
+K
+D D K N N
+P
+DEAD
+DEAD
+----
+1 0 1 1 2 0 0 
+MP
+
+DEAD
+K
+D D K N N
+P
+DEAD
+DEAD
+----
+1 0 1 1 2 0 0 
+MP
+
+DEAD
+K
+D D K N N
+P
+DEAD
+DEAD
+----
+1 0 1 1 2 0 0 
+MP
+
+DEAD
+K
+D D K N N
+P
+DEAD
+DEAD
+----
+Use N
+Use J
+Use J
+FP
+DEAD
+DEAD
+K
+D D K N
+P
+DEAD
+DEAD
+> g++ "solution.cpp" -o "solution.exe" -std=c++20 -Wall -Wextra -finput-charset=utf-8 -g -Wl,-stack=2147483647
+ÕýÔÚ±àÒë...> "solution.exe" -d
+========DEBUG========
+=====================
+Exited after 1.4527s, with code 0.
