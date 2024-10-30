@@ -453,15 +453,18 @@ namespace Solution {
             // 每次打完一张牌，都从头开始扫，判断最左侧的可用牌
             // * 注意这里不可以一路扫下去
             auto i = 0;
-            while (i < (int)cards.size()) {
+            bool executed = false;  // 只要这一轮执行了操作，就必须重扫一遍
+            while (i < (int)cards.size() or executed) {
+                executed = false;
                 for (i=0; i<(int)cards.size(); i++) {
-                    auto& card = *cards[i];
+                    auto& card = *cards[i]; 
                     bool isKillingCard = (card.label == Label::K_Killing);
                     if (isKillingCard and usedKillingCard >= 1) {
                         continue;  // 不能再次使用杀
                     }
                     if (card.apply()) {
                         if (isKillingCard)  usedKillingCard++; 
+                        executed = true;
                         break;  // 跳到 while 循环里重新开始
                     }
                 }
@@ -620,7 +623,7 @@ namespace Solution {
         if (ptr != owner->cards.end()) {  // 如果存在指向这张牌的指针
             owner->cards.erase(ptr);  // 删除指向自己的指针
         }
-        delete this;
+        // delete this;
     }
 
 
@@ -808,8 +811,9 @@ int main() {;
     return 0;
 }
 /*
-2 10
-MP P K K K
-FP K P P P
-K K K K K K K K K K K 
+3 8
+MP J K D F 
+ZP Z P F D 
+FP N F W J 
+Z D P W F D J W
 */
