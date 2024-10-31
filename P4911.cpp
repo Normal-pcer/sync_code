@@ -252,7 +252,7 @@ namespace Storage {
     const int _R = 12, _Mem = 0x1000000;
 
     enum RegisterLabel { R1, R2, R3, R4, E1, E2, E3, E4, Flag, Val, Ret, Line };
-    class Register { string name; int data; }  registers[_R];
+    struct Register { string name; int data; }  registers[_R];
     std::unordered_map<string, Register*> registerMapping;  // 名称到寄存器指针的映射
     int memory[_Mem];  // 内存
 
@@ -271,13 +271,17 @@ namespace Storage {
             if (type == InMemory) {
                 if (MemoryIndex < 0 or MemoryIndex >= _Mem) {  // 访问越界
                     program.raise({IndexError, "Illegal operation at an invalid memory address."});
-                    return valueConstant;  // 防止解释器 RE
+                    return valueConstant;  // 防止解释器本身 RE
                 }
                 return *valuePointer;
             }
             return *valuePointer;
         }
     };
+
+    StorageReference constRef(int data) { return {Constant, data}; }
+    StorageReference memoryRef(int index) { return {InMemory, 0, memory+index, index}; }
+    StorageReference registerRef(Register& reg) { return {InRegister, 0, &reg.data}; }
 
     void init() {
         // 注册所有寄存器
@@ -296,19 +300,28 @@ using Storage::StorageReference;
 namespace Processor {
     struct Arguments {
         vector<StorageReference> args;
+        Arguments(): args() {}
+        Arguments(std::initializer_list<StorageReference> lis): args(lis) {}
+
         template <size_t N>
         auto take() {
             return Utilities::Extractions::extract<N>(args);
         }
+        size_t size() { return args.size(); }
     };
 
     using operation_t = std::function<void(Arguments)>;
     /**
-     * 一个示例的操作函数，这会直接输出传入的两个参数
+     * 一个示例的操作函数，这会直接输出传入的三个参数
      */
     void Example_EXP(Arguments args) {
         auto [a, b, c] = args.take<3>();
-        io.writeln(sizeof(a));
+        io.writeln(*a, *b, *c);
+    }
+
+    void Set(Arguments args) {  // 将 b 赋值为 a
+        auto [source, target] = args.take<2>();
+        *target = *source;
     }
 }
 
@@ -316,8 +329,16 @@ namespace Solution {
 
     
     void test() {
+        Storage::init();
         // program.raise({IndexError, "List out of index", "CCF is bad"});
-        Processor::Arguments args;
+        Processor::Set({Storage::constRef(114514), Storage::memoryRef(0)});
+        Processor::Arguments args = {
+            StorageReference(Storage::Constant, 0),
+            StorageReference(Storage::InMemory, 0, Storage::memory, 0),
+            Storage::registerRef(*Storage::registerMapping["R1"]),
+        };
+
+        Processor::Example_EXP(args);
         // args.args.push_back(StorageReference{Storage::Constant, 114});
     }
 
