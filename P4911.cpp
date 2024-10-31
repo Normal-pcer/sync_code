@@ -203,7 +203,9 @@ namespace std {
     template <class T, size_t SZ>
     struct tuple_size<Utilities::Extractions::_Extraction<T, SZ>> { const static int value = SZ; };
     template <size_t N, class T, size_t SZ>
-    struct tuple_element<N, Utilities::Extractions::_Extraction<T, SZ>> { using type = decltype(*(T())); };
+    struct tuple_element<N, Utilities::Extractions::_Extraction<T, SZ>> {
+        using type = decltype(std::move(*std::declval<T>()));
+    };
 }
 
 
@@ -235,8 +237,8 @@ namespace Program {
         
         void raise(const Exception& exception) {  // 抛出一个运行时异常
             status = RuntimeError;  // 停止运行，输出异常信息
-            io << std::format("Runtime Error while running on line {}. {}: {}\n{}\n", 
-                line, (int)exception.type, exception.description, exception.information);
+            // io << std::format("Runtime Error while running on line {}. {}: {}\n{}\n", 
+                // line, (int)exception.type, exception.description, exception.information);
         }
     } program;  // 当前在运行的程序
 }
@@ -264,7 +266,7 @@ namespace Storage {
         int *valuePointer = nullptr;    // 数据的指针；如果是常量则为空指针
         int MemoryIndex = 0;            // 内存中的地址
 
-        int& operator() () {  // 重载运算符 解引用
+        int& operator* () {  // 重载运算符 解引用
             if (type == Constant)  return valueConstant;
             if (type == InMemory) {
                 if (MemoryIndex < 0 or MemoryIndex >= _Mem) {  // 访问越界
