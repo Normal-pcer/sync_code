@@ -296,7 +296,7 @@ namespace Solution {
 
 int main() {
     initDebug;
-    debug {
+    never {
         freopen("julian3.in", "r", stdin);
         freopen("julian3.out", "w", stdout);
     }

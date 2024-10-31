@@ -135,7 +135,11 @@ namespace lib{
         inline void write(const char c) {  push(c);  }
         inline void write(const string &s){  for (auto i:s)  push(i);  }
         inline void write(const char *s){  for (; *s; ++s) push(*s);  }
-        template <class T, class = typename std::enable_if_t<std::is_integral_v<T>>>
+        template <class T
+#if __cplusplus > 201403L
+        , class = typename std::enable_if_t<std::is_integral_v<T>>
+#endif
+        >
         inline void write(T x) {
             if (x<0) x=-x,push('-');
             static char sta[40]; int top=0;
@@ -161,21 +165,51 @@ namespace lib{
 using namespace lib;
 
 ;
+using namespace std::ranges::views;
+
+
+
 namespace Solution {
 
-    struct A;
-    std::vector<int> vec;
+    
+    void init() {
+
+    }
+
+
+    template <size_t SZ, class T>
+    requires (SZ>0)
+    class Extraction {
+    public:
+        const T *container;
+        Extraction(T& cont): container(&cont) {}
+    };
+    template <size_t SZ, class T>
+    Extraction<SZ, T> extract(const T& cont) {
+        return Extraction<SZ, T>(cont);
+    }
+}
+
+template <size_t SZ, class T>
+struct std::tuple_size<Solution::Extraction<SZ, T>> { const static int value = SZ; };
+template <size_t N, size_t SZ, class T>
+struct std::tuple_element<N, Solution::Extraction<SZ, T>> { using type = int; };
+
+
+namespace Solution {
+    template <size_t N, class Ext>
+    auto& get(Ext&& const c) {
+        return c.container->at(N);
+    }
+
+    // class 
 
     void solve() {
-        vec.push_back(1);
-        vec.push_back(2);
-        vec.push_back(3);
-        vec.push_back(4);
-        vec.push_back(5);
-        auto it = std::find(vec.begin(), vec.end(), 3);
-        vec.erase(it);
-        vec.insert(it, 114514);
-        for (auto i: vec)  printf("%d ", i);
+        init();
+        std::vector<int> vec = {0, 1, 2, 3, 4};
+        const auto &[a, b, c] = extract<3>(vec);
+        // auto &a = get<1>(extract<3>(vec));
+        io.writeln(a, b, c);
     }
 }
 

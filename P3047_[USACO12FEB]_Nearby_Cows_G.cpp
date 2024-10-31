@@ -1,3 +1,42 @@
+/**
+ * @link https://www.luogu.com.cn/problem/P3047
+ */
+
+#include <bits/stdc++.h>
+#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
+#define debug if(DEBUG_MODE)
+#define log(f, a...) debug printf(f, ##a);
+#define upto(i,n) for(int i=1;i<=(n);i++)
+#define from(i,b,e) for(int i=(b);i<=(e);i++)
+#define rev(i,e,b) for(int i=(e);i>=(b);i--)
+#define main() main(int argc, char const *argv[])
+#define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
+#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
+#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
+#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
+#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
+#define ensure(v, con, otw) (((v) con)? (v): (otw))
+#define never if constexpr(0)
+#define always if constexpr(1)
+#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
+#define Infinity 2147483647
+#define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
+bool DEBUG_MODE=false;
+typedef long long ll; typedef unsigned long long ull;
+inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
+#define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
+#define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
+#define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
+#define __macro_choose_helper(M,count)  M##count
+#define macro_choose_helper(M,count)   __macro_choose_helper(M,count)
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
+#define lam lambda
+namespace lib{}
+
 #include <bits/stdc++.h>
 #define USE_FREAD
 // #undef USE_FREAD
@@ -121,4 +160,60 @@ namespace lib{
     io;
     const char endl[] = "\n";
 
+}
+
+using namespace lib;
+
+
+namespace Solution {
+
+    int N, K;  const int _N = 1e5+5; const int _K = 25;
+    int val[_N];
+    std::vector<int> Graph[_N];
+
+    ll F[_N][_K];  // 距离中心点 i 的距离为 j，所有点点权之和，只能向下
+    ll G[_N][_K];  // 距离中心点 i 的距离为 j，所有点点权之和
+    
+    void init() {
+        io >> N >> K;
+        from(i, 2, N) {
+            int x, y;
+            io >> x >> y;
+            Graph[x].push_back(y), Graph[y].push_back(x);
+        }
+        upto(i, N)  io >> val[i];
+        // std::memset(F, -0x3f, sizeof(F));
+    }
+
+    void dfs1(int root, int prev) {
+        from(i, 0, K)  F[root][i] = val[root];
+        for (auto& son: Graph[root])  if (son != prev) {
+            dfs1(son, root);
+            from(k, 1, K) { F[root][k] += F[son][k-1]; }
+        }
+    }
+
+    void dfs2(int root, int prev) {
+        for (auto& son: Graph[root])  if (son != prev) {
+            G[son][1] += F[root][0];
+            from(j, 2, K)  G[son][j] += G[root][j-1] - F[son][j-2];
+            dfs2(son, root);
+        }
+    }
+
+    void solve() {
+        init();
+        dfs1(1, 0);
+        debug batchOutput2d(F, N, K, "%9lld")
+        from(i, 1, N)  from(j, 0, K) G[i][j] = F[i][j];
+        dfs2(1, 0);
+        from(i, 1, N)  io << G[i][K] << endl;
+    }
+}
+
+
+int main() {
+    initDebug;
+    Solution::solve();
+    return 0;
 }

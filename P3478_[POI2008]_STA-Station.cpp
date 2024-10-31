@@ -1,3 +1,42 @@
+/**
+ * 
+ */
+
+#include <bits/stdc++.h>
+#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
+#define debug if(DEBUG_MODE)
+#define log(f, a...) debug printf(f, ##a);
+#define upto(i,n) for(int i=1;i<=(n);i++)
+#define from(i,b,e) for(int i=(b);i<=(e);i++)
+#define rev(i,e,b) for(int i=(e);i>=(b);i--)
+#define main() main(int argc, char const *argv[])
+#define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
+#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
+#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
+#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
+#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
+#define ensure(v, con, otw) (((v) con)? (v): (otw))
+#define never if constexpr(0)
+#define always if constexpr(1)
+#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
+#define Infinity 2147483647
+#define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
+bool DEBUG_MODE=false;
+typedef long long ll; typedef unsigned long long ull;
+inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
+#define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
+#define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
+#define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
+#define __macro_choose_helper(M,count)  M##count
+#define macro_choose_helper(M,count)   __macro_choose_helper(M,count)
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
+#define lam lambda
+namespace lib{}
+
 #include <bits/stdc++.h>
 #define USE_FREAD
 // #undef USE_FREAD
@@ -96,11 +135,7 @@ namespace lib{
         inline void write(const char c) {  push(c);  }
         inline void write(const string &s){  for (auto i:s)  push(i);  }
         inline void write(const char *s){  for (; *s; ++s) push(*s);  }
-        template <class T
-#if __cplusplus > 201403L
-        , class = typename std::enable_if_t<std::is_integral_v<T>>
-#endif
-        >
+        template <class T, class = typename std::enable_if_t<std::is_integral_v<T>>>
         inline void write(T x) {
             if (x<0) x=-x,push('-');
             static char sta[40]; int top=0;
@@ -121,4 +156,66 @@ namespace lib{
     io;
     const char endl[] = "\n";
 
+}
+
+using namespace lib;
+
+;
+namespace Solution {
+
+    int N; const int _N = 1e6+5;
+
+    std::vector<int> Graph[_N];
+    int size[_N];
+    ll F[_N];
+
+
+    void calc_size(int root, int prev, ll &sum) {
+        int res = 1;  // self
+        for (auto &son: Graph[root]) {
+            if (son == prev)  continue;
+            calc_size(son, root, sum);
+            res += size[son];
+        }
+        size[root] = res;
+        sum += res;
+    }
+
+    void dfs(int root, int prev) {
+        for (auto &son: Graph[root]) {
+            if (son == prev)  continue;
+            F[son] = F[root] - size[son] + (N - size[son]);
+            dfs(son, root);
+        }
+    }
+    
+    void init() {
+        io >> N;
+        upto(i, N-1) {
+            int x, y;
+            io >> x >> y;
+            Graph[x].push_back(y);
+            Graph[y].push_back(x);
+        }
+    }
+
+    void solve() {
+        init();
+
+        calc_size(1, 0, F[1]);
+        dfs(1, 0);
+
+        // debug from(i, 1, N) log("%lld ", F[i]);
+
+        auto ans = std::max_element(F+1, F+1+N);
+        io << (ans - F) << endl;
+    }
+}
+
+
+int main() {;
+
+    initDebug;
+    Solution::solve();
+    return 0;
 }

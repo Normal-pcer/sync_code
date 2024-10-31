@@ -449,7 +449,7 @@ namespace Solution {
             drawCards();
 
             // 如果使用了武器猪哥连弩，没有杀的次数限制
-            int usedKillingCard = withWeapon? -Infinity: 0;
+            int usedKillingCard = 0;
             // 每次打完一张牌，都从头开始扫，判断最左侧的可用牌
             // * 注意这里不可以一路扫下去
             auto i = 0;
@@ -459,7 +459,7 @@ namespace Solution {
                 for (i=0; i<(int)cards.size(); i++) {
                     auto& card = *cards[i]; 
                     bool isKillingCard = (card.label == Label::K_Killing);
-                    if (isKillingCard and usedKillingCard >= 1) {
+                    if (isKillingCard and usedKillingCard >= 1 and not withWeapon) {
                         continue;  // 不能再次使用杀
                     }
                     if (card.apply()) {
