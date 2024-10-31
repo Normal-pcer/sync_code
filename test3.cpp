@@ -1,5 +1,5 @@
 /**
- * @link https://www.luogu.com.cn/problem/P4911
+ * 
  */
 
 #include <bits/stdc++.h>
@@ -36,6 +36,7 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
 #define lam lambda
 namespace lib{}
+
 #include <bits/stdc++.h>
 #define USE_FREAD
 // #undef USE_FREAD
@@ -162,170 +163,92 @@ namespace lib{
 }
 
 using namespace lib;
-using std::string, std::vector;
+
+;
+using namespace std::ranges::views;
 
 
-namespace Utilities {
-    /**
-     * “提取”一个容器中的前 SZ 项，其中 SZ 为编译期常量。
-     * 提取后的项可以用于结构化绑定。
-     * ! 修改提取后的项不会影响到原元素。
-     */
-    namespace Extractions {
-        template <class T, size_t SZ>  requires (SZ>0)
-        struct _Extraction {  T head;  };
-
-        template <size_t N, class Ext>
-        auto get(const Ext& c) {
-            return *(c.head + N);
-        }
-
-        /**
-         * 提取容器 con 的前 SZ 项，其中 SZ 为模板参数。
-         * 用法示例：
-         * std::vector<int> vec = {0, 1, 2, 3, 4};
-         * auto [a, b, c] = extract<3>(vec);
-         * -> a = 0, b = 1, c = 2
-         * 在这样操作后，对这些变量的修改**不会**同步到原容器，反之亦然
-         */
-        template <size_t SZ, class Container_T>
-        auto extract(Container_T& con) {
-            assert(con.size());
-            return _Extraction<decltype(con.begin()), SZ> {con.begin()};
-        }
-    }
-}
-
-using Utilities::Extractions::get;
-
-namespace std {
-    // 定义接口，用于实现 Utilities::Extractions::_Extraction 的结构化绑定。
-    template <class T, size_t SZ>
-    struct tuple_size<Utilities::Extractions::_Extraction<T, SZ>> { const static int value = SZ; };
-    template <size_t N, class T, size_t SZ>
-    struct tuple_element<N, Utilities::Extractions::_Extraction<T, SZ>> { using type = decltype(*(T())); };
-}
-
-
-/**
- * 作为一个解释后的“程序”和用户交互
- */
-namespace Program {
-
-    enum ProgramStatus { OK, CompileError, RuntimeError };
-
-    enum ExceptionType {  // 异常类型
-        None,           // 保留
-        IndexError,     // 越界访问
-    };
-
-    struct Exception {  // 运行时异常
-        ExceptionType type;     // 异常类型
-        string description;     // 描述
-        string information;     // 详细信息
-
-        Exception(ExceptionType type, string desc, string info=""): 
-            type(type), description(desc), information(info) {}
-    };
-
-    
-    struct Program {
-        ProgramStatus status;   // 运行状态
-        int line;  // 当前的行号
-        
-        void raise(const Exception& exception) {  // 抛出一个运行时异常
-            status = RuntimeError;  // 停止运行，输出异常信息
-            io << std::format("Runtime Error while running on line {}. {}: {}\n{}\n", 
-                line, (int)exception.type, exception.description, exception.information);
-        }
-    } program;  // 当前在运行的程序
-}
-using namespace Program;
-
-/**
- * 存储
- * 在本题中包含寄存器和内存
- */
-namespace Storage {
-    const int _R = 12, _Mem = 0x1000000;
-
-    enum RegisterLabel { R1, R2, R3, R4, E1, E2, E3, E4, Flag, Val, Ret, Line };
-    class Register { string name; int data; }  registers[_R];
-    std::unordered_map<string, Register*> registerMapping;  // 名称到寄存器指针的映射
-    int memory[_Mem];  // 内存
-
-    enum ReferenceType { Constant/*常量*/, InRegister/*寄存器*/, InMemory/*内存*/ };
-    /**
-     * 数据存储的位置
-     */
-    struct StorageReference {
-        ReferenceType type;             // 引用类型
-        int valueConstant = 0;          // 存储的常量值
-        int *valuePointer = nullptr;    // 数据的指针；如果是常量则为空指针
-        int MemoryIndex = 0;            // 内存中的地址
-
-        int& operator() () {  // 重载运算符 解引用
-            if (type == Constant)  return valueConstant;
-            if (type == InMemory) {
-                if (MemoryIndex < 0 or MemoryIndex >= _Mem) {  // 访问越界
-                    program.raise({IndexError, "Illegal operation at an invalid memory address."});
-                    return valueConstant;  // 防止解释器 RE
-                }
-                return *valuePointer;
-            }
-            return *valuePointer;
-        }
-    };
-
-    void init() {
-        // 注册所有寄存器
-        #define reg(x) registerMapping.insert(std::pair{string(#x), registers+x})
-        reg(R1); reg(R2); reg(R3); reg(R4); reg(E1); reg(E2); reg(E3); reg(E4); 
-        reg(Flag); reg(Val); reg(Ret); reg(Line);
-        #undef reg
-    }
-}
-using Storage::StorageReference;
-
-/**
- * 处理器
- * 负责执行解析后的操作
- */
-namespace Processor {
-    struct Arguments {
-        vector<StorageReference> args;
-        template <size_t N>
-        auto take() {
-            return Utilities::Extractions::extract<N>(args);
-        }
-    };
-
-    using operation_t = std::function<void(Arguments)>;
-    /**
-     * 一个示例的操作函数，这会直接输出传入的两个参数
-     */
-    void Example_EXP(Arguments args) {
-        auto [a, b, c] = args.take<3>();
-        io.writeln(sizeof(a));
-    }
-}
 
 namespace Solution {
 
     
-    void test() {
-        // program.raise({IndexError, "List out of index", "CCF is bad"});
-        Processor::Arguments args;
-        // args.args.push_back(StorageReference{Storage::Constant, 114});
+    void init() {
+
     }
 
-    void init() {
-        Storage::init();
+
+    template <class T, size_t SZ>
+    requires (SZ>0)
+    class Extraction {
+    public:
+        T head;
+    };
+}
+
+template <class T, size_t SZ>
+struct std::tuple_size<Solution::Extraction<T, SZ>> { const static int value = SZ; };
+template <size_t N, class T, size_t SZ>
+struct std::tuple_element<N, Solution::Extraction<T, SZ>> { using type = int; };
+
+
+namespace Solution {
+    template <size_t N, class Ext>
+    auto get(const Ext& c) {
+        return *(c.head + N);
     }
+
+    template <size_t SZ, class Container_T>
+    auto extract(Container_T& con) {
+        assert(con.size());
+        return Extraction<decltype(con.begin()), SZ> {con.begin()};
+    }
+
+    // class 
 
     void solve() {
-        test();
         init();
+        std::vector<int> vec = {0, 1, 2, 3, 4};
+        auto ext = extract<3>(vec);
+        auto [a, b, c] = ext;
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        vec.push_back(114);
+        // auto &a = get<1>(extract<3>(vec));
+        io.writeln(a, b, c);
+        a = 514;
+        b = 66666;
+        io.writeln(vec[0], vec[1], vec[2], vec[3], vec[4], vec[5]);
     }
 }
 
