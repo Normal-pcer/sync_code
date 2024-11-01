@@ -40,38 +40,60 @@ namespace lib{}
 using namespace lib;
 
 ;
-const int _N = 1e5+5;
-struct Solution {
-    int a[_N+5];
+namespace Solution {
+    const int _N = 105;
+    int N, M;
+    struct Edge { int a, b, val; };
+    std::vector<Edge> edges;
     
     void init() {
-        from(_, 1, 25) {
-            int i = std::rand(); 
-            log("%d ", i, a[i]);
+        scanf("%d%d", &N, &M);
+        upto(_, M) {
+            int a, b, val;
+            scanf("%d%d%d", &a, &b, &val);
+            edges.push_back({a, b, val});
         }
-        log("\n");
-        from(_, 1, 5000) {
-            int i = std::rand(); 
-            a[i] = std::rand();
-            // log("[%d]%d ", i, a[i]);
-        }
+    }
+
+    int F[_N], size[_N];
+    int find(int x) {
+        if (F[x] == x)  return x;
+        else  return (F[x] = find(F[x]));
+    }
+
+    void connect(int x, int y) {
+        auto a = find(x), b = find(y);
+        if (a == b)  return;
+        if (size[a] < size[b])  return connect(y, x);
+        F[b] = F[a], size[b] += size[a];
     }
 
     void solve() {
         init();
 
+        std::sort(edges.begin(), edges.end(), lam(a, b, a.val<b.val));
+        int ans_totally = Infinity;
+        for (auto min_pt = edges.begin(); min_pt != edges.end(); min_pt++) {
+            int max = -Infinity, cnt = 0;
+            from(i, 1, N)  F[i] = i, size[i] = 1;
+            for (auto pt = min_pt; pt != edges.end(); pt++) {
+                auto& [a, b, val] = *pt;
+                if (find(a) != find(b)) {
+                    connect(a, b);
+                    chkMax(max, val), cnt++;
+                    if (cnt + 1 == N)  break;
+                }
+            }
+            if (cnt + 1 >= N)  chkMin(ans_totally, max - min_pt->val);
+        }
+        printf("%d\n", ensure(ans_totally, <Infinity, -1));
     }
-};
+}
 
 
 int main() {;
 
     initDebug;
-    Solution *sol;
-    from(i, 1, 10000) {
-        sol = new Solution();
-        sol->solve();
-        delete sol;
-    }
+    Solution::solve();
     return 0;
 }

@@ -3,35 +3,11 @@
 // #undef USE_FREAD
 // 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
 namespace lib{
-#ifndef LIB_STRING
-    using string=std::string;
-#endif
-#ifdef USE_FREAD
-    template <const long long MAXSIZE, const long long MAX_ITEM_SZ=500>
-#endif
-    struct IO {
-#ifdef USE_FREAD
-        char buf[MAXSIZE],*p1,*p2;
-        char pbuf[MAXSIZE],*pp;
-        IO():p1(buf),p2(buf),pp(pbuf) {}
-        ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
-        inline char gc() {
-            if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
-            return p1==p2?' ':*p1++;
-        }
-        inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
-#endif
-#ifndef USE_FREAD
-        inline void sync() {}
-        inline char gc() {  return getchar();  }
-#endif
-        char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
+    using std::string;
+    struct __IO {
+        virtual inline char gc() = 0;
         inline bool blank(char ch) { return ch==' ' or ch=='\n' or ch=='\r' or ch=='\t'; }
         inline bool isd(char x) {return (x>='0' and x<='9');}
-        inline IO& setprecision(int d) {
-            sprintf(floatFormat, "%%.%df", d); sprintf(doubleFormat, "%%.%dlf", d);
-            return *this;
-        }
         string input(int reserve=0) {
             char c = gc(); string res=""; res.reserve(reserve);
             while((c&&!blank(c)) || c==' ') {  res.push_back(c); c = gc(); }
@@ -44,12 +20,6 @@ namespace lib{
             for (; isd(ch); ch=gc()) x=x*10+(ch^48);
             if (ch=='.') for (ch=gc(); isd(ch); ch=gc()) tmp*=.1f,x+=tmp*(ch^48);
             if (sign) x=-x;
-        }
-        inline void read(char *s) {
-            char ch=gc();
-            for (; blank(ch); ch=gc());
-            for (; not blank(ch); ch=gc()) *s++=ch;
-            *s=0;
         }
         inline void readln(char *s) {
             char c = gc(); while((c&&!blank(c)) || c==' ') {  *(s++)=c; c = gc();  } *s=0;
@@ -67,33 +37,8 @@ namespace lib{
         template <class T,class... Types> inline void read(T &x,Types &...args){  read(x); read(args...);  }
         template <class T> inline void scan(const T &x) { read(*x); }
         template <class T,class ...Types> inline void scan(const T &x,const Types &...args) {  read(*x); scan(args...);  }
-        inline void push(const char &c) {
-#ifdef USE_FREAD
-            if (pp-pbuf==MAXSIZE) sync();
-            *pp++=c;
-#endif
-#ifndef USE_FREAD
-            putchar(c);
-#endif
-        }
-        inline void write(const double x) {
-#ifdef USE_FREAD
-            if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
-            pp += sprintf(pp, doubleFormat, x);
-#endif
-#ifndef USE_FREAD
-            printf(doubleFormat, x);
-#endif
-        }
-        inline void write(const float x) {
-#ifdef USE_FREAD
-            if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
-            pp += sprintf(pp, floatFormat, x);
-#endif
-#ifndef USE_FREAD
-            printf(floatFormat, x);
-#endif
-        }
+        virtual inline void push(const char c) = 0;
+        
         inline void write(const char c) {  push(c);  }
         inline void write(const string &s){  for (auto i:s)  push(i);  }
         inline void write(const char *s){  for (; *s; ++s) push(*s);  }
@@ -112,14 +57,55 @@ namespace lib{
         template <class... Types> inline void writeln(const Types &...args){  write(args...); write('\n');  }
         template<class T=int> inline T get() {  T x; read(x); return x;  }
         // 流式输入输出
-        template <class T> inline IO& operator>>(T&x) {  read(x); return *this; }
-        template <class T> inline IO& operator<<(const T&x) {  write(x); return *this; }
+        template <class T> inline auto& operator>>(T&x) {  read(x); return *this; }
+        template <class T> inline auto& operator<<(const T&x) {  write(x); return *this; }
     };
-    IO
+
+    template <const long long MAXSIZE, const long long MAX_ITEM_SZ=500>
+    struct IO: __IO {
 #ifdef USE_FREAD
-    <1048576>
+        char buf[MAXSIZE],*p1,*p2;
+        char pbuf[MAXSIZE],*pp;
+        IO():p1(buf),p2(buf),pp(pbuf) {}
+        ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
+        inline char gc() {
+            if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
+            return p1==p2?' ':*p1++;
+        }
+        inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
+        inline void push(const char c) {
+            if (pp-pbuf==MAXSIZE) sync();
+            *pp++=c;
+        }
+#else
+        inline void gc() { return getchar(); }
+        inline void push(const char c) { putchar(c); }
 #endif
-    io;
+    };
+
+    struct SIO: __IO {
+        const string& src;
+        size_t index = 0;
+
+        SIO(const string& src): src(src) { index=0; }
+        inline char gc() {
+            return index==src.size()? ' ': src[index++];
+        }
+        inline void push(const char c) { putchar(c); }
+    };
+
+    struct SIO_w: __IO {
+        string& src;
+        size_t index = 0;
+
+        SIO_w(string& src): src(src) { index=0; }
+        inline char gc() {
+            return index==src.size()? ' ': src[index++];
+        }
+        inline void push(const char c) { src.push_back(c); }
+    };
+
+    IO<1<<20> io;
     const char endl[] = "\n";
 
 }

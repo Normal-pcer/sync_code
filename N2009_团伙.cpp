@@ -1,3 +1,42 @@
+/**
+ * @link https://neooj.com:8082/oldoj/problem.php?id=2009
+ */
+
+#include <bits/stdc++.h>
+#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
+#define debug if(DEBUG_MODE)
+#define log(f, a...) debug printf(f, ##a);
+#define upto(i,n) for(int i=1;i<=(n);i++)
+#define from(i,b,e) for(int i=(b);i<=(e);i++)
+#define rev(i,e,b) for(int i=(e);i>=(b);i--)
+#define main() main(int argc, char const *argv[])
+#define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
+#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
+#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
+#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
+#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
+#define ensure(v, con, otw) (((v) con)? (v): (otw))
+#define never if constexpr(0)
+#define always if constexpr(1)
+#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
+#define Infinity 2147483647
+#define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
+bool DEBUG_MODE=false;
+typedef long long ll; typedef unsigned long long ull;
+inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
+#define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
+#define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
+#define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
+#define __macro_choose_helper(M,count)  M##count
+#define macro_choose_helper(M,count)   __macro_choose_helper(M,count)
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
+#define lam lambda
+namespace lib{}
+
 #include <bits/stdc++.h>
 #define USE_FREAD
 // #undef USE_FREAD
@@ -52,10 +91,10 @@ namespace lib{
             *s=0;
         }
         inline void readln(char *s) {
-            char c = gc(); while((c&&!blank(c)) || c==' ') {  *(s++)=c; c = gc();  } *s=0;
+            char c = gc(); while((c&&!blank(c)) || c==' ') {  *(s++)=c; c = gc();  }
         }
         inline void readln(string &res, int reserve=0) {
-            char c = gc(); string().swap(res); res.reserve(reserve);
+            char c = gc(); res.reserve(reserve);
             while((c&&!blank(c)) || c==' ') {  res.push_back(c); c = gc(); }
         }
         inline void read(char &c) {  for (c=gc(); blank(c); c=gc());  }
@@ -88,7 +127,6 @@ namespace lib{
         inline void write(const float x) {
 #ifdef USE_FREAD
             if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
-            pp += sprintf(pp, floatFormat, x);
 #endif
 #ifndef USE_FREAD
             printf(floatFormat, x);
@@ -122,4 +160,52 @@ namespace lib{
     io;
     const char endl[] = "\n";
 
+}
+
+using namespace lib;
+
+;
+namespace Solution {
+
+    int N, M;
+    const int _N = 30005;
+    int F[_N];  // i 所在块的根节点
+    int size[_N];  // i 所在块的大小
+    
+    void init() {
+        io >> N >> M;
+    }
+
+
+    int find(int x) {
+        if (F[x] == x)  return x;  // root
+        else  return (F[x] = find(F[x]));
+    }
+
+    void combine(int x, int y) {
+        int r1 = find(x), r2 = find(y);
+        if (r1 == r2)  return;
+        if (size[r1] < size[r2]) { combine(y, x);  return; }
+        // 保证 r2 合并到 r1 更优
+        F[r2] = r1;
+        size[r1] += size[r2];
+    }
+
+    void solve() {
+        init();
+        from(i, 1, N)  size[i] = 1, F[i] = i;
+        from(_, 1, M) {
+            int x, y;  io >> x >> y;
+            combine(x, y);
+        }
+        io << *std::max_element(size+1, size+1+N) << endl;
+    }
+}
+
+
+int main() {;
+
+    initDebug;
+    Solution::solve();
+    return 0;
 }
