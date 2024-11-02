@@ -9,8 +9,6 @@
 #define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
 #define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
 #define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
-#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
-#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
 #define ensure(v, con, otw) (((v) con)? (v): (otw))
 #define never if constexpr(0)
 #define always if constexpr(1)

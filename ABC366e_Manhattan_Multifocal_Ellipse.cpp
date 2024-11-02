@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://atcoder.jp/contests/abc366/tasks/abc366_e
  */
 
 #include <bits/stdc++.h>
@@ -13,6 +13,8 @@
 #define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
 #define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
 #define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
+#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
+#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
 #define ensure(v, con, otw) (((v) con)? (v): (otw))
 #define never if constexpr(0)
 #define always if constexpr(1)
@@ -37,58 +39,68 @@ namespace lib{}
 
 using namespace lib;
 
-
+;
 namespace Solution {
+    int N, D;  const int _N = 2e5+5, _V = 4e6+20;
 
-    int P, N = 30002;  const int _N = 30005;
-
-    struct Node { int to, val; } F[_N];
-    // int size[_N];
-
-    Node find(int x) {
-        if (F[x].to == x)  return {x, F[x].val};
-        else {
-            auto tmp = find(F[x].to);
-            return (F[x] = {tmp.to, tmp.val + F[x].val});
-        }
-    }
-
-    void connect(int x, int y, int val) {
-        Node a = find(x), b = find(y);
-        if (a.to == b.to)  return;
-        F[a.to] = {b.to, val + b.val - a.val};
-    }
-
+    // std::vector<std::pair<int, int>> points;
+    int x_s[_N], y_s[_N];
+    ll sx[_N], sy[_N];
+    
     void init() {
-        std::ios::sync_with_stdio(false), std::cin.tie(0), std::cout.tie(0);
-        std::cin >> P;
-        from(i, 1, N)  F[i] = {i, 0};
+        scanf("%d%d", &N, &D);
+        upto(i, N) {
+            int x, y;  scanf("%d%d", &x, &y);
+            // points.push_back({x, y});
+            x_s[i] = x, y_s[i] = y;
+        }
+        std::sort(x_s+1, x_s+1+N);
+        std::sort(y_s+1, y_s+1+N);
+        upto(i, N)  sx[i] = sx[i-1] + x_s[i];
+        upto(i, N)  sy[i] = sy[i-1] + y_s[i];
     }
+
+    template <class T, class U>
+    ll query(T arr, U sigma, ll x) {
+        int pos = std::lower_bound(arr+1, arr+1+N, x) - arr;
+        if (pos == N+1) {
+            // log("%d -> %d\n", x, (x*N - sigma[N]))
+            return (x*N - sigma[N]);
+        }
+        int len1 = pos - 1, len2 = std::max(N - pos + 1, 0);
+        ll sum1 = sigma[pos-1], sum2 = sigma[N] - sigma[pos-1];
+        // log("%d -> %d(%d %d %d %d %d)\n", x, (sum2 - x*len2) + (x*len1 - sum1), pos, len1, len2, sum1, sum2)
+        return (sum2 - x*len2) + (x*len1 - sum1);
+    }
+
+    ll ans_y[_V];
+    const int center = 2e6+5;
 
     void solve() {
         init();
-        char ch; int x, y;
-#if 1
-        from(i, 1, P) {
-            std::cin >> ch >> x;
-            if (ch == 'M') {
-                std::cin >> y;
-                connect(x, y, 1);
-                log("!!%d\n", find(x).val);
-            } else {
-                printf("%d\n", find(x).val);
-            }
+        ll cnt = 0;
+
+        std::memset(ans_y, 0x3f, sizeof(ans_y));
+        from(y, -2000002, 2000002) {
+            ans_y[y+center] = query(y_s, sy, y); 
+            // int ans_x = query(x_s, sx, y);
         }
-#endif
-        // connect(1, 6, 1);
-        // connect(2, 4, 1);
-        // connect(4, 1, 1);
-        // printf("%d %d %d %d %d %d\n", find(1).to, find(1).val, find(4).to, find(4).val, find(2).to, find(2).val);
+        std::sort(ans_y, ans_y+_V);
+        // from(i, 0, 10)  log("%d ", ans_y[i]);
+        
+        from(x, -2000002, 2000002) {
+            ll ans_x = query(x_s, sx, x);
+            int pos = std::upper_bound(ans_y, ans_y+_V, D - ans_x) - ans_y;
+            cnt += pos;
+        }
+
+        printf("%lld\n", cnt);
     }
 }
 
 
-int main() {
+int main() {;
+
     initDebug;
     Solution::solve();
     return 0;

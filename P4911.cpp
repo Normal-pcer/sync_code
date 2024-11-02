@@ -223,13 +223,14 @@ namespace Processor {
  */
 namespace Program {
 
-    enum ProgramStatus { OK, Stopped, CompileError, RuntimeError };
+    enum ProgramStatus { OK, Jumping, Stopped, CompileError, RuntimeError };
 
     enum ExceptionType {  // 异常类型
         NoError,                // 保留
         IndexError,             // 越界访问
         ZeroDivisionError,      // 除以零
         ModifyConstantError,    // 修改常量
+        NullReferenceError,     // 空引用
     };
 
     struct Exception {  // 运行时异常
@@ -255,7 +256,7 @@ namespace Program {
         std::unordered_map<string, int> functionToId;
         std::unordered_map<int, string> IdToFunction;
         std::unordered_map<int, int> FunctionIdToDefintionLineIndex;
-        std::unordered_map<int, Operation> lineIndexMapping;
+        std::unordered_map<int, int> lineIndexMapping;
     };
 
     
@@ -269,6 +270,7 @@ namespace Program {
             status = RuntimeError;  // 停止运行，输出异常信息
             io << std::format("Runtime Error while running on line {}.\n {}: {}\n{}\n", 
                 step->line, (int)exception.type, exception.description, exception.information);
+            throw "Program Runtime Error!";
         }
         
         void halt() {  // 计划中的停机
@@ -277,11 +279,22 @@ namespace Program {
 
         void launch() {  // 开始运行
             step = code.operations.begin();
-            step->execute();
+
             while (step != code.operations.end() and status == OK) {
+                log("Step: %lld\n", step - code.operations.begin())
                 step->execute();
-                step++;
+                if (status == OK)  step++;
+                else if (status == Jumping) {
+                    status = OK;
+                } else {
+                    break;
+                }
             }
+        }
+
+        void jump(int opIndex) {  // 跳转
+            step = code.operations.begin() + opIndex;
+            status = Jumping;
         }
     } program;  // 当前在运行的程序
 }
@@ -319,12 +332,15 @@ namespace Storage {
         operator int() const {
             if (type == Constant)  return valueConstant;
             if (type == InRegister)  return *valuePointer;
+            if (type == Null) {
+                program.raise({NullReferenceError, "Accessing a NULL reference."});
+            }
             if (valuePointer) {  // 寄存器地址
                 return (int)(StorageReference){InMemory, 0, nullptr, *valuePointer};
             } else {
                 if (MemoryIndex < 0 or MemoryIndex >= _Mem) {  // 访问越界
                     program.raise({IndexError, std::format("Illegal memory access to {}.", MemoryIndex)});
-                    return valueConstant;  // 防止解释器本身 RE
+                    return valueConstant;
                 }
                 return memory[MemoryIndex];
             }
@@ -335,6 +351,9 @@ namespace Storage {
                 program.raise({ModifyConstantError, "Modifying a constant reference."});
                 return -1;
             }
+            if (type == Null) {
+                program.raise({NullReferenceError, "Accessing a NULL reference."});
+            }
             if (type == InRegister) {
                 return (*valuePointer = val);
             }
@@ -343,7 +362,7 @@ namespace Storage {
             } else {
                 if (MemoryIndex < 0 or MemoryIndex >= _Mem) {  // 访问越界
                     program.raise({IndexError, std::format("Illegal memory access to {}.", MemoryIndex)});
-                    return -1;  // 防止解释器本身 RE
+                    return -1;
                 }
                 return (memory[MemoryIndex] = val);
             }
@@ -417,16 +436,32 @@ namespace Processor {
 
     void Set(Arguments args) {  // 将 b 赋值为 a
         auto [source, target] = args.take<2>();
-        io << target.MemoryIndex << *source << endl;
         target = *source;
     }
 
-
-    void Add(Arguments args) {
-        auto [a, b] = args.take<2>();
-        auto target = args[2] || Storage::registerRef(Storage::VAL);
-        target = *a + *b;
+    void Jump_JMP(Arguments args) {  // 基于 %LINE 寄存器（定义函数时决定）的行号进行偏移和跳转
+        auto offset = args[0];
+        auto newLine = *Storage::registerRef(Storage::LINE) + *offset;
+        
+        program.jump(program.code.lineIndexMapping[newLine]);
     }
+
+    void Inverse_INV(Arguments args) {
+        auto [num] = args.take<1>();
+        auto target = args[1] || Storage::registerRef(Storage::VAL);
+        target = -(*num);
+    }
+
+#define defOP(name, op) \
+    void name(Arguments args) { \
+        auto [a, b] = args.take<2>(); \
+        auto target = args[2] || Storage::registerRef(Storage::VAL); \
+        target = *a op *b;  \
+    }
+
+    defOP(Add, +) defOP(Sub, -) defOP(Mult, *) defOP(Idiv, /) defOP(Mod, %) defOP(LeftShift_LSFT, <<) 
+    defOP(RightShift_RSFT, >>) defOP(BitAnd_BAND, &) defOP(BitOr_BOR, |) defOP(BitXOR_BXOR, ^)
+#undef defOP
 
     void ReadInt_RINT(Arguments args) {
         auto target = args[0] || Storage::registerRef(Storage::VAL);
@@ -439,9 +474,18 @@ namespace Processor {
 #define reg(s, fun) OperationsMapping.insert({#s, fun});
 #define reg0(s, fun) OperationsMapping0.insert({#s, fun});
         reg0(HLT, Halt_HLT)
-        reg(EXAMPLE, Example_EXP)
+        reg(EXP, Example_EXP)
         reg(SET, Set)
+        reg(JMP, Jump_JMP)
         reg(ADD, Add)
+        reg(SUB, Sub)
+        reg(MULT, Mult)
+        reg(IDIV, Idiv)
+        reg(MOD, Mod)
+        reg(LSFT, LeftShift_LSFT)
+        reg(RSFT, RightShift_RSFT)
+        reg(BAND, BitAnd_BAND)
+        reg(BXOR, BitXOR_BXOR)
         reg(RINT, ReadInt_RINT)
 #undef reg
 #undef reg0
@@ -559,6 +603,9 @@ namespace Parser {
             commandCount--;
             if (label != "FUNCTION"){
                 res.operations.push_back(op);
+                if (res.lineIndexMapping.find(line) == res.lineIndexMapping.end()) {
+                    res.lineIndexMapping[line] = res.operations.size() - 1;
+                }
             }
         }
 
@@ -571,6 +618,7 @@ namespace Parser {
 
 namespace Program {
     void Operation::execute() {
+        // debug std::cout << std::format("Executing new label {}\n", label);
         if (args->empty()) {
             assert(Processor::OperationsMapping0[label]);
             std::invoke(Processor::OperationsMapping0[label]);
@@ -610,8 +658,11 @@ namespace Solution {
 
 
 int main() {;
-
     initDebug;
-    Solution::solve();
+    try {
+        Solution::solve();
+    } catch (const char* exception) {
+        return 63;
+    }
     return 0;
 }
