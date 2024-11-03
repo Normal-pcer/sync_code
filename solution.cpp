@@ -1,268 +1,582 @@
-#include<bits/stdc++.h>
+/* Ktx-65 Assembly Language Interpreter */
+/* Ktx-65 汇编语言解释器 */
+/* Copyright (c) Kawasiro Nitori & Moriya Suwano of Kappa Heavy Industries Co.,Ltd. */
+/* 版权所有 河童重工业会社 河城荷取 洩矢诹访子 */
+
+/* 版本：审议稿 */
+/* 平成三十年 八月 十一日 */
+
+
+#include <bits/stdc++.h>
 using namespace std;
-const bool diff[3][3]={{0,0,1},{0,0,1},{1,1,0}};
-const int M=2005;
-int n,m,fanzhu,deadfan,rounds,tmp[M],used[M]; char ch,cu;
-struct PIGS {int iden,bloods,perfo,dead,nxt,equip,cnt; char cards[M];}a[15];
-deque <char> cards_pile;
-void _file() {
-    freopen("pigs.in","r",stdin);
-    freopen("pigs.out","w",stdout);
-}
-inline char read() {
-    ch=getchar();
-    while (ch<'A'||ch>'Z') ch=getchar();
-    return ch;
-}
-void _init() {
-    scanf("%d%d",&n,&m),fanzhu=deadfan=0;
-    for (int i=1,las=0; i<=n; i++) {
-        a[i].bloods=a[i].cnt=4,a[i].dead=a[i].perfo=a[i].equip=0,a[i].nxt=i%n+1;
-        cu=read(),fanzhu+=(cu=='F'),a[i].iden=(cu!='F')?((cu!='Z')?0:1):2,cu=read();
-        for (int j=1; j<=4; j++) a[i].cards[j]=read();
-    }
-    a[1].perfo=1;
-    for (int i=1; i<=m; i++) cards_pile.push_back(read());
-}
-void get_cards(int cur) {
-    a[cur].cards[++a[cur].cnt]=cards_pile.front();
-    if (cards_pile.size()>1) cards_pile.pop_front();
-}
-bool ought(int cur) {
-    int nxt=a[cur].nxt;
-    if (a[nxt].perfo==0) return 0; else
-    if (a[nxt].perfo==1) return diff[a[cur].iden][a[nxt].iden];
-    else return a[cur].iden==0;
-}
-int atk(int cur) {
-    if (a[cur].iden==2) return 1;
-    for (int nxt=a[cur].nxt; nxt!=cur; nxt=a[nxt].nxt) if (!a[nxt].dead)
-        if ((a[nxt].iden==2&&a[nxt].perfo==1)||(a[cur].iden==0&&a[nxt].perfo==-1)) return nxt;
-    return -1;
-}
-void pend(int x,int y) {
-    if (a[x].iden==0&&a[y].iden==1) {
-        for (int i=1; i<=a[x].cnt; i++) used[i]=rounds; a[x].equip=0;
-    }
-    else if (a[y].iden==2) get_cards(x),get_cards(x),get_cards(x);
-}
-int find(int cur,char aim) {
-    for (int i=1; i<=a[cur].cnt; i++) if (a[cur].cards[i]==aim) return i;
-    return 0;
-}
-void adjust(int cur,int s,int t) {
-    printf("adjust %d %d %d - Removed %c\n", cur, s, t, a[cur].cards[s]);
-    for (int i=s; i<t; i++) a[cur].cards[i]=a[cur].cards[i+1];
-}
-void respond_peach(int cur,int user) {
-    int re=find(cur,'P');
-    if (cur==user) {
-        re=0;
-        for (int i=1; i<=a[cur].cnt; i++) if (used[i]!=rounds&&a[cur].cards[i]=='P') {re=i; break;}
-        if (re) used[re]=rounds,a[cur].bloods++;
-        return;
-    }
-    if (re) a[cur].bloods++,adjust(cur,re,a[cur].cnt),a[cur].cnt--;
-}
-bool respond_dodge(int cur) {
-    int re=find(cur,'D');
-    if (re) adjust(cur,re,a[cur].cnt),a[cur].cnt--;
-    return re;
-}
-bool respond_kill(int cur,int user) {
-    int re=find(cur,'K');
-    if (cur==user) {
-        re=0;
-        for (int i=1; i<=a[cur].cnt; i++) if (used[i]!=rounds&&a[cur].cards[i]=='K') {re=i; break;}
-        if (re) used[re]=rounds;
-        return re;
-    }
-    if (re) adjust(cur,re,a[cur].cnt),a[cur].cnt--;
-    return re;
-}
-bool respond_wuxie(int cur,int user) {
-    int re=find(cur,'J');
-    if (cur==user) {
-        re=0;
-        for (int i=1; i<=a[cur].cnt; i++) if (used[i]!=rounds&&a[cur].cards[i]=='J') {re=i; break;}
-        if (re) used[re]=rounds;
-        return re;
-    }
-    if (re) {adjust(cur,re,a[cur].cnt),a[cur].cnt--;}
-    return re;
-}
-void lose_blood(int cur,int user) {
-    a[cur].bloods--; if (a[cur].bloods<1) respond_peach(cur,user);
-}
-void change_link(int cur) {
-    for (int pre=1; pre<=n; pre++)
-        if (!a[pre].dead&&a[pre].nxt==cur) {a[pre].nxt=a[cur].nxt; break;}
-}
-void do_peach(int cur) {
-    printf("Use P\n");
-    a[cur].bloods++;
-}
-void do_kill(int cur) {
-    printf("Use K\n");
-    int nxt=a[cur].nxt;
-    a[cur].perfo=1;
-    if (!respond_dodge(nxt)) {
-        lose_blood(nxt,cur);
-        if (a[nxt].bloods<1) deadfan+=(a[nxt].iden==2),a[nxt].dead=1,a[cur].nxt=a[nxt].nxt;
-        if (fanzhu==deadfan||a[1].dead) return;
-        if (a[nxt].bloods<1) pend(cur,nxt);
-    }
-}
-bool do_wuxie(int user,int cur,int aim,int now) {
-    printf("Use J\n");
-    bool ret=now;
-    for (int nxt=cur; ; ) if (!a[nxt].dead) {
-        if (!now) {
-            if (!diff[a[nxt].iden][a[aim].iden])
-                if (respond_wuxie(nxt,user)) {a[nxt].perfo=1; return do_wuxie(user,nxt,aim,1-now);}
-        }else {
-            if (diff[a[nxt].iden][a[aim].iden])
-                if (respond_wuxie(nxt,user)) {a[nxt].perfo=1; return do_wuxie(user,nxt,aim,1-now);}
-        }
-        nxt=a[nxt].nxt; if (nxt==cur) break;
-    }
-    return ret;
-}
-void do_fight(int cur,int aim,int user) {
-    printf("Use F\n");
-    a[cur].perfo=1;
-    if (a[aim].perfo==1) {
-        if (do_wuxie(cur,cur,aim,0)) return;
-    }
-    for (; ;) {
-        if (a[cur].iden==0&&a[aim].iden==1) {
-            lose_blood(aim,user);
-            if (a[aim].bloods<1) deadfan+=(a[aim].iden==2),a[aim].dead=1,change_link(aim);
-            if (fanzhu==deadfan||a[1].dead) return;
-            if (a[aim].bloods<1) pend(cur,aim);
-            return;
-        }else
-        if (!respond_kill(aim,user)) {
-            lose_blood(aim,user);
-            if (a[aim].bloods<1) deadfan+=(a[aim].iden==2),a[aim].dead=1,change_link(aim);
-            if (fanzhu==deadfan||a[1].dead) return;
-            if (a[aim].bloods<1) pend(cur,aim);
-            return;
-        }
-        if (!respond_kill(cur,user)) {
-            lose_blood(cur,user);
-            if (a[cur].bloods<1) deadfan+=(a[cur].iden==2),a[cur].dead=1,change_link(cur);
-            if (fanzhu==deadfan||a[1].dead) return;
-            if (a[cur].bloods<1) pend(aim,cur);
-            return;
-        }
-    }
-}
-void do_nanzhu(int cur) {
-    printf("Use N\n");
-    for (int nxt=a[cur].nxt; nxt!=cur; nxt=a[nxt].nxt) if (!a[nxt].dead) {
-        if (a[nxt].perfo==1) {
-            if (do_wuxie(cur,cur,nxt,0)) continue;
-        }
-        if (!respond_kill(nxt,cur)) {
-            lose_blood(nxt,cur); if (nxt==1&&a[cur].perfo==0) a[cur].perfo=-1;
-            if (a[nxt].bloods<1) deadfan+=(a[nxt].iden==2),a[nxt].dead=1,change_link(nxt);
-            if (fanzhu==deadfan||a[1].dead) return;
-            if (a[nxt].bloods<1) pend(cur,nxt);
-        }
-    }
-}
-void do_wanjian(int cur) {
-    printf("Use W\n");
-    for (int nxt=a[cur].nxt; nxt!=cur; nxt=a[nxt].nxt) if (!a[nxt].dead) {
-        if (a[nxt].perfo==1) {
-            if (do_wuxie(cur,cur,nxt,0)) continue;
-        }
-        if (!respond_dodge(nxt)) {
-            lose_blood(nxt,cur); if (nxt==1&&a[cur].perfo==0) a[cur].perfo=-1;
-            if (a[nxt].bloods<1) deadfan+=(a[nxt].iden==2),a[nxt].dead=1,change_link(nxt);
-            if (fanzhu==deadfan||a[1].dead) return;
-            if (a[nxt].bloods<1) pend(cur,nxt);
-        }
-    }
-}
-void do_zhuge(int cur) {
-    printf("Use Z\n");
-    a[cur].equip=1;
-}
-void _print();
-bool dis_cards(int cur) {
-    memset(used,0,sizeof used);
-    int i,cntused,totkill=0,counts,ret=-1,aim; char now;
-    for (rounds=1; ; rounds++) {
-        cntused=counts=0;
-        for (i=1; i<=a[cur].cnt; i++) if (used[i]!=rounds) {
-            now=a[cur].cards[i];
-            for (int i=1; i<=n; i++) printf("%d ", a[i].bloods);
-            printf("\n");
-            _print();printf("----\n");
-            switch (now) {
-                case 'P':
-                    if (a[cur].bloods<4) do_peach(cur),used[i]=rounds,cntused++,i=a[cur].cnt;
-                    break;
-                case 'K':
-                    if ((!totkill||a[cur].equip)&&ought(cur)) do_kill(cur),used[i]=rounds,cntused++,totkill++,i=a[cur].cnt;
-                    break;
-                case 'F':
-                    aim=atk(cur); if (aim!=-1) do_fight(cur,aim,cur),used[i]=rounds,cntused++,i=a[cur].cnt;
-                    break;
-                case 'N':
-                    do_nanzhu(cur),used[i]=rounds,cntused++,i=a[cur].cnt;
-                    break;
-                case 'W':
-                    do_wanjian(cur),used[i]=rounds,cntused++,i=a[cur].cnt;
-                    break;
-                case 'Z':
-                    do_zhuge(cur),used[i]=rounds,cntused++,i=a[cur].cnt;
-                    break;
-                default:
-                    break;
-            }
-            if (fanzhu==deadfan||a[1].dead) {ret=1; break;}
-            if (a[cur].dead) {ret=0; break;}
-        }
-        for (int i=1; i<=a[cur].cnt; i++) if (used[i]!=rounds) tmp[++counts]=a[cur].cards[i];
-        for (int i=1; i<=counts; i++) a[cur].cards[i]=tmp[i]; a[cur].cnt=counts;
-        if (!cntused&&ret!=1) ret=0;
-        if (ret>-1) return ret;
-    }
-}
-bool playing(int cur) {
-    get_cards(cur),get_cards(cur);
-    return dis_cards(cur);
-}
-void _duel() {
-    for (int i=1,event=0; !event&&fanzhu>0; i=a[i].nxt) {
-        printf("While i-1=%d\n", i-1);
-        if (!a[i].dead) event=playing(i);
-    }
-}
-void _print() {
-    printf("%s\n",a[1].dead?"FP":"MP");
-    for (int i=1; i<=n; i++) {
-        if (a[i].dead) printf("%s","DEAD"); else {
-            if (a[i].cnt>0) printf("%c",a[i].cards[1]);
-            for (int j=2; j<=a[i].cnt; j++) printf(" %c",a[i].cards[j]);
-        }
-        puts("");
-    }
-}
-int main() {
-    _init();
-    _duel();
-    _print();
-    return 0;
+
+
+bool compileErrorLevel = false;
+void compileError(int line, string message) {
+    // TODO Compile Error
+    cout << "[ERROR] Interpreter encountered a Compile Error on line " << line << endl;
+    cout << "    Message: " << message << endl;
+    compileErrorLevel = true;
 }
 
+#define compileAssert(line, statement, message) \
+(!!(statement) || [](int l, string state, string m)->bool {compileError(l, "Compile Assertion Failed: " + m + ", Statement: " + state); return false; }(line, #statement, message))
+
+void toupper(string& str) { for (char& c : str)c = toupper(c); }
+string touppers(const string& str) { string a = str; toupper(a); return a; }
+
+class AssemblyProgram {
+public:
+
+    enum Command {
+        Undefined = 0,  // Undefined
+        Halt = 1,       // Stops the program
+        NoOp,           // Does nothing
+        // Memory Access
+        Set,            // Read value from <0> into <1>
+        // Streamline control
+        Jump,           // Jump to <0>(absolute line number, begins from 1)
+        JumpIf,         // Jump to <0> if <1> is not zero (takes rFlag if <1> doesn't exist)
+        Call,           // push current linenum+1 to sAddr and jump to <0>(begins from 1)
+        Return,         // jump to sAddr.top() and sAddr.pop()
+        // Arithmetic operations
+        // rVal if not exist↓
+        Inverse,        // <1> = -<0>
+        Add,            // <2> = <0> + <1>
+        Minus,          // <2> = <0> - <1>
+        Multiply,       // <2> = <0> * <1>
+        IntDivide,      // <2> = <0> / <1>
+        Modulo,         // <2> = <0> % <1>
+        LeftShift,      // <2> = <0> << <1>
+        RightShift,     // <2> = <0> >> <1>
+        BitAnd,         // <2> = <0> & <1>
+        BitOr,          // <2> = <0> | <1>
+        BitXor,         // <2> = <0> ^ <1>
+        // Logical Operations
+        // rFlag if not exist↓
+        Greater,        //  <2> = <0> > <1>
+        Less,           //  <2> = <0> < <1>
+        GreaterEqual,   //  <2> = <0> >= <1>
+        LessEqual,      //  <2> = <0> <= <1>
+        Equal,          //  <2> = <0> == <1>
+        LogicalAnd,     //  <2> = <0> && <1>
+        LogicalOr,      //  <2> = <0> || <1>
+        // Console I/O
+        //        rVal if not exist ¡ý
+        ReadInt,        //  cin >> <0>
+        ReadChar,       // getchar(<0>)
+        WriteInt,       // cout << <0>
+        WriteChar,      // putchar(<0>)
+        // Keep at last - command count
+        CommandCount
+    };
+
+    enum VariableType {
+        Constant,
+        Pointer,
+        Memory
+    };
+
+    struct DataSource {
+        int* valptr;
+        int valconst;
+        int* valmemidptr;
+        AssemblyProgram* prog;
+        VariableType type;
+        int& operator ()() {
+            if (type == Constant)
+                return valconst;
+            else if (type == Pointer)
+                return *valptr;
+            else {
+                int id = *valmemidptr;
+                if (id >= memsize || id < 0) {
+                    prog->runtimeError("Memory acess out of range");
+                    valconst = 0;
+                    return valconst;
+                }
+                return prog->mem[id];
+            }
+        }
+    };
+
+    void halt() {
+        // TODO Halt
+        running = false;
+    }
+
+    void runtimeError(string message) {
+        // TODO Runtime Error
+        cout << "[ERROR] Interpreter encountered a Runtime Error on instruction " << nextptr + 1 << ", clock cycle " << clockCounter << endl;
+        cout << "    Message: " << message << endl;
+        running = false;
+    }
+
+private:
+    // Exception-Safe Wrappers
+    void pushAddr(int val) { if (sAddr.size() >= stackSize)runtimeError("sAddr Stack Overflow"); sAddr.push(val); }
+    int topAddr() { if (sAddr.size() <= 0) { runtimeError("sAddr Access Error(size = 0)"); return 0; } else return sAddr.top(); }
+    void popAddr() { if (sAddr.size() <= 0)runtimeError("sAddr Stack Underflow"); else sAddr.pop(); }
+    int popAddrRet() { if (sAddr.size() <= 0) { runtimeError("sAddr Stack Underflow"); return 0; } else { int val = sAddr.top(); sAddr.pop(); return val; } }
+    int readMem(int id) { if (id >= memsize || id < 0) { runtimeError("Memory Access Error(Read)"); return 0; } else return mem[id]; }
+    void writeMem(int id, int val) { if (id >= memsize || id < 0)runtimeError("Memory Access Error(Write)"); else mem[id] = val; }
+    int lineProgramId(int line) { auto i = commandLines.find(line); if (i == commandLines.end()) { runtimeError("Jump Line Number Invalid"); return 0; } else return i->second; }
+
+private:
+    // Command Handlers
+    void funcSet(vector<DataSource>& l) { l[1]() = l[0](); nextptr++; }
+    void funcJmp(vector<DataSource>& l) { nextptr = lineProgramId(l[0]() + rLine); }
+    void funcJIf(vector<DataSource>& l) { if (l.size() <= 1) { if (rFlag)nextptr = l[0]() + lineProgramId(rLine); else nextptr++; } else { if (l[1]())nextptr = l[0]() + lineProgramId(rLine); else nextptr++; } }
+    void funcCall(vector<DataSource>& l) { pushAddr(rLine); pushAddr(nextptr + 1); nextptr = lineProgramId(l[0]()); }
+    void funcRet(vector<DataSource>& l) { if (l.size() > 0)rRet = l[0](); nextptr = popAddrRet(); rLine = popAddrRet(); }
+    void funcInv(vector<DataSource>& l) { int* p;  if (l.size() <= 1)p = &rVal; else p = &l[1](); (*p) = -l[0](); nextptr++; }
+    void funcAdd(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() + l[1](); nextptr++; }
+    void funcSub(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() - l[1](); nextptr++; }
+    void funcMult(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() * l[1](); nextptr++; }
+    void funcIDiv(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() / l[1](); nextptr++; }
+    void funcMod(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() % l[1](); nextptr++; }
+    void funcLSft(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() << l[1](); nextptr++; }
+    void funcRSft(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() >> l[1](); nextptr++; }
+    void funcBAnd(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() & l[1](); nextptr++; }
+    void funcBOr(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() | l[1](); nextptr++; }
+    void funcBXor(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() ^ l[1](); nextptr++; }
+    void funcLGr(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() > l[1](); nextptr++; }
+    void funcLLs(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() < l[1](); nextptr++; }
+    void funcLGE(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() >= l[1](); nextptr++; }
+    void funcLLE(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() <= l[1](); nextptr++; }
+    void funcLEql(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() == l[1](); nextptr++; }
+    void funcLAnd(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() && l[1](); nextptr++; }
+    void funcLOr(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() || l[1](); nextptr++; }
+    void funcRInt(vector<DataSource>& l) { if (l.size() <= 0)cin >> rVal; else cin >> l[0](); nextptr++; }
+    void funcRCh(vector<DataSource>& l) { if (l.size() <= 0)rVal = getchar(); else l[0]() = getchar(); nextptr++; }
+    void funcWInt(vector<DataSource>& l) { /*if (l.size() <= 0)cout << rVal; else cout << l[0](); */nextptr++; }
+    void funcWCh(vector<DataSource>& l) { /*if (l.size() <= 0)putchar(rVal); else putchar(l[0]()); */nextptr++; }
+
+public:
+    void initalaize() {
+#define REGISTER_RAW(command, name) \
+commands[name] = command; names[command] = name
+#define REGISTER_HANDLER(command, handler, minParamCount, name)    \
+handlers[command] = [this](vector<DataSource>& l) {if (l.size() < minParamCount)runtimeError("Paramater Count Mismatch"); else handler(l); }; \
+/*handlers[command] = bind(&AssemblyProgram::handler, this, placeholders::_1);*/ \
+commands[name] = command; names[command] = name
+        REGISTER_RAW(Undefined, "UDEF");
+        handlers[Undefined] = [this](vector<DataSource>&) { runtimeError("Undefined Command Called"); };
+        REGISTER_RAW(Halt, "HLT");
+        handlers[Halt] = [this](vector<DataSource>&) { halt(); };
+        REGISTER_RAW(NoOp, "NOP");
+        handlers[NoOp] = [this](vector<DataSource>&) {};
+        REGISTER_HANDLER(Set, funcSet, 2, "SET");
+        REGISTER_HANDLER(Jump, funcJmp, 1, "JMP");
+        REGISTER_HANDLER(JumpIf, funcJIf, 1, "JIF");
+        REGISTER_HANDLER(Call, funcCall, 1, "CALL");
+        REGISTER_HANDLER(Return, funcRet, 0, "RET");
+        REGISTER_HANDLER(Inverse, funcInv, 1, "INV");
+        REGISTER_HANDLER(Add, funcAdd, 2, "ADD");
+        REGISTER_HANDLER(Minus, funcSub, 2, "SUB");
+        REGISTER_HANDLER(Multiply, funcMult, 2, "MULT");
+        REGISTER_HANDLER(IntDivide, funcIDiv, 2, "IDIV");
+        REGISTER_HANDLER(Modulo, funcMod, 2, "MOD");
+        REGISTER_HANDLER(LeftShift, funcLSft, 2, "LSFT");
+        REGISTER_HANDLER(RightShift, funcRSft, 2, "RSFT");
+        REGISTER_HANDLER(BitAnd, funcBAnd, 2, "BAND");
+        REGISTER_HANDLER(BitOr, funcBOr, 2, "BOR");
+        REGISTER_HANDLER(BitXor, funcBXor, 2, "BXOR");
+        REGISTER_HANDLER(Greater, funcLGr, 2, "LGR");
+        REGISTER_HANDLER(Less, funcLLs, 2, "LLS");
+        REGISTER_HANDLER(GreaterEqual, funcLGE, 2, "LGE");
+        REGISTER_HANDLER(LessEqual, funcLLE, 2, "LLE");
+        REGISTER_HANDLER(Equal, funcLEql, 2, "LEQL");
+        REGISTER_HANDLER(LogicalAnd, funcLAnd, 2, "LAND");
+        REGISTER_HANDLER(LogicalOr, funcLOr, 2, "LOR");
+        REGISTER_HANDLER(ReadInt, funcRInt, 0, "RINT");
+        REGISTER_HANDLER(ReadChar, funcRCh, 0, "RCH");
+        REGISTER_HANDLER(WriteInt, funcWInt, 0, "WINT");
+        REGISTER_HANDLER(WriteChar, funcWCh, 0, "WCH");
+#undef REGISTER_RAW
+#undef REGISTER_HANDLER
+        program.clear();
+        nextptr = 0;
+    }
+
+    bool pushCommand(int fileline, string name, vector<DataSource> param) {
+        toupper(name);
+        auto i = commands.find(name);
+        if (i == commands.end()) {
+            compileError(fileline, "Invaild command \"" + name + "\"");
+            return false;
+        }
+        else {
+            program.push_back(make_pair(i->second, param));
+            if (commandLines.find(fileline) == commandLines.end())
+                commandLines[fileline] = program.size() - 1;
+            return true;
+        }
+    }
+
+    int* getRegister(int fileline, string name) {
+        toupper(name);
+        if (name == "R1")
+            return &rR1;
+        else if (name == "R2")
+            return &rR2;
+        else if (name == "R3")
+            return &rR3;
+        else if (name == "R4")
+            return &rR4;
+        else if (name == "E1")
+            return &rE1;
+        else if (name == "E2")
+            return &rE2;
+        else if (name == "E3")
+            return &rE3;
+        else if (name == "E4")
+            return &rE4;
+        else if (name == "FLAG")
+            return &rFlag;
+        else if (name == "VAL")
+            return &rVal;
+        else if (name == "RET")
+            return &rRet;
+        else if (name == "LINE")
+            return &rLine;
+        else {
+            compileError(fileline, "Invaild register name \"" + name + '\"');
+            return nullptr;
+        }
+    }
+
+    int* getMemory(int fileline, int id) {
+        if (id >= memsize || id < 0) {
+            compileError(fileline, "Memory access statically out of range");
+            return 0;
+        }
+        else return mem + id;
+    }
+
+    void run() {
+        rR1 = rR2 = rR3 = rR4 = rE1 = rE2 = rE3 = rE4 = rFlag = rVal = rRet = rLine = 0;
+        memset(mem, 0, sizeof(mem));
+        while (!sAddr.empty())
+            sAddr.pop();
+
+        clockCounter = 0;
+        nextptr = 0;
+        running = true;
+        while (running) {
+            std::cout << std::format("Running on step {}\n", nextptr);
+            if (nextptr >= program.size() || nextptr < 0)
+                runtimeError("Program Pointer Invaild");
+            else
+                handlers[program[nextptr].first](program[nextptr].second);
+            clockCounter++;
+        }
+    }
+
+    int getClock() { return clockCounter; }
+
+    bool valid;
+private:
+
+    friend class Compiler;
+
+    int rR1, rR2, rR3, rR4;
+    int rE1, rE2, rE3, rE4;
+    int rFlag, rVal, rRet, rLine;
+    static constexpr int stackSize = 512 * 1024;
+    stack<int> /*sVal,*/ sAddr;
+
+    vector<pair<Command, vector<DataSource>>> program;
+    int nextptr;
+    static constexpr int memsize = 16 * 1024 * 1024;
+    int mem[memsize];
+
+    int clockCounter;
+    bool running;
+
+    function<void(vector<DataSource>&)> handlers[CommandCount];
+    map<int, int> commandLines;
+    map<string, Command> commands;
+    string names[CommandCount];
+};
+
+
+class Tokenizer {
+public:
+    enum Type {
+        Unknown,
+        Identifier,
+        Number,
+        Symbol
+    };
+
+    struct Token {
+        Type type;
+        string word;
+        int line;
+    };
+
+    static vector<Token> parse(const string& str) {
+        vector<Token> tokens;
+        Token buffer{ Unknown, "", 1 };
+        int commentLayers = 0;
+        int curline = 1;
+        for (char c : str) {
+            if (c == '[')
+                commentLayers++;
+            else if (c == ']') {
+                if (commentLayers > 0)
+                    commentLayers--;
+            }
+            else if (commentLayers <= 0) {
+                if (!(isblank(c) || iscntrl(c) || c == ',')) {
+                    if ((buffer.type == Number && !isdigit(c)) ||
+                        (buffer.type == Identifier && (!isalnum(c) && c != '_')) ||
+                        (buffer.type == Symbol && (isalnum(c) || c == '_' || c == '-'))) {
+                        buffer.line = curline;
+                        tokens.push_back(buffer);
+                        buffer = Token{ Unknown, "" };
+                    }
+                    if (buffer.type == Unknown) {
+                        // Check new object type
+                        if (isalpha(c) || c == '_')
+                            buffer.type = Identifier;
+                        else if (isdigit(c) || c == '-')
+                            buffer.type = Number;
+                        else
+                            buffer.type = Symbol;
+                    }
+                    buffer.word.push_back(c);
+                }
+                else {
+                    if (buffer.type != Unknown) {
+                        buffer.line = curline;
+                        tokens.push_back(buffer);
+                        buffer = Token{ Unknown, "" };
+                    }
+                }
+            }
+            if (c == '\n')
+                curline++;
+        }
+        if (buffer.type != Unknown) {
+            buffer.line = curline;
+            tokens.push_back(buffer);
+            buffer = Token{ Unknown, "" };
+        }
+        return tokens;
+    }
+
+    void parseTotal(string total) {
+        tokens = parse(total);
+        nextid = 0;
+    }
+
+    void parse(istream& in) {
+        int c;
+        string str;
+        while (c = in.get()) {
+            if (in.eof())
+                break;
+            str.push_back(c);
+        }
+        parseTotal(str);
+    }
+
+    Token next() {
+        if (nextid >= tokens.size())
+            return Token{ Unknown, "" };
+        else
+            return tokens[nextid++];
+    }
+
+    Token offset(int offset) {
+        int id = nextid - 1 + offset;
+        if (id >= tokens.size() || id < 1)
+            return Token{ Unknown };
+        else
+            return tokens[id];
+    }
+
+private:
+    vector<Token> tokens;
+    int nextid;
+};
+
 /*
-3 50
-MP P K D K
-ZP K K D P
-FP D D P K
-K D P P D D D K K P K D P P D D D K K P K D P P D D D K K P K D P P D D D K K P K D P P D D D K K P 
+Basic Syntax
+COMMAND %Register @Address Value @%AddrAtRegister;
 */
+class Compiler {
+public:
+
+    struct Command {
+        int line;
+        string command;
+        vector<Tokenizer::Token> sources;
+    };
+
+
+    void compile(Tokenizer& tokens) {
+        valid = false;
+        bool ok = true;
+        while (ok) {
+            Tokenizer::Token commt;
+            while (ok && (commt = tokens.next()).type != Tokenizer::Identifier)
+                if (commt.type == Tokenizer::Unknown)
+                    ok = false;
+            string command = commt.word;
+            vector<Tokenizer::Token> sources;
+            Tokenizer::Token cur;
+            bool pushCommand = true;
+            while (ok && (cur = tokens.next()).word != ";") {
+                if (cur.type == Tokenizer::Unknown)
+                    ok = false;
+                //if (cur.type == Tokenizer::Identifier&&tokens.offset(-1).type != Tokenizer::Symbol)
+                //    compileError(cur.line, "\";\" expected before a new identifier");
+                else if (cur.type == Tokenizer::Symbol&&cur.word == "$"&&touppers(command) == "FUNCTION") {
+                    Tokenizer::Token func = tokens.next();
+                    compileAssert(func.line, func.type == Tokenizer::Identifier, "\"function $\" not followed by a identifier as function name");
+                    compileAssert(func.line, funcStartLines.find(func.word) == funcStartLines.end(), "Redefinition of function \"" + func.word + "\"");
+                    funcStartLines.insert(make_pair(func.word, commt.line));
+
+                    auto vec = Tokenizer::parse("#LINE %LINE");
+                    for (auto& i : vec) { i.line = commt.line; }
+                    commands.push_back(Command{ commt.line, "SET", vec });
+                    pushCommand = false;
+                }
+                sources.push_back(cur);
+            }
+            if (compileErrorLevel)
+                break;
+            if (ok&&pushCommand)
+                commands.push_back(Command{ commt.line, command, sources });
+        }
+        if (compileErrorLevel) {
+            compileErrorLevel = false;
+            valid = false;
+        }
+        else
+            valid = true;
+        
+    }
+
+    void generateCode(AssemblyProgram& prog) {
+        if (!valid)
+            return;
+        prog.initalaize();
+        prog.valid = false;
+
+        bool ok = true;
+
+        for (auto i = commands.begin(); ok&&i != commands.end(); i++) {
+            string& command = i->command;
+            vector<AssemblyProgram::DataSource> sources;
+            bool pushCommand = true;
+
+            auto j = i->sources.begin();
+            auto nextToken = [&]()->Tokenizer::Token {
+                j++;
+                if (j == i->sources.end())
+                    return Tokenizer::Token{ Tokenizer::Unknown };
+                else
+                    return *j;
+            };
+            for (; ok&&j != i->sources.end(); nextToken()) {
+                auto& cur = *j;
+                if (cur.type == Tokenizer::Number)
+                    sources.push_back(AssemblyProgram::DataSource{ nullptr, atoi(cur.word.c_str()), nullptr, nullptr, AssemblyProgram::Constant });
+                else if (cur.type == Tokenizer::Symbol) {
+                    if (cur.word == "%") {
+                        Tokenizer::Token reg = nextToken();
+                        compileAssert(reg.line, reg.type == Tokenizer::Identifier, "% not followed by identifier");
+                        sources.push_back(AssemblyProgram::DataSource{ prog.getRegister(reg.line, reg.word), 0, nullptr, nullptr, AssemblyProgram::Pointer });
+                    }
+                    else if (cur.word == "@") {
+                        Tokenizer::Token val = nextToken();
+                        compileAssert(val.line, val.type == Tokenizer::Number, "@ not followed by a number");
+                        sources.push_back(AssemblyProgram::DataSource{ prog.getMemory(val.line, atoi(val.word.c_str())), 0, nullptr, nullptr, AssemblyProgram::Pointer });
+                    }
+                    else if (cur.word == "@%") {
+                        Tokenizer::Token reg = nextToken();
+                        compileAssert(reg.line, reg.type == Tokenizer::Identifier, "@% not followed by identifier");
+                        sources.push_back(AssemblyProgram::DataSource{ nullptr, 0, prog.getRegister(reg.line, reg.word), &prog, AssemblyProgram::Memory });
+                    }
+                    else if (cur.word == "#") {
+                        Tokenizer::Token def = nextToken();
+                        compileAssert(def.line, def.type == Tokenizer::Identifier, "# not followed by identifier");
+                        toupper(def.word);
+                        if (def.word == "LINE")
+                            sources.push_back(AssemblyProgram::DataSource{ nullptr, def.line, nullptr, nullptr, AssemblyProgram::Constant });
+                        else
+                            compileError(def.line, "Compile-time constant identifier \"" + def.word + "\" undefined");
+                    }
+                    else if (cur.word == "$") {
+                        if (command == "callfunc") {
+                            Tokenizer::Token func = nextToken();
+                            compileAssert(func.line, func.type == Tokenizer::Identifier, "\"callfunc $\" not followed by a identifier as function name");
+                            auto it = funcStartLines.find(func.word);
+                            if (it == funcStartLines.end())
+                                compileError(func.line, "Function \"" + func.word + "\" undefined");
+                            else {
+                                prog.pushCommand(i->line, "CALL", {
+                                    AssemblyProgram::DataSource{ nullptr, it->second, nullptr, nullptr, AssemblyProgram::Constant }});
+                            }
+                            pushCommand = false;
+                        }
+                        else
+                            compileError(cur.line, "$ not preceeded by keyword \"function\" or \"callfunc\"");
+
+                    }
+                }
+                if (compileErrorLevel)
+                    ok = false;
+            }
+            if (ok&&pushCommand)
+                prog.pushCommand(i->line, i->command, sources);
+        }
+
+        if (compileErrorLevel) {
+            compileErrorLevel = false;
+            prog.valid = false;
+        }
+        else
+            prog.valid = true;
+    }
+
+private:
+
+    vector<Command> commands;
+    map<string, int> funcStartLines;
+    bool valid;
+
+
+};
+
+
+AssemblyProgram prog;
+Tokenizer tokens;
+Compiler compiler;
+
+
+int main(int argc, char* argv[]) {
+
+    int n;
+    cin >> n;
+
+    string str;
+    string total;
+    while (n > 0 && getline(cin, str)) {
+        if (str == "")
+            continue;
+        n--;
+        total += str + '\n';
+    }
+
+    tokens.parseTotal(total);
+    compiler.compile(tokens);
+    compiler.generateCode(prog);
+    prog.run();
+
+    return 0;
+}

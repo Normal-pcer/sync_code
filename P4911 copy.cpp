@@ -3,10 +3,38 @@
  */
 
 #include <bits/stdc++.h>
+#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
+#define debug if(DEBUG_MODE)
+#define log(f, a...) debug printf(f, ##a);
+#define upto(i,n) for(int i=1;i<=(n);i++)
 #define from(i,b,e) for(int i=(b);i<=(e);i++)
-
+#define rev(i,e,b) for(int i=(e);i>=(b);i--)
+#define main() main(int argc, char const *argv[])
+#define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
+#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
+#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
+#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
+#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
+#define ensure(v, con, otw) (((v) con)? (v): (otw))
+#define never if constexpr(0)
+#define always if constexpr(1)
+#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
+#define Infinity 2147483647
+#define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
+bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
-
+inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
+#define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
+#define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
+#define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
+#define __macro_choose_helper(M,count)  M##count
+#define macro_choose_helper(M,count)   __macro_choose_helper(M,count)
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
+#define lam lambda
 namespace lib{}
 #include <bits/stdc++.h>
 #define USE_FREAD
@@ -187,6 +215,7 @@ namespace Processor {
     using operation_t = std::function<void(Arguments)>;
     using operation_no_arg_t = std::function<void()>;
     std::unordered_map<string, operation_t> OperationsMapping;
+    std::unordered_map<string, operation_no_arg_t> OperationsMapping0;
 }
 
 /**
@@ -200,6 +229,7 @@ namespace Program {
         NoError,                // 保留
         IndexError,             // 越界访问
         ZeroDivisionError,      // 除以零
+        ModifyConstantError,    // 修改常量
         NullReferenceError,     // 空引用
         FunctionCallingError,   // 函数调用相关
         EncodingError,          // 字符编码
@@ -254,6 +284,7 @@ namespace Program {
             step = code.operations.begin();
 
             while (step != code.operations.end() and status == OK) {
+                log("Step: %lld\n", step - code.operations.begin())
                 step->execute();
                 if (status == OK)  step++;
                 else if (status == Jumping) {
@@ -289,10 +320,10 @@ namespace Storage {
     std::unordered_map<string, Register*> registerMapping;  // 名称到寄存器指针的映射
     int memory[_Mem];  // 内存
 
+    enum ReferenceType { Null/*空引用*/, Constant/*常量*/, InRegister/*寄存器*/, InMemory/*内存*/ };
+
     // 调用栈，分别存储下一语句的序号和原先的 %Line 寄存器
     std::stack<std::pair<std::vector<Program::Operation>::iterator, int>> sAddr;
-    
-    enum ReferenceType { Null/*空引用*/, Constant/*常量*/, InRegister/*寄存器*/, InMemory/*内存*/ };
     /**
      * 数据存储的位置
      */
@@ -327,7 +358,8 @@ namespace Storage {
 
         int operator = (int val) {
             if (type == Constant) {
-                return val;  // 修改常量无影响
+                program.raise({ModifyConstantError, "Modifying a constant reference."});
+                return -1;
             }
             if (type == Null) {
                 program.raise({NullReferenceError, "Accessing a NULL reference."});
@@ -394,11 +426,22 @@ namespace Processor {
         }
     };
 
-    void Undefined_UDEF(Arguments) {}
-    void NoOperation_NOP(Arguments) {}
+    /**
+     * 以下是没有参数的函数
+     */
+    void Undefined_UDEF() {}
+    void NoOperation_NOP() {}
 
-    void Halt_HLT(Arguments) {
+    void Halt_HLT() {
         program.status = Stopped;
+    }
+
+    /**
+     * 一个示例的操作函数，这会直接输出传入的两个参数
+     */
+    void Example_EXP(Arguments args) {
+        auto [a, b] = args.take<2>();
+        io.writeln(*a, *b);
     }
 
     void Set(Arguments args) {  // 将 b 赋值为 a
@@ -460,25 +503,7 @@ namespace Processor {
         target = *a op *b;  \
     }
 
-    void Idiv(Arguments args) {
-        auto [a, b] = args.take<2>();
-        auto target = args[2] || Storage::registerRef(Storage::VAL);
-        if (*b == 0) {
-            program.raise({ZeroDivisionError, "Integer division by zero."});
-        }
-        target = *a / *b;
-    }
-
-    void Mod(Arguments args) {
-        auto [a, b] = args.take<2>();
-        auto target = args[2] || Storage::registerRef(Storage::VAL);
-        if (*b == 0) {
-            program.raise({ZeroDivisionError, "Integer division by zero."});
-        }
-        target = *a % *b;
-    }
-
-    defOP(Add, +) defOP(Sub, -) defOP(Mult, *) defOP(LeftShift_LSFT, <<) 
+    defOP(Add, +) defOP(Sub, -) defOP(Mult, *) defOP(Idiv, /) defOP(Mod, %) defOP(LeftShift_LSFT, <<) 
     defOP(RightShift_RSFT, >>) defOP(BitAnd_BAND, &) defOP(BitOr_BOR, |) defOP(BitXOR_BXOR, ^)
 #undef defOP
     
@@ -487,6 +512,7 @@ namespace Processor {
         auto [a, b] = args.take<2>();  \
         auto target = args[2] || Storage::registerRef(Storage::FLAG);  \
         target = (int)(*a op *b);  \
+        log("FLAG is %d now.", *Storage::registerRef(Storage::FLAG));  \
     }
 
     defLG(LGR, >) defLG(LLS, <) defLG(LGE, >=) defLG(LLE, <=) defLG(LEQL, ==) defLG(LAND, &&) defLG(LOR, ||)
@@ -505,11 +531,13 @@ namespace Processor {
 
     void WriteInt_WINT(Arguments args) {
         int x = *(args[0] || Storage::registerRef(Storage::VAL));
+        log("Write int: %d\n", x);
         io << (ll)x;
     }
 
     void WriteChar_WCH(Arguments args) {
         int ch = args[0] || Storage::registerRef(Storage::VAL);
+        log("Write char: ascii %d\n", ch);
         if (0 <= ch and ch <= 127) {
             io.push(ch);
         } else {
@@ -519,9 +547,11 @@ namespace Processor {
 
     void init() {
 #define reg(s, fun) OperationsMapping.insert({#s, fun});
-        reg(UDEF, Undefined_UDEF)
-        reg(HLT, Halt_HLT)
-        reg(NOP, NoOperation_NOP)
+#define reg0(s, fun) OperationsMapping0.insert({#s, fun});
+        reg0(UDEF, Undefined_UDEF)
+        reg0(HLT, Halt_HLT)
+        reg0(NOP, NoOperation_NOP)
+        // reg(EXP, Example_EXP)
         reg(SET, Set)
         reg(JMP, Jump_JMP)
         reg(JIF, JumpIf_JIF)
@@ -550,6 +580,7 @@ namespace Processor {
         reg(WINT, WriteInt_WINT)
         reg(WCH, WriteChar_WCH)
 #undef reg
+#undef reg0
     }
 }
 
@@ -644,7 +675,7 @@ namespace Parser {
                     string name; sio >> name;
                     int id = 0;
                     if (res.functionToId.find(name) == res.functionToId.end()) {
-                        id = res.functionToId.size();
+                        int id = res.functionToId.size();
                         res.functionToId[name] = id;
                         res.IdToFunction[id] = name;
                     } else {
@@ -668,8 +699,10 @@ namespace Parser {
                 sio >> c;
             }
             commandCount--;
+            log("%d %s %d\n", commandCount, label.c_str(), line);
             if (label != "FUNCTION"){
-                if (Processor::OperationsMapping.find(label) == Processor::OperationsMapping.end()) {
+                if (Processor::OperationsMapping.find(label) == Processor::OperationsMapping.end() and
+                    Processor::OperationsMapping0.find(label) == Processor::OperationsMapping0.end()) {
                     CompileError(std::format("Unknown command {}\n", label));
                     goto error;
                 }
@@ -682,6 +715,8 @@ namespace Parser {
                 res.lineIndexMapping[line] = res.operations.size() - 1;
             }
         }
+
+        
         return;
     error:
         throw 31;
@@ -690,12 +725,24 @@ namespace Parser {
 
 namespace Program {
     void Operation::execute() {
-        assert(Processor::OperationsMapping[label]);
-        std::invoke(Processor::OperationsMapping[label], *args);
+        debug std::cout << std::format("Executing new label {}\n", label);
+        if (args->empty()) {
+            if (Processor::OperationsMapping0.find(label) != Processor::OperationsMapping0.end()) {
+                assert(Processor::OperationsMapping0[label]);
+                std::invoke(Processor::OperationsMapping0[label]);
+            } else {
+                assert(Processor::OperationsMapping[label]);
+                std::invoke(Processor::OperationsMapping[label], *args);
+            }
+        } else {
+            assert(Processor::OperationsMapping[label]);
+            std::invoke(Processor::OperationsMapping[label], *args);
+        }
     }
 }
 
 namespace Solution {
+
     void init() {
         Storage::init();
         Processor::init();
@@ -705,12 +752,14 @@ namespace Solution {
     void solve() {
         init();
         Parser::readAndParse(program);
+        log("RUN!!!\n")
         program.launch();
     }
 }
 
 
-int main() {
+int main() {;
+    initDebug;
     try {
         Solution::solve();
     } catch (const int exception) {
