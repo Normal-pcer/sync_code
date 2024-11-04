@@ -12,10 +12,6 @@ namespace lib{}
 #define USE_FREAD
 // #undef USE_FREAD
 // 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
-#include <bits/stdc++.h>
-#define USE_FREAD
-// #undef USE_FREAD
-// 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
 namespace lib{
     using std::string;
     struct __IO {
@@ -714,7 +710,7 @@ int main() {
     try {
         Solution::solve();
     } catch (const int exception) {
-        return 31;
+        return exception;
     }
     return 0;
 }
