@@ -17,7 +17,7 @@ namespace lib{
         ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
         inline char gc() {
             if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
-            return p1==p2?' ':*p1++;
+            return p1==p2?'\0':*p1++;
         }
         inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
 #endif
@@ -26,7 +26,7 @@ namespace lib{
         inline char gc() {  return getchar();  }
 #endif
         char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
-        inline bool blank(char ch) { return ch==' ' or ch=='\n' or ch=='\r' or ch=='\t'; }
+        inline bool blank(char ch) { return ch<=32 or ch==127; }
         inline bool isd(char x) {return (x>='0' and x<='9');}
         inline IO& setprecision(int d) {
             sprintf(floatFormat, "%%.%df", d); sprintf(doubleFormat, "%%.%dlf", d);
@@ -103,8 +103,11 @@ namespace lib{
 #endif
         >
         inline void write(T x) {
-            if (x<0) x=-x,push('-');
             static char sta[40]; int top=0;
+            if (x<0) {
+                push('-'),sta[top++]=(-(x%10))^48,x=-(x/10);
+                if (x==0) { push(sta[--top]); return; }
+            }
             do {  sta[top++]=x%10^48,x/=10;  } while (x);
             while (top) push(sta[--top]);
         }
@@ -120,6 +123,6 @@ namespace lib{
     <1048576>
 #endif
     io;
-    const char endl[] = "\n";
+    const char endl = '\n';
 
 }

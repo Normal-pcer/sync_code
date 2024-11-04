@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         UID 颜色显示
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-28
+// @version      2024-11-4
 // @description  将用户名显示成其 UID 对应色
 // @author       normal-pcer
 // @match        https://www.luogu.com.cn/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=luogu.com.cn
 // @grant        none
+// @license      MIT
 // ==/UserScript==
 
 (function () {

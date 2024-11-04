@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://neooj.com:8082/oldoj/problem.php?id=2010
  */
 
 #include <bits/stdc++.h>
@@ -49,7 +49,7 @@ namespace lib{
         ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
         inline char gc() {
             if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
-            return p1==p2?'\0':*p1++;
+            return p1==p2?' ':*p1++;
         }
         inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
 #endif
@@ -58,7 +58,7 @@ namespace lib{
         inline char gc() {  return getchar();  }
 #endif
         char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
-        inline bool blank(char ch) { return ch<=32 or ch==127; }
+        inline bool blank(char ch) { return ch==' ' or ch=='\n' or ch=='\r' or ch=='\t'; }
         inline bool isd(char x) {return (x>='0' and x<='9');}
         inline IO& setprecision(int d) {
             sprintf(floatFormat, "%%.%df", d); sprintf(doubleFormat, "%%.%dlf", d);
@@ -135,11 +135,8 @@ namespace lib{
 #endif
         >
         inline void write(T x) {
+            if (x<0) x=-x,push('-');
             static char sta[40]; int top=0;
-            if (x<0) {
-                push('-'),sta[top++]=(-(x%10))^48,x=-(x/10);
-                if (x==0) { push(sta[--top]); return; }
-            }
             do {  sta[top++]=x%10^48,x/=10;  } while (x);
             while (top) push(sta[--top]);
         }
@@ -155,91 +152,66 @@ namespace lib{
     <1048576>
 #endif
     io;
-    const char endl = '\n';
+    const char endl[] = "\n";
 
 }
+
 
 using namespace lib;
 
 
 namespace Solution {
 
-    const int _N = 2e6+5;
 
-    template <size_t SZ>
-    struct SegTree {
-        struct Node {
-            int l, r;
-            int count, tag = -1;
-        } tr[SZ << 2];
+    int P, N = 30002; const int _N = 30005;
 
-        #define ls (p<<1)
-        #define rs (p<<1|1)
+    struct Node { int to, val; };
+    Node F[_N];
+    int size[_N];
 
-        void push_up(int p) {
-            tr[p].count = tr[ls].count + tr[rs].count;
-        }
-
-        void push_down(int p) {
-            if (tr[p].tag != -1) {
-                tr[ls].tag = tr[rs].tag = tr[p].tag;
-                tr[ls].count = tr[ls].r - tr[ls].l + 1, tr[rs].count = tr[rs].r - tr[rs].l + 1;
-                tr[p].tag = -1;
-            }
-        }
-
-        // ! 别忘 build
-        void build(int p, int l, int r) {
-            tr[p].l = l, tr[p].r = r;
-            if (l == r)  return;
-            auto mid = (l+r) >> 1;
-            build(ls, l, mid), build(rs, mid+1, r);
-        }
-
-        void set(int p, int l, int r, int val) {
-            if (tr[p].l >= l and tr[p].r <= r) {
-                tr[p].count = tr[p].r - tr[p].l + 1, tr[p].tag = val; 
-                return;
-            }
-            push_down(p);
-            if (tr[ls].r >= l)  set(ls, l, r, val);
-            if (tr[rs].l <= r)  set(rs, l, r, val);
-            push_up(p);
-        }
-
-        int query(int p, int l, int r) {
-            if (tr[p].l >= l and tr[p].r <= r) {
-                return tr[p].count;
-            }
-            push_down(p);
-            int res = 0;
-            if (tr[ls].r >= l)  res += query(ls, l, r);
-            if (tr[rs].l <= r)  res += query(rs, l, r);
-            return res;
-        }
-
-        #undef ls
-        #undef rs
-    };
-
-    SegTree<_N> seg;
-
-    int N, M;
-    
     void init() {
-        io >> N >> M;
+        std::ios::sync_with_stdio(false);  std::cin.tie(0), std::cout.tie(0);
+        io >> P;
 
-        seg.build(1, 1, N);
+        from(i, 1, N)  F[i] = {i, 0}, size[i] = 1;
+    }
+
+    // Find root node
+    Node find(int x) {
+        if (F[x].to == x)  return F[x];
+        Node tmp = find(F[x].to);
+        // log("find %d -> {%d, %d}\n", x, tmp.to, tmp.val + F[x].val);
+        return (F[x] = {tmp.to, tmp.val + F[x].val});
+    }
+
+    void connect(int x, int y) {
+        auto a = find(x), b = find(y);
+        auto xb = a.val + size[b.to];
+        auto xa = a.val;
+        if (a.to == b.to)  return;
+
+        int ab = xb - xa;
+        F[a.to] = {b.to, ab};
+        size[b.to] += size[a.to];
+
+        // log("connect %d %d %d -> [%d] = {%d, %d}\n", x, y, xy, a.to, b.to, ab);
     }
 
     void solve() {
         init();
-        int l, r;
-        from(_, 1, M) {
-            io >> l >> r;
-            seg.set(1, l, r, 1);
-            auto black = seg.query(1, 1, N);
-            io.writeln(black, N-black);
+        char ch;  int x, y;
+        from(i, 1, P) {
+            io >> ch >> x >> y;
+            if (ch == 'M') {
+                connect(x, y);
+            } else {
+                auto a = find(x), b = find(y);
+                if (a.to != b.to) {
+                    io << -1 << endl;
+                } else {
+                    io << abs(find(x).val - find(y).val) - 1 << endl;
+                }
+            }
         }
     }
 }
