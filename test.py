@@ -1,2 +1,1 @@
-import re;r,f,p=input,lambda x:len(x)**2+len(x),re.split
-for _ in"_"*int(r()):r();s=r();print(sum(map(f,p('<',s)+p('>',s)))//2-sum(map(f,p("<|>",s))))
+print((lambda ll:'\n'.join(list(map(lambda i: ' '.join(list(map(lambda j:str(0 if i >= len(ll[j]) else ll[j][i]), range(3)))), range(max(10,max(list(map(lambda a:len(a),ll)))))))))((lambda p:list(map(lambda i:list(map(lambda r:r[1], filter(lambda q:q[0]==i, p)))[::-1], set(list(zip(*p))[0]))))((list(map(lambda x:(list(map(int, x.split()))), __import__('sys').stdin.read().splitlines()))))))

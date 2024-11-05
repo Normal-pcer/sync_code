@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://www.luogu.com.cn/problem/P2866
  */
 
 #include <bits/stdc++.h>
@@ -164,60 +164,29 @@ using namespace lib;
 
 namespace Solution {
 
-    struct Part { int width, height; };
-    struct Log { int index;  ll time; };
+    int N;  const int _N = 8e4 + 5;
+    int H[_N];
 
-    int N;  const int _N = 1e5+5;
-
-    // 维护 height 不递增的栈
-    Log st[_N];  int p = 0;
-    Part component[_N];
-    int res[_N];
-    
     void init() {
         io >> N;
-        from(i, 1, N) {
-            int w, h;  io >> w >> h;
-            component[i] = {w, h};
-        }
-        component[0].height = component[N+1].height = Infinity;
+        from(i, 1, N)  io >> H[i];
     }
 
     void solve() {
         init();
 
-        int done = 0;
+        std::stack<int> st;
+        ll ans = 0;
+        
         from(i, 1, N) {
-            // 对于每一个部件，考虑：
-            // 如果它的高度更低，自然流下，时间和上一项的 time 相同
-            // 如果它的高度更高，会造成阻塞
-
-            // bool paused = false;
-
-            auto time = st[p].time;
-
-            while (p and component[st[p].index].height < component[i].height) {  // 阻塞
-                auto target = std::min(component[i].height, component[st[p-1].index].height);
-                res[st[p].index] = component[i].width + st[p].time, done++;  // 开始积蓄
-                if (done == N)  goto egg;
-                auto last = (target - component[i].height) * component[i].width;  // 等待达到下一个缺口
-                time = st[p].time + last;
-                p--;  // 弹出
-                // paused = true;
+            while (not st.empty() and st.top() <= H[i]) {
+                st.pop();
             }
-
-            Log new_l = {i, time};
-            st[++p] = new_l;   // 压入这条记录
-
-            debug {
-                from(i, 1, p)  io << st[i].index << ", " << st[i].time << " ";
-                io << endl;
-            }
+            ans += st.size();
+            st.push(H[i]);
         }
-    egg:
-        from(i, 1, N) {
-            io << res[i] << endl;
-        }
+
+        io << ans << endl;
     }
 }
 
