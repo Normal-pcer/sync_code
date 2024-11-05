@@ -214,7 +214,8 @@ namespace Program {
 
     struct Operation {
         int line;
-        string label;
+        // string label;
+        std::function<void(Processor::Arguments)> op;
         Processor::Arguments *args;
 
         void execute();
@@ -598,7 +599,7 @@ namespace Parser {
             string label;  sio >> label;
             int line = std::upper_bound(LineBeginCharIndex.begin(), LineBeginCharIndex.end(), 
                             sio.index) - LineBeginCharIndex.begin() - 1;  // 行号
-            auto op = Operation(line, to_upper(label), new Processor::Arguments());
+            auto op = Operation(line, Processor::OperationsMapping[to_upper(label)], new Processor::Arguments());
 
             // 接下来，读入若干个参数
             // 假定在分号之前都是参数
@@ -671,7 +672,7 @@ namespace Parser {
                 }
                 res.operations.push_back(op);
             } else {
-                res.operations.push_back(Operation{line, "SET", 
+                res.operations.push_back(Operation{line, Processor::Set, 
                     new Processor::Arguments({Storage::constRef(line), Storage::registerRef(Storage::LINE)})});
             }
             if (res.lineIndexMapping.find(line) == res.lineIndexMapping.end()) {
@@ -686,8 +687,8 @@ namespace Parser {
 
 namespace Program {
     void Operation::execute() {
-        assert(Processor::OperationsMapping[label]);
-        std::invoke(Processor::OperationsMapping[label], *args);
+        // std::invoke(op, *args);
+        op(*args);
     }
 }
 

@@ -3,16 +3,15 @@
  */
 
 #include "lib"
-#include "libs/io.hpp"
 using namespace lib;
 
 
 namespace Solution {
 
-    
+
 
     void init() {
-
+        
     }
 
     void solve() {
