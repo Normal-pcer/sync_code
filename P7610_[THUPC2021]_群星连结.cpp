@@ -160,6 +160,7 @@ namespace lib{
 
 using namespace lib;
 
+#define rgs std::ranges
 
 /**
  * “提取”一个容器中的前 SZ 项，其中 SZ 为编译期常量。
@@ -203,7 +204,7 @@ namespace std {
 
 
 namespace StarryConnection {
-    struct Player;
+    struct Character;
 
 
     enum TalentType {
@@ -311,14 +312,19 @@ namespace StarryConnection {
         int amount;
         Process::Round expireTime;      // 将在这个时间或更晚时过期
         
-        bool expired() { return current>=expireTime; }
+        bool expired() const { return current>=expireTime; }
+        operator int () const {
+            return expired()? amount: 0;
+        }
     };
 
+    auto operator + (int a, const Modifier& b) { return a + (int)b; }
+
     struct BoostedAttribute: public Attribute {  // 有“增益”设定的属性值
-        int boost = 0;
+        std::vector<Modifier> boost;
 
         operator int () const {
-            return value + boost;
+            return std::accumulate(boost.begin(), boost.end(), value);
         }
         int operator * () const { return (int)*this; }
 
@@ -332,15 +338,19 @@ namespace StarryConnection {
     struct Damage {
         int amount;         // 伤害数值（未计算伤害减免）
         int truth;          // 附带的真实伤害（未计算伤害减免）
-        Player *source;     // 伤害来源
-        Player *target;     // 目标
+        Character *source;     // 伤害来源
+        Character *target;     // 目标
     };
 
-    struct Player {
+    struct Character {
         Attribute health;           // 生命值
         Attribute mana;             // 能量值
         BoostedAttribute attack;    // 攻击力
         BoostedAttribute defense;   // 防御力
+
+        bool dead = false;          // 是否死亡
+
+        std::vector<Character*> priority_targets;  // 优先目标
 
         /**
          * 受到一次伤害。
@@ -352,7 +362,18 @@ namespace StarryConnection {
 
             // todo 添加天赋的伤害减免
             health.value -= finally;
+
+            // todo 角色死亡判定
         }
+    };
+
+    struct Player {
+        std::vector<Character*> characters;
+
+        /**
+         * 开始当前玩家的行动轮。
+         */
+        void action() {}
     };
 
 
