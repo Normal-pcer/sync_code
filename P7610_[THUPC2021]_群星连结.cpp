@@ -206,6 +206,17 @@ namespace std {
 namespace StarryConnection {
     struct Character;
 
+    int N;  // 每个玩家的角色数量
+
+    // 维护技能的参数列表
+    struct Arguments: std::vector<int> {
+        Arguments(): std::vector<int>() {}
+        Arguments(const std::initializer_list<int>& lis): std::vector<int>(lis) {}
+        template <size_t SZ>
+        auto take() {
+            return Extractions::_Extraction<Arguments, SZ>{*this};
+        }
+    };
 
     enum TalentType {
         WithDepression,             // 我自闭了 - 无特殊效果
@@ -215,6 +226,7 @@ namespace StarryConnection {
         Transcendent,               // 超凡入圣 - 普通攻击转换为真实伤害
         TechnologyFirst,            // 科技至上 - 普攻获得生命值，技能获得能量值
     };
+    auto TalentTypeLast = TechnologyFirst, TalentTypeFirst = WithDepression;
 
     enum SkillType {
         MentalityCollapsed,         // 心态崩了！ - 无特殊技能
@@ -229,6 +241,12 @@ namespace StarryConnection {
         ElfProtection,              // 精灵庇护！ - 己方所有角色回复生命值；一段时间内增大己方防御力增益
         // 全力超全开！轮回之终末！ - 略
         FullPowerInTheEndOfReincarnation,
+    };
+    auto SkillTypeLast = FullPowerInTheEndOfReincarnation, SkillTypeFirst = MentalityCollapsed;
+
+    struct Talent {
+        TalentType type;
+        Arguments args;
     };
 
     namespace Process {  // 游戏进程相关
@@ -266,13 +284,7 @@ namespace StarryConnection {
     }
     using Process::current;
 
-    // 维护技能的参数列表
-    struct Arguments: std::vector<int> {
-        template <size_t SZ>
-        auto take() {
-            return Extractions::_Extraction<Arguments, SZ>{*this};
-        }
-    };
+    
 
     struct Skill {
         SkillType type;
@@ -282,14 +294,14 @@ namespace StarryConnection {
     struct Limitation {
         int min = -Infinity, max = Infinity;
 
-        Limitation limitMax(int max) { return {-Infinity, max}; }
-        Limitation limitMin(int min) { return {min, +Infinity}; }
+        Limitation limitMax(const int max) { return {-Infinity, max}; }
+        Limitation limitMin(const int min) { return {min, +Infinity}; }
 
-        int limited(int val) {
+        int limited(const int val) const {
             return std::min(max, std::max(min, val));
         }
 
-        int operator() (int val) { return limited(val); }
+        int operator() (const int val) const { return limited(val); }
     };
 
     struct Attribute {  // 有限制的属性值
@@ -297,7 +309,7 @@ namespace StarryConnection {
         Limitation limit;
 
         operator int () const {
-            return value;
+            return limit(value);
         }
 
         int operator * () const { return (int)*this; }
@@ -320,11 +332,13 @@ namespace StarryConnection {
 
     auto operator + (int a, const Modifier& b) { return a + (int)b; }
 
-    struct BoostedAttribute: public Attribute {  // 有“增益”设定的属性值
+    struct BoostedAttribute{  // 有“增益”设定的属性值
+        int value;
+        Limitation limit;
         std::vector<Modifier> boost;
 
         operator int () const {
-            return std::accumulate(boost.begin(), boost.end(), value);
+            return limit(std::accumulate(boost.begin(), boost.end(), value));
         }
         int operator * () const { return (int)*this; }
 
@@ -348,9 +362,17 @@ namespace StarryConnection {
         BoostedAttribute attack;    // 攻击力
         BoostedAttribute defense;   // 防御力
 
+        Talent talent;  // 天赋
+        Skill skill;        // 技能
+
         bool dead = false;          // 是否死亡
 
-        std::vector<Character*> priority_targets;  // 优先目标
+        std::deque<Character*> priority_targets;  // 优先目标
+        std::deque<int> _priority_targets_index;  // 优先目标的下标（0 开始）
+
+        Character(int HP, int MP, int atk, int def):
+            health({HP, {0, HP}}), mana({0, {0, MP}}), 
+            attack({atk, {1, Infinity}, {}}), defense({def, {0, Infinity}, {}}) {}
 
         /**
          * 受到一次伤害。
@@ -365,6 +387,8 @@ namespace StarryConnection {
 
             // todo 角色死亡判定
         }
+
+        void useSkill() {}
     };
 
     struct Player {
@@ -373,9 +397,37 @@ namespace StarryConnection {
         /**
          * 开始当前玩家的行动轮。
          */
-        void action() {}
+        void action() {
+            // 选择编号最大的可使用技能
+            for (auto sk = SkillTypeLast; sk != SkillTypeFirst; sk = SkillType((int)sk-1)) {
+                auto rev = characters | rgs::views::reverse;
+                auto pos = rgs::find_if(rev, lam(cpt, cpt->skill.type == sk));
+                if (pos == rev.end())  continue;
+                (*pos)->useSkill();
+            }
+        }
+
+        /**
+         * 进行该玩家的收尾。
+         */
+        void actionDone() {}
     };
 
+    void roundEnd() {}
+
+    std::vector<Player*> players;
+
+    // 进行一个回合
+    void round() {
+        current.next(), assert(current.type == Process::Begin);
+        for (auto &playerPtr: players) {  // 对于每个玩家
+            current.next();  // 切到该玩家行动轮
+            playerPtr->action();  // 行动
+            current.next();
+            playerPtr->actionDone();  // 收尾
+        }
+        current.next(), roundEnd();
+    }
 
     void init() {
 
@@ -389,14 +441,59 @@ namespace StarryConnection {
         }
     }
     void solve() {
-        init();
-        test();
+        try {
+            init();
+            test();
+
+            io >> N;
+            from(i, 0, 1) {  // 输入玩家及其角色的相关参数
+                auto *playerPtr = new Player();
+                players.push_back(playerPtr);
+
+                from(j, 1, N) {
+                    int HP, MP, atk, def;
+                    io >> HP >> MP >> atk >> def;
+                    auto *charPtr = new Character(HP, MP, atk, def);
+                    playerPtr->characters.push_back(charPtr);
+                    from(k, 1, N) {
+                        int target;  io >> target;
+                        charPtr->_priority_targets_index.push_back(target - 1);
+                    }
+                    int sk, tl, x, y, z;
+                    io >> sk >> x >> y;
+                    charPtr->skill = Skill{(SkillType)sk, {x, y}};
+                    io >> tl >> x >> y >> z;
+                    charPtr->talent = Talent{(TalentType)tl, {x, y, z}};
+                }
+            }
+
+            from(i, 0, 1) {  // 处理优先目标
+                for (auto& ch: players[i]->characters) {
+                    for (auto& index: ch->_priority_targets_index) {
+                        ch->priority_targets.push_back(players[i^1]->characters[index]);
+                    }
+                }
+            }
+
+            // todo 开始游戏
+        } catch (const int Exception) {
+            if (Exception == 0) {
+                // todo 游戏结束
+            } else {
+                throw -1;  // 未知错误
+            }
+        }
+        
     }
 }
 
 
 int main() {
     initDebug;
-    StarryConnection::solve();
+    try {
+        StarryConnection::solve();
+    } catch (const int Exception) {
+        return Exception;
+    }
     return 0;
 }
