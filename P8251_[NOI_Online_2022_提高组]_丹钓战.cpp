@@ -184,7 +184,7 @@ namespace Solution {
         int p = 0;
 
         from(i, 1, N) {
-            while (p and (arr[st[p]].l == arr[i].l or arr[st[p]].r >= arr[i].r)) {
+            while (p and (arr[st[p]].l == arr[i].l or arr[st[p]].r <= arr[i].r)) {
                 F[0][st[p]] = i, p--;
             }
             st[++p] = i;
@@ -205,7 +205,7 @@ namespace Solution {
                     l = F[i][l];
                 }
             }
-            io << cnt << endl;
+            io << cnt + 1 << endl;
         }
     }
 }
