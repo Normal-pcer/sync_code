@@ -165,14 +165,17 @@ using namespace lib;
 namespace Solution {
 
     struct Part { int width, height; };
-    struct Log { int index;  ll time; };
+    struct Log { int index; };
 
     int N;  const int _N = 1e5+5;
 
     // 维护 height 不递增的栈
     Log st[_N];  int p = 0;
     Part component[_N];
-    int res[_N];
+    int res[_N];  // 什么时候开始被覆盖
+    ll time;  // 当前步骤的时间
+
+    int sw[_N];  // 宽度的前缀和
     
     void init() {
         io >> N;
@@ -180,6 +183,8 @@ namespace Solution {
             int w, h;  io >> w >> h;
             component[i] = {w, h};
         }
+        std::transform(component+1, component+1+N, sw+1, lam(c, c.width));
+        std::partial_sum(sw+1, sw+1+N, sw+1);
         component[0].height = component[N+1].height = Infinity;
     }
 
@@ -187,30 +192,33 @@ namespace Solution {
         init();
 
         int done = 0;
-        from(i, 1, N) {
+        from(i, 1, N+1) {
             // 对于每一个部件，考虑：
             // 如果它的高度更低，自然流下，时间和上一项的 time 相同
             // 如果它的高度更高，会造成阻塞
 
             // bool paused = false;
 
-            auto time = st[p].time;
-
+            // ?改成严格递减？
             while (p and component[st[p].index].height < component[i].height) {  // 阻塞
                 auto target = std::min(component[i].height, component[st[p-1].index].height);
-                res[st[p].index] = component[i].width + st[p].time, done++;  // 开始积蓄
+                int t = p-1;
+                while (component[st[t].index].height == component[st[p].index].height)  t--;
+                res[st[p].index] = (sw[i-1] - sw[st[t].index]) + time, done++;  // 开始积蓄
                 if (done == N)  goto egg;
-                auto last = (target - component[i].height) * component[i].width;  // 等待达到下一个缺口
-                time = st[p].time + last;
+                // st[p-1] 到 i（均不包含）之间的所有区域水位都需要上涨
+                auto last = (ll)(target - component[st[p].index].height) * (sw[i-1] - sw[st[t].index]);  // 等待达到下一个缺口
+                time += last;
                 p--;  // 弹出
                 // paused = true;
             }
 
-            Log new_l = {i, time};
+            Log new_l = {i};
             st[++p] = new_l;   // 压入这条记录
 
             debug {
-                from(i, 1, p)  io << st[i].index << ", " << st[i].time << " ";
+                io << time << " ";
+                from(i, 1, p)  io << st[i].index << " ";
                 io << endl;
             }
         }
