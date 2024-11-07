@@ -17,6 +17,7 @@
 #define Infinity 2147483647
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
+typedef unsigned int ui;
 
 #define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
 #define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
@@ -164,48 +165,60 @@ using namespace lib;
 
 namespace Solution {
 
+    std::mt19937 rnd(745184);
 
-    int N, Q;  const int _N = 5e5+5;
-    struct pair { int l, r; };
-    // int next[_N];
-    pair arr[_N];
+    const int _N = 5e5;
+    ui rand[_N];
+
+    int N;  // 点数
+    int M;  // 边数
+    int Q;  // 询问次数
+
+    ull c[_N];  // 对于一条从 i 出发的边，认为边权为 rand[i]。所有终点为 i 的边的边权和为 c[i]
+    ull sum;  // c[i] 的求和
+    ull target;  // 期望的求和
+    ull origin[_N];  // 记录每个点的原始状态
 
     void init() {
-        io >> N >> Q;
-        from(i, 1, N)  io >> arr[i].l;
-        from(i, 1, N)  io >> arr[i].r;
+        io >> N >> M;
+        from(i, 0, N)  rand[i] = rnd();
+        from(_, 1, M) {
+            int x, y;
+            io >> x >> y;  // x->y 连边
+            c[y] += rand[x];
+        }
+        from(i, 1, N)  origin[i] = c[i];
+        sum = std::accumulate(c+1, c+1+N, 0ULL);
+        from(i, 1, N)  target += rand[i];
+        io >> Q;
     }
 
     void solve() {
         init();
-
-        static int st[_N];
-        static int F[24][_N];
-        int p = 0;
-
-        from(i, 1, N) {
-            while (p and (arr[st[p]].l == arr[i].l or arr[st[p]].r >= arr[i].r)) {
-                F[0][st[p]] = i, p--;
+        
+        from(_, 1, Q) {
+            int op, u;
+            io >> op >> u;
+            if (op == 1) {  // 摧毁一条连接
+                auto v = io.get();
+                c[v] -= rand[u];
+                sum -= rand[u];
+            } else if (op == 2) {  // 摧毁一个据点
+                sum -= c[u];
+                c[u] = 0;
+            } else if (op == 3) {  // 重建一条连接
+                auto v = io.get();
+                sum += rand[u];
+                c[v] += rand[u];
+            } else {  // 修复一个据点
+                sum += (origin[u] - c[u]);
+                c[u] = origin[u];
             }
-            st[++p] = i;
-        }
-
-        from(i, 1, 20) {
-            from(j, 1, N) {
-                F[i][j] = F[i-1][F[i-1][j]];  // 倍增
+            if (sum == target) {
+                io << "YES" << endl;
+            } else {
+                io << "NO" << endl;
             }
-        }
-
-        while (Q --> 0) {
-            int l, r;  io >> l >> r;
-            int cnt = 0;
-            rev(i, 20, 0) {
-                if (0 < F[i][l] && F[i][l] <= r) {
-                    cnt += 1<<i;
-                    l = F[i][l];
-                }
-            }
-            io << cnt << endl;
         }
     }
 }

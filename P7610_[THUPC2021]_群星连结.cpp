@@ -247,6 +247,8 @@ namespace StarryConnection {
     struct Talent {
         TalentType type;
         Arguments args;
+
+        bool operator== (TalentType t) { return t == type; }
     };
 
     namespace Process {  // 游戏进程相关
@@ -289,6 +291,8 @@ namespace StarryConnection {
     struct Skill {
         SkillType type;
         Arguments args;
+
+        bool operator== (SkillType t) { return t == type; }
     };
 
     struct Limitation {
@@ -362,6 +366,8 @@ namespace StarryConnection {
         BoostedAttribute attack;    // 攻击力
         BoostedAttribute defense;   // 防御力
 
+        Player* owner;
+
         Talent talent;  // 天赋
         Skill skill;        // 技能
 
@@ -382,28 +388,45 @@ namespace StarryConnection {
             auto x = dmg.amount, y = dmg.truth;
             auto finally = std::max(0, x-defense) + y;
 
-            // todo 添加天赋的伤害减免
+            if (talent == FleshSkin) {
+                finally -= y/2;  // 天赋效果，受到真伤减半
+            }
             health.value -= finally;
 
+            // 回复一点能量值
+            mana = mana + 1;
             // todo 角色死亡判定
         }
 
-        void useSkill() {}
+        void useSkill() {
+            if (skill == GreensExplosion) {
+                auto dmg = skill.args[0];  // 伤害数值
+                for (auto &ch: owner->enemy->characters) {
+                    ch->damaged({dmg, 0, this, ch});  // 受到伤害
+                    mana = mana - (mana/10);  // 减少能量
+                }
+            }
+        }
     };
 
     struct Player {
         std::vector<Character*> characters;
+        Player *enemy;  // 对手
 
         /**
          * 开始当前玩家的行动轮。
          */
         void action() {
             // 选择编号最大的可使用技能
+            bool usedSkill = false;
             for (auto sk = SkillTypeLast; sk != SkillTypeFirst; sk = SkillType((int)sk-1)) {
                 auto rev = characters | rgs::views::reverse;
                 auto pos = rgs::find_if(rev, lam(cpt, cpt->skill.type == sk));
                 if (pos == rev.end())  continue;
-                (*pos)->useSkill();
+                (*pos)->useSkill(), usedSkill = true;
+            }
+            if (not usedSkill) {  // 使用普通攻击
+
             }
         }
 
@@ -437,7 +460,7 @@ namespace StarryConnection {
         Process::Round kkk;
         kkk.teams = 5;
         from(_, 1, 100) {
-
+            
         }
     }
     void solve() {
@@ -468,6 +491,7 @@ namespace StarryConnection {
             }
 
             from(i, 0, 1) {  // 处理优先目标
+                players[i]->enemy = players[i^1];
                 for (auto& ch: players[i]->characters) {
                     for (auto& index: ch->_priority_targets_index) {
                         ch->priority_targets.push_back(players[i^1]->characters[index]);
