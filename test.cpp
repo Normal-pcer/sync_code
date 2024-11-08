@@ -1,54 +1,32 @@
-/**
- * 
- */
-
-#include <bits/stdc++.h>
-#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
-#define debug if(DEBUG_MODE)
-#define log(f, a...) debug printf(f, ##a);
-#define from(i,b,e) for(int i=(b);i<=(e);i++)
-#define rev(i,e,b) for(int i=(e);i>=(b);i--)
-#define main() main(int argc, char const *argv[])
-#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
-#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
-#define never if constexpr(0)
-#define always if constexpr(1)
-#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define Infinity 2147483647
-bool DEBUG_MODE=false;
-typedef long long ll; typedef unsigned long long ull;
-
-#define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
-#define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
-#define __macro_choose_helper(M,count)  M##count
-#define macro_choose_helper(M,count)   __macro_choose_helper(M,count)
-#define __lambda_1(expr) [&](){return expr;}
-#define __lambda_2(a, expr) [&](auto a){return expr;}
-#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
-#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
-#define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
-#define lam lambda
-namespace lib{}
-
-using namespace lib;
-
-
-namespace Solution_1712273310987102 {
-
-    
-    void init() {
-
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef unsigned long long ull;
+typedef long double ld;
+vector<vector<int>> v(1010,vector<int>(1010,0));
+void solve(){
+    int n, m;
+    cin >> n >> m;
+    while(m--) {
+        int x, y, a, b;
+        cin >> x >> y >> a >> b;
+        v[x][y]++;
+        v[x][b + 1]--;
+        v[a + 1][y]--;
+        v[a + 1][b + 1]++;
     }
-
-    void solve() {
-        init();
-
+    for (int i = 1; i <= n; ++i) {
+        for (int j = 1; j <= n; ++j) {
+            v[i][j] += v[i - 1][j] + v[i][j - 1] - v[i - 1][j - 1];
+            cout << v[i][j] << ' ';
+        }
+        cout << "\n";
     }
 }
-
-
-int main() {
-    initDebug;
-    Solution_1712273310987102::solve();
+int main(){
+    ios::sync_with_stdio(false); 
+    cin.tie(0);
+    cout.tie(0);
+    solve();
     return 0;
 }

@@ -161,10 +161,9 @@ namespace lib{
 
 using namespace lib;
 
-
 namespace Solution_6584310475963280 {
     int N;  const int _N = 1e5+5;
-    struct level { int width, height; };
+    struct level { int width; ll height; };
     level lvl[_N];
 
     #define hh(i) lvl[i].height
@@ -184,28 +183,28 @@ namespace Solution_6584310475963280 {
 
         static int st[_N], p = 0;  // 单调递减栈，被水流过的阶梯的下标
         st[++p] = min;
-        std::vector<int> res(N+1);  
+        std::vector<ll> res(N+1);  
         from(_, 1, N) {
             auto ex_w = 0;  // 合并被灌水的阶梯
             if (lvl[l].height < lvl[r].height) {  // 走左侧
                 // 维护单调递减栈，即将压入 l
                 while (p and hh(st[p]) < hh(l)) {  // 一个较矮的
                     ww(st[p]) += ex_w;
-                    res[st[p]] = time + ww(st[p]) * 1;
+                    res[st[p]] = time + ww(st[p]) * 1;  
                     ex_w = ww(st[p]);
                     auto filled = st[p--];
-                    time += ww(filled) * (std::min(hh(st[p]), hh(r)) - hh(filled));  // 同向或反向取最值
+                    time += ww(filled) * (std::min(hh(st[p]), hh(l)) - hh(filled)); 
                 }
                 ww(l) += ex_w;
                 st[++p] = l, l--;  // 压入这级阶梯
             } else {
-                // 维护单调递减栈，即将压入 l
+                // 维护单调递减栈，即将压入 r
                 while (p and hh(st[p]) < hh(r)) {  // 一个较矮的
                     ww(st[p]) += ex_w;
-                    res[st[p]] = time + ww(st[p]) * 1;
+                    res[st[p]] = time + ww(st[p]) * 1;  
                     ex_w = ww(st[p]);
                     auto filled = st[p--];
-                    time += ww(filled) * (std::min(hh(st[p]), hh(l)) - hh(filled));  // 同向或反向取最值
+                    time += ww(filled) * (std::min(hh(st[p]), hh(r)) - hh(filled)); 
                 }
                 ww(r) += ex_w;
                 st[++p] = r, r++;  // 压入这级阶梯
@@ -215,7 +214,6 @@ namespace Solution_6584310475963280 {
         from(i, 1, N)  io << res[i] << endl;
     }
 }
-
 
 int main() {
     initDebug;

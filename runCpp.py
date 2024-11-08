@@ -328,6 +328,8 @@ if __name__ == '__main__':
         json.dump(defaultConfig, open( os.path.join(baseDir, 'config.json'), "w", encoding="UTF-8" ))
 
         fileName = sys.argv[1] if len(sys.argv)>=2 else previousFile
+        if fileName.startswith('.\\') or fileName.startswith('./'):
+            fileName = fileName[2:]
         fileName = re.sub(r"[ \/\\\:\*\?\"\<\>\|\-]", '_', fileName)
         if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
         if not os.path.exists(fileName):  # 创建新文件
