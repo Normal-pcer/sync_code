@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://www.luogu.com.cn/problem/P5300
  */
 
 #include <bits/stdc++.h>
@@ -167,7 +167,7 @@ namespace Solution {
     const int mod = 1e9+7;
     const int _N = 1005;
     int N;
-    int super[_N][_N];
+    unsigned super[_N][_N];
     
     void init() {
         io >> N;
@@ -178,16 +178,16 @@ namespace Solution {
 
     int sub(int x, int l, int m, int r) {
         auto a = (m-l+1) * (r-m+1) % mod;
-        return a * x % mod;
+        return (ll)a * x % mod;
     }
 
     template <class arr>
     int count(arr&& src) {
-        int tot = 0;
+        ll tot = 0;
         static int cnt[_N][_N];  // 从该点向上有几个连续的 1
         from(digit, 0, 31) {
-            const int mask = 1<<digit;  // 掩码
-            int ans = 0;  // 记录这一位的答案
+            const unsigned mask = 1U<<digit;  // 掩码
+            ll ans = 0;  // 记录这一位的答案
             from(i, 1, N)  from(j, 1, N) {
                 if (src[i][j] & mask)  cnt[i][j] = cnt[i-1][j] + 1;
                 else  cnt[i][j] = 0;
@@ -234,7 +234,7 @@ namespace Solution {
                         auto height = cur[st[p]];
                         auto l = left[st[p]] + 1;
                         auto r = i - 1;
-                        auto ans_this = sub(height, l, st[p], r);
+                        ll ans_this = sub(height, l, st[p], r);
                         ans_line += ans_this;  // 记录必须包含这一列的方法总数
                         ans_line %= mod;
                         p--;
@@ -242,15 +242,16 @@ namespace Solution {
 
                     // 此时 st2[p] 栈顶的对应值严格小于 i
                     // 符合条件，直接记录
-                    left[i] = st2[p];
+                    left[i] = st[p];
 
                     st[++p] = i;  // 将 i 压入两个栈
                 }
 
                 ans = (ans + ans_line) % mod;
-                debug io << std::format("({})ans of line {}: {}", digit, bottom, ans_line) << endl;
+                never io << std::format("({})ans of line {}: {} => {}", digit, bottom, ans_line, ans) << endl;
             }
-            tot += (ll)ans * mask % mod;
+            tot += (ll)ans * (ll)mask % mod;
+            never io << std::format("TOT is {} now.", tot) << endl;
             tot %= mod;
         }
         return tot;
@@ -259,7 +260,11 @@ namespace Solution {
     void solve() {
         init();
 
-        io << count(super) << endl;
+        auto ans1 = count(super);
+        from(i, 1, N)  from(j, 1, N)  super[i][j] = ~super[i][j];
+        auto tot = 294967267LL * (N*(N+1)/2%mod) % mod * (N*(N+1)/2%mod) % mod;
+        auto ans2 = (tot - count(super) + mod) % mod;
+        io.writeln(ans1, ans2);
     }
 }
 

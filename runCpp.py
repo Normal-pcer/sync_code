@@ -4,6 +4,7 @@ from traceback import print_exc
 from abc import abstractmethod
 import re
 import json
+import random
 
 class Option:
     switch: List[str]
@@ -35,9 +36,9 @@ class DebugOption(Option):
         super().__init__("debug", "d", "nd")
     
     def apply(self):
-        global debug
+        global debugMessage
         runArgs.append("-d")
-        debug = True
+        debugMessage = True
 
 class ReplaceOption(Option):
     def __init__(self):
@@ -193,13 +194,31 @@ class LogOption(Option):
         global log
         log = True
 
-class BreakOption(Option):
+class BuildOption(Option):
     def __init__(self):
         super().__init__("break", "b", "nb")
     
     def apply(self):
-        global breakBeforeExecute
-        breakBeforeExecute = True
+        global buildOnly
+        buildOnly = True
+
+class gdbOption(Option):
+    def __init__(self):
+        super().__init__("gdb", "g", "ng")
+    
+    def apply(self):
+        global launchGDB, buildOnly
+        launchGDB = True
+        buildOnly = True
+
+class tempOption(Option):
+    def __init__(self):
+        super().__init__("temp", "t", "nt")
+    
+    def apply(self):
+        global tempMode
+        tempMode = True
+
 
 def isInt(n: str):
     try:
@@ -208,6 +227,9 @@ def isInt(n: str):
     except ValueError:
         return False
 
+def hashName(name: str):
+    return str(hash(name)+(1<<63)).zfill(16)[:16]
+
 options: Dict[str, Option] = {
     "debug": DebugOption(),
     "replace": ReplaceOption(),
@@ -215,7 +237,8 @@ options: Dict[str, Option] = {
     "log": LogOption(),
     "autoInput": AutoInputOption(),
     "autoInitialize": AutoInitializeOption(),
-    "break": BreakOption()
+    "break": BuildOption(),
+    "gdb": gdbOption()
 }
 switchMap: Dict[str, Option] = {}
 switchNoneMap: Dict[str, Option] = {}
@@ -228,8 +251,11 @@ compileArgs = ['-std=c++20', '-O2', '-Wall', '-Wextra', '-finput-charset=utf-8']
 runArgs = []
 
 fileName = ""
-debug = False
-breakBeforeExecute = False
+debugMessage = False
+buildOnly = False
+launchGDB = False
+tempMode = False
+
 
 if __name__ == '__main__':
     try:
@@ -302,9 +328,9 @@ if __name__ == '__main__':
         json.dump(defaultConfig, open( os.path.join(baseDir, 'config.json'), "w", encoding="UTF-8" ))
 
         fileName = sys.argv[1] if len(sys.argv)>=2 else previousFile
-        fileName = fileName.replace(' ', '_')
+        fileName = re.sub(r"[ \/\\\:\*\?\"\<\>\|\-]", '_', fileName)
         if not fileName.endswith('.cpp'):   fileName = fileName + ".cpp"
-        if not os.path.exists(fileName):
+        if not os.path.exists(fileName):  # 创建新文件
             if not options["autoInitialize"].data:
                 raise FileNotFoundError("未找到文件")
             if fileName == "new.cpp":
@@ -313,11 +339,18 @@ if __name__ == '__main__':
                 maxIndex = str(maxIndex)
             else:
                 maxIndex = fileName[:-4]
-                previousFile = fileName.replace(' ', '_')
+                previousFile = re.sub(r"[ \/\\\:\*\?\"\<\>\|\-]", '_', fileName)
             fileName = str(maxIndex) + '.cpp'
             with open( os.path.join(baseDir, 'previousFile.txt'), "w", encoding="UTF-8" ) as f:
                 f.write(previousFile)
-            shutil.copyfile("init.cpp", fileName)
+            template = ""
+            with open("template.cpp", "r", encoding="UTF-8") as f:
+                template += f.read()
+            template = re.sub(r'\/\*\s*random\s*\*\/', lambda _:hex(random.randint(0x100000000000, 0xffffffffffff))[2:], template)
+            template = re.sub(r'\/\*\s*hashName\s*\*\/', hashName(fileName), template)
+            template = re.sub(r'\/\*\s*fileName\s*\*\/', re.sub('[^0-9A-Za-z_]', '_', fileName), template)
+            with open(fileName, "w", encoding="UTF-8") as f:
+                f.write(template)
             os.system(" ".join(["code", '"' + fileName + '"']))
             sys.exit()
 
@@ -327,22 +360,28 @@ if __name__ == '__main__':
                 option.apply()
         
         previousFile = fileName
-        with open( os.path.join(baseDir, 'previousFile.txt'), "w", encoding="UTF-8" ) as f:
-            f.write(previousFile)
-        
+        if not previousFile:
+            with open( os.path.join(baseDir, 'previousFile.txt'), "w", encoding="UTF-8" ) as f:
+                f.write(previousFile)
+            
+        if launchGDB:
+            shutil.copyfile(fileName, '__temp.cpp')
+            fileName = '__temp.cpp'
 
         if log:
             print(">", f"g++ \"{fileName}\" -o \"{fileName[:-4]}.exe\" " + ' '.join(compileArgs))
         print("正在编译...", end='\r')
         os.system(f"g++ \"{fileName}\" -o \"{fileName[:-4]}.exe\" " + ' '.join(compileArgs))
 
-        if breakBeforeExecute:
+        if buildOnly:
+            if launchGDB:
+                os.system("gdb ./__temp.exe")
             sys.exit(0)
 
         tm = time.perf_counter()
         if log: 
             print(">", f"\"{fileName[:-4]}.exe\" ".replace('/', '\\') + ' '.join(runArgs))
-        print("="*8 + ("DEBUG" if debug else "=====") + "="*8)
+        print("="*8 + ("DEBUG" if debugMessage else "=====") + "="*8)
         returns = os.system(f"\"{fileName[:-4]}.exe\" ".replace('/', '\\') + ' '.join(runArgs))
         print("="*21)
         print("Exited after {:.4f}s, with code {}.".format(time.perf_counter()-tm, returns))

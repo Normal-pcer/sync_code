@@ -33,7 +33,7 @@ namespace lib{}
 using namespace lib;
 
 
-namespace Solution_1712273310987102 {
+namespace Solution_1820357514260425 {
 
     
     void init() {
@@ -42,13 +42,13 @@ namespace Solution_1712273310987102 {
 
     void solve() {
         init();
-
+        printf("肚子的\n");
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_1712273310987102::solve();
+    Solution_1820357514260425::solve();
     return 0;
 }
