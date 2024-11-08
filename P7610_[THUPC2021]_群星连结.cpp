@@ -205,6 +205,7 @@ namespace std {
 
 namespace StarryConnection {
     struct Character;
+    struct Player;
 
     int N;  // 每个玩家的角色数量
 
@@ -270,11 +271,19 @@ namespace StarryConnection {
             int arg = 0;  // 用于标明哪一方的行动轮
             int teams;  // 队伍数量
 
+            Round endOf(int id) {
+                return Round(id, End, teams, teams);
+            }
+
             Round &next() {
                 if (type == End)  arg = 0, id++;
                 if (type == ActionDone and arg < teams)  type = Action, arg++;
                 else  type++;
                 return *this;
+            }
+
+            Round &operator++(int) {
+                return next();
             }
 
             std::weak_ordering operator <=> (const Round& other) const {
@@ -360,6 +369,21 @@ namespace StarryConnection {
         Character *target;     // 目标
     };
 
+    struct Player {
+        std::vector<Character*> characters;
+        Player *enemy;  // 对手
+
+        /**
+         * 开始当前玩家的行动轮。
+         */
+        void action();
+
+        /**
+         * 进行该玩家的收尾。
+         */
+        void actionDone();
+    };
+
     struct Character {
         Attribute health;           // 生命值
         Attribute mana;             // 能量值
@@ -385,6 +409,8 @@ namespace StarryConnection {
          * 将会计算伤害的减免（如防御力）。
          */
         void damaged(const Damage &dmg) {
+            // 如果已经死亡，不再收到伤害
+            if (dead)  return;
             auto x = dmg.amount, y = dmg.truth;
             auto finally = std::max(0, x-defense) + y;
 
@@ -405,36 +431,42 @@ namespace StarryConnection {
                     ch->damaged({dmg, 0, this, ch});  // 受到伤害
                     mana = mana - (mana/10);  // 减少能量
                 }
+            } else if (skill == ICBM) {
+                for (auto &ch: owner->enemy->characters) {
+                    ch->damaged({0, attack, this, ch});
+                }
+            } else if (skill == EmperorsSwordInSkyPalace) {
+                auto x = skill.args[0];
+                for (auto &ch: priority_targets) {
+                    if (not ch->dead) {  // 攻击所有存活的目标
+                        auto dmg = std::min(attack * x, ch->health.limit.max / 10);
+                        ch->damaged({dmg, 0, this, ch});
+                    }
+                }
+            } else if (skill == ShowBeginning) {
+                // auto t = current.id;
+                // auto [x, y] = skill.args.take<2>();
+                // Process::Round expire({t+x-1, Process::End});
             }
         }
     };
 
-    struct Player {
-        std::vector<Character*> characters;
-        Player *enemy;  // 对手
-
-        /**
-         * 开始当前玩家的行动轮。
-         */
-        void action() {
-            // 选择编号最大的可使用技能
-            bool usedSkill = false;
-            for (auto sk = SkillTypeLast; sk != SkillTypeFirst; sk = SkillType((int)sk-1)) {
-                auto rev = characters | rgs::views::reverse;
-                auto pos = rgs::find_if(rev, lam(cpt, cpt->skill.type == sk));
-                if (pos == rev.end())  continue;
-                (*pos)->useSkill(), usedSkill = true;
-            }
-            if (not usedSkill) {  // 使用普通攻击
-
-            }
+    void Player::action()  {
+        // 选择编号最大的可使用技能
+        bool usedSkill = false;
+        for (auto sk = SkillTypeLast; sk != SkillTypeFirst; sk = SkillType((int)sk-1)) {
+            auto rev = characters | rgs::views::reverse;
+            auto pos = rgs::find_if(rev, lam(cpt, cpt->skill.type == sk));
+            if (pos == rev.end())  continue;
+            (*pos)->useSkill(), usedSkill = true;
         }
+        if (not usedSkill) {  // 使用普通攻击
 
-        /**
-         * 进行该玩家的收尾。
-         */
-        void actionDone() {}
-    };
+        }
+    }
+
+    void Player::actionDone() {}
+
 
     void roundEnd() {}
 
@@ -460,7 +492,8 @@ namespace StarryConnection {
         Process::Round kkk;
         kkk.teams = 5;
         from(_, 1, 100) {
-            
+            io << std::format("{} {} {} {}", (int)kkk.type, kkk.id, kkk.arg, kkk.teams) << endl;
+            kkk++;
         }
     }
     void solve() {
