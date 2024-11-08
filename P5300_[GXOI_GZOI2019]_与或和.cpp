@@ -196,8 +196,8 @@ namespace Solution {
             from(bottom, 1, N) {  // 枚举底边
                 auto cur = cnt[bottom];  // 当前行
                 static int st[_N];  // 存储下标，对应值单调不减
-                static int st2[_N];  // 存储下标，对应值单调递增
-                int p = 0, q = 0;
+                // static int st2[_N];  // 存储下标，对应值单调递增
+                int p = 0;
                 int ans_line = 0;  // 本行产生的贡献
 
 #if false  // 错误的实现思路
@@ -239,15 +239,12 @@ namespace Solution {
                         ans_line %= mod;
                         p--;
                     }
-                    while (q and cur[st2[q]] >= cur[i]) {
-                        q--;
-                    }
 
                     // 此时 st2[p] 栈顶的对应值严格小于 i
                     // 符合条件，直接记录
-                    left[i] = st2[q];
+                    left[i] = st2[p];
 
-                    st[++p] = st2[++q] = i;  // 将 i 压入两个栈
+                    st[++p] = i;  // 将 i 压入两个栈
                 }
 
                 ans = (ans + ans_line) % mod;
