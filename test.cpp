@@ -17,7 +17,6 @@
 #define Infinity 2147483647
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
-typedef unsigned int ui;
 
 #define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
 #define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
@@ -165,61 +164,105 @@ using namespace lib;
 
 namespace Solution {
 
-    std::mt19937 rnd(745184);
-
-    const int _N = 5e5+5;
-    ui rand[_N];
-
-    int N;  // 点数
-    int M;  // 边数
-    int Q;  // 询问次数
-
-    ull c[_N];  // 对于一条从 i 出发的边，认为边权为 rand[i]。所有终点为 i 的边的边权和为 c[i]
-    ull sum;  // c[i] 的求和
-    ull target;  // 期望的求和
-    ull origin[_N];  // 记录每个点的原始状态
-
+    const int mod = 1e9+7;
+    const int _N = 1005;
+    int N;
+    int super[_N][_N];
+    
     void init() {
-        io >> N >> M;
-        from(i, 0, N)  rand[i] = rnd();
-        from(_, 1, M) {
-            int x, y;
-            io >> x >> y;  // x->y 连边
-            c[y] += rand[x];
+        io >> N;
+        from(i, 1, N)  from(j, 1, N) {
+            io >> super[i][j];
         }
-        from(i, 1, N)  origin[i] = c[i];
-        sum = std::accumulate(c+1, c+1+N, 0ULL);
-        from(i, 1, N)  target += rand[i];
-        io >> Q;
+    }
+
+    int sub(int x, int l, int m, int r) {
+        auto a = (m-l+1) * (r-m+1) % mod;
+        return a * x % mod;
+    }
+
+    template <class arr>
+    int count(arr&& src) {
+        int tot = 0;
+        static int cnt[_N][_N];  // 从该点向上有几个连续的 1
+        from(digit, 0, 31) {
+            const int mask = 1<<digit;  // 掩码
+            int ans = 0;  // 记录这一位的答案
+            from(i, 1, N)  from(j, 1, N) {
+                if (src[i][j] & mask)  cnt[i][j] = cnt[i-1][j] + 1;
+                else  cnt[i][j] = 0;
+            }
+
+            from(bottom, 1, N) {  // 枚举底边
+                auto cur = cnt[bottom];  // 当前行
+                static int st[_N];  // 存储下标，对应值单调不减
+                static int st2[_N];  // 存储下标，对应值单调递增
+                int p = 0, q = 0;
+                int ans_line = 0;  // 本行产生的贡献
+
+#if false  // 错误的实现思路
+                from(i, 1, N+1) {  // 从左到右遍历，右边界视为 0
+                    auto last = i;  // 最后一个被弹出的元素
+                    bool flag = false;  // 是否有元素在本次流程中被弹出
+                    while (p and cur[st[p]] > cur[i]) {
+                        // 一个元素将要被弹出
+                        // 它的上端可以直接被结算
+                        auto height = cur[st[p]] - cur[i];  // 比当前元素高的部分
+                        auto width = i - st[p];  // 宽度
+                        // 上端的一个长方形区域，计算这部分的子矩阵数量
+                        auto cnt1 = sub(height, width);
+                        // 减去只在右边的部分
+                        auto passed = i - last;  // 需要减去的宽度；高度依然是 height
+                        auto cnt2 = sub(height, passed);
+                        // 减去只在上边的部分
+                        // 故这次结算出来的数量为 cnt1 - cnt2
+                        assert(cnt1-cnt2>=0), ans_line = (ans_line - cnt2 + cnt1) % mod;
+                        last = st[p--], flag = true;  // 记录并弹出当前元素
+                    }
+
+                    if (flag)  cur[st[++p]] = cur[i];  // 截断
+                    else  st[++p] = i;
+                }
+
+                debug io << std::format("ans of line {}: {}", bottom, ans_line) << endl;
+#endif
+                // 对于每一列，寻找分别寻找它左侧第一个低于它的，和右侧第一个不高于它的列
+                std::vector<int> left(N+5);  // 记录左侧
+                from(i, 1, N+1) {
+                    while (p and cur[st[p]] > cur[i]) {
+                        // 栈顶元素的右侧添加了一个更高的
+                        auto height = cur[st[p]];
+                        auto l = left[st[p]] + 1;
+                        auto r = i - 1;
+                        auto ans_this = sub(height, l, st[p], r);
+                        ans_line += ans_this;  // 记录必须包含这一列的方法总数
+                        ans_line %= mod;
+                        p--;
+                    }
+                    while (q and cur[st2[q]] >= cur[i]) {
+                        q--;
+                    }
+
+                    // 此时 st2[p] 栈顶的对应值严格小于 i
+                    // 符合条件，直接记录
+                    left[i] = st2[q];
+
+                    st[++p] = st2[++q] = i;  // 将 i 压入两个栈
+                }
+
+                ans = (ans + ans_line) % mod;
+                debug io << std::format("({})ans of line {}: {}", digit, bottom, ans_line) << endl;
+            }
+            tot += (ll)ans * mask % mod;
+            tot %= mod;
+        }
+        return tot;
     }
 
     void solve() {
         init();
-        
-        from(_, 1, Q) {
-            int op, u;
-            io >> op >> u;
-            if (op == 1) {  // 摧毁一条连接
-                auto v = io.get();
-                c[v] -= rand[u];
-                sum -= rand[u];
-            } else if (op == 2) {  // 摧毁一个据点
-                sum -= c[u];
-                c[u] = 0;
-            } else if (op == 3) {  // 重建一条连接
-                auto v = io.get();
-                sum += rand[u];
-                c[v] += rand[u];
-            } else {  // 修复一个据点
-                sum += (origin[u] - c[u]);
-                c[u] = origin[u];
-            }
-            if (sum == target) {
-                io << "YES" << endl;
-            } else {
-                io << "NO" << endl;
-            }
-        }
+
+        io << count(super) << endl;
     }
 }
 
