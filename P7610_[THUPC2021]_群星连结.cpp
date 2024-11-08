@@ -203,7 +203,7 @@ namespace std {
 }
 
 
-namespace StarryConnection {
+namespace StellarisConnection {
     struct Character;
     struct Player;
 
@@ -275,6 +275,10 @@ namespace StarryConnection {
                 return Round(id, End, teams, teams);
             }
 
+            Round unreachable() {
+                return Round(Infinity, End, teams, teams);
+            }
+
             Round &next() {
                 if (type == End)  arg = 0, id++;
                 if (type == ActionDone and arg < teams)  type = Action, arg++;
@@ -335,9 +339,9 @@ namespace StarryConnection {
 
     struct Modifier {
         int amount;
-        Process::Round expireTime;      // 将在这个时间或更晚时过期
+        Process::Round expireTime;      // 将在比这个时间更晚时过期
         
-        bool expired() const { return current>=expireTime; }
+        bool expired() const { return current > expireTime; }
         operator int () const {
             return expired()? amount: 0;
         }
@@ -390,6 +394,8 @@ namespace StarryConnection {
         BoostedAttribute attack;    // 攻击力
         BoostedAttribute defense;   // 防御力
 
+        BoostedAttribute extraMana;  // 额外回复能量值
+
         Player* owner;
 
         Talent talent;  // 天赋
@@ -402,7 +408,22 @@ namespace StarryConnection {
 
         Character(int HP, int MP, int atk, int def):
             health({HP, {0, HP}}), mana({0, {0, MP}}), 
-            attack({atk, {1, Infinity}, {}}), defense({def, {0, Infinity}, {}}) {}
+            attack({atk, {1, Infinity}, {}}), defense({def, {0, Infinity}, {}}), 
+            extraMana({0, {0, Infinity}, {}}) {}
+
+        // 获取优先目标
+        // 这会自动清理优先目标队列
+        Character *target() {
+            while (not priority_targets.empty() and priority_targets.front()->dead) {
+                priority_targets.pop_front();
+            }
+            if (not priority_targets.empty()) {
+                return priority_targets.front();
+            } else {
+                throw -8;  // 没有优先目标，抛出异常
+                return nullptr;
+            }
+        }
 
         /**
          * 受到一次伤害。
@@ -444,9 +465,32 @@ namespace StarryConnection {
                     }
                 }
             } else if (skill == ShowBeginning) {
-                // auto t = current.id;
-                // auto [x, y] = skill.args.take<2>();
-                // Process::Round expire({t+x-1, Process::End});
+                auto t = current.id;  // 当前回合号
+                auto [x, y] = skill.args.take<2>();
+                auto expire = current.endOf(t+x-1);  // 到这个回合的结束
+                for (auto &ch: owner->characters) {
+                    // 给队友添加增益
+                    ch->extraMana.boost.push_back(Modifier{y, expire});
+                }
+            } else if (skill == SiriusSlash) {
+                auto x = skill.args[0];
+                target()->defense.boost.push_back({-x, current.unreachable()});  // 削减对方防御力，不过期
+                target()->damaged({0, attack, this, target()});
+            } else if (skill == SuperLightning) {
+                auto [x, y] = skill.args.take<2>();
+                // 对目标造成真伤
+                target()->damaged({0, attack, this, target()});
+                auto t = current.id;  // 当前回合
+                auto expire = current.endOf(t+x-1);  // 过期
+                // 削弱所有敌方角色的攻击力
+                for (auto &ch: owner->characters) {
+                    ch->attack.boost.push_back({-y, expire});
+                }
+            } else if (skill == AuroraBloom) {
+                auto [x, y, z] = skill.args.take<3>();
+                auto vw = owner->characters | std::ranges::views::filter(lam(t, not t->dead));
+                auto to = std::ranges::min_element(vw, lam(a, b, a->health < b->health));  // 要救助的对象
+                (*to)->health = (*to)->health + z;
             }
         }
     };
@@ -548,7 +592,7 @@ namespace StarryConnection {
 int main() {
     initDebug;
     try {
-        StarryConnection::solve();
+        StellarisConnection::solve();
     } catch (const int Exception) {
         return Exception;
     }
