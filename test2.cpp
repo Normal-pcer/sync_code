@@ -168,7 +168,8 @@ namespace Solution_2592824635015318 {
     int w[_N];
     
     void init() {
-        io << fabs(-2);
+        io >> N;
+        from(i, 1, N)  io >> w[i];
     }
 
     void solve() {
