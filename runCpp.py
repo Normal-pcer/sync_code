@@ -238,7 +238,8 @@ options: Dict[str, Option] = {
     "autoInput": AutoInputOption(),
     "autoInitialize": AutoInitializeOption(),
     "break": BuildOption(),
-    "gdb": gdbOption()
+    "gdb": gdbOption(),
+    "temp": tempOption()
 }
 switchMap: Dict[str, Option] = {}
 switchNoneMap: Dict[str, Option] = {}
@@ -343,8 +344,9 @@ if __name__ == '__main__':
                 maxIndex = fileName[:-4]
                 previousFile = re.sub(r"[ \/\\\:\*\?\"\<\>\|\-]", '_', fileName)
             fileName = str(maxIndex) + '.cpp'
-            with open( os.path.join(baseDir, 'previousFile.txt'), "w", encoding="UTF-8" ) as f:
-                f.write(previousFile)
+            if not tempMode:
+                with open( os.path.join(baseDir, 'previousFile.txt'), "w", encoding="UTF-8" ) as f:
+                    f.write(previousFile)
             template = ""
             with open("template.cpp", "r", encoding="UTF-8") as f:
                 template += f.read()
@@ -362,7 +364,7 @@ if __name__ == '__main__':
                 option.apply()
         
         previousFile = fileName
-        if not previousFile:
+        if not tempMode:
             with open( os.path.join(baseDir, 'previousFile.txt'), "w", encoding="UTF-8" ) as f:
                 f.write(previousFile)
             

@@ -14,7 +14,7 @@
 #define never if constexpr(0)
 #define always if constexpr(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define Infinity 2147483647
+#define Infinity 0x3f3f3f3f
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 
@@ -162,25 +162,60 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_2592824635015318 {
-
-    int N;  const int _N = 1e5+5;
-    int w[_N];
-    
-    void init() {
-        io >> N;
-        from(i, 1, N)  io >> w[i];
-    }
+namespace Solution_8186795051575562 {
+    const int _N = 2005;
+    int N, D, M;
+    int val[_N], pos[_N];
 
     void solve() {
-        init();
-        
+        io >> N >> D >> M;
+        from(i, 1, N)  io >> val[i] >> pos[i];
+
+        // std::vector<int> ps(N+1);
+        // std::partial_sum(pos+1, pos+1+N, ps.begin()+1);
+
+#if false
+        static int F[_N][_N];  // 最后一次选中了点 i，一共跳跃 j 次的最大值
+        std::memset(F, -0x3f, sizeof(F)), F[1][1] = val[1];
+
+        int ans = 0;
+        from(i, 1, N) {
+            from(j, 1, M+1) {
+                for (auto k=i-1; k>=0 and pos[i]-pos[k] <= D; k--) {
+                    chkMax(F[i][j], F[k][j-1] + val[i]);
+                }
+                chkMax(ans, F[i][j]);
+            }
+        }
+#else
+
+        // 考虑让每次跳都尽可能远
+        int ans = 0;
+        static int F[_N][_N];
+        static int q[_N][_N], l[_N], r[_N];
+        std::fill(l, l+M+1, 1);
+        std::memset(F, -0x3f, sizeof(F)), F[1][1] = ans = val[1];
+        from(j, 1, M+1)  q[j][++r[j]] = 1;
+        from(i, 2, N) {
+            rev(j, M, 1) {
+                auto &tl = l[j];
+                auto &tr = r[j];
+                auto &tq = q[j];
+                while (tr >= tl and pos[i] - pos[tq[tl]] > D)  tl++;
+                auto front = tq[tl];
+                F[i][j+1] = F[front][j] + val[i], chkMax(ans, F[i][j+1]);
+                while (r[j+1] >= l[j+1] and F[q[j+1][r[j+1]]][j+1] <= F[i][j+1])  r[j+1]--;
+                q[j+1][++r[j+1]] = i;
+            }
+        }
+#endif
+        io << ans << endl;
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_2592824635015318::solve();
+    Solution_8186795051575562::solve();
     return 0;
 }

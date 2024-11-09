@@ -8,13 +8,8 @@ using namespace lib;
 
 namespace Solution_/*hashName*/ {
 
-    
-    void init() {
-
-    }
 
     void solve() {
-        init();
 
     }
 }

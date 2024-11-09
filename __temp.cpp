@@ -1,5 +1,5 @@
 /**
- * @link https://www.luogu.com.cn/problem/P2897
+ * 
  */
 
 #include <bits/stdc++.h>
@@ -14,7 +14,7 @@
 #define never if constexpr(0)
 #define always if constexpr(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define Infinity 2147483647
+#define Infinity 0x3f3f3f3f
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 
@@ -162,63 +162,60 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_6584310475963280 {
-    int N;  const int _N = 1e5+5;
-    struct level { int width, height; };
-    level lvl[_N];
-
-    #define hh(i) lvl[i].height
-    #define ww(i) lvl[i].width
-
-    void init() {
-        io >> N;
-        from(i, 1, N)  io >> lvl[i].width >> lvl[i].height;
-        lvl[N+1].height = lvl[0].height = Infinity;
-    }
+namespace Solution_8186795051575562 {
+    const int _N = 2005;
+    int N, D, M;
+    int val[_N], pos[_N];
 
     void solve() {
-        init();
-        auto min = std::min_element(lvl+1, lvl+1+N, lam(a, b, a.height<b.height)) - lvl;
-        auto l = min-1, r = min+1;
-        ll time = 0;
+        io >> N >> D >> M;
+        from(i, 1, N)  io >> val[i] >> pos[i];
 
-        static int st[_N], p = 0;  // 单调递减栈，被水流过的阶梯的下标
-        st[++p] = min;
-        std::vector<int> res(N+1);  
-        from(_, 1, N) {
-            auto ex_w = 0;  // 合并被灌水的阶梯
-            if (lvl[l].height < lvl[r].height) {  // 走左侧
-                // 维护单调递减栈，即将压入 l
-                while (p and hh(st[p]) < hh(l)) {  // 一个较矮的
-                    ww(st[p]) += ex_w;
-                    res[st[p]] = time + ww(st[p]) * 1;
-                    ex_w = ww(st[p]);
-                    auto filled = st[p--];
-                    time += ww(filled) * (std::min(hh(st[p]), hh(r)) - hh(filled));  // 同向或反向取最值
+        // std::vector<int> ps(N+1);
+        // std::partial_sum(pos+1, pos+1+N, ps.begin()+1);
+
+#if false
+        static int F[_N][_N];  // 最后一次选中了点 i，一共跳跃 j 次的最大值
+        std::memset(F, -0x3f, sizeof(F)), F[1][1] = val[1];
+
+        int ans = 0;
+        from(i, 1, N) {
+            from(j, 1, M+1) {
+                for (auto k=i-1; k>=0 and pos[i]-pos[k] <= D; k--) {
+                    chkMax(F[i][j], F[k][j-1] + val[i]);
                 }
-                ww(l) += ex_w;
-                st[++p] = l, l--;  // 压入这级阶梯
-            } else {
-                // 维护单调递减栈，即将压入 l
-                while (p and hh(st[p]) < hh(r)) {  // 一个较矮的
-                    ww(st[p]) += ex_w;
-                    res[st[p]] = time + ww(st[p]) * 1;
-                    ex_w = ww(st[p]);
-                    auto filled = st[p--];
-                    time += ww(filled) * (std::min(hh(st[p]), hh(l)) - hh(filled));  // 同向或反向取最值
-                }
-                ww(r) += ex_w;
-                st[++p] = r, r++;  // 压入这级阶梯
+                chkMax(ans, F[i][j]);
+            }
+        }
+#endif
+
+        // 考虑让每次跳都尽可能远
+        int ans = 0;
+        static int F[_N][_N];
+        static int q[_N][_N], l[_N], r[_N];
+        std::fill(l, l+M+1, 1);
+        std::memset(F, -0x3f, sizeof(F)), F[1][1] = val[1];
+        q[1][++r[1]] = 1;
+        from(i, 2, N) {
+            rev(j, M, 1) {
+                auto &tl = l[j];
+                auto &tr = r[j];
+                auto &tq = q[j];
+                while (tr >= tl and pos[i] - pos[tq[tl]] > D)  tl++;
+                auto front = tq[tl++];
+                F[i][j+1] = F[front][j] + val[i], chkMax(ans, F[i][j+1]);
+                while (r[j+1] >= l[j+1] and F[q[j+1][r[j+1]]][j+1] <= F[i][j+1])  r[j+1]--;
+                q[j+1][++r[j+1]] = i;
             }
         }
 
-        from(i, 1, N)  io << res[i] << endl;
+        io << ans << endl;
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_6584310475963280::solve();
+    Solution_8186795051575562::solve();
     return 0;
 }

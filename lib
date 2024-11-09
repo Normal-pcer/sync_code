@@ -10,7 +10,7 @@
 #define never if constexpr(0)
 #define always if constexpr(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define Infinity 2147483647
+#define Infinity 0x3f3f3f3f
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 

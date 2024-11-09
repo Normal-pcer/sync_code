@@ -174,7 +174,7 @@ namespace Solution_8186795051575562 {
         // std::vector<int> ps(N+1);
         // std::partial_sum(pos+1, pos+1+N, ps.begin()+1);
 
-#if true
+#if false
         static int F[_N][_N];  // 最后一次选中了点 i，一共跳跃 j 次的最大值
         std::memset(F, -0x3f, sizeof(F)), F[1][1] = val[1];
 

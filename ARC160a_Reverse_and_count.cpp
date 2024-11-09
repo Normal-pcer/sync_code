@@ -1,7 +1,8 @@
 /**
  * 
  */
-
+#pragma GCC optimize(3)
+#pragma GCC optimize("inline")
 #include <bits/stdc++.h>
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
 #define debug if(DEBUG_MODE)
@@ -14,7 +15,7 @@
 #define never if constexpr(0)
 #define always if constexpr(1)
 #define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define Infinity 0x3f3f3f3f
+#define Infinity 2147483647
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 
@@ -32,7 +33,7 @@ namespace lib{}
 
 #include <bits/stdc++.h>
 #define USE_FREAD
-// #undef USE_FREAD
+#undef USE_FREAD
 // 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
 namespace lib{
 #ifndef LIB_STRING
@@ -162,60 +163,52 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_8186795051575562 {
-    const int _N = 2005;
-    int N, D, M;
-    int val[_N], pos[_N];
+namespace Solution_2106364128478003 {
+    
+    using pii = std::pair<int, int>;
+    int N, M;  const int _N = 7005;
+    int a[_N];
+
+    inline bool cmp(const pii x, const pii y) {
+        auto [x1, y1] = x;
+        auto [x2, y2] = y;
+
+        std::vector<int> v1 = {x1, x2, y1, y2};
+        std::sort(v1.begin(), v1.end());
+        #define tmp(a1, x1) auto a1 = std::find(v1.begin(), v1.end(), x1) - v1.begin();
+        tmp(a1, x1) tmp(a2, x2) tmp(b1, y1) tmp(b2, y2);
+        #undef tmp
+        std::vector<int> v2 = v1;
+        std::reverse(v1.begin()+a1, v1.begin()+b1+1);
+        std::reverse(v2.begin()+a2, v2.begin()+b2+1);
+        std::transform(v1.begin(), v1.end(), v1.begin(), lam(i, a[i]));
+        std::transform(v2.begin(), v2.end(), v2.begin(), lam(i, a[i]));
+
+        return v1 < v2;
+    }
+
+    void init() {
+        io >> N >> M;
+        from(i, 1, N)  io >> a[i];
+    }
 
     void solve() {
-        io >> N >> D >> M;
-        from(i, 1, N)  io >> val[i] >> pos[i];
-
-        // std::vector<int> ps(N+1);
-        // std::partial_sum(pos+1, pos+1+N, ps.begin()+1);
-
-#if true
-        static int F[_N][_N];  // 最后一次选中了点 i，一共跳跃 j 次的最大值
-        std::memset(F, -0x3f, sizeof(F)), F[1][1] = val[1];
-
-        int ans = 0;
-        from(i, 1, N) {
-            from(j, 1, M+1) {
-                for (auto k=i-1; k>=0 and pos[i]-pos[k] <= D; k--) {
-                    chkMax(F[i][j], F[k][j-1] + val[i]);
-                }
-                chkMax(ans, F[i][j]);
-            }
+        init();
+        std::vector<pii> pairs;
+        from(i, 1, N)  from(j, i, N) {
+            pairs.push_back({i, j});
         }
-#else
-
-        // 考虑让每次跳都尽可能远
-        int ans = 0;
-        static int F[_N][_N];
-        static int q[_N][_N], l[_N], r[_N];
-        std::fill(l, l+M+1, 1);
-        std::memset(F, -0x3f, sizeof(F)), F[1][1] = ans = val[1];
-        from(j, 1, M+1)  q[j][++r[j]] = 1;
-        from(i, 2, N) {
-            rev(j, M, 1) {
-                auto &tl = l[j];
-                auto &tr = r[j];
-                auto &tq = q[j];
-                while (tr >= tl and pos[i] - pos[tq[tl]] > D)  tl++;
-                auto front = tq[tl];
-                F[i][j+1] = F[front][j] + val[i], chkMax(ans, F[i][j+1]);
-                while (r[j+1] >= l[j+1] and F[q[j+1][r[j+1]]][j+1] <= F[i][j+1])  r[j+1]--;
-                q[j+1][++r[j+1]] = i;
-            }
-        }
-#endif
-        io << ans << endl;
+        std::nth_element(pairs.begin(), pairs.begin()+(M-1), pairs.end(), cmp);
+        auto [x, y] = pairs[M-1];
+        std::reverse(a+x, a+y+1);
+        from(i, 1, N)  io << a[i] << ' ';
+        io << endl;
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_8186795051575562::solve();
+    Solution_2106364128478003::solve();
     return 0;
 }

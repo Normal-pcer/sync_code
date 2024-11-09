@@ -1,26 +1,43 @@
 import random
+from time import perf_counter
+from os import system
 
-random.seed(745184)
 
-N, Q = list(map(int, input().split()))
-A = list(map(int, input().split()))
-B = list(map(int, input().split()))
+a = "test.exe < 1.txt > 2.txt"
+b = "N1058_猴子.exe < 1.txt > 3.txt"
 
-s1 = [0]
-s2 = [0]
+def pro(s: str):
+    lis = s.splitlines()
+    s = '\n'.join([i.rstrip() for i in lis])
+    return s
 
-log = {}
-def rand(kkk):
-    if not kkk in log:
-        log[kkk] = random.randint(0, 18446744073709551615)
-    return log[kkk]
+for __ in range(114514):
+    N = random.randint(1, 300)
+    D = random.randint(1, 10000)
+    M = random.randint(1, N)
+    lis = [[random.randint(0, 10000), 0]] + [[random.randint(0, 10000), random.randint(0, 100)] for _ in range(N)]
+    for i in range(1, len(lis)):
+        lis[i][1] += lis[i-1][1]
+    inp = f"{N} {D} {M}\n{'\n'.join([f'{i[0]} {i[1]}' for i in lis])}\n"
 
-for i in range(N):
-    s1.append(s1[i]+rand(A[i]))
-    s2.append(s2[i]+rand(B[i]))
+    with open('1.txt', 'w', newline='\n') as f:
+        f.write(inp)
+    tm = perf_counter()
+    ret = system(a)
+    tm = perf_counter() - tm
 
-for _ in range(Q):
-    l1, r1, l2, r2 = list(map(int, input().split()))
-    p = s1[r1] - s1[l1-1]
-    q = s2[r2] - s2[l2-1]
-    print("Yes" if p==q else "No")
+    with open('2.txt', 'r') as f:
+        inferior = pro(f.read())
+    
+    system(b)
+    with open("3.txt", 'r') as f:
+        solution = pro(f.read())
+    
+    if ret != 0:
+        input('Runtime Error')
+    elif tm > 1:
+        input('Time Limit Exceed')
+    elif inferior != solution:
+        input('Wrong Answer')
+    else:
+        print('Test {}: Accepted in {:.2f} seconds'.format(__, tm))
