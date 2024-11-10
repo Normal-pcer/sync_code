@@ -637,7 +637,7 @@ namespace StellarisConnection {
             target()->damaged({0, attack, this, target()});
             auto expire = current.endOf(t+x-1);  // 过期
             // 削弱所有敌方角色的攻击力
-            for (auto &ch: owner->aliveCharacters()) {
+            for (auto &ch: owner->enemy->aliveCharacters()) {
                 ch->attack.boost.push_back({-y, expire});
             }
         } else if (skill == AuroraBloom) {
