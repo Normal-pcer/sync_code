@@ -249,7 +249,7 @@ namespace StellarisConnection {
         TalentType type;
         Arguments args;
 
-        bool operator== (TalentType t) { return t == type; }
+        bool operator== (TalentType t) const { return t == type; }
     };
 
     namespace Process {  // 游戏进程相关
@@ -272,17 +272,20 @@ namespace StellarisConnection {
             int teams;  // 队伍数量
 
             Round endOf(int id) {
-                return Round(id, End, teams, teams);
+                return Round(id, End, teams-1, teams);
             }
 
-            Round unreachable() {
-                return Round(Infinity, End, teams, teams);
+            static Round unreachable() {
+                return Round(Infinity, End, Infinity, 0);
             }
 
             Round &next() {
                 if (type == End)  arg = 0, id++;
-                if (type == ActionDone and arg < teams)  type = Action, arg++;
+                if (type == ActionDone and arg < teams - 1)  type = Action, arg++;
                 else  type++;
+                debug {
+                    io << std::format("Round {} {} {} {}", id, arg, (int)type, teams) << endl;
+                }
                 return *this;
             }
 
@@ -335,6 +338,10 @@ namespace StellarisConnection {
             value = limit(val);
             return *this;
         }
+
+        bool full() {
+            return value == limit.max;
+        }
     };
 
     struct Modifier {
@@ -343,7 +350,7 @@ namespace StellarisConnection {
         
         bool expired() const { return current > expireTime; }
         operator int () const {
-            return expired()? amount: 0;
+            return expired()? 0: amount;
         }
     };
 
@@ -376,6 +383,8 @@ namespace StellarisConnection {
     struct Player {
         std::vector<Character*> characters;
         Player *enemy;  // 对手
+        int id;
+        Process::Round deadline = Process::Round::unreachable();  // 获胜期限
 
         /**
          * 开始当前玩家的行动轮。
@@ -386,9 +395,19 @@ namespace StellarisConnection {
          * 进行该玩家的收尾。
          */
         void actionDone();
+
+        /**
+         * 检查玩家是否失败
+         */
+        bool lose();
+
+        auto aliveCharacters();
     };
 
+    std::vector<Player*> players;
+
     struct Character {
+        int id;
         Attribute health;           // 生命值
         Attribute mana;             // 能量值
         BoostedAttribute attack;    // 攻击力
@@ -398,18 +417,19 @@ namespace StellarisConnection {
 
         Player* owner;
 
-        Talent talent;  // 天赋
+        Talent talent;      // 天赋
         Skill skill;        // 技能
+
 
         bool dead = false;          // 是否死亡
 
         std::deque<Character*> priority_targets;  // 优先目标
         std::deque<int> _priority_targets_index;  // 优先目标的下标（0 开始）
 
-        Character(int HP, int MP, int atk, int def):
-            health({HP, {0, HP}}), mana({0, {0, MP}}), 
+        Character(int HP, int MP, int atk, int def, int id):
+            id(id), health({HP, {0, HP}}), mana({0, {0, MP}}), 
             attack({atk, {1, Infinity}, {}}), defense({def, {0, Infinity}, {}}), 
-            extraMana({0, {0, Infinity}, {}}) {}
+            extraMana({0, {0, Infinity}, {}}), owner(nullptr) {}
 
         // 获取优先目标
         // 这会自动清理优先目标队列
@@ -425,111 +445,293 @@ namespace StellarisConnection {
             }
         }
 
-        /**
-         * 受到一次伤害。
-         * 将会计算伤害的减免（如防御力）。
-         */
-        void damaged(const Damage &dmg) {
-            // 如果已经死亡，不再收到伤害
-            if (dead)  return;
+        int calcDamage(const Damage &dmg) const {
+            if (dead)  return 0;
             auto x = dmg.amount, y = dmg.truth;
             auto finally = std::max(0, x-defense) + y;
 
             if (talent == FleshSkin) {
                 finally -= y/2;  // 天赋效果，受到真伤减半
             }
-            health.value -= finally;
+
+            return finally;
+        }
+
+        /**
+         * 受到一次伤害。
+         * 将会计算伤害的减免（如防御力）。
+         * 返回目标生命值减少量。
+         */
+        int damaged(const Damage &dmg) {
+            // 如果已经死亡，不再收到伤害
+            if (dead)  return 0;
+
+            auto realAmount = calcDamage(dmg);
+            auto healthOriginal = (int)health;
+            health.value -= realAmount;
+            auto healthDecreasing = healthOriginal - health;
 
             // 回复一点能量值
             mana = mana + 1;
-            // todo 角色死亡判定
+
+            debug io << std::format("{} Damaged by {}(amount={},{}) h-={}", (std::string)*this, (std::string)*dmg.source, dmg.amount, dmg.truth, healthDecreasing) << endl;
+
+            if (health <= 0) {
+                dead = true;
+                if (owner->lose()) {
+                    throw owner;  // 游戏结束
+                }
+            }
+            return healthDecreasing;
         }
 
-        void useSkill() {
-            if (skill == GreensExplosion) {
-                auto dmg = skill.args[0];  // 伤害数值
-                for (auto &ch: owner->enemy->characters) {
-                    ch->damaged({dmg, 0, this, ch});  // 受到伤害
-                    mana = mana - (mana/10);  // 减少能量
-                }
-            } else if (skill == ICBM) {
-                for (auto &ch: owner->enemy->characters) {
-                    ch->damaged({0, attack, this, ch});
-                }
-            } else if (skill == EmperorsSwordInSkyPalace) {
-                auto x = skill.args[0];
-                for (auto &ch: priority_targets) {
-                    if (not ch->dead) {  // 攻击所有存活的目标
-                        auto dmg = std::min(attack * x, ch->health.limit.max / 10);
-                        ch->damaged({dmg, 0, this, ch});
-                    }
-                }
-            } else if (skill == ShowBeginning) {
-                auto t = current.id;  // 当前回合号
-                auto [x, y] = skill.args.take<2>();
-                auto expire = current.endOf(t+x-1);  // 到这个回合的结束
-                for (auto &ch: owner->characters) {
-                    // 给队友添加增益
-                    ch->extraMana.boost.push_back(Modifier{y, expire});
-                }
-            } else if (skill == SiriusSlash) {
-                auto x = skill.args[0];
-                target()->defense.boost.push_back({-x, current.unreachable()});  // 削减对方防御力，不过期
-                target()->damaged({0, attack, this, target()});
-            } else if (skill == SuperLightning) {
-                auto [x, y] = skill.args.take<2>();
-                // 对目标造成真伤
-                target()->damaged({0, attack, this, target()});
-                auto t = current.id;  // 当前回合
-                auto expire = current.endOf(t+x-1);  // 过期
-                // 削弱所有敌方角色的攻击力
-                for (auto &ch: owner->characters) {
-                    ch->attack.boost.push_back({-y, expire});
-                }
-            } else if (skill == AuroraBloom) {
-                auto [x, y, z] = skill.args.take<3>();
-                auto vw = owner->characters | std::ranges::views::filter(lam(t, not t->dead));
-                auto to = std::ranges::min_element(vw, lam(a, b, a->health < b->health));  // 要救助的对象
-                (*to)->health = (*to)->health + z;
-            }
+        void useSkill();
+
+        operator std::string() const {
+            return std::format("P{}-C{}", owner->id, id);
         }
     };
+
+    auto Player::aliveCharacters() {
+        return characters | rgs::views::filter(lam(ch, not ch->dead));
+    }
 
     void Player::action()  {
         // 选择编号最大的可使用技能
         bool usedSkill = false;
-        for (auto sk = SkillTypeLast; sk != SkillTypeFirst; sk = SkillType((int)sk-1)) {
-            auto rev = characters | rgs::views::reverse;
+        for (auto sk = SkillTypeLast; sk >= SkillTypeFirst; sk = SkillType((int)sk-1)) {
+            auto rev = characters   | rgs::views::filter(lam(ch, not ch->dead))
+                                    | rgs::views::filter(lam(ch, ch->mana.full()))
+                                    | rgs::views::reverse;
             auto pos = rgs::find_if(rev, lam(cpt, cpt->skill.type == sk));
             if (pos == rev.end())  continue;
-            (*pos)->useSkill(), usedSkill = true;
+            auto ch = *pos;
+            ch->useSkill(), usedSkill = true;
+            ch->mana = ch->mana + 1;
+            break;
         }
         if (not usedSkill) {  // 使用普通攻击
+            // 寻找一个角色：其优先目标的生命值最高
 
+            auto virtualDamage = [&](Character *ch) -> int {
+                if (ch->talent == Transcendent) {
+                    return std::min((int)ch->target()->health, 
+                        ch->target()->calcDamage({0, ch->attack, ch, ch->target()}));
+                } else {
+                    auto attached = 0;
+                    if (ch->talent == GalaxyPowerReflection)  attached = ch->talent.args[0];
+                    return std::min((int)ch->target()->health, 
+                        ch->target()->calcDamage({ch->attack, attached, ch, ch->target()}));
+                }
+            };
+
+            auto cmp = [&](Character *a, Character *b) -> bool {
+                if ((int)a->target()->health != (int)b->target()->health) {
+                    return (int)a->target()->health < (int)b->target()->health;
+                }
+                return virtualDamage(a) < virtualDamage(b);
+            };
+
+            auto filtered = characters  
+                            | rgs::views::filter(lam(ch, not ch->dead))  // 排除已死亡玩家
+                            | rgs::views::reverse;
+
+            auto ch = *rgs::max_element(filtered, cmp);
+            // auto ch = *filtered.begin();
+            // for (auto &i: filtered) {
+            //     io << std::format("cmp with {} and {}: {}", (std::string)*ch, (std::string)*i, cmp(ch, i)) << endl;
+            //     if (cmp(ch, i))  ch = i;
+            // }
+            
+            debug io << std::format("{} Normal Attack -> {}", (std::string)*ch, (std::string)*ch->target()) << endl;
+
+            if (ch->talent == Transcendent) {
+                ch->target()->damaged({0, ch->attack, ch, ch->target()});
+            } else {
+                auto attached = 0;
+                if (ch->talent == GalaxyPowerReflection)  attached = ch->talent.args[0];
+                ch->target()->damaged({ch->attack, attached, ch, ch->target()});
+            }
+
+            ch->mana = ch->mana + 1;
+
+            if (ch->talent == TechnologyFirst) {
+                auto x = ch->talent.args[0];
+                ch->health = ch->health + x;
+            }
         }
     }
 
-    void Player::actionDone() {}
+    void Player::actionDone() {
+        for (auto &ch: aliveCharacters()) {
+            // 回复能量值
+            auto manaIncreasing = 1 + (int)ch->extraMana;
+            if (ch->talent == MindBetterThanMatter) {
+                manaIncreasing += ch->talent.args[1];  // 天赋回能
+            }
+            ch->mana = ch->mana + manaIncreasing;
+
+            // 回复生命值
+            if (ch->talent == MindBetterThanMatter) {
+                auto healthIncreasing = ch->talent.args[0];  // 回生命
+                ch->health = ch->health + healthIncreasing;
+            }
+        }
+
+        debug {
+            io << "-----" << endl;
+            for (auto &pl: players) {
+                io << 'P' << pl->id << ' ';
+                for (auto &ch: pl->characters) {
+                    io << std::format("C{}(HP{}/{}, MP{}/{}, atk{}, def{}, target{}, dead{})", ch->id, (int)ch->health, ch->health.limit.max, (int)ch->mana, ch->mana.limit.max, (int)ch->attack, (int)ch->defense, (std::string)*ch->target(), (int)ch->dead) << ' ';
+                }
+                io << endl;
+            }
+            io << "-----" << endl;
+        }
+    }
+
+    void Character::useSkill() {
+        auto t = current.id;  // 当前游戏进度
+        debug {
+            io << std::format("P{}-C{}: useSkill {} with args ", owner->id, id, (int)skill.type);
+            for (auto &arg: skill.args) {
+                io << arg << ' ';
+            }
+            io << endl;
+        }
+        // 清空能量值
+        mana = 0;
+        if (skill == GreensExplosion) {
+            auto dmg = skill.args[0];  // 伤害数值
+            for (auto &ch: owner->enemy->aliveCharacters()) {
+                ch->damaged({dmg, 0, this, ch});  // 受到伤害
+                mana = mana - (mana/10);  // 减少能量
+            }
+        } else if (skill == ICBM) {
+            for (auto &ch: owner->enemy->aliveCharacters()) {
+                ch->damaged({0, attack, this, ch});
+            }
+        } else if (skill == EmperorsSwordInSkyPalace) {
+            auto x = skill.args[0];
+            for (auto &ch: priority_targets) {
+                if (not ch->dead) {  // 攻击所有存活的目标
+                    auto dmg = std::min(attack * x, ch->health.limit.max / 10);
+                    ch->damaged({dmg, 0, this, ch});
+                }
+            }
+        } else if (skill == ShowBeginning) {
+            auto [x, y] = skill.args.take<2>();
+            auto expire = current.endOf(t+x-1);  // 到这个回合的结束
+            for (auto &ch: owner->aliveCharacters()) {
+                // 给队友添加增益
+                ch->extraMana.boost.push_back(Modifier{y, expire});
+            }
+        } else if (skill == SiriusSlash) {
+            auto x = skill.args[0];
+            target()->defense.boost.push_back({-x, current.unreachable()});  // 削减对方防御力，不过期
+            target()->damaged({0, attack, this, target()});
+        } else if (skill == SuperLightning) {
+            auto [x, y] = skill.args.take<2>();
+            // 对目标造成真伤
+            target()->damaged({0, attack, this, target()});
+            auto expire = current.endOf(t+x-1);  // 过期
+            // 削弱所有敌方角色的攻击力
+            for (auto &ch: owner->aliveCharacters()) {
+                ch->attack.boost.push_back({-y, expire});
+            }
+        } else if (skill == AuroraBloom) {
+            auto [x, y, z] = skill.args.take<3>();
+            auto vw = owner->aliveCharacters();
+            auto to = *std::ranges::min_element(vw, lam(a, b, a->health < b->health));  // 要救助的对象
+            to->health = to->health + z;
+
+            // 给己方全部角色生命值增益
+            auto expire = current.endOf(t+x-1);
+            for (auto &ch: owner->aliveCharacters()) {
+                ch->attack.boost.push_back({y, expire});
+            }
+        } else if (skill == Meteor) {
+            auto [x, y] = skill.args.take<2>();
+            // 先造成伤害，后降低防御
+            for (auto &ch: owner->enemy->aliveCharacters()) {
+                ch->damaged({attack, 0, this, ch});
+            }
+            
+            auto expire = current.endOf(t+x-1);
+            for (auto &ch: owner->enemy->aliveCharacters()) {
+                ch->defense.boost.push_back({-y, expire});
+            }
+        } else if (skill == ElfProtection) {
+            auto [x, y, z] = skill.args.take<3>();
+            
+            for (auto &ch: owner->aliveCharacters()) {
+                ch->health = ch->health + z;
+            }
+
+            auto expire = current.endOf(t+x-1);
+            for (auto &ch: owner->aliveCharacters()) {
+                ch->defense.boost.push_back({y, expire});
+            }
+        } else if (skill == FullPowerInTheEndOfReincarnation) {
+            auto x = skill.args.at(0);
+            auto expire = current.endOf(t+x-1);
+            for (auto &ch: owner->aliveCharacters()) {
+                ch->attack.value *= 2;
+                ch->defense.value *= 2;
+
+                if (not ch->dead) {
+                    ch->health = std::max((int)ch->health, ch->health.limit.max / 2);
+                    ch->mana = std::max((int)ch->mana, ch->mana.limit.max / 2);
+                    ch->extraMana.boost.push_back({1, expire});
+                }
+            }
+            for (auto &pl: players) {
+                // 禁用所有此类技能
+                for (auto &ch: pl->characters)  if (ch->skill == FullPowerInTheEndOfReincarnation) {
+                    ch->skill.type = MentalityCollapsed;
+                }
+            }
+            owner->deadline = expire;  // 记录限期
+        }
+
+        if (talent == TechnologyFirst) {
+            auto y = talent.args[1];
+            mana = mana + y;
+        }
+    }
+
+    bool Player::lose() {
+        return rgs::all_of(characters, lam(ch, ch->dead));
+    }
 
 
-    void roundEnd() {}
+    void roundEnd() {
+        // 检查玩家的 deadline
+        for (auto &pl: players) {
+            if (current >= pl->deadline) {
+                auto inferior = pl;
+                throw inferior;
+            }
+        }
+    }
 
-    std::vector<Player*> players;
 
     // 进行一个回合
     void round() {
-        current.next(), assert(current.type == Process::Begin);
+        
+        assert(current.type == Process::Begin);
         for (auto &playerPtr: players) {  // 对于每个玩家
             current.next();  // 切到该玩家行动轮
             playerPtr->action();  // 行动
             current.next();
             playerPtr->actionDone();  // 收尾
         }
-        current.next(), roundEnd();
+        current.next(), roundEnd(), current.next();
     }
 
     void init() {
-
+        current.teams = 2;
     }
     
     void test() {
@@ -543,27 +745,29 @@ namespace StellarisConnection {
     void solve() {
         try {
             init();
-            test();
+            // test();
 
             io >> N;
             from(i, 0, 1) {  // 输入玩家及其角色的相关参数
                 auto *playerPtr = new Player();
+                playerPtr->id = i;
                 players.push_back(playerPtr);
 
-                from(j, 1, N) {
+                from(j, 0, N-1) {
                     int HP, MP, atk, def;
                     io >> HP >> MP >> atk >> def;
-                    auto *charPtr = new Character(HP, MP, atk, def);
+                    auto *charPtr = new Character(HP, MP, atk, def, j);
+                    charPtr->owner = playerPtr;
                     playerPtr->characters.push_back(charPtr);
                     from(k, 1, N) {
                         int target;  io >> target;
                         charPtr->_priority_targets_index.push_back(target - 1);
                     }
                     int sk, tl, x, y, z;
-                    io >> sk >> x >> y;
-                    charPtr->skill = Skill{(SkillType)sk, {x, y}};
-                    io >> tl >> x >> y >> z;
-                    charPtr->talent = Talent{(TalentType)tl, {x, y, z}};
+                    io >> tl >> x >> y;
+                    charPtr->talent = Talent{(TalentType)tl, {x, y}};
+                    io >> sk >> x >> y >> z;
+                    charPtr->skill = Skill{(SkillType)sk, {x, y, z}};
                 }
             }
 
@@ -576,13 +780,21 @@ namespace StellarisConnection {
                 }
             }
 
-            // todo 开始游戏
-        } catch (const int Exception) {
-            if (Exception == 0) {
-                // todo 游戏结束
-            } else {
-                throw -1;  // 未知错误
+            from(i, 1, 114514) {
+                round();
             }
+
+            // 如果游戏还未结束
+            io << "qwq" << endl;  // 输出任意卖萌表情
+        } catch (const Player *loser) {
+            // 输出结局
+            io << current.id + 1 << endl;
+            if (loser == players[0])  io << "Bob" << endl;
+            else  io << "Alice" << endl;
+            for (auto &ch: loser->enemy->characters) {
+                io << (int)ch->health << ' ';
+            }
+            io << endl;
         }
         
     }
@@ -593,8 +805,8 @@ int main() {
     initDebug;
     try {
         StellarisConnection::solve();
-    } catch (const int Exception) {
-        return Exception;
+    } catch (...) {
+        return -1;
     }
     return 0;
 }
