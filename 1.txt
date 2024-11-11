@@ -1,8 +1,0 @@
-15
-Alice
-2 0 96 
-> g++ "P7610_[THUPC2021]_群星连结.cpp" -o "P7610_[THUPC2021]_群星连结.exe" -std=c++20 -Wall -Wextra -finput-charset=utf-8 -g -fexec-charset=gb2312
-正在编译...> "P7610_[THUPC2021]_群星连结.exe" 
-=====================
-=====================
-Exited after 6.3142s, with code 0.

@@ -1,582 +1,828 @@
-/* Ktx-65 Assembly Language Interpreter */
-/* Ktx-65 汇编语言解释器 */
-/* Copyright (c) Kawasiro Nitori & Moriya Suwano of Kappa Heavy Industries Co.,Ltd. */
-/* 版权所有 河童重工业会社 河城荷取 洩矢诹访子 */
+#include<iostream>
+#include<fstream>
+#include<queue>
+#include<vector>
+#include<list>
+#include<assert.h>
 
-/* 版本：审议稿 */
-/* 平成三十年 八月 十一日 */
+// #define DEBUG
 
-
-#include <bits/stdc++.h>
-using namespace std;
-
-
-bool compileErrorLevel = false;
-void compileError(int line, string message) {
-    // TODO Compile Error
-    cout << "[ERROR] Interpreter encountered a Compile Error on line " << line << endl;
-    cout << "    Message: " << message << endl;
-    compileErrorLevel = true;
-}
-
-#define compileAssert(line, statement, message) \
-(!!(statement) || [](int l, string state, string m)->bool {compileError(l, "Compile Assertion Failed: " + m + ", Statement: " + state); return false; }(line, #statement, message))
-
-void toupper(string& str) { for (char& c : str)c = toupper(c); }
-string touppers(const string& str) { string a = str; toupper(a); return a; }
-
-class AssemblyProgram {
-public:
-
-    enum Command {
-        Undefined = 0,  // Undefined
-        Halt = 1,       // Stops the program
-        NoOp,           // Does nothing
-        // Memory Access
-        Set,            // Read value from <0> into <1>
-        // Streamline control
-        Jump,           // Jump to <0>(absolute line number, begins from 1)
-        JumpIf,         // Jump to <0> if <1> is not zero (takes rFlag if <1> doesn't exist)
-        Call,           // push current linenum+1 to sAddr and jump to <0>(begins from 1)
-        Return,         // jump to sAddr.top() and sAddr.pop()
-        // Arithmetic operations
-        // rVal if not exist↓
-        Inverse,        // <1> = -<0>
-        Add,            // <2> = <0> + <1>
-        Minus,          // <2> = <0> - <1>
-        Multiply,       // <2> = <0> * <1>
-        IntDivide,      // <2> = <0> / <1>
-        Modulo,         // <2> = <0> % <1>
-        LeftShift,      // <2> = <0> << <1>
-        RightShift,     // <2> = <0> >> <1>
-        BitAnd,         // <2> = <0> & <1>
-        BitOr,          // <2> = <0> | <1>
-        BitXor,         // <2> = <0> ^ <1>
-        // Logical Operations
-        // rFlag if not exist↓
-        Greater,        //  <2> = <0> > <1>
-        Less,           //  <2> = <0> < <1>
-        GreaterEqual,   //  <2> = <0> >= <1>
-        LessEqual,      //  <2> = <0> <= <1>
-        Equal,          //  <2> = <0> == <1>
-        LogicalAnd,     //  <2> = <0> && <1>
-        LogicalOr,      //  <2> = <0> || <1>
-        // Console I/O
-        //        rVal if not exist ¡ý
-        ReadInt,        //  cin >> <0>
-        ReadChar,       // getchar(<0>)
-        WriteInt,       // cout << <0>
-        WriteChar,      // putchar(<0>)
-        // Keep at last - command count
-        CommandCount
-    };
-
-    enum VariableType {
-        Constant,
-        Pointer,
-        Memory
-    };
-
-    struct DataSource {
-        int* valptr;
-        int valconst;
-        int* valmemidptr;
-        AssemblyProgram* prog;
-        VariableType type;
-        int& operator ()() {
-            if (type == Constant)
-                return valconst;
-            else if (type == Pointer)
-                return *valptr;
-            else {
-                int id = *valmemidptr;
-                if (id >= memsize || id < 0) {
-                    prog->runtimeError("Memory acess out of range");
-                    valconst = 0;
-                    return valconst;
-                }
-                return prog->mem[id];
-            }
-        }
-    };
-
-    void halt() {
-        // TODO Halt
-        running = false;
+#ifdef DEBUG
+#undef DEBUG
+#define DEBUG true
+#else
+#define NDEBUG
+constexpr bool DEBUG=true;
+#endif
+#define debug if constexpr(DEBUG)
+using ll=long long;
+using ull=unsigned long long;
+ll n=0;
+struct callback{
+    virtual void run()=0;
+    virtual ~callback(){};
+};
+struct event{
+    virtual void attach(callback*)=0;
+    virtual void tigger()=0;
+};
+class event_once:event{
+    private:
+    std::queue<callback*> callbacks;
+    public:
+    virtual void attach(callback*c){
+        debug std::clog<<"attach.\n";
+        callbacks.push(c);
     }
-
-    void runtimeError(string message) {
-        // TODO Runtime Error
-        cout << "[ERROR] Interpreter encountered a Runtime Error on instruction " << nextptr + 1 << ", clock cycle " << clockCounter << endl;
-        cout << "    Message: " << message << endl;
-        running = false;
+    virtual void tigger(){
+        debug std::clog<<"tigger.\n";
+        for(;!callbacks.empty();callbacks.pop()) callbacks.front()->run(),delete callbacks.front();
     }
-
-private:
-    // Exception-Safe Wrappers
-    void pushAddr(int val) { if (sAddr.size() >= stackSize)runtimeError("sAddr Stack Overflow"); sAddr.push(val); }
-    int topAddr() { if (sAddr.size() <= 0) { runtimeError("sAddr Access Error(size = 0)"); return 0; } else return sAddr.top(); }
-    void popAddr() { if (sAddr.size() <= 0)runtimeError("sAddr Stack Underflow"); else sAddr.pop(); }
-    int popAddrRet() { if (sAddr.size() <= 0) { runtimeError("sAddr Stack Underflow"); return 0; } else { int val = sAddr.top(); sAddr.pop(); return val; } }
-    int readMem(int id) { if (id >= memsize || id < 0) { runtimeError("Memory Access Error(Read)"); return 0; } else return mem[id]; }
-    void writeMem(int id, int val) { if (id >= memsize || id < 0)runtimeError("Memory Access Error(Write)"); else mem[id] = val; }
-    int lineProgramId(int line) { auto i = commandLines.find(line); if (i == commandLines.end()) { runtimeError("Jump Line Number Invalid"); return 0; } else return i->second; }
-
-private:
-    // Command Handlers
-    void funcSet(vector<DataSource>& l) { l[1]() = l[0](); nextptr++; }
-    void funcJmp(vector<DataSource>& l) { nextptr = lineProgramId(l[0]() + rLine); }
-    void funcJIf(vector<DataSource>& l) { if (l.size() <= 1) { if (rFlag)nextptr = l[0]() + lineProgramId(rLine); else nextptr++; } else { if (l[1]())nextptr = l[0]() + lineProgramId(rLine); else nextptr++; } }
-    void funcCall(vector<DataSource>& l) { pushAddr(rLine); pushAddr(nextptr + 1); nextptr = lineProgramId(l[0]()); }
-    void funcRet(vector<DataSource>& l) { if (l.size() > 0)rRet = l[0](); nextptr = popAddrRet(); rLine = popAddrRet(); }
-    void funcInv(vector<DataSource>& l) { int* p;  if (l.size() <= 1)p = &rVal; else p = &l[1](); (*p) = -l[0](); nextptr++; }
-    void funcAdd(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() + l[1](); nextptr++; }
-    void funcSub(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() - l[1](); nextptr++; }
-    void funcMult(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() * l[1](); nextptr++; }
-    void funcIDiv(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() / l[1](); nextptr++; }
-    void funcMod(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() % l[1](); nextptr++; }
-    void funcLSft(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() << l[1](); nextptr++; }
-    void funcRSft(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() >> l[1](); nextptr++; }
-    void funcBAnd(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() & l[1](); nextptr++; }
-    void funcBOr(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() | l[1](); nextptr++; }
-    void funcBXor(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rVal; else p = &l[2](); (*p) = l[0]() ^ l[1](); nextptr++; }
-    void funcLGr(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() > l[1](); nextptr++; }
-    void funcLLs(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() < l[1](); nextptr++; }
-    void funcLGE(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() >= l[1](); nextptr++; }
-    void funcLLE(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() <= l[1](); nextptr++; }
-    void funcLEql(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() == l[1](); nextptr++; }
-    void funcLAnd(vector<DataSource>& l) { int* p; if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() && l[1](); nextptr++; }
-    void funcLOr(vector<DataSource>& l) { int* p;  if (l.size() <= 2)p = &rFlag; else p = &l[2](); (*p) = l[0]() || l[1](); nextptr++; }
-    void funcRInt(vector<DataSource>& l) { if (l.size() <= 0)cin >> rVal; else cin >> l[0](); nextptr++; }
-    void funcRCh(vector<DataSource>& l) { if (l.size() <= 0)rVal = getchar(); else l[0]() = getchar(); nextptr++; }
-    void funcWInt(vector<DataSource>& l) { /*if (l.size() <= 0)cout << rVal; else cout << l[0](); */nextptr++; }
-    void funcWCh(vector<DataSource>& l) { /*if (l.size() <= 0)putchar(rVal); else putchar(l[0]()); */nextptr++; }
-
-public:
-    void initalaize() {
-#define REGISTER_RAW(command, name) \
-commands[name] = command; names[command] = name
-#define REGISTER_HANDLER(command, handler, minParamCount, name)    \
-handlers[command] = [this](vector<DataSource>& l) {if (l.size() < minParamCount)runtimeError("Paramater Count Mismatch"); else handler(l); }; \
-/*handlers[command] = bind(&AssemblyProgram::handler, this, placeholders::_1);*/ \
-commands[name] = command; names[command] = name
-        REGISTER_RAW(Undefined, "UDEF");
-        handlers[Undefined] = [this](vector<DataSource>&) { runtimeError("Undefined Command Called"); };
-        REGISTER_RAW(Halt, "HLT");
-        handlers[Halt] = [this](vector<DataSource>&) { halt(); };
-        REGISTER_RAW(NoOp, "NOP");
-        handlers[NoOp] = [this](vector<DataSource>&) {};
-        REGISTER_HANDLER(Set, funcSet, 2, "SET");
-        REGISTER_HANDLER(Jump, funcJmp, 1, "JMP");
-        REGISTER_HANDLER(JumpIf, funcJIf, 1, "JIF");
-        REGISTER_HANDLER(Call, funcCall, 1, "CALL");
-        REGISTER_HANDLER(Return, funcRet, 0, "RET");
-        REGISTER_HANDLER(Inverse, funcInv, 1, "INV");
-        REGISTER_HANDLER(Add, funcAdd, 2, "ADD");
-        REGISTER_HANDLER(Minus, funcSub, 2, "SUB");
-        REGISTER_HANDLER(Multiply, funcMult, 2, "MULT");
-        REGISTER_HANDLER(IntDivide, funcIDiv, 2, "IDIV");
-        REGISTER_HANDLER(Modulo, funcMod, 2, "MOD");
-        REGISTER_HANDLER(LeftShift, funcLSft, 2, "LSFT");
-        REGISTER_HANDLER(RightShift, funcRSft, 2, "RSFT");
-        REGISTER_HANDLER(BitAnd, funcBAnd, 2, "BAND");
-        REGISTER_HANDLER(BitOr, funcBOr, 2, "BOR");
-        REGISTER_HANDLER(BitXor, funcBXor, 2, "BXOR");
-        REGISTER_HANDLER(Greater, funcLGr, 2, "LGR");
-        REGISTER_HANDLER(Less, funcLLs, 2, "LLS");
-        REGISTER_HANDLER(GreaterEqual, funcLGE, 2, "LGE");
-        REGISTER_HANDLER(LessEqual, funcLLE, 2, "LLE");
-        REGISTER_HANDLER(Equal, funcLEql, 2, "LEQL");
-        REGISTER_HANDLER(LogicalAnd, funcLAnd, 2, "LAND");
-        REGISTER_HANDLER(LogicalOr, funcLOr, 2, "LOR");
-        REGISTER_HANDLER(ReadInt, funcRInt, 0, "RINT");
-        REGISTER_HANDLER(ReadChar, funcRCh, 0, "RCH");
-        REGISTER_HANDLER(WriteInt, funcWInt, 0, "WINT");
-        REGISTER_HANDLER(WriteChar, funcWCh, 0, "WCH");
-#undef REGISTER_RAW
-#undef REGISTER_HANDLER
-        program.clear();
-        nextptr = 0;
+};
+class character;
+class team;
+class game;
+class game_over_exeception:public std::exception{
+    private:
+    team*t;
+    public:
+    game_over_exeception():t(NULL){}
+    game_over_exeception(team*t_){
+        t=t_;
     }
-
-    bool pushCommand(int fileline, string name, vector<DataSource> param) {
-        toupper(name);
-        auto i = commands.find(name);
-        if (i == commands.end()) {
-            compileError(fileline, "Invaild command \"" + name + "\"");
-            return false;
-        }
-        else {
-            program.push_back(make_pair(i->second, param));
-            if (commandLines.find(fileline) == commandLines.end())
-                commandLines[fileline] = program.size() - 1;
-            return true;
-        }
+    const team* get_team()const noexcept{
+        return t;
     }
-
-    int* getRegister(int fileline, string name) {
-        toupper(name);
-        if (name == "R1")
-            return &rR1;
-        else if (name == "R2")
-            return &rR2;
-        else if (name == "R3")
-            return &rR3;
-        else if (name == "R4")
-            return &rR4;
-        else if (name == "E1")
-            return &rE1;
-        else if (name == "E2")
-            return &rE2;
-        else if (name == "E3")
-            return &rE3;
-        else if (name == "E4")
-            return &rE4;
-        else if (name == "FLAG")
-            return &rFlag;
-        else if (name == "VAL")
-            return &rVal;
-        else if (name == "RET")
-            return &rRet;
-        else if (name == "LINE")
-            return &rLine;
-        else {
-            compileError(fileline, "Invaild register name \"" + name + '\"');
-            return nullptr;
-        }
+};
+class skill{
+    protected:
+    ll x,y,z;
+    public:
+    skill(ll x_,ll y_,ll z_){
+        x=x_;
+        y=y_;
+        z=z_;
     }
-
-    int* getMemory(int fileline, int id) {
-        if (id >= memsize || id < 0) {
-            compileError(fileline, "Memory access statically out of range");
-            return 0;
-        }
-        else return mem + id;
+    virtual ll get_skill_id()const=0;
+    inline void print_info()const{
+        debug std::clog<<"\tskill #"<<get_skill_id()<<" ("<<x<<","<<y<<","<<z<<")\n";
     }
-
-    void run() {
-        rR1 = rR2 = rR3 = rR4 = rE1 = rE2 = rE3 = rE4 = rFlag = rVal = rRet = rLine = 0;
-        memset(mem, 0, sizeof(mem));
-        while (!sAddr.empty())
-            sAddr.pop();
-
-        clockCounter = 0;
-        nextptr = 0;
-        running = true;
-        while (running) {
-            std::cout << std::format("Running on step {}\n", nextptr);
-            if (nextptr >= program.size() || nextptr < 0)
-                runtimeError("Program Pointer Invaild");
-            else
-                handlers[program[nextptr].first](program[nextptr].second);
-            clockCounter++;
-        }
-    }
-
-    int getClock() { return clockCounter; }
-
-    bool valid;
-private:
-
-    friend class Compiler;
-
-    int rR1, rR2, rR3, rR4;
-    int rE1, rE2, rE3, rE4;
-    int rFlag, rVal, rRet, rLine;
-    static constexpr int stackSize = 512 * 1024;
-    stack<int> /*sVal,*/ sAddr;
-
-    vector<pair<Command, vector<DataSource>>> program;
-    int nextptr;
-    static constexpr int memsize = 16 * 1024 * 1024;
-    int mem[memsize];
-
-    int clockCounter;
-    bool running;
-
-    function<void(vector<DataSource>&)> handlers[CommandCount];
-    map<int, int> commandLines;
-    map<string, Command> commands;
-    string names[CommandCount];
+    virtual void run(character*)=0;
+    virtual ~skill(){}
 };
 
+class character{
+    private:
 
-class Tokenizer {
-public:
-    enum Type {
-        Unknown,
-        Identifier,
-        Number,
-        Symbol
-    };
-
-    struct Token {
-        Type type;
-        string word;
-        int line;
-    };
-
-    static vector<Token> parse(const string& str) {
-        vector<Token> tokens;
-        Token buffer{ Unknown, "", 1 };
-        int commentLayers = 0;
-        int curline = 1;
-        for (char c : str) {
-            if (c == '[')
-                commentLayers++;
-            else if (c == ']') {
-                if (commentLayers > 0)
-                    commentLayers--;
-            }
-            else if (commentLayers <= 0) {
-                if (!(isblank(c) || iscntrl(c) || c == ',')) {
-                    if ((buffer.type == Number && !isdigit(c)) ||
-                        (buffer.type == Identifier && (!isalnum(c) && c != '_')) ||
-                        (buffer.type == Symbol && (isalnum(c) || c == '_' || c == '-'))) {
-                        buffer.line = curline;
-                        tokens.push_back(buffer);
-                        buffer = Token{ Unknown, "" };
-                    }
-                    if (buffer.type == Unknown) {
-                        // Check new object type
-                        if (isalpha(c) || c == '_')
-                            buffer.type = Identifier;
-                        else if (isdigit(c) || c == '-')
-                            buffer.type = Number;
-                        else
-                            buffer.type = Symbol;
-                    }
-                    buffer.word.push_back(c);
-                }
-                else {
-                    if (buffer.type != Unknown) {
-                        buffer.line = curline;
-                        tokens.push_back(buffer);
-                        buffer = Token{ Unknown, "" };
-                    }
-                }
-            }
-            if (c == '\n')
-                curline++;
+    protected:
+    static ll cnt_id;
+    ll id;
+    ll talent_x,talent_y;
+    bool is_die_;
+    skill*s;
+    std::queue<character*>attack_order;
+    public:
+    ll hp,mhp,mp,mmp,atk,datk,def,ddef;
+    team *self_team,*enemy_team;
+    character(){
+        id=cnt_id++;
+    }
+    inline ll A(){return std::max(atk+datk,1ll);}
+    inline ll D(){return std::max(def+ddef,0ll);}
+    friend class character_init_;
+    friend class skill;
+    inline ll get_id(){
+        return id;
+    }
+    inline void print_info();
+    virtual ll get_talent_id()=0;
+    //hp:
+    virtual void die();
+    virtual ll get_hp(){
+        return hp;
+    }
+    virtual void de_hp(ll dhp){
+        debug{
+            std::clog<<"character #"<<id<<" de_hp "<<dhp;
+            assert(dhp>=0);
         }
-        if (buffer.type != Unknown) {
-            buffer.line = curline;
-            tokens.push_back(buffer);
-            buffer = Token{ Unknown, "" };
+        debug std::clog<<" hp "<<hp;
+        hp-=dhp;
+        debug std::clog<<" => "<<hp<<"\n";
+        if(hp<=0){
+            die();
+        }else{
+            add_mp(1ll);
+        };
+    }
+    virtual ll get_de_hp(ll damage,ll real_damage){
+        debug{
+            std::clog<<"character #"<<id<<" get_de_hp damage="<<damage<<" real_damage="<<real_damage<<" dhp "<<std::max(damage-D(),0ll)+real_damage<<"\n";
+            assert(damage>=0);
+            assert(real_damage>=0);
         }
-        return tokens;
+        return std::max(damage-D(),0ll)+real_damage;
     }
-
-    void parseTotal(string total) {
-        tokens = parse(total);
-        nextid = 0;
-    }
-
-    void parse(istream& in) {
-        int c;
-        string str;
-        while (c = in.get()) {
-            if (in.eof())
-                break;
-            str.push_back(c);
+    virtual void add_hp(ll dhp){
+         debug{
+            std::clog<<"character #"<<id<<" add_hp "<<dhp;
+            assert(dhp>=0);
         }
-        parseTotal(str);
+        debug std::clog<<" hp "<<hp;
+        hp=std::min(hp+dhp,mhp);
+        debug std::clog<<" => "<<hp<<"\n";
+    }
+    inline bool is_die(){
+        return is_die_;
+    }
+    //mp
+    virtual ll get_mp(){
+        return mp;
+    }
+    inline void de_mp(ll dmp){
+        debug{
+            std::clog<<"character #"<<id<<"de_mp "<<dmp;
+            assert(dmp>=0);
+        }
+        debug std::clog<<" mp "<<mp;
+        mp=std::max(mp-dmp,0ll);
+        debug std::clog<<" => "<<mp<<"\n";
+    }
+    virtual void add_mp(ll dmp){
+        debug{
+            std::clog<<"character #"<<id<<" add_mp "<<dmp;
+            assert(dmp>=0);
+        }
+        debug std::clog<<" mp "<<mp;
+        mp=std::min(mp+dmp,mmp);
+        debug std::clog<<" => "<<mp<<"\n";
+    }
+    //skill
+    inline void set_skill(skill*s_){
+        if(s) delete s;
+        s=s_;
+    }
+    inline const skill* get_skill(){
+        return s;
+    }
+    virtual bool can_use_skill(){
+        return mp==mmp;
+    }
+    virtual void use_skill(){
+        debug{
+            std::clog<<"character #"<<id<<" use_skill\n";
+            s->print_info();
+            assert(can_use_skill());
+        }
+        mp=0;
+        s->run(this);
+        add_mp(1ll);
     }
 
-    Token next() {
-        if (nextid >= tokens.size())
-            return Token{ Unknown, "" };
-        else
-            return tokens[nextid++];
+    //attack
+    virtual character* get_attack_target(){
+        while((!attack_order.empty())&&attack_order.front()->is_die_) attack_order.pop();
+        return attack_order.empty()?(NULL):(attack_order.front());
     }
-
-    Token offset(int offset) {
-        int id = nextid - 1 + offset;
-        if (id >= tokens.size() || id < 1)
-            return Token{ Unknown };
-        else
-            return tokens[id];
+    virtual ll get_attack_de_hp(){
+        debug{
+            std::clog<<"character #"<<id<<" get_attack_de_hp\n";
+        }
+        auto target=get_attack_target();
+        return target?target->get_de_hp(A(),0ll):0ll;
     }
-
-private:
-    vector<Token> tokens;
-    int nextid;
+    virtual ll get_attack_target_hp(){
+        auto target=get_attack_target();
+        return target?target->hp:0ll;
+    }
+    virtual void attack(){
+        debug{
+            std::clog<<"character #"<<id<<" atack";
+        }
+        auto target=get_attack_target();
+        debug std::clog<<" character #"<<((target)?(target->get_id()):(-1))<<"\n";
+        if(target)target->de_hp(get_attack_de_hp());
+        debug assert(target!=NULL);
+        add_mp(1ll);
+    }
+    //other
+    virtual void after_action(){
+        debug{
+            std::clog<<"character #"<<id<<" after_action\n";
+        }
+        add_mp(1ll);
+    }
 };
+ll character::cnt_id=0;
+class character_init_;
+class character_talent_0:public character{
+    virtual ll get_talent_id(){
+        return 0;
+    }
+};
+class character_talent_1:public character{
+    virtual ll get_talent_id(){
+        return 1;
+    }
+    virtual ll get_de_hp(ll damage,ll real_damage){                     //talent#1 该角色免疫一半真实伤害
+        debug{
+            std::clog<<"character #"<<id<<" get_de_hp(talent#1) damage="<<damage<<" real_damage="<<real_damage<<" dhp "<<std::max(damage-D(),0ll)+real_damage-(real_damage>>1)<<"\n";
+            assert(damage>=0);
+            assert(real_damage>=0);
+        }
+        return std::max(damage-D(),0ll)+real_damage-(real_damage>>1);
+    }
+};
+class character_talent_2:public character{
+    virtual ll get_talent_id(){
+        return 2;
+    }
+    virtual ll get_attack_de_hp(){                                      //talent#2 该角色每次普通攻击会附加的 x 点真实伤害
+        debug{
+             std::clog<<"character #"<<id<<" get_attack_de_hp(talent#2)\n";
+        }
+        auto target=get_attack_target();
+        return target?target->get_de_hp(A(),talent_x):0ll;
+    }
+};
+class character_talent_3:public character{
+    virtual ll get_talent_id(){
+        return 3;
+    }
+    virtual void after_action(){                                        //talent#3 该角色每次己方行动结束后回复 x 点生命值，并额外回复 y 点能量值
+        debug{
+            std::clog<<"character #"<<id<<" after_action(talent#3)\n";
+        }
+        add_hp(talent_x);
+        add_mp(1ll+talent_y);
+    }
+};
+class character_talent_4:public character{
+    virtual ll get_talent_id(){
+        return 4;
+    }
+    virtual ll get_attack_de_hp(){                                      //talent#4 该角色的普通攻击被视为真实伤害攻击，即该角色的普通攻击不造成伤害，但造成 A 点真实伤害。
+        debug{
+            std::clog<<"character #"<<id<<" get_attack_de_hp(talent#4)\n";
+        }
+        auto target=get_attack_target();
+        return target?target->get_de_hp(0ll,A()):0ll;
+    }
+};
+class character_talent_5:public character{
+    virtual ll get_talent_id(){
+        return 5;
+    }
+    virtual void attack(){                                              //talent#5 该角色每次进行普通攻击后，回复 x 点生命值
+        debug{
+            std::clog<<"character #"<<id<<" ttack(talent#5) ";
+        }
+        auto target=get_attack_target();
+        debug std::clog<<" character #"<<((target)?(target->get_id()):(-1))<<"\n";
+        if(target)target->de_hp(get_attack_de_hp());
+        debug assert(target!=NULL);
+        add_hp(talent_x);
+        add_mp(1ll);
+    }
+    virtual void use_skill(){                                           //talent#5 该角色每次发动技能后，额外回复 y 点能量值
+        debug{
+            std::clog<<"character #"<<id<<" use_skill(talent#5)\n";
+            s->print_info();
+            assert(can_use_skill());
+        }
+        mp=0;
+        s->run(this);
+        add_mp(1ll+talent_y);
+    }
+};
+class team{
+    private:
+    std::list<character*>alive_characters;
+    std::vector<character*>all_characters;
+    std::string team_name;
+    team* enemy_team;
+    protected:
+    public:
+    friend class character_init_;
+    ll team_dmp_after_action;
+    team(std::string const&name,team*enemy_team_){
+        team_name=name;
+        enemy_team=enemy_team_;
+    }
+    inline character*get_character_by_id(ll id)const{
+        assert(id<=n);
+        if(id<=n){
+            return all_characters[id-1];
+        }
+        return NULL;
+    }
+    inline std::list<character*> const& get_alive_characters()const{
+        return alive_characters;
+    }
+    inline std::vector<character*> const& get_all_characters()const{
+        return all_characters;
+    }
+    inline std::string const& get_team_name()const{
+        return team_name;
+    }
+    inline void update_alive_characters(){
+        for(std::list<character*>::iterator i=alive_characters.begin();i!=alive_characters.end();){
+            auto tmp=i;
+            i++;
+            if((*tmp)->is_die()) alive_characters.erase(tmp);
+        }
+        if(alive_characters.empty()){
+            throw game_over_exeception(enemy_team);
+        }
+    }
+    inline void init();
+    inline void action();
+    inline void after_action();
+};
+class game{
+    private:
+    static constexpr ll MAX_ROUND=23333;
+    std::vector<character*>all_characters;
+    ll cnt_round;
+    event_once run_round_end[MAX_ROUND],run_init_end;
+    team team1{"Alice",&team2},team2{"Bob",&team1};
+    public:
+    game(){
+        cnt_round=1;
+    }
+    inline void attach_run_round_end(ll round,callback*c){
+        debug std::clog<<"attach @"<<round<<"\n";
+        debug assert(round>=cnt_round);
+        if(round<=MAX_ROUND){
+            run_round_end[round].attach(c);
+        }else{
+            delete c;
+        }
+    }
+    inline void attach_tun_init_end(callback*c){
+        run_init_end.attach(c);
+    }
+    inline ll get_cnt_round()const{
+        return cnt_round;
+    }
+    inline std::vector<character*> const& get_all_characters(){
+        return all_characters;
+    }
+    void print_info(){
+        // debug{
+            std::clog<<"round_cnt "<<cnt_round<<"\n";
+            std::clog<<"team "<<team1.get_team_name()<<"\n";
+            for(auto i:team1.get_all_characters())i->print_info();
+            std::clog<<"team "<<team2.get_team_name()<<"\n";
+            for(auto i:team2.get_all_characters())i->print_info();
+            std::clog<<"\n\n";
+        // }
+    }
+    inline void init(){
+        debug std::clog<<"game init.....\n";
+        std::cin>>n;
+        team1.init();
+        team2.init();
+        for(auto const&i:team1.get_all_characters()) all_characters.push_back(i);
+        for(auto const&i:team2.get_all_characters()) all_characters.push_back(i);
+        run_init_end.tigger();
+        debug std::clog<<"game init.\n";
+        debug{
+            print_info();
+        }
+    }
+    inline void play(){
+        debug std::clog<<"round "<<cnt_round<<'\n';
+        team1.action();
+        team1.after_action();
+        team2.action();
+        team2.after_action();
+        run_round_end[cnt_round].tigger();
+        debug std::clog<<"round "<<cnt_round<<" end.\n";
+        cnt_round++;
+        if(cnt_round==MAX_ROUND){
+            throw game_over_exeception();
+        }
+    }
+};
+game g;
 
-/*
-Basic Syntax
-COMMAND %Register @Address Value @%AddrAtRegister;
-*/
-class Compiler {
-public:
+class skill_0:public skill{
+    /*
+    skill#0:
+    该角色的主动技能毫无作用
+    */
+    public:
+    skill_0(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 0;
+    }
+    virtual void run(character*self){
 
-    struct Command {
-        int line;
-        string command;
-        vector<Tokenizer::Token> sources;
+    }
+};
+class skill_1:public skill{
+    /*
+    skill#1:
+    对敌方所有角色造成 x 点伤害，然后使敌方所有角色能量值减少 int(enemy_mp/10) 
+    */
+    public:
+    skill_1(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 1;
+    }
+    virtual void run(character*self){
+        // for(auto i:self->enemy_team->get_all_characters()) i->de_hp(i->get_de_hp(x,0ll));
+        for(auto i=self->enemy_team->get_alive_characters().begin(),e=self->enemy_team->get_alive_characters().end(),t=i;i!=e;t=i){//对敌方所有角色造成 x 点伤害
+            i++;
+            (*t)->de_hp((*t)->get_de_hp(x,0ll));
+        }
+        for(auto i:self->enemy_team->get_all_characters()) i->de_mp((i->mp)/10ll);//然后使敌方所有角色能量值减少int(enemy_mp/10)
+    }
+};
+class skill_2:public skill{
+    /*
+    skill#2:
+    对敌方所有角色造成 A 点真实伤害。
+    */
+    public:
+    skill_2(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 2;
+    }
+    virtual void run(character*self){
+        // for(auto i:self->enemy_team->get_alive_characters()) i->de_hp(i->get_de_hp(0ll,self->A()));
+        for(auto i=self->enemy_team->get_alive_characters().begin(),e=self->enemy_team->get_alive_characters().end(),t=i;i!=e;t=i){//对敌方所有角色造成 A 点真实伤害。
+            i++;
+            (*t)->de_hp((*t)->get_de_hp(0ll,self->A()));
+        }
+    }
+};
+class skill_3:public skill{
+    /*
+    skill#3:
+    对敌方所有目标造成 min(int(enemy_mhp/10),x×A) 点伤害
+    */
+    public:
+    skill_3(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 3;
+    }
+    virtual void run(character*self){
+        // for(auto i:self->enemy_team->get_alive_characters()) i->de_hp(i->get_de_hp(std::min(i->mhp/10,x*self->A()),0ll));
+        for(auto i=self->enemy_team->get_alive_characters().begin(),e=self->enemy_team->get_alive_characters().end(),t=i;i!=e;t=i){//对敌方所有目标造成 min(int(enemy_mhp/10),x×A) 点伤害
+            i++;
+            (*t)->de_hp((*t)->get_de_hp(std::min((*t)->mhp/10,x*self->A()),0ll));
+        }
+    }
+};
+class skill_4:public skill{
+    /*
+    skill#4:
+    从发动技能开始，到第 t+x−1 回合结束期间，在己方行动结束时，己方全体角色额外回复 y 点能量值
+    */
+    private:
+    struct skill_4_callback:callback{
+        ll *p_team_dmp,y;
+        skill_4_callback(team*self_team_,ll y_){
+            p_team_dmp=&self_team_->team_dmp_after_action,y=y_;
+        }
+        void run(){
+            *p_team_dmp-=y;
+        }
     };
-
-
-    void compile(Tokenizer& tokens) {
-        valid = false;
-        bool ok = true;
-        while (ok) {
-            Tokenizer::Token commt;
-            while (ok && (commt = tokens.next()).type != Tokenizer::Identifier)
-                if (commt.type == Tokenizer::Unknown)
-                    ok = false;
-            string command = commt.word;
-            vector<Tokenizer::Token> sources;
-            Tokenizer::Token cur;
-            bool pushCommand = true;
-            while (ok && (cur = tokens.next()).word != ";") {
-                if (cur.type == Tokenizer::Unknown)
-                    ok = false;
-                //if (cur.type == Tokenizer::Identifier&&tokens.offset(-1).type != Tokenizer::Symbol)
-                //    compileError(cur.line, "\";\" expected before a new identifier");
-                else if (cur.type == Tokenizer::Symbol&&cur.word == "$"&&touppers(command) == "FUNCTION") {
-                    Tokenizer::Token func = tokens.next();
-                    compileAssert(func.line, func.type == Tokenizer::Identifier, "\"function $\" not followed by a identifier as function name");
-                    compileAssert(func.line, funcStartLines.find(func.word) == funcStartLines.end(), "Redefinition of function \"" + func.word + "\"");
-                    funcStartLines.insert(make_pair(func.word, commt.line));
-
-                    auto vec = Tokenizer::parse("#LINE %LINE");
-                    for (auto& i : vec) { i.line = commt.line; }
-                    commands.push_back(Command{ commt.line, "SET", vec });
-                    pushCommand = false;
-                }
-                sources.push_back(cur);
-            }
-            if (compileErrorLevel)
-                break;
-            if (ok&&pushCommand)
-                commands.push_back(Command{ commt.line, command, sources });
+    public:
+    skill_4(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 4;
+    }
+    virtual void run(character*self){
+        self->self_team->team_dmp_after_action+=y;
+        g.attach_run_round_end(g.get_cnt_round()+x-1,new skill_4_callback(self->self_team,y));
+    }
+};
+class skill_5:public skill{
+    /*
+    skill#5:
+    优先目标的防御力增益减小 x，然后对优先目标造成 A 点真实伤害
+    */
+    public:
+    skill_5(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 5;
+    }
+    virtual void run(character*self){
+        auto target=self->get_attack_target();
+        if(target){
+            target->ddef-=x;
+            target->de_hp(target->get_de_hp(0ll,self->A()));
         }
-        if (compileErrorLevel) {
-            compileErrorLevel = false;
-            valid = false;
+    }
+};
+class skill_6:public skill{
+    /*
+    skill#6:
+    对优先目标造成 A 点真实伤害，另外，从发动技能开始，到第 t+x−1 回合结束期间，敌方所有角色攻击力增益减小 y
+    */
+    private:
+    struct skill_6_callback:callback{
+        team*enemy_team;
+        ll y;
+        skill_6_callback(team*enemy_team_,ll y_){
+            enemy_team=enemy_team_,y=y_;
         }
-        else
-            valid = true;
+        void run(){
+            for(auto i:enemy_team->get_alive_characters()) i->datk+=y;
+        }
+    };
+    public:
+    skill_6(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 6;
+    }
+    virtual void run(character*self){
+        auto target=self->get_attack_target();
+        if(target){
+            target->de_hp(target->get_de_hp(0ll,self->A()));
+        }
+        for(auto i:self->enemy_team->get_alive_characters()) i->datk-=y;
+        g.attach_run_round_end(g.get_cnt_round()+x-1,new skill_6_callback(self->enemy_team,y));
+    }
+};
+class skill_7:public skill{
+    /*
+    skill#7:
+    使己方未【死亡】角色生命值最低（如有多个，则编号最小）的恰好一名角色回复 z 点生命值,
+    从发动技能开始到第 t+x−1 回合结束期间，己方所有角色攻击力增益增大 y。
+    */
+    private:
+    struct skill_7_callback:callback{
+        team*self_team;
+        ll y;
+        skill_7_callback(team*self_team_,ll y_){
+            self_team=self_team_,y=y_;
+        }
+        void run(){
+            for(auto i:self_team->get_alive_characters()) i->datk-=y;
+        }
+    };
+    public:
+    skill_7(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 7;
+    }
+    virtual void run(character*self){
+        character*c=NULL;ll min_hp=1e11;
+        for(auto i:self->self_team->get_alive_characters())if(i->hp<min_hp) c=i,min_hp=i->hp;
+        c->add_hp(z);
+
+        for(auto i:self->self_team->get_alive_characters()) i->datk+=y;
+        g.attach_run_round_end(g.get_cnt_round()+x-1,new skill_7_callback(self->self_team,y));
+    }
+};
+class skill_8:public skill{
+    /*
+    skill#8:
+    对敌方所有角色造成 A 点伤害
+    从该技能造成伤害后，到 t+x−1 回合结束期间，使敌方所有角色防御力增益减小 y
+    */
+    private:
+    struct skill_8_callback:callback{
+        team*enemy_team;
+        ll y;
+        skill_8_callback(team*enemy_team_,ll y_){
+            enemy_team=enemy_team_,y=y_;
+        }
+        void run(){
+            for(auto i:enemy_team->get_alive_characters()) i->ddef+=y;
+        }
+    };
+    public:
+    skill_8(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 8;
+    }
+    virtual void run(character*self){
+        // for(auto i:self->enemy_team->get_alive_characters()) i->de_hp(i->get_de_hp(self->A(),0ll));
+        for(auto i=self->enemy_team->get_alive_characters().begin(),e=self->enemy_team->get_alive_characters().end(),t=i;i!=e;t=i){
+            i++;
+            (*t)->de_hp((*t)->get_de_hp(self->A(),0ll));
+        }
+        for(auto i:self->enemy_team->get_alive_characters()) i->ddef-=y;
+        g.attach_run_round_end(g.get_cnt_round()+x-1,new skill_8_callback(self->enemy_team,y));
+    }
+};
+class skill_9:public skill{
+    /*
+    skill#9:
+    己方全体角色回复 z 点生命值
+    从发动技能开始，到第 t+x−1 回合结束期间，己方所有角色防御力增益增大 y
+    */
+    private:
+    struct skill_9_callback:callback{
+        team*self_team;
+        ll y;
+        skill_9_callback(team*self_team_,ll y_){
+            self_team=self_team_,y=y_;
+        }
+        void run(){
+            for(auto i:self_team->get_alive_characters()) i->ddef-=y;
+        }
+    };
+    public:
+    skill_9(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 9;
+    }
+    virtual void run(character*self){
+        for(auto i:self->self_team->get_alive_characters()) i->add_hp(z);
+        for(auto i:self->self_team->get_alive_characters()) i->ddef+=y;
+        g.attach_run_round_end(g.get_cnt_round()+x-1,new skill_9_callback(self->self_team,y));
+    }
+};
+class skill_10:public skill{
+    /*
+    skill#10:
+    己方所有角色基础攻击力 atk、基础防御力 def 变为原先的两倍 2×atk,2×def
+    未【死亡】角色生命值 hp 变为 max(int(mhp/2),hp),能量值 mp 变为 max(int(mmp/2),mp)
+    从发动技能开始，到第 t+x−1 回合结束期间，己方行动结束时，己方所有角色额外回复 1 点能量值。
+    在第 t+x−1 回合结束时，若敌方仍有角色未【死亡】，则己方全体角色强制生命值清零，并被判定为【死亡】。
+    另外，在发动该技能时，场上所有拥有这个技能的角色（包括自己）的技能将被强制替换为 talent#0
+    */
+    private:
+    struct skill_10_callback:callback{
+        team*self_team;
+        skill_10_callback(team*self_team_){
+            self_team=self_team_;
+        }
+        void run(){
+            debug std::clog<<"skill 10 callback.\n";
+            self_team->team_dmp_after_action-=1;
+            // for(auto i:self_team->get_alive_characters()) i->de_hp(i->hp);
+            while(!self_team->get_alive_characters().empty()) self_team->get_alive_characters().front()->de_hp(1e11); //保证在游戏中的任意时刻，所有题面中提及到的参数及表达式的绝对值均不超过 1e9 ==> 1e11>hp
+        }
+    };
+    public:
+    skill_10(ll x_,ll y_,ll z_):skill(x_,y_,z_){};
+    virtual ll get_skill_id()const{
+        return 10;
+    }
+    virtual void run(character*self){
+        for(auto i:self->self_team->get_alive_characters()){
+            i->atk<<=1,i->def<<=1;
+            i->hp=std::max(i->mhp>>1,i->hp),i->mp=std::max(i->mmp>>1,i->mp);
+        }
+        self->self_team->team_dmp_after_action+=1;
+        g.attach_run_round_end(g.get_cnt_round()+x-1,new skill_10_callback(self->self_team));
+        for(auto i:self->self_team->get_alive_characters()) if(i->get_skill()->get_skill_id()==10)i->set_skill(new skill_0(0ll,0ll,0ll));
+        for(auto i:self->enemy_team->get_alive_characters()) if(i->get_skill()->get_skill_id()==10)i->set_skill(new skill_0(0ll,0ll,0ll));
         
     }
-
-    void generateCode(AssemblyProgram& prog) {
-        if (!valid)
-            return;
-        prog.initalaize();
-        prog.valid = false;
-
-        bool ok = true;
-
-        for (auto i = commands.begin(); ok&&i != commands.end(); i++) {
-            string& command = i->command;
-            vector<AssemblyProgram::DataSource> sources;
-            bool pushCommand = true;
-
-            auto j = i->sources.begin();
-            auto nextToken = [&]()->Tokenizer::Token {
-                j++;
-                if (j == i->sources.end())
-                    return Tokenizer::Token{ Tokenizer::Unknown };
-                else
-                    return *j;
-            };
-            for (; ok&&j != i->sources.end(); nextToken()) {
-                auto& cur = *j;
-                if (cur.type == Tokenizer::Number)
-                    sources.push_back(AssemblyProgram::DataSource{ nullptr, atoi(cur.word.c_str()), nullptr, nullptr, AssemblyProgram::Constant });
-                else if (cur.type == Tokenizer::Symbol) {
-                    if (cur.word == "%") {
-                        Tokenizer::Token reg = nextToken();
-                        compileAssert(reg.line, reg.type == Tokenizer::Identifier, "% not followed by identifier");
-                        sources.push_back(AssemblyProgram::DataSource{ prog.getRegister(reg.line, reg.word), 0, nullptr, nullptr, AssemblyProgram::Pointer });
-                    }
-                    else if (cur.word == "@") {
-                        Tokenizer::Token val = nextToken();
-                        compileAssert(val.line, val.type == Tokenizer::Number, "@ not followed by a number");
-                        sources.push_back(AssemblyProgram::DataSource{ prog.getMemory(val.line, atoi(val.word.c_str())), 0, nullptr, nullptr, AssemblyProgram::Pointer });
-                    }
-                    else if (cur.word == "@%") {
-                        Tokenizer::Token reg = nextToken();
-                        compileAssert(reg.line, reg.type == Tokenizer::Identifier, "@% not followed by identifier");
-                        sources.push_back(AssemblyProgram::DataSource{ nullptr, 0, prog.getRegister(reg.line, reg.word), &prog, AssemblyProgram::Memory });
-                    }
-                    else if (cur.word == "#") {
-                        Tokenizer::Token def = nextToken();
-                        compileAssert(def.line, def.type == Tokenizer::Identifier, "# not followed by identifier");
-                        toupper(def.word);
-                        if (def.word == "LINE")
-                            sources.push_back(AssemblyProgram::DataSource{ nullptr, def.line, nullptr, nullptr, AssemblyProgram::Constant });
-                        else
-                            compileError(def.line, "Compile-time constant identifier \"" + def.word + "\" undefined");
-                    }
-                    else if (cur.word == "$") {
-                        if (command == "callfunc") {
-                            Tokenizer::Token func = nextToken();
-                            compileAssert(func.line, func.type == Tokenizer::Identifier, "\"callfunc $\" not followed by a identifier as function name");
-                            auto it = funcStartLines.find(func.word);
-                            if (it == funcStartLines.end())
-                                compileError(func.line, "Function \"" + func.word + "\" undefined");
-                            else {
-                                prog.pushCommand(i->line, "CALL", {
-                                    AssemblyProgram::DataSource{ nullptr, it->second, nullptr, nullptr, AssemblyProgram::Constant }});
-                            }
-                            pushCommand = false;
-                        }
-                        else
-                            compileError(cur.line, "$ not preceeded by keyword \"function\" or \"callfunc\"");
-
-                    }
-                }
-                if (compileErrorLevel)
-                    ok = false;
-            }
-            if (ok&&pushCommand)
-                prog.pushCommand(i->line, i->command, sources);
-        }
-
-        if (compileErrorLevel) {
-            compileErrorLevel = false;
-            prog.valid = false;
-        }
-        else
-            prog.valid = true;
-    }
-
-private:
-
-    vector<Command> commands;
-    map<string, int> funcStartLines;
-    bool valid;
-
-
 };
 
-
-AssemblyProgram prog;
-Tokenizer tokens;
-Compiler compiler;
-
-
-int main(int argc, char* argv[]) {
-
-    int n;
-    cin >> n;
-
-    string str;
-    string total;
-    while (n > 0 && getline(cin, str)) {
-        if (str == "")
-            continue;
-        n--;
-        total += str + '\n';
+int main(){
+    g.init();
+    try{
+        while(true){
+            
+            g.play();
+            debug{
+                g.print_info();
+            }
+            
+        }
+    }catch(game_over_exeception&err){
+        if(err.get_team()){
+            std::cout<<g.get_cnt_round()<<"\n"<<err.get_team()->get_team_name()<<"\n";
+            for(auto i:err.get_team()->get_all_characters()) std::cout<<i->get_hp()<<' ';
+        }else{
+            std::cout<<"...";
+        }
     }
-
-    tokens.parseTotal(total);
-    compiler.compile(tokens);
-    compiler.generateCode(prog);
-    prog.run();
-
     return 0;
 }
+//::
+class character_init_{
+    private:
+    struct character_init_callback:callback{
+        std::queue<ll>*q;
+        std::queue<character*>*q_2;
+        team*enemy_team;
+        character_init_callback(character*c,std::queue<ll>*q_){
+            q=q_;
+            q_2=&c->attack_order;
+            enemy_team=c->enemy_team;
+        }
+        void run(){
+            for(;!q->empty();q->pop()){
+                q_2->push(enemy_team->get_character_by_id(q->front()));
+                debug assert(enemy_team->get_character_by_id(q->front())!=NULL);
+            }
+            delete q;
+        }
+    };
+    public:
+    inline character*operator()(team*t){
+        character*result;
+        ll talent,talent_x,talent_y,hp,mp,atk,def,skill,skill_x,skill_y,skill_z;
+        std::cin>>hp>>mp>>atk>>def;//四个非负整数 HP,MP,atk,def 分别表示该角色的最大生命值、最大能量值、基础攻击力、基础防御力
+        std::queue<ll>*q=new std::queue<ll>;
+        for(int i=0,p=0;i<n;i++){//n 个正整数 表示该角色攻击顺序，保证这是一个关于 1 到 n 的排列
+            std::cin>>p;
+            q->push(p);
+        }
+        std::cin>>talent>>talent_x>>talent_y;//三个非负整数 tf,x,y 表示天赋编号以及附加参数。如果该天赋附加参数不足两个，那么你可以忽略多余的部分
+        std::cin>>skill>>skill_x>>skill_y>>skill_z;//四个非负整数 jn,x,y,z 表示技能编号及附加参数。如果该技能附加参数不足三个，那么你可以忽略多余的部分
+        switch (talent){
+            case 0:result=new character_talent_0();break;
+            case 1:result=new character_talent_1();break;
+            case 2:result=new character_talent_2();break;
+            case 3:result=new character_talent_3();break;
+            case 4:result=new character_talent_4();break;
+            case 5:result=new character_talent_5();break;
+        }
+        result->hp=result->mhp=hp,result->mmp=mp,result->atk=atk,result->def=def,result->mp=result->ddef=result->datk=0ll;
+        result->talent_x=talent_x,result->talent_y=talent_y;
+        result->self_team=t,result->enemy_team=t->enemy_team;
+        g.attach_tun_init_end(new character_init_callback(result,q));
+        switch (skill){
+            case 0:result->set_skill(new skill_0(skill_x,skill_y,skill_z));break;
+            case 1:result->set_skill(new skill_1(skill_x,skill_y,skill_z));break;
+            case 2:result->set_skill(new skill_2(skill_x,skill_y,skill_z));break;
+            case 3:result->set_skill(new skill_3(skill_x,skill_y,skill_z));break;
+            case 4:result->set_skill(new skill_4(skill_x,skill_y,skill_z));break;
+            case 5:result->set_skill(new skill_5(skill_x,skill_y,skill_z));break;
+            case 6:result->set_skill(new skill_6(skill_x,skill_y,skill_z));break;
+            case 7:result->set_skill(new skill_7(skill_x,skill_y,skill_z));break;
+            case 8:result->set_skill(new skill_8(skill_x,skill_y,skill_z));break;
+            case 9:result->set_skill(new skill_9(skill_x,skill_y,skill_z));break;
+            case 10:result->set_skill(new skill_10(skill_x,skill_y,skill_z));break;
+        }
+        return result;
+    }
+}character_init;
+//
+
+
+
+//character::
+inline void character::print_info(){
+    debug{
+        std::clog<<"character #"<<id<<" @team"<<self_team->get_team_name()<<"\n"
+                 <<"\t"<<"hp(<"<<mhp<<")"<<hp<<"  mp(<"<<mmp<<")"<<mp<<"  atk "<<atk<<"(+"<<datk<<")  def "<<def<<"(+"<<ddef<<")\n"
+                 <<"\t"<<"talent #"<<get_talent_id()<<" ("<<talent_x<<","<<talent_y<<")\n";
+                   s->print_info();
+    }
+}
+inline void character::die(){
+    debug std::clog<<"character #"<<id<<" die.\n";
+    is_die_=true;
+    hp=0;
+    self_team->update_alive_characters();
+}
+//character
+
+//team::
+inline void team::init(){
+    debug std::clog<<"team "<<team_name<<" init...\n";
+    character*tmp;
+    for(int i=0;i<n;i++){
+        tmp=character_init(this);
+        all_characters.push_back(tmp);
+        alive_characters.push_back(tmp);
+    }
+    debug std::clog<<"team "<<team_name<<" init.\n";
+}
+inline void team::action(){
+    debug std::clog<<"team "<<team_name<<" action...\n";
+    character*c=NULL;ll max_skill_id=-1;
+    debug std::clog<<"\tuse skill?\n";
+    for(auto i:alive_characters){
+        if((i->can_use_skill())&&(i->get_skill()->get_skill_id()>=max_skill_id)){
+            c=i;
+            max_skill_id=i->get_skill()->get_skill_id();
+        }
+    }
+    if(c){
+        debug std::clog<<"\tuse skill.\n";
+        c->use_skill();
+    }else{
+        ll attack_target_hp=0,attack_de_hp=0;
+        for(auto i:alive_characters){
+            if((i->get_attack_target_hp()>attack_target_hp)||((i->get_attack_target_hp()==attack_target_hp)&&(i->get_attack_de_hp()>=attack_de_hp))){
+                c=i;
+                attack_de_hp=i->get_attack_de_hp();
+                attack_target_hp=i->get_attack_target_hp();
+            }
+        }
+        debug std::clog<<"\tattack.\n";
+        c->attack();
+    }
+    debug std::clog<<"team "<<team_name<<" action.\n";
+}
+inline void team::after_action(){
+    debug std::clog<<"team "<<team_name<<" after_action...\n";
+    for(auto i:alive_characters) i->after_action(),i->add_mp(team_dmp_after_action);
+    debug std::clog<<"team "<<team_name<<" after_action.\n";
+}
+//team

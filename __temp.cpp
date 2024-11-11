@@ -519,12 +519,12 @@ namespace StellarisConnection {
 
             auto virtualDamage = [&](Character *ch) -> int {
                 if (ch->talent == Transcendent) {
-                    return std::min(Infinity, 
+                    return std::min((int)ch->target()->health, 
                         ch->target()->calcDamage({0, ch->attack, ch, ch->target()}));
                 } else {
                     auto attached = 0;
                     if (ch->talent == GalaxyPowerReflection)  attached = ch->talent.args[0];
-                    return std::min(Infinity, 
+                    return std::min((int)ch->target()->health, 
                         ch->target()->calcDamage({ch->attack, attached, ch, ch->target()}));
                 }
             };

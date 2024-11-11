@@ -283,9 +283,6 @@ namespace StellarisConnection {
                 if (type == End)  arg = 0, id++;
                 if (type == ActionDone and arg < teams - 1)  type = Action, arg++;
                 else  type++;
-                debug {
-                    io << std::format("Round {} {} {} {}", id, arg, (int)type, teams) << endl;
-                }
                 return *this;
             }
 
@@ -475,17 +472,19 @@ namespace StellarisConnection {
             health.value -= realAmount;
             auto healthDecreasing = healthOriginal - health;
 
-            // 回复一点能量值
-            mana = mana + 1;
 
-            debug io << std::format("{} Damaged by {}(amount={},{}) h-={}", (std::string)*this, (std::string)*dmg.source, dmg.amount, dmg.truth, healthDecreasing) << endl;
+            // debug io << std::format("{} Damaged by {}(amount={},{}) h-={}", (std::string)*this, (std::string)*dmg.source, dmg.amount, dmg.truth, healthDecreasing) << endl;
 
             if (health <= 0) {
                 dead = true;
                 if (owner->lose()) {
                     throw owner;  // 游戏结束
                 }
+                return healthDecreasing;
             }
+
+            // 回复一点能量值
+            mana = mana + 1;
             return healthDecreasing;
         }
 
@@ -519,12 +518,12 @@ namespace StellarisConnection {
 
             auto virtualDamage = [&](Character *ch) -> int {
                 if (ch->talent == Transcendent) {
-                    return std::min(Infinity, 
+                    return std::min((int)ch->target()->health, 
                         ch->target()->calcDamage({0, ch->attack, ch, ch->target()}));
                 } else {
                     auto attached = 0;
                     if (ch->talent == GalaxyPowerReflection)  attached = ch->talent.args[0];
-                    return std::min(Infinity, 
+                    return std::min((int)ch->target()->health, 
                         ch->target()->calcDamage({ch->attack, attached, ch, ch->target()}));
                 }
             };
@@ -542,7 +541,7 @@ namespace StellarisConnection {
 
             auto ch = *rgs::max_element(filtered, cmp);
             
-            debug io << std::format("{} Normal Attack -> {}", (std::string)*ch, (std::string)*ch->target()) << endl;
+            // debug io << std::format("{} Normal Attack -> {}", (std::string)*ch, (std::string)*ch->target()) << endl;
 
             if (ch->talent == Transcendent) {
                 ch->target()->damaged({0, ch->attack, ch, ch->target()});
@@ -577,22 +576,11 @@ namespace StellarisConnection {
             }
         }
 
-        debug {
-            io << "-----" << endl;
-            for (auto &pl: players) {
-                io << 'P' << pl->id << ' ';
-                for (auto &ch: pl->characters) {
-                    io << std::format("\tC{}(HP{}/{}, MP{}/{}, atk{}({}), def{}({}), target{}, dead{})\n", ch->id, (int)ch->health, ch->health.limit.max, (int)ch->mana, ch->mana.limit.max, (int)ch->attack, ch->attack.value, (int)ch->defense, ch->defense.value, (std::string)*ch->target(), (int)ch->dead);
-                }
-                io << endl;
-            }
-            io << "-----" << endl;
-        }
     }
 
     void Character::useSkill() {
         auto t = current.id;  // 当前游戏进度
-        debug {
+        never {
             io << std::format("P{}-C{}: useSkill {} with args ", owner->id, id, (int)skill.type);
             for (auto &arg: skill.args) {
                 io << arg << ' ';
@@ -713,6 +701,15 @@ namespace StellarisConnection {
                 throw inferior;
             }
         }
+
+        debug {
+            for (auto &pl: players) {
+                for (auto &ch: pl->characters) {
+                    io << std::format("P{}-C{} H{}/{} M{}/{} atk{} def{}\n", ch->owner->id, ch->id, (int)ch->health, ch->health.limit.max, (int)ch->mana, ch->mana.limit.max, (int)ch->attack, (int)ch->defense);
+                }
+                // io << endl;
+            }
+        }
     }
 
 
@@ -720,6 +717,7 @@ namespace StellarisConnection {
     void round() {
         
         assert(current.type == Process::Begin);
+        debug  io << std::format("\n\nround {}\n", current.id);
         for (auto &playerPtr: players) {  // 对于每个玩家
             current.next();  // 切到该玩家行动轮
             playerPtr->action();  // 行动
