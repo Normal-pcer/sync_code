@@ -207,9 +207,8 @@ class gdbOption(Option):
         super().__init__("gdb", "g", "ng")
     
     def apply(self):
-        global launchGDB, buildOnly
+        global launchGDB
         launchGDB = True
-        buildOnly = True
 
 class tempOption(Option):
     def __init__(self):
@@ -378,8 +377,10 @@ if __name__ == '__main__':
         os.system(f"g++ \"{fileName}\" -o \"{fileName[:-4]}.exe\" " + ' '.join(compileArgs))
 
         if buildOnly:
-            if launchGDB:
-                os.system("gdb ./__temp.exe")
+            sys.exit(0)
+
+        if launchGDB:
+            os.system("gdb ./__temp.exe")
             sys.exit(0)
 
         tm = time.perf_counter()
