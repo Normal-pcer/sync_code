@@ -158,130 +158,60 @@ namespace lib{
 
 }
 
-namespace lib {
-    namespace binary {  // 二分
-        template <class T, class U, class Func>
-        T lower_bound_mapping(
-            T begin,
-            T end,
-            U val,
-            Func &&mapping,
-            T eps = 1
-        ) {
-            while (end-begin >= eps) {
-                T mid = begin + (end-begin)/2;
-                if (mapping(mid) < val) {
-                    begin = mid + eps;
-                } else {
-                    end = mid;
-                }
-            }
-            return begin;
-        }
-
-        template <class T, class U, class Func>
-        T upper_bound_mapping(
-            T begin,
-            T end,
-            U val,
-            Func &&mapping,
-            T eps = 1
-        ) {
-            while (end-begin >= eps) {
-                T mid = begin + (end-begin)/2;
-                if (mapping(mid) <= val) {
-                    begin = mid + eps;
-                } else {
-                    end = mid;
-                }
-            }
-            return begin;
-        }
-    }
-}
 using namespace lib;
 
 
-namespace Solution_1268115891474192 {
+namespace Solution_1551233729792707 {
 
-    int N, D; ll K;  const int _N = 5e5+5;
-    struct Point { int pos, val; } point[_N];
+    int N, P, Q;  const int _N = 1e5+5;
+    int W[_N];
 
     void solve() {
-        io >> N >> D >> K;
+        io >> N >> P >> Q;
+        from(i, 1, N)  io >> W[i];
+        W[N+1] = -inf;
+
+        static ll ps[_N];
+        std::partial_sum(W, W+N+1, ps);
+
+        static int q[_N], l=1, r=0;
+        // q[++r] = 0;
+
+        auto ans = -infLL;
         from(i, 1, N) {
-            point[i] = {io.get(), io.get()};
+            // 清除不合法
+            while (r>=l and i-q[l] > Q)  l++;
+
+            // 将合法的压入队列
+            // x = i-P 在这一轮变得合法
+            auto x = i - P;
+            if (x >= 0) {
+                // 更劣解出队
+                while (r>=l and ps[q[r]] >= ps[x])  r--;
+                q[++r] = x;
+            }
+
+            if (r>=l) {
+                auto front = q[l];
+                auto val = ps[i] - ps[front];
+                chkMax(ans, val);
+            }
+
+            debug {
+                from(i, l, r) {
+                    io << q[i] << ' ';
+                }
+                io << endl;
+            }
         }
 
-#if false
-        auto check = [&](int g) {
-            static ll F[_N];  // 最后一次跳到 i，可能的最高分
-            std::memset(F, -0x3f, sizeof(F)), F[0] = 0;
-
-            auto d_min = std::max(1, D-g), d_max = D+g;
-            auto ans = -infLL;
-            static int q[_N];
-            from(i, 1, N) {
-                auto max = -infLL;
-                for (auto j = i-1; point[i].pos-point[j].pos <= d_max; j--) {
-                    if (point[i].pos-point[j].pos >= d_min) {
-                        chkMax(max, F[j]);
-                    }
-                }
-                F[i] = max + point[i].val;
-
-                chkMax(ans, F[i]);
-            }
-            
-            debug io << g << " -> " << ans << endl;
-            return ans;
-        };
-#else
-        auto check = [&](int g) {
-            static ll F[_N];  // 最后一次跳到 i，可能的最高分
-            std::memset(F, -0x3f, sizeof(F)), F[0] = 0;
-
-            auto d_min = std::max(1, D-g), d_max = D+g;
-            auto ans = -infLL;
-            static int q[_N];  // 单调递减
-            int l=1, r=0;
-            #define luo q[l]
-            // q[++r] = 0;
-            int ptr = 0;
-            from(i, 1, N) {
-                // 压入合法元素
-                while (ptr<=i and point[i].pos-point[ptr].pos >= d_min) {
-                    // 维护递减并压入 ptr
-                    while (l<=r and F[point[q[r]].pos] >= F[point[ptr].pos])  r--;
-                    q[++r] = ptr++;
-                }
-                // 删除不合法元素
-                while (r>=l and point[i].pos-point[luo].pos >= d_max)  l++;
-
-                if (r>=l) {
-                    auto max = F[point[luo].pos];
-                    F[i] = max + point[i].val;
-                }
-
-                chkMax(ans, F[i]);
-            }
-            
-            debug io << g << " -> " << ans << endl;
-            return ans;
-        };
-#endif
-        auto min_g = binary::lower_bound_mapping(0, (int)1e9, K, check);  // 最小的 g
-        if (min_g >= (int)1e9) {
-            io << -1 << endl;
-        } else {
-            io << min_g << endl;
-        }
+        io << ans << endl;
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_1268115891474192::solve();
+    Solution_1551233729792707::solve();
     return 0;
 }

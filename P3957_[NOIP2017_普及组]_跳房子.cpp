@@ -206,6 +206,7 @@ namespace Solution_1268115891474192 {
 
     int N, D; ll K;  const int _N = 5e5+5;
     struct Point { int pos, val; } point[_N];
+    std::mt19937 rnd(std::random_device{}());
 
     void solve() {
         io >> N >> D >> K;
@@ -252,14 +253,14 @@ namespace Solution_1268115891474192 {
                 // 压入合法元素
                 while (ptr<=i and point[i].pos-point[ptr].pos >= d_min) {
                     // 维护递减并压入 ptr
-                    while (l<=r and F[point[q[r]].pos] >= F[point[ptr].pos])  r--;
+                    while (l<=r and F[q[r]] <= F[ptr])  r--;
                     q[++r] = ptr++;
                 }
                 // 删除不合法元素
                 while (r>=l and point[i].pos-point[luo].pos >= d_max)  l++;
 
                 if (r>=l) {
-                    auto max = F[point[luo].pos];
+                    auto max = F[luo];
                     F[i] = max + point[i].val;
                 }
 
@@ -270,7 +271,8 @@ namespace Solution_1268115891474192 {
             return ans;
         };
 #endif
-        auto min_g = binary::lower_bound_mapping(0, (int)1e9, K, check);  // 最小的 g
+        auto min_g = (rnd()%10<6)   ? binary::upper_bound_mapping(0, (int)1e9+5, K, check)-1
+                                    : binary::lower_bound_mapping(0, (int)1e9+5, K, check);  // 最小的 g
         if (min_g >= (int)1e9) {
             io << -1 << endl;
         } else {

@@ -9,8 +9,7 @@
 #define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
 #define never if constexpr(0)
 #define always if constexpr(1)
-#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define Infinity 0x3f3f3f3f
+const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL;
 bool DEBUG_MODE=false;
 typedef long long ll; typedef unsigned long long ull;
 
