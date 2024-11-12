@@ -166,21 +166,20 @@ namespace Solution_2899078437135001 {
     int N;  const int _N = 3005;
 
     std::vector<int> res(_N);
-    int cnt[_N];
     bool dfs(int p, int limit, int dep = 0) {
         debug io.writeln("dfs", p, limit, dep);
         if (dep >= limit)  return false;
+        if ( (res[p-1] << (limit - dep)) < N )  return false;
         // for (int q = 0; q < p; q++) {
         auto q = p-1;
         for (auto r = q; r >= 0; r--) {
             auto newVal = res[q] + res[r];
-            res[p] = newVal, cnt[newVal]++;
+            res[p] = newVal;
             if (newVal == N)  return true;
             if (newVal <= res[p-1])  continue;
-            if (cnt[newVal] != 0 and dfs(p+1, limit, dep+1)) {
+            if (dfs(p+1, limit, dep+1)) {
                 return true;
             }
-            cnt[newVal]--;
         }
         // }
         return false;
@@ -190,7 +189,6 @@ namespace Solution_2899078437135001 {
         io >> N;
         res[0] = 1;
         from(i, 1, 3000) {
-            std::memset(cnt, 0, sizeof(cnt));
             if (dfs(1, i)) {
                 io << i+1 << endl;
                 from(j, 0, i)  io << res[j] << ' ';
