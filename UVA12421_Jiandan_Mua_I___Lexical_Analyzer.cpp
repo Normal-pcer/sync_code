@@ -35,21 +35,29 @@ using namespace lib;
 namespace Solution_1223658170809683 {
 
     namespace Tokenizer {
+
+        void raise(const std::string &message) {
+            std::cout << "Tokenizer threw an exception." << endl;
+            std::cout << message << endl;
+            throw 32;
+        }
+
         enum TokenType {
             Reserved,
             Number,
-
+            EOL,
         };
         enum ReversedType {
 
         };
         struct Token {
             TokenType type;
-            std::string origin;
+            std::string origin = "";
         };
 
         auto tokenize(const std::string &code) {
             enum parseStatus {
+                nothing,            // 空闲
                 identifier,         // 读取标识符
                 string,             // 字符串
                 integer,            // 整数
@@ -59,8 +67,20 @@ namespace Solution_1223658170809683 {
             std::stack<parseStatus> st;
             std::string top;
 
+            std::vector<Token> res;
+
             auto ptr = 0ULL;
-            for (; ptr < code.size(); ptr++) {}
+            auto line = 1ULL;
+            st.push(nothing);
+            for (; ptr < code.size(); ptr++) {
+                char cur = code[ptr];
+
+                if (cur == '\n' or cur == '\r') {  // 读取到换行符
+                    res.push_back({EOL});
+                    if (st.top() == string)  raise("Expected end of string.");
+                    st.pop(), st.push(nothing);  // 清空所有读取
+                }
+            }
         }
     }
 
