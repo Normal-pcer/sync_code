@@ -1,284 +1,209 @@
-#include <cstdio>
-#include <vector>
-#include <cctype>
-#include <cstring>
-#include <string>
-#include <cmath>
-using namespace std;
+/**
+ * 
+ */
 
-using u8 = unsigned char;
-using i16 = short;
-using u16 = unsigned short;
-using i32 = int;
-using u32 = unsigned int;
+#include <bits/stdc++.h>
+#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
+#define debug if(DEBUG_MODE)
+#define log(f, a...) debug printf(f, ##a);
+#define from(i,b,e) for(int i=(b);i<=(e);i++)
+#define rev(i,e,b) for(int i=(e);i>=(b);i--)
+#define main() main(int argc, char const *argv[])
+#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
+#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
+#define never if constexpr(0)
+#define always if constexpr(1)
+const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL;
+bool DEBUG_MODE=false;
+typedef long long ll; typedef unsigned long long ull;
 
-string cur_token_content;
+#define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
+#define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
+#define __macro_choose_helper(M,count)  M##count
+#define macro_choose_helper(M,count)   __macro_choose_helper(M,count)
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
+#define lam lambda
+namespace lib{}
 
-struct Reader {
-        char ch, unget;
-        Reader() {
-                unget = '\0';
-                ch = getchar();
+#include <bits/stdc++.h>
+#define USE_FREAD
+// #undef USE_FREAD
+// 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
+namespace lib{
+#ifndef LIB_STRING
+    using string=std::string;
+#endif
+#ifdef USE_FREAD
+    template <const long long MAXSIZE, const long long MAX_ITEM_SZ=500>
+#endif
+    struct IO {
+#ifdef USE_FREAD
+        char buf[MAXSIZE],*p1,*p2;
+        char pbuf[MAXSIZE],*pp;
+        IO():p1(buf),p2(buf),pp(pbuf) {}
+        ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
+        inline char gc() {
+            if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
+            return p1==p2?'\0':*p1++;
         }
-        char seek() { return unget ? unget : ch; }
-        void skip() { if (unget) unget = '\0'; else cur_token_content += ch, ch = getchar(); }
-        bool eof() { return ch == '\0' && unget == '\0'; }
-        void read(char &c) { c = seek(); skip(); }
-        char read() { char res; return read(res), res; }
-        void ungetc(char c) { unget = c; }
-};
+        inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
+#endif
+#ifndef USE_FREAD
+        inline void sync() {}
+        inline char gc() {  return getchar();  }
+#endif
+        char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
+        inline bool blank(char ch) { return ch<=32 or ch==127; }
+        inline bool isd(char x) {return (x>='0' and x<='9');}
+        inline IO& setprecision(int d) {
+            sprintf(floatFormat, "%%.%df", d); sprintf(doubleFormat, "%%.%dlf", d);
+            return *this;
+        }
+        string input(int reserve=0) {
+            char c = gc(); string res=""; res.reserve(reserve);
+            while((c&&!blank(c)) || c==' ') {  res.push_back(c); c = gc(); }
+            return res;
+        }
+        template <class T>
+        inline void read(T &x) {
+            double tmp=1; bool sign=0; x=0; char ch=gc();
+            for (; not isd(ch); ch=gc()) if (ch=='-') sign=1;
+            for (; isd(ch); ch=gc()) x=x*10+(ch^48);
+            if (ch=='.') for (ch=gc(); isd(ch); ch=gc()) tmp*=.1f,x+=tmp*(ch^48);
+            if (sign) x=-x;
+        }
+        inline void read(char *s) {
+            char ch=gc();
+            for (; blank(ch); ch=gc());
+            for (; not blank(ch); ch=gc()) *s++=ch;
+            *s=0;
+        }
+        inline void readln(char *s) {
+            char c = gc(); while((c&&!blank(c)) || c==' ') {  *(s++)=c; c = gc();  } *s=0;
+        }
+        inline void readln(string &res, int reserve=0) {
+            char c = gc(); string().swap(res); res.reserve(reserve);
+            while((c&&!blank(c)) || c==' ') {  res.push_back(c); c = gc(); }
+        }
+        inline void read(char &c) {  for (c=gc(); blank(c); c=gc());  }
+        inline void read(string &s){
+            string().swap(s); char ch=gc();
+            for (; blank(ch); ch=gc());
+            for (; not blank(ch); ch=gc()) s.push_back(ch);
+        }
+        template <class T,class... Types> inline void read(T &x,Types &...args){  read(x); read(args...);  }
+        template <class T> inline void scan(const T &x) { read(*x); }
+        template <class T,class ...Types> inline void scan(const T &x,const Types &...args) {  read(*x); scan(args...);  }
+        inline void push(const char &c) {
+#ifdef USE_FREAD
+            if (pp-pbuf==MAXSIZE) sync();
+            *pp++=c;
+#endif
+#ifndef USE_FREAD
+            putchar(c);
+#endif
+        }
+        inline void write(const double x) {
+#ifdef USE_FREAD
+            if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
+            pp += sprintf(pp, doubleFormat, x);
+#endif
+#ifndef USE_FREAD
+            printf(doubleFormat, x);
+#endif
+        }
+        inline void write(const float x) {
+#ifdef USE_FREAD
+            if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
+            pp += sprintf(pp, floatFormat, x);
+#endif
+#ifndef USE_FREAD
+            printf(floatFormat, x);
+#endif
+        }
+        inline void write(const char c) {  push(c);  }
+        inline void write(const string &s){  for (auto i:s)  push(i);  }
+        inline void write(const char *s){  for (; *s; ++s) push(*s);  }
+        template <class T
+#if __cplusplus > 201403L
+        , class = typename std::enable_if_t<std::is_integral_v<T>>
+#endif
+        >
+        inline void write(T x) {
+            static char sta[40]; int top=0;
+            if (x<0) {
+                push('-'),sta[top++]=(-(x%10))^48,x=-(x/10);
+                if (x==0) { push(sta[--top]); return; }
+            }
+            do {  sta[top++]=x%10^48,x/=10;  } while (x);
+            while (top) push(sta[--top]);
+        }
+        template <class T,class... Types>  inline void write(const T &x,const Types &...args){ write(x); write(' '); write(args...); }
+        template <class... Types> inline void writeln(const Types &...args){  write(args...); write('\n');  }
+        template<class T=int> inline T get() {  T x; read(x); return x;  }
+        // 流式输入输出
+        template <class T> inline IO& operator>>(T&x) {  read(x); return *this; }
+        template <class T> inline IO& operator<<(const T&x) {  write(x); return *this; }
+    };
+    IO
+#ifdef USE_FREAD
+    <1048576>
+#endif
+    io;
+    const char endl = '\n';
 
-const u32 MAX_DATA_SIZE = 32 * 1024;
-const u32 ID_HASH_LENGTH = 512 * 1024;
-char str_data[MAX_DATA_SIZE];
-char* id_hash[ID_HASH_LENGTH];
-u32 easy_hash(const char *str) {
-        u32 res = 0;
-        while (*str != '\0')
-                res = res * 331 + *(str ++);
-        return res;
 }
 
-enum TokenType {
-        Reserved = 1, Number, String, Symbol, Name, Eol
-};
-enum ReservedType {
-        Error = 0, And = 64, Break, Do, Else, Elseif, End, False, For, Function,
-        If, In, Local, Nil, Not, Or, Repeat, Return, Then, True, Until, While
-};
-enum SymbolType {
-        ERROR = 0, PLUS = 128, MINUS, MUL, DIV, MOD, POWER, HASHTAG, EQ, GT, LT, GE, LE, NE,
-        LPAREN, RPAREN, LBRACKET, RBRACKET, LCURLY, RCURLY,
-        SEMICOLON, COLON, COMMA, DOT, DOT2, DOT3, ASSIGN, COMMENT
-};
+using namespace lib;
 
-template <typename T>
-struct Match {
-        const static int MAX_NODE = 128;
-        u8 transition[MAX_NODE][256];
-        T info[MAX_NODE];
-        u8 cnt;
-        Match(const vector<pair<const char*, T>> &vec) {
-                cnt = 0;
-                for (auto &ele: vec) {
-                        const char *ptr = ele.first;
-                        u8 cur = 0;
-                        while (*ptr != '\0') {
-                                u8 &nxt = transition[cur][(u8)(*(ptr ++))];
-                                if (nxt == 0) nxt = ++ cnt;
-                                cur = nxt;
-                        }
-                        info[cur] = ele.second;
-                }
-        }
-        T readFromReader(Reader& r) const {
-                u8 cur = 0, temp = 0;
-                while ((temp = transition[cur][(u8)r.seek()]))
-                        cur = temp, r.skip();
-                return info[cur];
-        }
-        template <typename T2>
-        T readFromStr(T2 str) const {
-                u8 cur = 0, temp = 0;
-                while (*str != '\0') {
-                        temp = transition[cur][(u8)(*(str ++))];
-                        if (temp == 0) return info[0];
-                        cur = temp;
-                }
-                return info[cur];
-        }
-};
 
-const Match<ReservedType> resMatch(vector<pair<const char*, ReservedType>>{
-        {"and", And}, {"break", Break}, {"do", Do}, {"else", Else}, {"elseif", Elseif},
-        {"end", End}, {"false", False}, {"for", For}, {"function", Function}, {"if", If},
-        {"in", In}, {"local", Local}, {"nil", Nil}, {"not", Not}, {"or", Or},
-        {"repeat", Repeat}, {"return", Return}, {"then", Then}, {"true", True}, {"until", Until},
-        {"while", While} 
-});
-const Match<SymbolType> symMatch(vector<pair<const char*, SymbolType>>{
-        {"+", PLUS}, {"-", MINUS}, {"*", MUL}, {"/", DIV}, {"%", MOD}, {"^", POWER}, {"#", HASHTAG},
-        {"==", EQ}, {">", GT}, {"<", LT}, {">=", GE}, {"<=", LE}, {"~=", NE},
-        {"(", LPAREN}, {")", RPAREN}, {"[", LBRACKET}, {"]", RBRACKET}, {"{", LCURLY}, {"}", RCURLY},
-        {";", SEMICOLON}, {":", COLON}, {",", COMMA}, {".", DOT}, {"..", DOT2}, {"...", DOT3}, {"=", ASSIGN}, {"--", COMMENT}
-});
+namespace Solution_2899078437135001 {
 
-struct Token {
-        TokenType type;
-        union {
-                ReservedType rtype;
-                double num;
-                char* str;
-                SymbolType stype;
-                u32 id;
-        };
-        Token(TokenType type): type(type) {}
-        Token(ReservedType rtype): type(Reserved), rtype(rtype) {}
-        Token(double num): type(Number), num(num) {}
-        Token(char* str): type(String), str(str) {}
-        Token(SymbolType stype): type(Symbol), stype(stype) {}
-        Token(u32 id): type(Name), id(id) {}
-};
+    int N;  const int _N = 3005;
 
-vector<Token> tokens;
-
-pair<bool, double> parse_number(Reader &reader) {
-        double res = 0;
-        while (isdigit(reader.seek()))
-                res = res * 10 + (reader.read() - '0');
-        if (reader.seek() == '.') {
-                reader.skip();
-                double power = 0.1;
-                while (isdigit(reader.seek())) {
-                        res += power * (reader.read() - '0');
-                        power *= 0.1;
-                }
+    std::vector<int> res(_N);
+    int cnt[_N];
+    bool dfs(int p, int limit, int dep = 0) {
+        debug io.writeln("dfs", p, limit, dep);
+        if (dep >= limit)  return false;
+        // for (int q = 0; q < p; q++) {
+        auto q = p-1;
+        for (auto r = q; r >= 0; r--) {
+            auto newVal = res[q] + res[r];
+            res[p] = newVal, cnt[newVal]++;
+            if (newVal == N)  return true;
+            if (newVal <= res[p-1])  continue;
+            if (cnt[newVal] != 0 and dfs(p+1, limit, dep+1)) {
+                return true;
+            }
+            cnt[newVal]--;
         }
-        if (reader.seek() == 'E' || reader.seek() == 'e') {
-                reader.skip();
-                double flg = 1, exp = 0;
-                if (reader.seek() == '+' || reader.seek() == '-')
-                        flg = reader.read() == '-' ? -1 : 1;
-                bool good = false;
-                while (isdigit(reader.seek()))
-                        exp = exp * 10 + (reader.read() - '0'), good = true;
-                if (!good)
-                        return {false, 0};
-                return {true, res * pow(10, exp * flg)};
+        // }
+        return false;
+    }
+
+    void solve() {
+        io >> N;
+        res[0] = 1;
+        from(i, 1, 3000) {
+            std::memset(cnt, 0, sizeof(cnt));
+            if (dfs(1, i)) {
+                io << i+1 << endl;
+                from(j, 0, i)  io << res[j] << ' ';
+                io << endl;
+                return;
+            }
         }
-        return {true, res};
+    }
 }
 
-bool tokenize(Reader &reader) {
-        char *data_ptr = str_data;
-        while (!reader.eof()) {
-                cur_token_content = "";
-                if (reader.seek() == '\n') {
-                        tokens.push_back(Eol);
-                        reader.skip();
-                }
-                else if (isspace(reader.seek())) {
-                        reader.skip();
-                        continue;
-                }
-                else if (reader.seek() == '\'' || reader.seek() == '"') {
-                        tokens.push_back(data_ptr);
-                        char open = reader.read();
-                        while (!reader.eof() && reader.seek() != open) {
-                                *data_ptr = reader.read();
-                                if (*data_ptr == '\\') {
-                                        char nxt = reader.seek();
-                                        if (nxt == 'n') *data_ptr = '\n';
-                                        else if (nxt == '\\') ;
-                                        else if (nxt == '\'') *data_ptr = '\'';
-                                        else if (nxt == '"') *data_ptr = '"';
-                                        else return false;
-                                        reader.skip();
-                                }
-                                ++ data_ptr;
-                        }
-                        if (reader.eof()) return false;
-                        ++ data_ptr;
-                        reader.skip();
-                }
-                else if (isdigit(reader.seek())) {
-                        char first = reader.read();
-                        if (first == '0' && tolower(reader.seek()) == 'x') {
-                                bool bad = true;
-                                double num = 0;
-                                reader.skip();
-                                while (1) {
-                                        char cur = reader.seek();
-                                        if (isdigit(cur)) {
-                                                num = num * 16 + (cur - '0');
-                                                bad = false;
-                                                reader.skip(); continue;
-                                        }
-                                        else if (isalpha(cur)) {
-                                                cur = tolower(cur);
-                                                if (cur <= 'f') {
-                                                        num = num * 16 + (cur - 'a' + 10);
-                                                        bad = false;
-                                                        reader.skip(); continue;
-                                                }
-                                        }
-                                        break;
-                                }
-                                if (bad) return false;
-                                tokens.push_back(num);
-                        }
-                        else {
-                                reader.ungetc(first);
-                                auto ele = parse_number(reader);
-                                if (!ele.first) return false;
-                                tokens.push_back(ele.second);
-                        }
-                }
-                else if (isalpha(reader.seek())) {
-                        string id = "";
-                        while (isalnum(reader.seek()) || reader.seek() == '_')
-                                id += reader.read();
-                        id += '\0';
-                        ReservedType t = resMatch.readFromStr(id.begin());
-                        if (t == Error) {
-                                u32 hsh = easy_hash(id.c_str()) & (ID_HASH_LENGTH - 1);
-                                while (id_hash[hsh] != nullptr && strcmp(id_hash[hsh], id.c_str()))
-                                        hsh = (hsh + 1) & (ID_HASH_LENGTH - 1);
-                                if (id_hash[hsh] == nullptr) {
-                                        char* str = new char[id.size()];
-                                        memcpy(str, id.c_str(), id.size());
-                                        id_hash[hsh] = str;
-                                }
-                                tokens.push_back(hsh);
-                        }
-                        else
-                                tokens.push_back(t);
-                }
-                else {
-                        bool checked = false;
-                        if (reader.seek() == '.') {
-                                reader.skip();
-                                if (isdigit(reader.seek())) {
-                                        reader.ungetc('.');
-                                        auto ele = parse_number(reader);
-                                        if (!ele.first) return false;
-                                        tokens.push_back(ele.second);
-                                        checked = true;
-                                }
-                                else
-                                        reader.ungetc('.');
-                        }
-                        if (!checked) {
-                                SymbolType t = symMatch.readFromReader(reader);
-                                if (t == ERROR)
-                                        return false;
-                                if (t == COMMENT) {
-                                        while (!reader.eof() && reader.seek() != '\n')
-                                                reader.skip();
-                                        continue;
-                                }
-                                tokens.push_back(t);
-                        }
-                }
-                if (tokens.back().type == Reserved)
-                        printf("[RESERVED] ");
-                else if (tokens.back().type == Number)
-                        printf("[NUMBER] ");
-                else if (tokens.back().type == String)
-                        printf("[STRING] ");
-                else if (tokens.back().type == Symbol)
-                        printf("[SYMBOL] ");
-                else if (tokens.back().type == Name)
-                        printf("[NAME] ");
-                else if (tokens.back().type == Eol)
-                        printf("[EOL]");
-                puts(tokens.back().type == Eol ? "" : cur_token_content.c_str());
-        }
-        return true;
-}
 
 int main() {
-        Reader reader;
-        if (!tokenize(reader))
-                puts("Unable to tokenize to input.");
+    initDebug;
+    Solution_2899078437135001::solve();
+    return 0;
 }
