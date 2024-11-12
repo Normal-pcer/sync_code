@@ -1,29 +1,29 @@
 /**
- * 
- */
+*
+*/
 
 #include "lib"
 using namespace lib;
 
-// input:
-// 
+//input:
+//
 
 namespace Solution {
 
-    
-    void init() {
+	
+	void init(){
 
-    }
+	}
 
-    void solve() {
-        init();
+	void solve(){
+		init();
 
-    }
+	}
 }
 
 
-int main() {
-    initDebug;
-    Solution::solve();
-    return 0;
+int main(){
+	initDebug;
+	Solution::solve();
+	return 0;
 }

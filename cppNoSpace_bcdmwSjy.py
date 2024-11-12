@@ -8,7 +8,7 @@ for root,dirs,files in os.walk(r"."):
         if name.endswith(".cpp"):
             s=""
             print(os.path.join(root,name))
-            with open(os.path.join(root,name),"r") as f:
+            with open(os.path.join(root,name),"r", encoding="UTF-8") as f:
                 s=f.read()
             ans=""
             flag=False
@@ -41,5 +41,5 @@ for root,dirs,files in os.walk(r"."):
                 ans=re.sub(r"#define\s*int\s*long\s*long","using ll=long long;",ans)
                 ans=ans.replace("int","ll")
             ans=re.sub(r"signed main","int main",ans)
-            with open(os.path.join(root,name),"w") as f:
+            with open(os.path.join(root,name),"w", encoding="UTF-8") as f:
                 f.write(ans)
