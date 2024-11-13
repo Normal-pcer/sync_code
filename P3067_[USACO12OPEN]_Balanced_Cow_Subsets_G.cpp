@@ -161,82 +161,74 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_1806430963834722 {
+namespace Solution_1600440631359333 {
 
-    const int _N = 35;
-    int N, M;
+    int N;
     std::vector<int> w;
-    // std::vector<ll> ps;
 
-    std::map<int, int> res_l;  // 达到目标重量最少劈瓜次数
+    std::map<int, std::set<int>> res;
+    std::map<int, std::set<int>> res2;
 
-    int limitPos;
-    auto best = inf;
-
-    void _dfs(int p, int sum, int broken) {
-        // if (broken >= best)  return;
-        if (sum > M)  return;
-        // if (p<N and (ll)sum + ps[p] < (ll)M)  return;
-        if (p >= limitPos) {
-            if (res_l.find(sum) == res_l.end())   res_l.insert({sum, broken});
-            else {
-                auto& target = res_l.at(sum);
-                chkMin(target, broken);
-            }
-            // chkMin(best, broken);
+    // 三种划分 - 集合 A，集合 B，不选择
+    template <class T>
+    void dfs(
+        int p,      // 即将被处理的元素
+        int diff,   // A - B
+        T&& res,    // 输出结果
+        int limit,
+        int status = 0
+    ) {
+        debug io.writeln(p, diff, limit);
+        if (p >= limit) {  // 记录答案
+            if (status != 0)  res[diff].insert(status);
             return;
         }
-        _dfs(p+1, sum, broken);
-        _dfs(p+1, sum + (w[p]>>1), broken+1);
-        _dfs(p+1, sum + w[p], broken);
+        dfs(p+1, diff, res, limit, status);  // 不选择
+        dfs(p+1, diff + w[p], res, limit, status | 1<<p);  // +A
+        dfs(p+1, diff - w[p], res, limit, status | 1<<p);  // +B
     }
 
-    void _dfs2(int p, int sum, int broken) {
-        // if (broken >= best)  return;
-        // if (std::clock() > limit)  return;
-        if (sum > M)  return;
-        // if (p<N and (ll)sum + ps[p] < (ll)M)  return;
-        if (broken > best)  return;
-        if (p >= limitPos) {
-            auto required = M - sum;
-            if (res_l.find(required) != res_l.end()) {
-                auto append = res_l.at(required);
-                auto res = broken + append;
-                chkMin(best, res);
-            }
-            // chkMin(best, broken);
+    template <class T>
+    void dfs2(int p, int diff, T&& prev, T&& res, int limit, int status = 0) {
+        debug io.writeln("qwq", p, diff, limit);
+        if (p >= limit) {
+            if (status != 0)  res[diff].insert(status);
             return;
         }
-        _dfs2(p+1, sum, broken);
-        _dfs2(p+1, sum + (w[p]>>1), broken+1);
-        _dfs2(p+1, sum + w[p], broken);
-    }
 
+        dfs2(p+1, diff, prev, res, limit, status);
+        dfs2(p+1, diff + w[p], prev, res, limit, status | 1<<p);
+        dfs2(p+1, diff - w[p], prev, res, limit, status | 1<<p);
+    }
 
     void solve() {
-        io >> N >> M, M *= 2;
-        w.resize(N);
-        from(i, 0, N-1)  io >> w[i], w[i] *= 2;
-        std::sort(w.begin(), w.end());
-        // ps.resize(N);
-        // std::partial_sum(w.rbegin(), w.rend(), ps.rbegin());
-        // debug for (auto &i: ps)  io << i << endl;
+        io >> N, w.resize(N);
+        from(i, 0, N-1)  io >> w[i];
 
-        auto mid = N * 3 >> 3;  // 左侧分 3/8
-        limitPos = mid+1;
-        _dfs(0, 0, 0);
-        limitPos = N;
-        _dfs2(mid+1, 0, 0);
+        auto mid = N >> 1;
+        dfs(0, 0, res, mid+1);
+        debug for (auto &[key, value]: res) { 
+            io.write("L", __LINE__, key, ": ");
+            for (auto &i: value)  io << i << ' ';
+            io << endl;
+        }
+        dfs2(mid+1, 0, res, res2, N);
 
+        ll ans = 0;
+        for (auto it = res2.lower_bound(0); it != res2.end(); it++) {
+            auto& [diff, sts] = *it;
+            auto required = -diff;
+            ans += res[required].size() * sts.size();
+            io.write("L", __LINE__, diff, sts.size());
+        }
 
-        if (best >= inf)  io << -1 << endl;
-        else  io << best << endl;
+        io << ans << endl;
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_1806430963834722::solve();
+    Solution_1600440631359333::solve();
     return 0;
 }
