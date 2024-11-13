@@ -1,13 +1,13 @@
 /**
- * 
+ * @link https://www.luogu.com.cn/problem/P5691
  */
 
 #include <bits/stdc++.h>
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
 #define debug if(DEBUG_MODE)
 #define log(f, a...) debug printf(f, ##a);
-#define from(i,b,e) for(auto i=(b);i<=(e);i++)
-#define rev(i,e,b) for(auto i=(e);i>=(b);i--)
+#define from(i,b,e) for(int i=(b);i<=(e);i++)
+#define rev(i,e,b) for(int i=(e);i>=(b);i--)
 #define main() main(int argc, char const *argv[])
 #define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
 #define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
@@ -161,50 +161,51 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_1806430963834722 {
+namespace Solution_6627068540932095 {
 
-    const int _N = 35;
-    int N, M;
-    int w[_N];
+    int N, M;  const int _N = 7;
+    int p[_N], k[_N];
 
-    std::unordered_map<int, int> res_l;  // 达到目标重量最少劈瓜次数
-    std::unordered_map<int, int> res_r;
-    template <class T>
-    void dfs(int p, int limitPos, int sum, int broken, T&& res) {
-        if (p >= limitPos) {
-            if (res.find(sum) == res.end())   res.insert({sum, broken});
-            else  chkMin(res.at(sum), broken);
-            return;
+    std::map<ll, int> solutions;  // 能得到该值的方案数
+    ll res = 0;
+
+    ll pow(ll a, ll b) {
+        auto res = 1LL;
+        for (; b; b >>= 1, a = a * a)  if (b&1) res = res * a;
+        return res;
+    }
+
+    void dfs1(int i, int limit, int val=0) {
+        if (i > limit)  return void(solutions[val]++);
+        from(x, 1, M) {
+            auto cur = (ll)k[i] * pow(x, p[i]);
+            dfs1(i+1, limit, val+cur);
         }
-        dfs(p+1, limitPos, sum, broken, res);
-        dfs(p+1, limitPos, sum + (w[p]>>1), broken+1, res);
-        dfs(p+1, limitPos, sum + w[p], broken, res);
+    }
+
+    void dfs2(int i, int limit, int val=0) {
+        if (i <= limit)  return void(res += solutions[-val]);
+        from(x, 1, M) {
+            auto cur = (ll)k[i] * pow(x, p[i]);
+            dfs2(i-1, limit, val+cur);
+        }
     }
 
     void solve() {
-        io >> N >> M, M *= 2;
-        from(i, 0, N-1)  io >> w[i], w[i] *= 2;
+        io >> N >> M;
+        from(i, 1, N)  io >> k[i] >> p[i];
 
-        dfs(0, (N>>1)+1, 0, 0, res_l);
-        dfs((N>>1)+1, N, 0, 0, res_r);
+        auto mid = N>>1;
+        dfs1(1, mid);
+        dfs2(N, mid);
 
-        auto res = inf;
-        for (auto [w, t]: res_l) {
-            auto required = M - w;
-            if (res_r.find(required) != res_r.end()) {
-                auto append = res_r.at(required);
-                chkMin(res, append + t);
-            }
-        }
-
-        if (res == inf)  io << -1 << endl;
-        else  io << res << endl;
+        io << res << endl;
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_1806430963834722::solve();
+    Solution_6627068540932095::solve();
     return 0;
 }

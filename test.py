@@ -1,7 +1,12 @@
-x = int(input())
-ans = [str(i) for i in [3, 5, 7] if x%i==0]
+def quick_power(base, exponent):
+    result = 1
+    while exponent > 0:
+        if exponent % 2 == 1:
+            result *= base
+        base *= base
+        exponent //= 2
+    return result
 
-if ans:
-    print(' '.join(ans))
-else:
-    print('n')
+print(quick_power(2, 10))  # 输出 1024
+print(quick_power(3, 5))   # 输出 243
+print(quick_power(5, 3))   # 输出 125
