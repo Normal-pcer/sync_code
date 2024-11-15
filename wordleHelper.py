@@ -103,7 +103,7 @@ if __name__ == "__main__":
                 
                 for sol in solutions:
                     print(sol.text, sol.meaning)
-            elif guess == 'undo':
+            elif guess == '/undo':
                 if len(limits):
                     limits.pop()
                 else:
