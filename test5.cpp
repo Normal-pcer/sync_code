@@ -1,3 +1,7 @@
+/**
+ * 
+ */
+
 #include <bits/stdc++.h>
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
 #define debug if(DEBUG_MODE)
@@ -27,7 +31,7 @@ namespace lib{}
 
 #include <bits/stdc++.h>
 #define USE_FREAD
-#undef USE_FREAD
+// #undef USE_FREAD
 // 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
 namespace lib{
 #ifndef LIB_STRING
@@ -157,90 +161,58 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_2711067474028868 {
+namespace Solution_1165032995890248 {
 
-    const int mod = 998244353;
-    int K, A, H;
+    const int _N = 1e5+5;
 
-    constexpr inline int pow(ll a, ll b, int p) {
-        auto res = 1LL;
-        for (; b; b >>= 1, a = a * a % p) if (b&1) res = res * a % p;
-        return res;
-    }
-
-    std::map<int, std::vector<int>> res;  // 贡献和到状态的映射
-    std::vector<int> log;
-    void dfs1(
-        int p,        // 当前轮次
-        int limit,    // 限制
-        int winner,   // 获胜者；状态压缩
-        int sum       // 贡献
-    ) {
-        never io << std::format("dfs1  {} {} {} {}", p, limit, winner, sum) << endl;
-        // 结束
-        if (std::__popcount(winner) == 1) {
-            // 确定冠军的位置，lowbit(winner) 即可
-            auto pos = std::__lg(winner & -winner) + 1;
-            never debug io << "Winner " << pos << endl;
-            auto score = (ll)pos * pow(A, 1, mod) % mod;
-            sum += score;
-
-            // res[sum].insert(winner);
-            return;
-        }
-
-        std::vector<int> winnerPos;
-        winnerPos.reserve(std::__popcount(winner));
-        for (auto i = 0; i < limit; i++) {
-            auto mask = 1u << i;
-            if (mask & winner)  winnerPos.push_back(i);
-        }
-
-        auto inferior_rank = (1 << (K-p-1)) + 1;  // 落败者获得的排名
-        never io << inferior_rank << endl;
-
-        auto digits = std::__popcount(winner) >> 1;
-        for (auto qwq = 0; qwq < (1<<digits); qwq++) {  // 0 表示 2i 位获胜，1 表示 (2i+1) 位获胜
-            auto new_st = 0;
-            auto new_sum = sum;
-            for (auto i = 0; i < digits; i++) {
-                auto mask = 1 << i;
-                auto new_winner = 0;
-                if (mask & qwq)  new_winner = (i << 1);
-                else  new_winner = (i << 1 | 1);
-
-                new_st |= 1 << winnerPos.at(new_winner);  // 记录新状态
-                // io << "qwq" << new_winner << endl;
-                new_sum += (ll)(winnerPos.at(new_winner ^ 1) + 1) * pow(A, inferior_rank, mod) % mod;  // 落败者的贡献可以确定
-                log[winnerPos.at(new_winner ^ 1)] = inferior_rank;
-                never debug io << "loser" << winnerPos.at(new_winner^1) << "/" << winnerPos.at(new_winner) << endl;
-                // io << "qaq" << (ll)((new_winner ^ 1) + 1) * pow(A, inferior_rank, mod) % mod << endl;
-                new_sum %= mod;
+    std::vector<int> primes;
+    bool notPrime[_N];
+    void pre() {
+        notPrime[0] = notPrime[1] = true;
+        for (int i = 2; i*i <= _N; i++) {
+            if (notPrime[i])  continue;
+            for (int j = i<<1; j < _N; j += i) {
+                notPrime[j] = true;
             }
+        }
 
-            // 进行下一轮
-            dfs1(p+1, limit, new_st, new_sum);
+        from(i, 2, _N-1)  if (not notPrime[i]) {
+            primes.push_back(i);
         }
     }
 
+    // 质因子数量
+    int mem_count[_N];
+    int count(int x, int t = 0) {
+        if (mem_count[x])  return mem_count[x];
+        if (x == 0 or x == 1)  return 0;
+        if (not notPrime[x])  return 1;
+        int ptr = t;
+        while (x % primes[ptr])  ptr++;
+        return (mem_count[x] = count(x / primes[ptr]) + 1);
+    }
+
+    int N;
+    int a[_N];
 
     void solve() {
-        io >> K >> A >> H;
-        dfs1(0, 1<<K, (1<<(1<<(K)))-1, 0);
+        pre();
+        // io << count(1680) << endl;
+        io >> N;
+        from(i, 1, N)  io >> a[i];
 
-        for (auto [key, val]: res) {
-            io << key << ':' << ' ';
-            for (auto i: val) {
-                io << i << ' ';
-            }
-            io << endl;
-        }
+        std::transform(a+1, a+N+1, a+1, lam(a, count(a)));
+        
+
+        auto s = std::accumulate(a+1, a+N+1, 0, lam(a, b, a^b));
+        if (s)  io << "Anna" << endl;
+        else  io << "Bruno" << endl;
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_2711067474028868::solve();
+    Solution_1165032995890248::solve();
     return 0;
 }

@@ -76,7 +76,7 @@ if __name__ == "__main__":
                 if len(row[0]) == length:
                     words.append(Word(row[0], row[1]))
 
-    # words = [Word("girl", "")]
+    # print(sorted([len(i.text) for i in words])[::-1])
 
     try:
         limits: List[Limit] = list()

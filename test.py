@@ -1,32 +1,25 @@
-def construct_sequence(n, k):
-    # 初始化序列 a_i = i
-    a = list(range(1, n + 1))
-    
-    # 当前已经形成的倍数对数
-    current_pairs = 0
-    
-    # 从后往前遍历，尽量不破坏前面的倍数关系
-    for i in range(n - 1, 0, -1):
-        for j in range(i + 1, n + 1):
-            if a[j] % a[i] != 0 and current_pairs < k:
-                # 找到一个合适的倍数，使得 a[j] 是 a[i] 的倍数，且 a[j] <= 2n-1
-                multiple = (a[j] // a[i] + 1) * a[i]  # 找到一个比当前 a[j] 大的、a[i] 的倍数
-                if multiple <= 2 * n - 1:
-                    a[j] = multiple
-                    current_pairs += 1
-                    if current_pairs == k:
-                        break
-            # 如果已经找到足够的倍数对，就退出内层循环
-            if current_pairs == k:
-                break
-        # 如果已经找到足够的倍数对，就退出外层循环
-        if current_pairs == k:
-            break
-    
-    return a
+def maximize_dissimilarity(n, S):
+    T = []
+    current_char = 'a'
+    for s_char in S:
+        # 选择一个与 s_char 不同的字符
+        # 简单地通过循环 'a' 到 'z' 来实现
+        # 如果 current_char 与 s_char 相同，则跳到下一个字符
+        while current_char == s_char:
+            current_char = chr((ord(current_char) - ord('a') + 1) % 26 + ord('a'))
+        T.append(current_char)
+        # 为了下一次迭代，可能需要更新 current_char
+        # 但由于我们只需要任意一种解，所以这里不需要真正地“跟踪”使用过的字符
+        # 简单地继续循环即可（这会导致在某些情况下字符会重复，但这仍然是一个有效的解）
+        # 如果想要避免在 T 中重复使用相同的字符（尽管这不是必需的），
+        # 可以使用一个集合来跟踪已经使用过的字符，并在选择新字符时进行检查。
+        # 但由于题目要求输出任意一种解，并且 n 可以远大于 26，
+        # 因此这种方法在这里是不必要的。
+    return ''.join(T)
 
 # 读取输入
-n, k = map(int, input().split())
+n = int(input())
+S = input().strip()
 
-# 输出构造的序列
-print(" ".join(map(str, construct_sequence(n, k))))
+# 计算并输出结果
+print(maximize_dissimilarity(n, S))

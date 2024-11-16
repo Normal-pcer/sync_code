@@ -1,3 +1,7 @@
+/**
+ * 
+ */
+
 #include <bits/stdc++.h>
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
 #define debug if(DEBUG_MODE)
@@ -157,83 +161,100 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_2711067474028868 {
+namespace Solution_1545947219600800 {
 
-    const int mod = 998244353;
-    int K, A, H;
+    const int _N = 1e5+5;
+    int N;
+    ll a[_N];
+    ll b[_N];
 
-    constexpr inline int pow(ll a, ll b, int p) {
-        auto res = 1LL;
-        for (; b; b >>= 1, a = a * a % p) if (b&1) res = res * a % p;
-        return res;
-    }
+    template <size_t SZ>
+    struct SegTree {
+        struct Node {
+            int l, r, len;
+            ll sum, tag = -infLL;
+        } tr[SZ >> 2];
 
-    std::map<int, std::vector<int>> res;  // 贡献和到状态的映射
-    std::vector<int> log;
-    void dfs1(
-        int p,        // 当前轮次
-        int limit,    // 限制
-        int winner,   // 获胜者；状态压缩
-        int sum       // 贡献
-    ) {
-        never io << std::format("dfs1  {} {} {} {}", p, limit, winner, sum) << endl;
-        // 结束
-        if (std::__popcount(winner) == 1) {
-            // 确定冠军的位置，lowbit(winner) 即可
-            auto pos = std::__lg(winner & -winner) + 1;
-            never debug io << "Winner " << pos << endl;
-            auto score = (ll)pos * pow(A, 1, mod) % mod;
-            sum += score;
+        #define ls (p<<1)
+        #define rs (p<<1 | 1)
 
-            // res[sum].insert(winner);
-            return;
+        void push_up(int p) {
+            tr[p].sum = tr[ls].sum + tr[rs].sum;
         }
 
-        std::vector<int> winnerPos;
-        winnerPos.reserve(std::__popcount(winner));
-        for (auto i = 0; i < limit; i++) {
-            auto mask = 1u << i;
-            if (mask & winner)  winnerPos.push_back(i);
+        void push_down(int p) {
+            if (tr[p].tag != -infLL) {
+                tr[ls].sum = tr[p].tag * tr[ls].len;
+                tr[rs].sum = tr[p].tag * tr[rs].len;
+                tr[ls].tag = tr[p].tag;
+                tr[rs].tag = tr[p].tag;
+                tr[p].tag = 0;
+            }
         }
 
-        auto inferior_rank = (1 << (K-p-1)) + 1;  // 落败者获得的排名
-        never io << inferior_rank << endl;
-
-        auto digits = std::__popcount(winner) >> 1;
-        for (auto qwq = 0; qwq < (1<<digits); qwq++) {  // 0 表示 2i 位获胜，1 表示 (2i+1) 位获胜
-            auto new_st = 0;
-            auto new_sum = sum;
-            for (auto i = 0; i < digits; i++) {
-                auto mask = 1 << i;
-                auto new_winner = 0;
-                if (mask & qwq)  new_winner = (i << 1);
-                else  new_winner = (i << 1 | 1);
-
-                new_st |= 1 << winnerPos.at(new_winner);  // 记录新状态
-                // io << "qwq" << new_winner << endl;
-                new_sum += (ll)(winnerPos.at(new_winner ^ 1) + 1) * pow(A, inferior_rank, mod) % mod;  // 落败者的贡献可以确定
-                log[winnerPos.at(new_winner ^ 1)] = inferior_rank;
-                never debug io << "loser" << winnerPos.at(new_winner^1) << "/" << winnerPos.at(new_winner) << endl;
-                // io << "qaq" << (ll)((new_winner ^ 1) + 1) * pow(A, inferior_rank, mod) % mod << endl;
-                new_sum %= mod;
+        void build(int p, int l, int r) {
+            tr[p].l = l, tr[p].r = r, tr[p].len = r - l + 1;
+            if (l == r) {
+                tr[p].sum = a[l];
+                return;
             }
 
-            // 进行下一轮
-            dfs1(p+1, limit, new_st, new_sum);
+            auto mid = (l + r) >> 1;
+            build(ls, l, mid);
+            build(rs, mid+1, r);
+            push_up(p);
         }
-    }
 
+        void update(int p, int l, int r, ll val) {
+            never io << std::format("update {} {} {} {}", p, l, r, val) << endl;
+            if (tr[p].l >= l and tr[p].r <= r) {
+                tr[p].sum = val * tr[p].len;
+                tr[p].tag = val;
+                return;
+            }
+            push_down(p);
+            if (tr[ls].r >= l)  update(ls, l, r, val);
+            if (tr[rs].l <= r)  update(rs, l, r, val);
+            push_up(p);
+        }
+
+        ll query(int p, int l, int r) {
+            if (tr[p].l >= l and tr[p].r <= r) {
+                return tr[p].sum;
+            }
+            push_down(p);
+            ll res = 0;
+            if (tr[ls].r >= l)  res += query(ls, l, r);
+            if (tr[rs].l <= r)  res += query(rs, l, r);
+            return res;
+        }
+
+        #undef ls
+        #undef rs
+    };
+
+    SegTree<_N> seg;
 
     void solve() {
-        io >> K >> A >> H;
-        dfs1(0, 1<<K, (1<<(1<<(K)))-1, 0);
+        io >> N;
+        from(i, 1, N)  io >> a[i];
+        from(i, 1, N)  io >> b[i];
 
-        for (auto [key, val]: res) {
-            io << key << ':' << ' ';
-            for (auto i: val) {
-                io << i << ' ';
+        seg.build(1, 1, N);
+
+        int Q = io.get();
+        from(_, 1, Q) {
+            int op, x, y;
+            io >> op >> x >> y;
+            if (op == 1) {
+                seg.update(1, x, x, y);
+                a[x] = y;
+            } else if (op == 2) {
+                b[x] = y;
+            } else {
+                // 寻找区间内所有乘法操作
+                std::vector<int> times;
             }
-            io << endl;
         }
     }
 }
@@ -241,6 +262,6 @@ namespace Solution_2711067474028868 {
 
 int main() {
     initDebug;
-    Solution_2711067474028868::solve();
+    Solution_1545947219600800::solve();
     return 0;
 }
