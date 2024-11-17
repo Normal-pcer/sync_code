@@ -23,7 +23,7 @@ int main(){
         if(!a[i]||a[i]==i)continue;
         int x=a[i];
         if(!a[x])a[x]=i;
-        else if(a[x]!=i){
+        else if(a[x]!=i) {
             puts("0");
             return 0;
         }
