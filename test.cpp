@@ -179,7 +179,6 @@ namespace Solution_5323420302406151 {
         }
 
         std::vector<int> order;
-        std::vector<int> res(N+1);
         std::deque<int> q;
         bool flag = false;
         from(i, 1, N)  if (inD[i] == 0) {
@@ -188,7 +187,7 @@ namespace Solution_5323420302406151 {
 
         order.reserve(N);
         while (not q.empty()) {
-            auto x = q.front();  q.pop_back();
+            auto x = q.front();  q.pop_front();
             order.push_back(x);
             for (auto dest: graph[x])  if (--inD[dest] == 0) {
                 q.push_back(dest);
@@ -198,10 +197,7 @@ namespace Solution_5323420302406151 {
 
         if (order.size() < (size_t)N)  flag = true;
 
-        io << "Yes" << endl;
-
-        for (auto i: order)  io << i << ' ';
-        io << endl;
+        for (auto i: order)  io << i << endl;
         io << (int)flag << endl;
         return;
     }
