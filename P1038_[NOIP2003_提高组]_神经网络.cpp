@@ -1,8 +1,12 @@
 /**
- * 
+ * @link https://www.luogu.com.cn/problem/P1038
  */
 
-#include <bits/stdc++.h>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <deque>
+#include <cstring>
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
 #define debug if(DEBUG_MODE)
 #define log(f, a...) debug printf(f, ##a);
@@ -29,9 +33,8 @@ typedef long long ll; typedef unsigned long long ull;
 #define lam lambda
 namespace lib{}
 
-#include <bits/stdc++.h>
 #define USE_FREAD
-// #undef USE_FREAD
+#undef USE_FREAD
 // 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
 namespace lib{
 #ifndef LIB_STRING
@@ -161,56 +164,60 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_5323420302406151 {
-
-    int N, M;
-    const int _N = 2e5+5;
-
-    std::vector<int> graph[_N];
-    int inD[_N];
+namespace Solution_1698638569337870 {
 
     void solve() {
-        io >> N >> M;
-        from(_, 1, M) {
-            int x, y;
-            io >> x >> y;
-            graph[x].push_back(y);
-            inD[y]++;
+        int N, P;
+        io >> N >> P;
+
+        struct Node { int to, val; };
+
+        std::vector<ll> u(N+1);
+        std::vector<ll> c(N+1);
+        from(i, 1, N) {
+            io >> c[i] >> u[i];
+            c[i] -= u[i];
         }
 
-        std::vector<int> order;
-        std::vector<int> res(N+1);
+        std::vector<std::vector<Node>> graph(N+1);
+        std::vector<int> in(N+1);
+        std::vector<int> out(N+1);
+        from(_, 1, P) {
+            int x, y, val;  io >> x >> y >> val;
+            graph[x].push_back({y, val});
+            in.at(y)++, out.at(x)++;
+        }
+
         std::deque<int> q;
-        bool flag = false;
-        from(i, 1, N)  if (inD[i] == 0) {
+        std::vector<int> order;
+        from(i, 1, N)  if (not in.at(i)) {
             q.push_back(i);
+            c[i] += u[i];
         }
-
-        order.reserve(N);
         while (not q.empty()) {
-            auto x = q.front();  q.pop_back();
+            auto x = q.front();  q.pop_front();
             order.push_back(x);
-            for (auto dest: graph[x])  if (--inD[dest] == 0) {
-                q.push_back(dest);
-                if (q.size() > 1)  flag = true;
+
+            for (auto &dest: graph.at(x)) {
+                if (c.at(x) > 0)  c.at(dest.to) += dest.val * c.at(x);
+                if (--in.at(dest.to) == 0)  q.push_back(dest.to);
             }
         }
 
-        if (order.size() < (size_t)N)  flag = true;
-
-        io << "Yes" << endl;
-
-        for (auto i: order)  io << i << ' ';
-        io << endl;
-        io << (int)flag << endl;
-        return;
+        bool flag = true;
+        from(i, 1, N) {
+            if (out.at(i) == 0 and c.at(i) > 0) {
+                flag = false;
+                io << i << ' ' << c.at(i) << endl;
+            }
+        }
+        if (flag)  io << "NULL" << endl;
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_5323420302406151::solve();
-
+    Solution_1698638569337870::solve();
     return 0;
 }

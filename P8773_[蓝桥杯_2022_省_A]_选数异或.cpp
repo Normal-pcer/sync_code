@@ -161,56 +161,59 @@ namespace lib{
 using namespace lib;
 
 
-namespace Solution_5323420302406151 {
+namespace Solution_1036338159763302 {
 
-    int N, M;
-    const int _N = 2e5+5;
+    int N, M, X;
+    const int _N = 1e5+5, _X = 1048576, _LG = 21;
 
-    std::vector<int> graph[_N];
-    int inD[_N];
+    int a[_N], buc[_X];
+    int prev[_N];  // 前面一个能配对的位置
+    int F[_N][_LG];
 
     void solve() {
-        io >> N >> M;
-        from(_, 1, M) {
-            int x, y;
-            io >> x >> y;
-            graph[x].push_back(y);
-            inD[y]++;
+        io >> N >> M >> X;
+
+        from(i, 1, N) {
+            io >> a[i];
         }
 
-        std::vector<int> order;
-        std::vector<int> res(N+1);
-        std::deque<int> q;
-        bool flag = false;
-        from(i, 1, N)  if (inD[i] == 0) {
-            q.push_back(i);
+        from(i, 1, N) {
+            auto cur = a[i];
+            auto other = X ^ cur;
+            
+            prev[i] = buc[other];
+            buc[cur] = i;
         }
 
-        order.reserve(N);
-        while (not q.empty()) {
-            auto x = q.front();  q.pop_back();
-            order.push_back(x);
-            for (auto dest: graph[x])  if (--inD[dest] == 0) {
-                q.push_back(dest);
-                if (q.size() > 1)  flag = true;
+        from(i, 1, N)  F[i][0] = prev[i];
+        auto lg = std::__lg(N);
+
+        from(j, 1, lg) {
+            from(l, 1, N) {
+                F[l][j] = std::max(F[l][j-1], F[l + (1<<(j-1))][j-1]);
             }
         }
 
-        if (order.size() < (size_t)N)  flag = true;
+        auto query = [&](int l, int r) {
+            auto lg = std::__lg(r - l + 1);
+            auto l1 = l, l2 = r - (1<<lg) + 1;
+            return std::max(F[l1][lg], F[l2][lg]);
+        };
 
-        io << "Yes" << endl;
+        from(_, 1, M) {
+            int x, y;
+            io >> x >> y;
 
-        for (auto i: order)  io << i << ' ';
-        io << endl;
-        io << (int)flag << endl;
-        return;
+            auto max_prev = query(x, y);
+            if (max_prev >= x)  io << "yes" << endl;
+            else  io << "no" << endl;
+        }
     }
 }
 
 
 int main() {
     initDebug;
-    Solution_5323420302406151::solve();
-
+    Solution_1036338159763302::solve();
     return 0;
 }
