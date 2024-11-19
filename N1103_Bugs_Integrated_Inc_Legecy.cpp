@@ -162,65 +162,8 @@ namespace lib {
         }
     }
 }
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const int p>
-    class mod {
-    public:
-        T data;
-
-        mod() = default;
-        mod(T num) : data(positive(num % p)) {}
-
-        T positive(T num) { 
-            if (num>=0)  return num;
-            if (num+p>=0)  return num+p;
-            return num + p * ((-num) / p + 1);
-        }
-
-        mod operator+(const mod &other) { return mod(positive(data + other.data) % p); }
-        mod operator-(const mod &other) { return mod(positive(data - other.data) % p); }
-        mod operator*(const mod &other) { return mod(positive(data * other.data) % p); }
-        mod operator/(const mod &other) { return mod((data * other.data)); }
-    };
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const long long sz>
-    class RollingArray {  // 滚动数组
-    public: 
-        T arr[sz];
-        long long first = 0;  // arr[0] 对应的原下标
-        
-
-        void forward() {
-            for (long long i=0; i<sz-1; i++) {
-                std::memcpy(arr+i, arr+i+1, sizeof(T));
-            }
-            first++;
-        }
-
-        void backward() {
-            for (long long i=sz-1; i>0; i--) {
-                std::memcpy(arr+i, arr+i-1, sizeof(T));
-            }
-            first--;
-        }
-
-        T& operator[](long long i) {
-            long long real = i - first;
-            while (real >= sz) {
-                real--;
-                this->forward();
-            }
-            while (real < 0LL) {
-                real++;
-                this->backward();
-            }
-            return arr[real];
-        }
-    };
-}
+#include "./libs/mod.hpp"
+#include "./libs/rollingArray.hpp"
 #include <bits/stdc++.h>
 namespace lib {
     template <typename T, const long long sz>
