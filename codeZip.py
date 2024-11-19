@@ -7,7 +7,7 @@ source = {}  # 文件相对位置到文件内容的映射
 if __name__ == '__main__':
     # 读取源文件
     SOURCE_MATCH = re.compile(r".*\.hpp")
-    TARGET_MATCH = re.compile(r"test.cpp")
+    TARGET_MATCH = re.compile(r".*\.cpp")
 
     for root, dirs, files in os.walk('.'):
         for file in files:
@@ -21,24 +21,26 @@ if __name__ == '__main__':
                     string = binary.decode(encoding)
                 
                 string = string.replace('\r\n', '\n')
-                source[fullName] = re.compile(string)
+                source[fullName] = string
 
                 with open(fullName, 'w', encoding="UTF-8") as f:
                     f.write(string)
     
-    print(source)
     print("Source files:", source.keys())
+    print(source)
 
     for root, dirs, files in os.walk('.'):
         for file in files:
             if re.match(TARGET_MATCH, file):
+                fullName = os.path.join(root, file)
                 with open(fullName, 'rb') as f:
                     binary = f.read()
                     encoding = chardet.detect(binary)["encoding"]
                     string = binary.decode(encoding)
                 string = string.replace('\r\n', '\n')
+                print(repr(string))
                 for key in source:
-                    string = re.sub(source[key], string, "#include \"{}\"".format(key.replace("\\", '/')))
+                    string = string.replace(source[key], "#include \"{}\"".format(key.replace("\\", '/')))
                 
                 with open(fullName, 'w', encoding="UTF-8") as f:
                     f.write(string)
