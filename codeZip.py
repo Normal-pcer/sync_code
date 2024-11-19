@@ -23,7 +23,7 @@ if __name__ == '__main__':
                 string = string.replace('\r\n', '\n')
                 source[fullName] = string
 
-                with open(fullName, 'w', encoding="UTF-8") as f:
+                with open(fullName, 'w', encoding="UTF-8", newline='\n') as f:
                     f.write(string)
     
     print("Source files:", source.keys())
@@ -38,7 +38,7 @@ if __name__ == '__main__':
                     string = binary.decode(encoding)
                 string = string.replace('\r\n', '\n')
                 for key in source:
-                    string = string.replace(source[key], "#include \"{}\"".format(key.replace("\\", '/')))
+                    string = string.replace(source[key], "#include \"{}\"\n".format(key.replace("\\", '/')))
                 
-                with open(fullName, 'w', encoding="UTF-8") as f:
+                with open(fullName, 'w', encoding="UTF-8", newline='\n') as f:
                     f.write(string)
