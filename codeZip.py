@@ -27,7 +27,6 @@ if __name__ == '__main__':
                     f.write(string)
     
     print("Source files:", source.keys())
-    print(source)
 
     for root, dirs, files in os.walk('.'):
         for file in files:
@@ -35,10 +34,9 @@ if __name__ == '__main__':
                 fullName = os.path.join(root, file)
                 with open(fullName, 'rb') as f:
                     binary = f.read()
-                    encoding = chardet.detect(binary)["encoding"]
+                    encoding = chardet.detect(binary)["encoding"] or "UTF-8"
                     string = binary.decode(encoding)
                 string = string.replace('\r\n', '\n')
-                print(repr(string))
                 for key in source:
                     string = string.replace(source[key], "#include \"{}\"".format(key.replace("\\", '/')))
                 

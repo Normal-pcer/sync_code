@@ -128,57 +128,7 @@ namespace lib {
 
 #define select_func(ret, name, args...) static_cast<ret(*)(args)>(name)
 
-#include <bits/stdc++.h>
-#define LIB_STRING
-namespace lib {
-    class string: public std::string {
-    public:
-        string() = default;
-        string(const char* s) : std::string(s) {}
-        string(std::string s) : std::string(s) {}
-        template <class T>
-        string join(T&& s) {
-            string res = "";
-            size_t size = 0;
-            for (const auto& i: s)  size += i.size();
-            res.reserve(size);
-            bool first = true;
-            for (const auto& i: s) {
-                if (!first)
-                    res += *this;
-                res += i;
-                first = false;
-            }
-            return res;
-        }
-        vector<string> split(std::vector<char> c={' ', '\n', '\t'}) {
-            vector<string> res;
-            size_t start = 0;
-            for (size_t i = 0; i < this->size(); i++) {
-                if (std::find(c.begin(), c.end(), (*this)[i]) != c.end()) {
-                    if (i - start > 0)
-                        res.push_back(this->substr(start, i - start));
-                    start = i + 1;
-                }
-            }
-            if (start < this->size())
-                res.push_back(this->substr(start, this->size()));
-            return res;
-        }
-        vector<string> split(char c) {
-            return split(vector<char>{c});
-        }
-        string repeat(int times) const {
-            string result = *this;
-            result.reserve(times * this->size());
-            for (int i=1; i<times; i++)  result += *this;
-            return result;
-        }
-        string operator* (int times) const {
-            return this->repeat(times);
-        }
-    };
-}
+#include "./libs/string.hpp"
 #include <bits/stdc++.h>
 #define USE_FREAD
 // #undef USE_FREAD
@@ -300,85 +250,9 @@ namespace lib{
 
 }
 
-#include <bits/stdc++.h>
-namespace lib {
-    namespace bit {
-        // 按位遍历所有的 1
-        template <class T, class Func>
-        inline void traverse1(T x, Func&& f) {  
-            for (; x; x&=x-1)  f(x&-x);
-        }
-        // 按位大于
-        template <class T>
-        inline bool greater(T x, T y) {  
-            return x & ~y;
-        }
-        // 枚举子集
-        template <class T, class Func>
-        inline void subset(T s, Func&& F) {  
-            for (auto t=s; t; t=(t-1)&s)  f(t);
-        }
-    }
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const int p>
-    class mod {
-    public:
-        T data;
-
-        mod() = default;
-        mod(T num) : data(positive(num % p)) {}
-
-        T positive(T num) { 
-            if (num>=0)  return num;
-            if (num+p>=0)  return num+p;
-            return num + p * ((-num) / p + 1);
-        }
-
-        mod operator+(const mod &other) { return mod(positive(data + other.data) % p); }
-        mod operator-(const mod &other) { return mod(positive(data - other.data) % p); }
-        mod operator*(const mod &other) { return mod(positive(data * other.data) % p); }
-        mod operator/(const mod &other) { return mod((data * other.data)); }
-    };
-}
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const long long sz>
-    class RollingArray {  // 滚动数组
-    public: 
-        T arr[sz];
-        long long first = 0;  // arr[0] 对应的原下标
-        
-
-        void forward() {
-            for (long long i=0; i<sz-1; i++) {
-                std::memcpy(arr+i, arr+i+1, sizeof(T));
-            }
-            first++;
-        }
-
-        void backward() {
-            for (long long i=sz-1; i>0; i--) {
-                std::memcpy(arr+i, arr+i-1, sizeof(T));
-            }
-            first--;
-        }
-
-        T& operator[](long long i) {
-            long long real = i - first;
-            while (real >= sz) {
-                real--;
-                this->forward();
-            }
-            while (real < 0LL) {
-                real++;
-                this->backward();
-            }
-            return arr[real];
-        }
-    };
-}
+#include "./libs/bit.hpp"
+#include "./libs/mod.hpp"
+#include "./libs/rollingArray.hpp"
 #include <bits/stdc++.h>
 namespace lib {
     template <typename T, const long long sz>
@@ -391,67 +265,8 @@ namespace lib {
         }
     };
 }
-#include <bits/stdc++.h>
-namespace lib {
-    template <typename T, const unsigned long long sz>
-    class MapArray {
-    public:
-        T arr[sz];
-        MapArray() = default;
-        MapArray(const MapArray<T, sz>&) = default;
-        MapArray(std::initializer_list<T>& il) {
-            std::copy(il.begin(), il.end(), arr);
-        }
-
-        T& operator[](const unsigned long long idx) {
-            return arr[idx];
-        }
-        T& operator()(const unsigned long long idx) {
-            return arr[idx];
-        }
-    };
-}
-namespace lib {
-    namespace binary {  // 二分
-        template <class T, class U, class Func>
-        T lower_bound_mapping(
-            T begin,
-            T end,
-            U val,
-            Func &&mapping,
-            T eps = 1
-        ) {
-            while (end-begin >= eps) {
-                T mid = begin + (end-begin)/2;
-                if (mapping(mid) < val) {
-                    begin = mid + eps;
-                } else {
-                    end = mid;
-                }
-            }
-            return begin;
-        }
-
-        template <class T, class U, class Func>
-        T upper_bound_mapping(
-            T begin,
-            T end,
-            U val,
-            Func &&mapping,
-            T eps = 1
-        ) {
-            while (end-begin >= eps) {
-                T mid = begin + (end-begin)/2;
-                if (mapping(mid) <= val) {
-                    begin = mid + eps;
-                } else {
-                    end = mid;
-                }
-            }
-            return begin;
-        }
-    }
-}
+#include "./libs/mapArray.hpp"
+#include "./libs/binary.hpp"
 using namespace lib;
 
 ;
