@@ -46,7 +46,7 @@ namespace Solution {
 
         if ((ll)(i - K) * (i - K) > (ll)(K - 1) * (K - 1) * i) {
             auto ans = (ll)(i - K) * (i - K);
-            ans += oneCount * (K - 1);
+            ans += (ll)oneCount * (K - 1);
             std::cout << ans << std::endl;
         } else {
             auto ans = (ll)(K - 1) * (K - 1) * N;

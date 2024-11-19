@@ -58,7 +58,7 @@ namespace Solution {
             }
         }
 
-        const auto _DIGIT_MAX = 24;
+        const auto _DIGIT_MAX = 32;
         for (auto _ = 1; _ <= Q; _++) {
             int x, y;
             std::cin >> x >> y;
