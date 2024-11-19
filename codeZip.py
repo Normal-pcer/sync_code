@@ -6,7 +6,7 @@ source = {}  # 文件相对位置到文件内容的映射
 
 if __name__ == '__main__':
     # 读取源文件
-    SOURCE_MATCH = re.compile(r".*\.hpp")
+    SOURCE_MATCH = re.compile(r"(.*\.hpp|lib)")
     TARGET_MATCH = re.compile(r".*\.cpp")
 
     for root, dirs, files in os.walk('.'):
