@@ -132,6 +132,7 @@ namespace lib{
     const char endl = '\n';
 
 }
+#include "./libs/binary.hpp"
 
 using namespace lib;
 
@@ -163,18 +164,21 @@ namespace Solution_1062104036224782 {
         }
 
         int rank(int x) {
+            auto x_cpy = x;
             auto res = 1;
             x--;
             while (x) {
                 res += tr[x];
                 x -= lowbit(x);
             }
+            debug io << std::format("Rank of {} is {}", x_cpy, res) << endl;
             return res;
         }
 
         int at(int x) {
-            // x--;
-            // if (x == 0)  return min_element;
+#if false
+            x--;
+            if (x == 0)  return min_element;
             auto idx = 0;
             int begin = std::__lg(_N);
 
@@ -184,16 +188,17 @@ namespace Solution_1062104036224782 {
                     x -= tr[idx];
                 }
             }
-            
-            return idx+1;
+#else
+            auto idx = binary::upper_bound_mapping(1, _N, x, lam(x, rank(x)));
+#endif
+            return idx - 1;
         }
 
         int prev(int x) {
-            auto rank = this->rank(x-1);
+            auto rank = this->rank(x);
             auto res = this->at(rank);
-            // if (res == x)  return this->at(rank-1);
-            // else  return res;
-            return res;
+            if (res == x)  return this->at(rank-1);
+            else  return res;
         }
 
         int next(int x) {
@@ -245,7 +250,7 @@ namespace Solution_1062104036224782 {
             } else {
                 io << numbers[s.next(x)] << endl;
             }
-            debug{    
+            never {    
                 io<<"a:";
                 for (int i=1; i<=size; i++) io << numbers[s.at(i)] << " ";
                 io << "\n";

@@ -1,5 +1,5 @@
 /**
- * @link https://www.luogu.com.cn/problem/P3369
+ * https://www.luogu.com.cn/problem/P2741
  */
 
 #include "./lib"
@@ -135,120 +135,115 @@ namespace lib{
 
 using namespace lib;
 
-namespace Solution_1062104036224782 {
-
-    int Q;  const int _N = 1e5+5;
+namespace Solution_6383929149905497 {
     
-    int min_element = inf;
-    
-    template <int _N>
-    struct set {
-    protected:
-        std::array<int, _N> tr;
-    
-#define lowbit(x) ((x) & -(x))
-    public:
-        void insert(int x) {
-            while (x < _N) {
-                tr[x]++;
-                x += lowbit(x);
-            }
+    struct Realm {
+        int top = inf;
+        int left = inf;
+        int bottom = -1;
+        int right = -1;
+
+        operator std::string () {
+            std::stringstream s;
+            s << "Realm(" << top << ", " << left << ", " << bottom << ", " << right << ')';
+            return s.str();
         }
 
-        void erase(int x) {
-            while (x < _N) {
-                tr[x]--;
-                x += lowbit(x);
-            }
-        }
-
-        int rank(int x) {
-            auto res = 1;
-            x--;
-            while (x) {
-                res += tr[x];
-                x -= lowbit(x);
-            }
-            return res;
-        }
-
-        int at(int x) {
-            // x--;
-            // if (x == 0)  return min_element;
-            auto idx = 0;
-            int begin = std::__lg(_N);
-
-            for (auto i = begin; i >= 0; i--) {
-                if (idx + (1<<i) < _N and tr[idx + (1<<i)] < x) {
-                    idx += 1<<i;
-                    x -= tr[idx];
-                }
-            }
-            
-            return idx+1;
-        }
-
-        int prev(int x) {
-            auto rank = this->rank(x-1);
-            auto res = this->at(rank);
-            // if (res == x)  return this->at(rank-1);
-            // else  return res;
-            return res;
-        }
-
-        int next(int x) {
-            auto rank = this->rank(x);
-            auto res = this->at(rank+1);
-            return res;
-        }
-
-#undef lowbit
+        int getWidth() { return right - left; }
+        int getHeight() { return bottom - top; }
     };
-
-    set<_N> s;
-
+    
     void solve() {
-        io >> Q;
-        std::vector<std::pair<int, int>> ops;
-        std::vector<int> numbers = {-inf};
-        while (Q --> 0) {
-            int op, x;
-            io >> op >> x;
-            ops.push_back({op, x});
-            numbers.push_back(x);
+        const static auto MAX_POINT = 128;
+        int H, W;  io >> H >> W;
+        std::vector<std::string> origin(H);
+        std::map<char, Realm> realmOf;
+        
+        from(i, 0, H) {
+            io >> origin.at(i);
         }
 
-        std::sort(numbers.begin(), numbers.end());
-        numbers.erase(std::unique(numbers.begin(),numbers.end()),numbers.end());
-        debug {
-            for (auto i: numbers)  io << i << ' ';
-            io << endl;
-        }
-
-        int size=0;
-        for (auto [op, num]: ops) {
-            int x = std::lower_bound(numbers.begin(), numbers.end(), num) - numbers.begin();
-            debug io << std::format("{} <- {}", x, num) << endl;
-            if (op == 1) {
-                s.insert(x);
-                chkMin(min_element, x);
-                size++;
-            } else if (op == 2) {
-                s.erase(x);
-                size--;
-            } else if (op == 3) {
-                io << s.rank(x) << endl;
-            } else if (op == 4) {
-                io << numbers[s.at(num)] << endl;
-            } else if (op == 5) {
-                io << numbers[s.prev(x)] << endl;
-            } else {
-                io << numbers[s.next(x)] << endl;
+        std::vector<char> isExist(MAX_POINT);
+        from(row, 0, H) {
+            from(col, 0, W) {
+                auto cur = origin[row][col];
+                if (cur == '.')  continue;
+                isExist[cur] = true;
+                chkMin(realmOf[cur].top, row);
+                chkMax(realmOf[cur].bottom, row+1);
+                chkMin(realmOf[cur].left, col);
+                chkMax(realmOf[cur].right, col+1);
             }
-            debug{    
-                io<<"a:";
-                for (int i=1; i<=size; i++) io << numbers[s.at(i)] << " ";
-                io << "\n";
+        }
+
+        debug for (auto [key, value]: realmOf) {
+            io << key << ' ' << (std::string)value << endl;
+        }
+
+        std::vector<std::pair<int, int>> limits;
+        std::vector<char> exist;
+        
+        for (auto [ch, realm]: realmOf) {
+            auto check = [&](int r, int c) -> void {
+                if (origin.at(r).at(c) != ch) {
+                    limits.push_back({ch, origin[r][c]});
+                }
+            };
+            auto [top, left, bottom, right] = realm;
+            from(r, top, bottom)  check(r, left);
+            from(r, top, bottom)  check(r, right-1);
+            from(c, left, right)  check(top, c);
+            from(c, left, right)  check(bottom-1, c);
+        }
+
+        debug for (auto [a, b]: limits) {
+            io << "limit ";
+            io.push(a), io.push(' '), io.push(b), io.push(endl);
+        }
+
+        std::vector<std::set<char>> graph(MAX_POINT);
+        std::vector<int> in(MAX_POINT);
+        for (auto [a, b]: limits) {
+            graph.at(a).insert(b);
+        }
+
+        from(i, 0ULL, graph.size()) {
+            auto &set = graph[i];
+            if (isExist[i])  exist.push_back(i);
+            for (auto dest: set) {
+                in.at(dest)++;
+                debug io << (char)i << ' ' << dest << endl;
+            }
+        }
+
+        std::vector<char> solution(realmOf.size());
+        std::vector<char> vis(MAX_POINT);
+        std::function<void(char, int)> dfs = [&](char top, int depth) {
+            if (vis[top])  return;
+            vis[top] = '\1';
+            // debug io << std::format("dfs while top = {}, depth = {}", top, depth) << endl;
+            solution.at(depth) = top;
+            if (depth+1 >= (int)solution.size()) {
+                for (auto ch: solution)  io.push(ch);
+                io << endl;
+                goto egg;
+            } 
+            for (auto dest: graph.at(top)) {
+                in[dest]--;  // 删除限制
+            }
+            for (auto dest: exist)  if (in[dest] == 0) {
+                dfs(dest, depth+1);  // 继续搜索
+            }
+            for (auto dest: graph.at(top)) {
+                in[dest]++;  // 把这个点再加回来，重新启用限制
+            }
+        egg:
+            vis[top] = '\0';
+        };
+
+        for (auto i: exist) {
+            if (in.at(i) == 0) {
+                dfs(i, 0);
             }
         }
     }
@@ -257,6 +252,6 @@ namespace Solution_1062104036224782 {
 
 int main() {
     initDebug;
-    Solution_1062104036224782::solve();
+    Solution_6383929149905497::solve();
     return 0;
 }
