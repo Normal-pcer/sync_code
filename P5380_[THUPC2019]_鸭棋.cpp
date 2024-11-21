@@ -162,7 +162,6 @@ namespace lib{
 
 using namespace lib;
 
-
 const int _X = 9;
 const int _Y = 10;
 
