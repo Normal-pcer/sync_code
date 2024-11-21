@@ -5,7 +5,6 @@
 #include "lib"
 using namespace lib;
 
-
 namespace Solution {
 
     
@@ -18,7 +17,6 @@ namespace Solution {
 
     }
 }
-
 
 int main() {
     initDebug;

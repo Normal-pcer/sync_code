@@ -274,7 +274,6 @@ namespace Solution {
     }
 }
 
-
 int main() {
     initDebug;
     always {

@@ -215,7 +215,6 @@ namespace Solution {
 
     const int pow3[] = {1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147};
 
-
     #define COLUMN_WIDTH_LIMIT (M)
 
     /*
@@ -232,7 +231,6 @@ namespace Solution {
     int prev[_M];  // 前一行的状态数组
     int cur[_M];  // 当前行的状态数组
     bool broken[_N][_M];  // 是否为坏块
-
 
     /**
      * 将一个整数转为三进制数组。数组靠前的项表示低位。
@@ -362,7 +360,6 @@ namespace Solution {
         io << ans << endl;
     }
 }
-
 
 int main() {
     initDebug;

@@ -250,7 +250,6 @@ memory chips that can be cut out of the plate.
 的芯片的最大数量。
 */
 
-
 int D;
 
 namespace Solution {
@@ -317,7 +316,6 @@ namespace Solution {
         }
 
         val digit0 = pos<<1;  // 首个未被搜到的二进制位
-
 
         // 如果是坏块，则必定看成“被占用”
         if (bad[tgt][pos]) {
@@ -415,7 +413,6 @@ namespace Solution {
             }
         }
 
-
         never {
             // 调试，输出 F
             from(i, 0, N) {
@@ -429,7 +426,6 @@ namespace Solution {
         printf("%d\n", ans);
     }
 }
-
 
 int main() {
     never{freopen("N1103.in", "r", stdin);

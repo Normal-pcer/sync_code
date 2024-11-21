@@ -31,9 +31,6 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
-
-
-
 ;
 namespace Solution {
     const int _N = 5e5+5;
@@ -49,7 +46,6 @@ namespace Solution {
         upto(i, N) {
             std::cin >> s[i];
         }
-
 
         // std::sort(s+1, s+N+1);
 
@@ -101,7 +97,6 @@ namespace Solution {
         std::cout << std::endl;
     }
 }
-
 
 int main() {;
 

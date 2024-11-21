@@ -34,7 +34,6 @@ template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<
 
 typedef uint16_t status;
 
-
 int T = read();
 const int _N = 14;
 int N;
@@ -99,7 +98,6 @@ int main() {
         }
 
         debug batchOutput(F, 1<<N);
-
 
         putInt(ans);  // 去掉占位的选手 0 和 选手 1 自己
     }

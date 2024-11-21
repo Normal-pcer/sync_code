@@ -101,7 +101,6 @@ struct Node {
         ll tag=0;  // 需要下传的更改
     } tr[maxN<<2];
 
-
 void pushUp(int i) {  // 向上合并信息
     tr[i].sum = tr[(i<<1)].sum + tr[(i<<1|1)].sum;
 }

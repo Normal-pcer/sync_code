@@ -6,7 +6,6 @@
 
 using namespace lib;
 
-
 namespace Solution_1637954082994790 {
 
     const int _N = 1e5+5;
@@ -51,7 +50,6 @@ namespace Solution_1637954082994790 {
         return query(x-1) + 1;
     }
 
-
     int nth_element(int n) {
         int max = std::__lg(_N);
         auto idx = 0;
@@ -81,7 +79,6 @@ namespace Solution_1637954082994790 {
             val.push_back(x);
         }
 
-
         std::sort(val.begin(), val.end());
         val.erase(std::unique(val.begin(), val.end()), val.end());
 
@@ -102,7 +99,6 @@ namespace Solution_1637954082994790 {
         }
     }
 }
-
 
 int main() {
     initDebug;

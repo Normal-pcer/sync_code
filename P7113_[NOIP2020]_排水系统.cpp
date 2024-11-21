@@ -130,7 +130,6 @@ namespace lib{
 using i128 = __int128;
 using namespace lib;
 
-
 namespace Solution_1531095818932130 {
 
     struct Frac {
@@ -197,7 +196,6 @@ namespace Solution_1531095818932130 {
         }
     }
 }
-
 
 int main() {
     initDebug;

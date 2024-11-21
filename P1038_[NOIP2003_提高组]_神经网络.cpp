@@ -163,7 +163,6 @@ namespace lib{
 
 using namespace lib;
 
-
 namespace Solution_1698638569337870 {
 
     void solve() {
@@ -214,7 +213,6 @@ namespace Solution_1698638569337870 {
         if (flag)  io << "NULL" << endl;
     }
 }
-
 
 int main() {
     initDebug;

@@ -6,7 +6,6 @@
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution_4870535850952584 {
 
     const int _N = 36;
@@ -50,7 +49,6 @@ namespace Solution_4870535850952584 {
         io << ans << endl;
     }
 }
-
 
 int main() {
     initDebug;

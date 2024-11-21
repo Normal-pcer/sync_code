@@ -5,9 +5,7 @@
 #include "./lib_legecy.hpp"
 using namespace lib;
 
-
 namespace Solution_1779691446829941 {
-
 
     void solve() {
         std::ios::sync_with_stdio(false), std::cin.tie(nullptr), std::cout.tie(nullptr);
@@ -55,7 +53,6 @@ namespace Solution_1779691446829941 {
         }
     }
 }
-
 
 int main() {
     initDebug;

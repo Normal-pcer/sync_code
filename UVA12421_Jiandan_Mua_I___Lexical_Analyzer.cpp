@@ -93,7 +93,6 @@ namespace Solution_1223658170809683 {
     }
 }
 
-
 int main() {
     initDebug;
     Solution_1223658170809683::solve();

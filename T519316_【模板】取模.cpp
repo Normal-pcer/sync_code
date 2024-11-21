@@ -32,15 +32,12 @@ namespace lib{}
 
 using namespace lib;
 
-
 namespace Solution_7584771256335264 {
-
 
     void solve() {
 
     }
 }
-
 
 int main() {
     initDebug;

@@ -143,7 +143,6 @@ using namespace lib;
 
 using std::string;
 
-
 namespace Solution {
 
     int N_operationsCount;
@@ -398,7 +397,6 @@ namespace Solution {
         }
     }
 }
-
 
 int main() {
     initDebug;

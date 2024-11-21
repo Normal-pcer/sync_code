@@ -134,7 +134,6 @@ namespace lib{
 
 using namespace lib;
 
-
 namespace Solution_1545947219600800 {
 
     const int _N = 1e5+5;
@@ -232,7 +231,6 @@ namespace Solution_1545947219600800 {
         }
     }
 }
-
 
 int main() {
     initDebug;

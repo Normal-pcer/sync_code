@@ -16,7 +16,6 @@ using namespace std;
 #define bounce (a>=0&&a<=9&&b>=0&&b<=8&&c>=0&&c<=9&&d>=0&&d<=8)
 #define checkok {jiang=1;return;}													//////////
 
-
 int Q;
 int a,b,c,d;
 																							// 全局变量区
@@ -42,7 +41,6 @@ int which;		// move的时候调用的什么兵
 //    if(a==2) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_BLUE|FOREGROUND_GREEN);
 //    if(a==3) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_RED);
 //}
-
 
 inline void init()			//初始化棋盘 
 {

@@ -167,8 +167,6 @@ namespace lib {
             *this = ((*this) * other);
         }
 
-
-
         void operator<<=( size_t shift ) {
             if (shift == 0) return;
             if (shift < 32) {
@@ -310,7 +308,6 @@ namespace lib {
 }
 using namespace lib;
 
-
 namespace Solution {
 
     BigInt N;
@@ -338,7 +335,6 @@ namespace Solution {
         else  std::cout << p.to_string() << std::endl;
     }
 }
-
 
 int main() {
     initDebug;

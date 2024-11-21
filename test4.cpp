@@ -5,7 +5,6 @@
 #include "lib"
 using namespace lib;
 
-
 namespace Solution_1710896767598486 {
 
     int N; const int _N = 35;
@@ -20,7 +19,6 @@ namespace Solution_1710896767598486 {
 
     }
 }
-
 
 int main() {
     initDebug;

@@ -21,6 +21,7 @@ if __name__ == '__main__':
                     string = binary.decode(encoding)
                 
                 string = string.replace('\r\n', '\n')
+                string = string.replace('\n\n\n', '\n')
                 source[fullName] = string
 
                 with open(fullName, 'w', encoding="UTF-8", newline='\n') as f:
@@ -37,6 +38,7 @@ if __name__ == '__main__':
                     encoding = chardet.detect(binary)["encoding"] or "UTF-8"
                     string = binary.decode(encoding)
                 string = string.replace('\r\n', '\n')
+                string = string.replace('\n\n\n', '\n\n')
                 for key in source:
                     string = string.replace(source[key], "#include \"{}\"\n".format(key.replace("\\", '/')))
                 

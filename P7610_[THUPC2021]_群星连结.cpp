@@ -74,7 +74,6 @@ namespace std {
     };
 }
 
-
 namespace StellarisConnection {
     struct Character;
     struct Player;
@@ -244,7 +243,6 @@ namespace StellarisConnection {
         }
     };
 
-
     struct Damage {
         int amount;         // 伤害数值（未计算伤害减免）
         int truth;          // 附带的真实伤害（未计算伤害减免）
@@ -295,7 +293,6 @@ namespace StellarisConnection {
 
         Talent talent;      // 天赋
         Skill skill;        // 技能
-
 
         bool dead = false;          // 是否死亡
 
@@ -576,7 +573,6 @@ namespace StellarisConnection {
         return rgs::all_of(characters, lam(ch, ch->dead));
     }
 
-
     void roundEnd() {
         // 检查玩家的 deadline
         for (auto &pl: players) {
@@ -586,7 +582,6 @@ namespace StellarisConnection {
             }
         }
     }
-
 
     // 进行一个回合
     void round() {
@@ -670,7 +665,6 @@ namespace StellarisConnection {
         
     }
 }
-
 
 int main() {
     initDebug;

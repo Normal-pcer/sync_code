@@ -44,7 +44,6 @@ namespace Solution {
     }
 }
 
-
 int main() {
     initDebug;
 #if false

@@ -28,7 +28,6 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution_9106446611119119 {
 
     int A, B;

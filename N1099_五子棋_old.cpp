@@ -34,7 +34,6 @@ template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<
 
 typedef uint16_t status;
 
-
 int T = read();
 const int _N = 14;
 int N;

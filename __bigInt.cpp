@@ -26,7 +26,6 @@ typedef long long ll; typedef unsigned long long ull;
 inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 
-
 namespace Solution {
 
     class BigInt {
@@ -159,8 +158,6 @@ namespace Solution {
             *this = ((*this) * other);
         }
 
-
-
         void operator<<=( size_t shift ) {
             if (shift == 0) return;
             if (shift < 32) {
@@ -267,7 +264,6 @@ namespace Solution {
         std::cout << (a+b).to_string() << std::endl;
     }
 }
-
 
 int main() {
     initDebug;

@@ -162,7 +162,6 @@ namespace lib{
 
 using namespace lib;
 
-
 namespace Solution_2106364128478003 {
     
     using pii = std::pair<int, int>;
@@ -205,7 +204,6 @@ namespace Solution_2106364128478003 {
         io << endl;
     }
 }
-
 
 int main() {
     initDebug;

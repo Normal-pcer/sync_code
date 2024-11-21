@@ -129,7 +129,6 @@ namespace lib{
 using namespace lib;
 using std::string, std::vector;
 
-
 namespace Utilities {
     /**
      * “提取”一个容器中的前 SZ 项，其中 SZ 为编译期常量。
@@ -210,7 +209,6 @@ namespace Program {
         Exception(ExceptionType type, string desc, string info=""): 
             type(type), description(desc), information(info) {}
     };
-
 
     struct Operation {
         int line;
@@ -705,7 +703,6 @@ namespace Solution {
         program.launch();
     }
 }
-
 
 int main() {
     try {

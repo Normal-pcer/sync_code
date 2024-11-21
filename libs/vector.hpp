@@ -30,8 +30,6 @@ namespace lib {
             }
             return res;
         }
-
-
         template <typename Func>  
         auto map(Func&& f) const {  
             vector<decltype(std::invoke(std::forward<Func>(f), std::declval<const T&>()))> result;

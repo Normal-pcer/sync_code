@@ -130,7 +130,6 @@ namespace lib{
 
 using namespace lib;
 
-
 namespace Solution_2711067474028868 {
 
     const int mod = 998244353;
@@ -197,7 +196,6 @@ namespace Solution_2711067474028868 {
         }
     }
 
-
     void solve() {
         io >> K >> A >> H;
         dfs1(0, 1<<K, (1<<(1<<(K)))-1, 0);
@@ -211,7 +209,6 @@ namespace Solution_2711067474028868 {
         }
     }
 }
-
 
 int main() {
     initDebug;

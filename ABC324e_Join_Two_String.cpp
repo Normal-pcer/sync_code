@@ -31,8 +31,6 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
-
-
 /*
 Problem E: Joint Two Strings
 Difficulty: 1153   Time Limit: 2s   Memory Limit: 1024MB
@@ -75,7 +73,6 @@ namespace Solution {
             }
         }
 
-
         never {
             upto(i, N)  std::cout << mp[i] << ' ';
             std::cout << std::endl;
@@ -100,7 +97,6 @@ namespace Solution {
         std::cout << ans << std::endl;
     }
 }
-
 
 int main() {
     initDebug;

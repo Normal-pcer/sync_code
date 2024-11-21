@@ -164,7 +164,6 @@ namespace lib{
 
 using namespace lib;
 
-
 namespace Solution {
 
     int N, K;  const int _N = 1e5+5; const int _K = 25;
@@ -210,7 +209,6 @@ namespace Solution {
         from(i, 1, N)  io << G[i][K] << endl;
     }
 }
-
 
 int main() {
     initDebug;

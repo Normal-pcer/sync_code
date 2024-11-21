@@ -142,8 +142,6 @@ namespace lib{
 }
 using namespace lib;
 
-
-
 namespace Solution {
 
     const int _N = 10;
@@ -174,7 +172,6 @@ namespace Solution {
         printf("%lld\n", ans);
     }
 }
-
 
 int main() {
     initDebug;

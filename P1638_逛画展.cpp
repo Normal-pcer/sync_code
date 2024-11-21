@@ -32,7 +32,6 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution_1163173797181140 {
     int N, M;  const int _N = 1e6+5, _M = 2e3+5;
     int artist[_N];
@@ -64,7 +63,6 @@ namespace Solution_1163173797181140 {
         io.writeln(l, r);
     }
 }
-
 
 int main() {
     initDebug;

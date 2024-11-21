@@ -68,7 +68,6 @@ typedef int32_t value;  // 路径价值
 value F[1<<_N][_N][_N];  // 状态码为 i 的路径的最大价值，并且这条路径的后两个点是 i-1 和 i-2
 int C[1<<_N][_N][_N];  // 计数
 
-
 namespace Solution {
     inline int lg2(int x) {
         if (x == 0) return -1;

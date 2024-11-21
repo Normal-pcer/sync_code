@@ -162,10 +162,6 @@ namespace lib{
 
 using namespace lib;
 
-
-
-
-
 const int _X = 9;
 const int _Y = 10;
 
@@ -346,7 +342,6 @@ namespace Solution {
     }
 }
 
-
 int main() {
     initDebug;
     Solution::solve();
@@ -373,7 +368,6 @@ int main() {
 8 4 9 4
 6 6 9 4
 9 8 8 8
-
 
 Invalid command
 Invalid command

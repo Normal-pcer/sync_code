@@ -180,7 +180,6 @@ namespace Solution {
     }
 }
 
-
 int main() {
     initDebug;
     Solution::solve();

@@ -169,7 +169,6 @@ namespace Solution {
     int size[_N];
     ll F[_N];
 
-
     void calc_size(int root, int prev, ll &sum) {
         int res = 1;  // self
         for (auto &son: Graph[root]) {
@@ -211,7 +210,6 @@ namespace Solution {
         io << (ans - F) << endl;
     }
 }
-
 
 int main() {;
 

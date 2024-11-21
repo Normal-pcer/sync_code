@@ -763,8 +763,6 @@ class character_init_{
 }character_init;
 //
 
-
-
 //character::
 inline void character::print_info(){
     debug{

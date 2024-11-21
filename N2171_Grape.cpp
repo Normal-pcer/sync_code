@@ -201,7 +201,6 @@ namespace Solution {
     }
 }
 
-
 int main() {
     initDebug;
     debug {

@@ -6,7 +6,6 @@
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution_1806430963834722 {
 
     const int _N = 35;
@@ -58,7 +57,6 @@ namespace Solution_1806430963834722 {
         _dfs2(p+1, sum + w[p], broken);
     }
 
-
     void solve() {
         io >> N >> M, M *= 2;
         w.resize(N);
@@ -74,12 +72,10 @@ namespace Solution_1806430963834722 {
         limitPos = N;
         _dfs2(mid+1, 0, 0);
 
-
         if (best >= inf)  io << -1 << endl;
         else  io << best << endl;
     }
 }
-
 
 int main() {
     initDebug;

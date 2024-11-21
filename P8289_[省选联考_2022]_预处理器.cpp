@@ -33,7 +33,6 @@ namespace lib{}
 #include "./libs/sio.hpp"
 using namespace lib;
 
-
 namespace Solution {
 
     int N;
@@ -134,7 +133,6 @@ namespace Solution {
         }
     }
 }
-
 
 int main() {
     initDebug;

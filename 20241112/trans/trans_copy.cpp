@@ -28,7 +28,6 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution {
 
     int N;  const int _N = 8;  // 站点数量
@@ -42,7 +41,6 @@ namespace Solution {
         std::vector<int> ways;  // 可选择的交通方式
         int dis;
     } graph[_N];
-
 
     // 从 p 到 n 的最小开支
     ll dfs(int p, int prev=-1, int prev2=-1) { 
@@ -80,7 +78,6 @@ namespace Solution {
         io << dfs(0) << endl;
     }
 }
-
 
 int main() {
     initDebug;

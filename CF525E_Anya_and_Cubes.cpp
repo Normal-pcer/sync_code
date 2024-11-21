@@ -6,7 +6,6 @@
 #include "./lib_legecy.hpp"
 using namespace lib;
 
-
 namespace Solution_1686091082382235 {
 
     constexpr const auto beyond = 20;  // 20! > 1e18
@@ -88,7 +87,6 @@ namespace Solution_1686091082382235 {
         std::cout << ans << std::endl;
     }
 }
-
 
 int main() {
     initDebug;

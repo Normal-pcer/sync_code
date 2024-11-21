@@ -28,7 +28,6 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution {
 
     int N;  const int _N = 64;  // 站点数量
@@ -108,7 +107,6 @@ namespace Solution {
         // io << ans << endl;
     }
 }
-
 
 int main() {
     initDebug;

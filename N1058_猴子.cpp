@@ -33,7 +33,6 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution_8186795051575562 {
     const int _N = 2005;
     int N, D, M;
@@ -84,7 +83,6 @@ namespace Solution_8186795051575562 {
         io << ans << endl;
     }
 }
-
 
 int main() {
     initDebug;
