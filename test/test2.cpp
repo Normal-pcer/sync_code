@@ -127,7 +127,6 @@ extern "C" {
 
   typedef __builtin_va_list __gnuc_va_list;
 
-
   typedef __gnuc_va_list va_list;
 #99 "C:/msys64/ucrt64/include/vadefs.h" 3
 }
@@ -141,7 +140,6 @@ void __attribute__((__cdecl__))__debugbreak(void);
 extern __inline__ __attribute__((__always_inline__,__gnu_inline__))void __attribute__((__cdecl__))__debugbreak(void){
 
   __asm__ __volatile__("int {$}3":);
-
 
 }
 #601 "C:/msys64/ucrt64/include/_mingw.h" 3
@@ -163,7 +161,6 @@ const char*__mingw_get_crt_info(void);
 __extension__ typedef unsigned long long size_t;
 #45 "C:/msys64/ucrt64/include/corecrt.h" 3
 __extension__ typedef long long ssize_t;
-
 
 typedef size_t rsize_t;
 #62 "C:/msys64/ucrt64/include/corecrt.h" 3
@@ -258,7 +255,6 @@ extern "C" {
 #1 "C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.1.0/include/limits.h" 1 3 4
 #34 "C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.1.0/include/limits.h" 3 4
 #1 "C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.1.0/include/syslimits.h" 1 3 4
-
 
 #1 "C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.1.0/include/limits.h" 1 3 4
 #210 "C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.1.0/include/limits.h" 3 4
@@ -378,7 +374,6 @@ __attribute__((__dllimport__))int __attribute__((__cdecl__))___mb_cur_max_func(v
 
   void __attribute__((__cdecl__))_Exit(int)__attribute__((__noreturn__));
 
-
 	   
 
   void __attribute__((__cdecl__))__attribute__((__noreturn__))abort(void);
@@ -453,12 +448,10 @@ float __attribute__((__cdecl__))__attribute__((__nothrow__))strtof(const char*__
   return __mingw_strtof(_Str,_EndPtr);
 }
 
-
   long double __attribute__((__cdecl__))__attribute__((__nothrow__))strtold(const char*__restrict__,char**__restrict__);
 
   extern double __attribute__((__cdecl__))__attribute__((__nothrow__))
   __strtod(const char*__restrict__,char**__restrict__);
-
 
   float __attribute__((__cdecl__))__mingw_strtof(const char*__restrict__,char**__restrict__);
   double __attribute__((__cdecl__))__mingw_strtod(const char*__restrict__,char**__restrict__);
@@ -493,7 +486,6 @@ float __attribute__((__cdecl__))__attribute__((__nothrow__))strtof(const char*__
   __attribute__((__dllimport__))void*__attribute__((__cdecl__))_aligned_recalloc(void*_Memory,size_t _Count,size_t _Size,size_t _Alignment);
   __attribute__((__dllimport__))void*__attribute__((__cdecl__))_aligned_offset_recalloc(void*_Memory,size_t _Count,size_t _Size,size_t _Alignment,size_t _Offset);
   __attribute__((__dllimport__))size_t __attribute__((__cdecl__))_aligned_msize(void*_Memory,size_t _Alignment,size_t _Offset);
-
 
   __attribute__((__dllimport__))wchar_t*__attribute__((__cdecl__))_itow(int _Value,wchar_t*_Dest,int _Radix);
   __attribute__((__dllimport__))wchar_t*__attribute__((__cdecl__))_ltow(long _Value,wchar_t*_Dest,int _Radix);
@@ -744,7 +736,6 @@ _mm_free(void*__aligned_ptr){
   __attribute__((__dllimport__))void*__attribute__((__cdecl__))_expand(void*_Memory,size_t _NewSize);
   __attribute__((__dllimport__))size_t __attribute__((__cdecl__))_msize(void*_Memory);
 
-
   __attribute__((__dllimport__))size_t __attribute__((__cdecl__))_get_sbh_threshold(void);
   __attribute__((__dllimport__))int __attribute__((__cdecl__))_set_sbh_threshold(size_t _NewValue);
   __attribute__((__dllimport__))errno_t __attribute__((__cdecl__))_set_amblksiz(size_t _Value);
@@ -814,7 +805,6 @@ namespace std{
   __extension__ inline constexpr
   __float128
   abs(__float128 __x){
-
 
 	return __builtin_signbit(__x)?-__x:__x;
 
@@ -1030,7 +1020,6 @@ extern "C" {
 
 int __attribute__((__cdecl__))isblank(int _C);
 
-
   int __attribute__((__cdecl__))iswalpha(wint_t _C);
   __attribute__((__dllimport__))int __attribute__((__cdecl__))_iswalpha_l(wint_t _C,_locale_t _Locale);
   int __attribute__((__cdecl__))iswupper(wint_t _C);
@@ -1092,7 +1081,6 @@ namespace std{
   using::tolower;
   using::toupper;
 }
-
 
 namespace std{
   using::isblank;
@@ -1239,7 +1227,6 @@ namespace std{
 #42 "C:/msys64/ucrt64/include/c++/14.1.0/cstddef" 3
 	   
 #43 "C:/msys64/ucrt64/include/c++/14.1.0/cstddef" 3
-
 
 #1 "C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.1.0/include/stddef.h" 1 3 4
 #1 "C:/msys64/ucrt64/include/stddef.h" 1 3 4
@@ -1803,7 +1790,6 @@ __extension__ template<>struct __is_integer<__int128>{ enum { __value=1 };typede
 	struct __memcpyable<_Tp*,const _Tp*>
 	:__is_nonvolatile_trivially_copyable<_Tp>{ };
 
-
   template<typename _Iter1,typename _Iter2>
 	struct __memcmpable{
 	  enum { __value=0 };
@@ -1820,7 +1806,6 @@ __extension__ template<>struct __is_integer<__int128>{ enum { __value=1 };typede
   template<typename _Tp>
 	struct __memcmpable<_Tp*,const _Tp*>
 	:__is_nonvolatile_trivially_copyable<_Tp>{ };
-
 
   template<typename _Tp,bool _TreatAsBytes=
 
@@ -2070,7 +2055,6 @@ namespace __gnu_cxx{
   template<typename _Value>
 	const int __numeric_traits_floating<_Value>::__max_exponent10;
 
-
   template<typename _Value>
 	struct __numeric_traits
 	:public __numeric_traits_integer<_Value>{ };
@@ -2128,7 +2112,6 @@ namespace std{
 
   template<bool __v>
 	using bool_constant=__bool_constant<__v>;
-
 
   template<bool,typename _Tp=void>
 	struct enable_if{ };
@@ -2314,7 +2297,6 @@ namespace std{
 	struct __is_integral_helper<wchar_t>
 	:public true_type { };
 
-
   template<>
 	struct __is_integral_helper<char16_t>
 	:public true_type { };
@@ -2473,7 +2455,6 @@ namespace std{
 	struct __is_nullptr_t
 	:public is_null_pointer<_Tp>{ } __attribute__((__deprecated__("use '" "std::is_null_pointer" "' instead")));
 
-
   template<typename _Tp>
 	struct is_reference
 	:public __bool_constant<__is_reference(_Tp)>{ };
@@ -2575,7 +2556,6 @@ namespace std{
 	  static_assert(std::__is_complete_or_unbounded(__type_identity<_Tp>{}),
  "template argument must be a complete class or an unbounded array");
 	};
-
 
   template<typename _Tp>
 	struct
@@ -2698,7 +2678,6 @@ namespace std{
 	  static_assert(std::__is_complete_or_unbounded(__type_identity<_Tp>{}),
  "template argument must be a complete class or an unbounded array");
 	};
-
 
   struct __do_is_nt_destructible_impl{
 	template<typename _Tp>
@@ -3015,7 +2994,6 @@ namespace std{
 	struct extent<_Tp[],_Uint>
 	:public extent<_Tp,_Uint-1>::type { };
 
-
   template<typename _Tp,typename _Up>
 	struct is_same
 	:public __bool_constant<__is_same(_Tp,_Up)>{ };
@@ -3074,7 +3052,6 @@ namespace std{
   template<typename _Tp>
 	using add_cv_t=typename add_cv<_Tp>::type;
 
-
   template<typename _Tp>
 	struct remove_reference{ using type=__remove_reference(_Tp);};
 #1706 "C:/msys64/ucrt64/include/c++/14.1.0/type_traits" 3
@@ -3092,7 +3069,6 @@ namespace std{
 
   template<typename _Tp>
 	using add_rvalue_reference_t=typename add_rvalue_reference<_Tp>::type;
-
 
   template<typename _Unqualified,bool _IsConst,bool _IsVol>
 	struct __cv_selector;
@@ -3209,7 +3185,6 @@ namespace std{
 =typename __make_unsigned_selector<char32_t,false,true>::__type;
 	};
 
-
   template<typename _Tp>
 	struct make_unsigned{ using type=typename __make_unsigned_selector<_Tp>::__type;};
 
@@ -3284,7 +3259,6 @@ namespace std{
 =typename __make_signed_selector<char32_t,false,true>::__type;
 	};
 
-
   template<typename _Tp>
 	struct make_signed{ using type=typename __make_signed_selector<_Tp>::__type;};
 
@@ -3322,7 +3296,6 @@ namespace std{
 
   template<typename _Tp>
 	using remove_all_extents_t=typename remove_all_extents<_Tp>::type;
-
 
   template<typename _Tp>
 	struct remove_pointer{ using type=__remove_pointer(_Tp);};
@@ -3545,7 +3518,6 @@ namespace std{
 	  static const bool __stop=false;
 	};
 
-
   template<typename _Tp>
 	auto declval()noexcept->decltype(__declval<_Tp>(0)){
 	  static_assert(__declval_protector<_Tp>::__stop,
@@ -3655,7 +3627,6 @@ namespace std{
 		__result_of_memfun_deref<_MemPtr,_Arg,_Args...>
 	 >::type;
 	};
-
 
   template<typename _Tp,typename _Up=__remove_cvref_t<_Tp>>
 	struct __inv_unwrap{
@@ -3844,7 +3815,6 @@ namespace std{
   template<typename _Tp>
 	struct __is_nothrow_swappable
 	:public __is_nothrow_swappable_impl<_Tp>::type{ };
-
 
   template<typename _Tp>
 	struct is_swappable
@@ -4147,11 +4117,9 @@ template<typename _Tp>
   inline constexpr bool is_member_object_pointer_v=
 	__is_member_object_pointer(_Tp);
 
-
 template<typename _Tp>
   inline constexpr bool is_member_function_pointer_v=
 	__is_member_function_pointer(_Tp);
-
 
 template<typename _Tp>
   inline constexpr bool is_enum_v=__is_enum(_Tp);
@@ -4326,7 +4294,6 @@ template<typename _Tp,unsigned _Idx>
 template<typename _Tp,typename _Up>
   inline constexpr bool is_same_v=__is_same(_Tp,_Up);
 
-
 template<typename _Base,typename _Derived>
   inline constexpr bool is_base_of_v=__is_base_of(_Base,_Derived);
 
@@ -4345,7 +4312,6 @@ template<typename _Ret,typename _Fn,typename... _Args>
   inline constexpr bool is_nothrow_invocable_r_v
 	=is_nothrow_invocable_r<_Ret,_Fn,_Args...>::value;
 
-
   template<typename _Tp>
 	struct has_unique_object_representations
 	:bool_constant<__has_unique_object_representations(
@@ -4359,11 +4325,9 @@ template<typename _Ret,typename _Fn,typename... _Args>
 	inline constexpr bool has_unique_object_representations_v
 	 =has_unique_object_representations<_Tp>::value;
 
-
   template<typename _Tp>
 	struct is_aggregate
 	:bool_constant<__is_aggregate(remove_cv_t<_Tp>)>{ };
-
 
   template<typename _Tp>
 	inline constexpr bool is_aggregate_v=__is_aggregate(remove_cv_t<_Tp>);
@@ -4375,7 +4339,6 @@ template<typename _Ret,typename _Fn,typename... _Args>
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/bits/move.h" 3
 namespace std{
 
-
   template<typename _Tp>
 	inline constexpr _Tp*
 	__addressof(_Tp&__r)noexcept{ return __builtin_addressof(__r);}
@@ -4384,7 +4347,6 @@ namespace std{
 	[[__nodiscard__]]
 	constexpr _Tp&&
 	forward(typename std::remove_reference<_Tp>::type&__t)noexcept{ return static_cast<_Tp&&>(__t);}
-
 
   template<typename _Tp>
 	[[__nodiscard__]]
@@ -4462,7 +4424,6 @@ namespace std{
 #36 "C:/msys64/ucrt64/include/c++/14.1.0/bits/utility.h" 3
 	   
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/bits/utility.h" 3
-
 
 namespace std{
 
@@ -4669,7 +4630,6 @@ namespace std{
   template<size_t _Int,typename _Tp,size_t _Nm>
 	constexpr const _Tp&&
 	get(const array<_Tp,_Nm>&&)noexcept;
-
 
   template<bool,typename _T1,typename _T2>
 	struct _PCC{
@@ -5087,7 +5047,6 @@ namespace std{
  __const_move_get(const pair<_Tp1,_Tp2>&&__pair)noexcept{ return std::forward<const _Tp2>(__pair.second);}
 	};
 
-
   template<size_t _Int,class _Tp1,class _Tp2>
 	constexpr typename tuple_element<_Int,pair<_Tp1,_Tp2>>::type&
 	get(pair<_Tp1,_Tp2>&__in)noexcept{ return __pair_get<_Int>::__get(__in);}
@@ -5214,7 +5173,6 @@ namespace std{
 	  typedef const _Tp&reference;
 	};
 
-
   template<typename _Iter>
 	__attribute__((__always_inline__))
 	inline constexpr
@@ -5237,7 +5195,6 @@ namespace std{
 	  typedef is_base_of<random_access_iterator_tag,_Cat>_Base;
 	  enum { __value=_Base::value };
 	};
-
 
 }
 #66 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_algobase.h" 2 3
@@ -5416,7 +5373,6 @@ namespace std{
   template<typename _Ptr,typename=void>
 	struct __ptr_traits_elem:__get_first_arg<_Ptr>{ };
 
-
   template<typename _Ptr>
 	struct __ptr_traits_elem<_Ptr,__void_t<typename _Ptr::element_type>>{ using type=typename _Ptr::element_type;};
 
@@ -5427,7 +5383,6 @@ namespace std{
 	struct __ptr_traits_ptr_to{
 	  using pointer=_Ptr;
 	  using element_type=_Elt;
-
 
 	  static pointer
 	  pointer_to(element_type&__r){ return pointer::pointer_to(__r);}
@@ -5440,7 +5395,6 @@ namespace std{
 	struct __ptr_traits_ptr_to<_Tp*,_Tp,false>{
 	  using pointer=_Tp*;
 	  using element_type=_Tp;
-
 
 	  static pointer
 	  pointer_to(element_type&__r)noexcept{ return std::addressof(__r);}
@@ -5471,10 +5425,8 @@ namespace std{
   template<typename _Ptr>
 	struct __ptr_traits_impl<_Ptr,__undefined>{ };
 
-
   template<typename _Ptr>
 	struct pointer_traits:__ptr_traits_impl<_Ptr,__ptr_traits_elem_t<_Ptr>>{ };
-
 
   template<typename _Tp>
 	struct pointer_traits<_Tp*>:__ptr_traits_ptr_to<_Tp*,_Tp>{
@@ -5553,7 +5505,6 @@ namespace std{
 
 	  reverse_iterator&operator=(const reverse_iterator&)=default;
 
-
 	  template<typename _Iter>
 
  constexpr
@@ -5583,7 +5534,6 @@ namespace std{
  return*--__tmp;
 	  }
 
-
 	  [[__nodiscard__]]
 	  constexpr pointer
 	  operator->()const{
@@ -5593,13 +5543,11 @@ namespace std{
  return _S_to_pointer(__tmp);
 	  }
 
-
 	  constexpr reverse_iterator&
 	  operator++(){
 --current;
  return*this;
 	  }
-
 
 	  constexpr reverse_iterator
 	  operator++(int){
@@ -5608,13 +5556,11 @@ namespace std{
  return __tmp;
 	  }
 
-
 	  constexpr reverse_iterator&
 	  operator--(){
 ++current;
  return*this;
 	  }
-
 
 	  constexpr reverse_iterator
 	  operator--(int){
@@ -5623,11 +5569,9 @@ namespace std{
  return __tmp;
 	  }
 
-
 	  [[__nodiscard__]]
 	  constexpr reverse_iterator
 	  operator+(difference_type __n)const{ return reverse_iterator(current-__n);}
-
 
 	  constexpr reverse_iterator&
 	  operator+=(difference_type __n){
@@ -5635,18 +5579,15 @@ namespace std{
  return*this;
 	  }
 
-
 	  [[__nodiscard__]]
 	  constexpr reverse_iterator
 	  operator-(difference_type __n)const{ return reverse_iterator(current+__n);}
-
 
 	  constexpr reverse_iterator&
 	  operator-=(difference_type __n){
  current+=__n;
  return*this;
 	  }
-
 
 	  [[__nodiscard__]]
 	  constexpr reference
@@ -6094,7 +6035,6 @@ namespace __gnu_cxx{
 		const __normal_iterator<_Iterator,_Container>&__rhs)
 	noexcept{ return __lhs.base()>=__rhs.base();}
 
-
   template<typename _IteratorL,typename _IteratorR,typename _Container>
 
 	[[__nodiscard__]]
@@ -6126,7 +6066,6 @@ namespace std{
 	_Iterator
 	__niter_base(__gnu_cxx::__normal_iterator<_Iterator,_Container>__it)
 	noexcept(std::is_nothrow_copy_constructible<_Iterator>::value){ return __it.base();}
-
 
   template<typename _Iterator,typename _Container>
 	constexpr auto
@@ -6209,7 +6148,6 @@ namespace std{
 ++_M_current;
  return __tmp;
 	  }
-
 
 	  constexpr move_iterator&
 	  operator--(){
@@ -6931,7 +6869,6 @@ namespace std{
 
 namespace std{
 
-
   template<typename _Tp,typename _Up>
 	constexpr
 	inline int
@@ -7039,7 +6976,6 @@ namespace std{
 	inline _Iterator
 	__niter_wrap(const _Iterator&,_Iterator __res){ return __res;}
 
-
   template<bool _IsMove,bool _IsSimple,typename _Category>
 	struct __copy_move{
 	  template<typename _II,typename _OI>
@@ -7124,7 +7060,6 @@ namespace std{
 	struct _Deque_iterator;
 
   struct _Bit_iterator;
-
 
   template<typename _CharT>
 	struct char_traits;
@@ -7290,7 +7225,6 @@ namespace std{
 	  return std::__copy_move_a<true>(std::__miter_base(__first),
 		  std::__miter_base(__last),__result);
 	}
-
 
   template<bool _IsMove,bool _IsSimple,typename _Category>
 	struct __copy_move_backward{
@@ -7466,7 +7400,6 @@ namespace std{
 			std::__miter_base(__last),
 			__result);
 	}
-
 
   template<typename _ForwardIterator,typename _Tp>
    
@@ -7851,7 +7784,6 @@ namespace std{
 (__is_memcmp_ordered_with<_ValueType1,_ValueType2>::__value
  &&__is_pointer<_II1>::__value
  &&__is_pointer<_II2>::__value
-
 
  );
 
@@ -8425,7 +8357,6 @@ namespace std{
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/initializer_list" 3
 
-
 namespace std{
 
   template<class _E>
@@ -8459,11 +8390,9 @@ namespace std{
 	  end()const noexcept { return begin()+size();}
 	};
 
-
   template<class _Tp>
 	constexpr const _Tp*
 	begin(initializer_list<_Tp>__ils)noexcept{ return __ils.begin();}
-
 
   template<class _Tp>
 	constexpr const _Tp*
@@ -8558,7 +8487,6 @@ namespace std{
    
 	_IIter
 	find_if_not(_IIter,_IIter,_Predicate);
-
 
   template<typename _IIter1,typename _IIter2>
    
@@ -9167,7 +9095,6 @@ inline namespace _V2 {
 #63 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_heap.h" 3
 namespace std{
 
-
   template<typename _RandomAccessIterator,typename _Distance,
 	typename _Compare>
    
@@ -9591,7 +9518,6 @@ namespace std{
 	  uniform_int_distribution(const param_type&__p)
 	 :_M_param(__p){ }
 
-
 	  void
 	  reset(){ }
 
@@ -9856,7 +9782,6 @@ extern "C++" {
 
 namespace std{
 
-
   class bad_alloc:public exception{
   public:
 	bad_alloc()throw(){ }
@@ -10029,7 +9954,6 @@ namespace std{
 		__destroy(_ForwardIterator,_ForwardIterator){ }
 	};
 
-
   template<typename _ForwardIterator>
 	inline void
 	_Destroy(_ForwardIterator __first,_ForwardIterator __last){
@@ -10063,7 +9987,6 @@ namespace std{
    return __first;
  }
 	};
-
 
   template<typename _ForwardIterator,typename _Size>
 	inline _ForwardIterator
@@ -10128,7 +10051,6 @@ namespace std{
   template<typename _Tp>
 	inline void
 	return_temporary_buffer(_Tp*__p){::operator delete(__p);}
-
 
   template<typename _ForwardIterator,typename _Tp>
 	class _Temporary_buffer{
@@ -10771,7 +10693,6 @@ namespace std{
 	  __gnu_cxx::__ops::__iter_comp_iter(__binary_pred));
 	}
 
-
   template<typename _ForwardIterator,typename _OutputIterator,
 	typename _BinaryPredicate>
    
@@ -10791,7 +10712,6 @@ namespace std{
    }
 	  return++__result;
 	}
-
 
   template<typename _InputIterator,typename _OutputIterator,
 	typename _BinaryPredicate>
@@ -10816,7 +10736,6 @@ namespace std{
 	  return++__result;
 	}
 
-
   template<typename _InputIterator,typename _ForwardIterator,
 	typename _BinaryPredicate>
    
@@ -10834,7 +10753,6 @@ namespace std{
 	  return++__result;
 	}
 
-
   template<typename _BidirectionalIterator>
    
 	void
@@ -10848,7 +10766,6 @@ namespace std{
 	++__first;
    }
 	}
-
 
   template<typename _RandomAccessIterator>
    
@@ -13970,7 +13887,6 @@ using __enable_if_execution_policy=
 	typename std::enable_if<__pstl::execution::is_execution_policy<std::__remove_cvref_t<_ExecPolicy>>::value,
 							_Tp>::type;
 
-
 template<class _IsVector>
 struct __serial_tag;
 template<class _IsVector>
@@ -14448,7 +14364,6 @@ lexicographical_compare(_ExecutionPolicy&&__exec,_ForwardIterator1 __first1,_For
 	   
 #46 "C:/msys64/ucrt64/include/c++/14.1.0/bitset" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/string" 1 3
 #36 "C:/msys64/ucrt64/include/c++/14.1.0/string" 3
 	   
@@ -14487,14 +14402,12 @@ namespace std{
 
 namespace std{
 
-
   template<class _CharT>
 	struct char_traits;
 
   template<>struct char_traits<char>;
 
   template<>struct char_traits<wchar_t>;
-
 
   template<>struct char_traits<char16_t>;
   template<>struct char_traits<char32_t>;
@@ -14820,7 +14733,6 @@ typedef off32_t off_t;
   int __attribute__((__cdecl__))__stdio_common_vfwprintf(unsigned long long options,FILE*file,const wchar_t*format,_locale_t locale,va_list valist);
   int __attribute__((__cdecl__))__stdio_common_vswscanf(unsigned long long options,const wchar_t*input,size_t length,const wchar_t*format,_locale_t locale,va_list valist);
   int __attribute__((__cdecl__))__stdio_common_vfwscanf(unsigned long long options,FILE*file,const wchar_t*format,_locale_t locale,va_list valist);
-
 
 inline __attribute__((__cdecl__))
 													 __attribute__((__nonnull__(2)))
@@ -15750,7 +15662,6 @@ namespace std{
 }
 }
 
-
 namespace __gnu_cxx{
 
   using::wcstold;
@@ -15828,14 +15739,12 @@ namespace std{
  return*this;
 	  }
 
-
 	  fpos
 	  operator+(streamoff __off)const{
  fpos __pos(*this);
  __pos+=__off;
  return __pos;
 	  }
-
 
 	  fpos
 	  operator-(streamoff __off)const{
@@ -15844,11 +15753,9 @@ namespace std{
  return __pos;
 	  }
 
-
 	  streamoff
 	  operator-(const fpos&__other)const{ return _M_off-__other._M_off;}
 	};
-
 
   template<typename _StateT>
 	inline bool
@@ -16492,7 +16399,6 @@ namespace std{
 	  void
 	  deallocate(_Tp*__p,size_type __n __attribute__((__unused__))){
 
-
  if(alignof(_Tp)>16){
 	::operator delete((__p),(__n)*sizeof(_Tp),
 		 std::align_val_t(alignof(_Tp)));
@@ -16501,7 +16407,6 @@ namespace std{
 
 ::operator delete((__p),(__n)*sizeof(_Tp));
 	  }
-
 
 	  __attribute__((__always_inline__))
 	  size_type
@@ -16624,7 +16529,6 @@ namespace std{
 
 	};
 
-
   template<typename _T1,typename _T2>
 	__attribute__((__always_inline__))
 	inline bool
@@ -16636,7 +16540,6 @@ namespace std{
 	inline bool
 	operator!=(const allocator<_T1>&,const allocator<_T2>&)
 	noexcept{ return false;}
-
 
   template<typename _Tp>
 	class allocator<const _Tp>{
@@ -16662,10 +16565,8 @@ namespace std{
 	  template<typename _Up>allocator(const allocator<_Up>&){ }
 	};
 
-
   extern template class allocator<char>;
   extern template class allocator<wchar_t>;
-
 
 }
 #44 "C:/msys64/ucrt64/include/c++/14.1.0/string" 2 3
@@ -17002,7 +16903,6 @@ int vsnprintf(char*__stream,size_t __n,const char*__format,__builtin_va_list __l
   __attribute__((__format__(__gnu_scanf__,3,4)))__attribute__((__nonnull__(3)))
   int __attribute__((__cdecl__))_snscanf(const char*__restrict__ _Src,size_t _MaxCount,const char*__restrict__ _Format,...);
 
-
   __attribute__((__pure__))
   __attribute__((__format__(__ms_printf__,1,0)))__attribute__((__nonnull__(1)))
   __attribute__((__dllimport__))int __attribute__((__cdecl__))_vscprintf(const char*__restrict__ _Format,va_list _ArgList);
@@ -17036,7 +16936,6 @@ int vsnprintf(char*__stream,size_t __n,const char*__format,__builtin_va_list __l
   __attribute__((__dllimport__))size_t __attribute__((__cdecl__))_fwrite_nolock(const void*__restrict__ _DstBuf,size_t _Size,size_t _Count,FILE*__restrict__ _File);
   __attribute__((__dllimport__))int __attribute__((__cdecl__))_ungetc_nolock(int _Ch,FILE*_File);
 
-
   char*__attribute__((__cdecl__))tempnam(const char*_Directory,const char*_FilePrefix);
   int __attribute__((__cdecl__))fcloseall(void);
   FILE*__attribute__((__cdecl__))fdopen(int _FileHandle,const char*_Format);
@@ -17068,7 +16967,6 @@ int vsnprintf(char*__stream,size_t __n,const char*__format,__builtin_va_list __l
 #10 "C:/msys64/ucrt64/include/sec_api/stdio_s.h" 2 3
 #21 "C:/msys64/ucrt64/include/sec_api/stdio_s.h" 3
 extern "C" {
-
 
   __attribute__((__dllimport__))errno_t __attribute__((__cdecl__))clearerr_s(FILE*_File);
 
@@ -17604,7 +17502,6 @@ namespace std{
 	   
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/iosfwd" 3
 
-
 namespace std{
 
 #76 "C:/msys64/ucrt64/include/c++/14.1.0/iosfwd" 3
@@ -17884,7 +17781,6 @@ namespace __cxx11 {
 
 namespace __cxxabiv1{
 
-
   class __forced_unwind{
 	virtual~__forced_unwind()throw();
 
@@ -17964,7 +17860,6 @@ namespace std{
 
   extern template wostream&__ostream_insert(wostream&,const wchar_t*,
 		  streamsize);
-
 
 }
 #47 "C:/msys64/ucrt64/include/c++/14.1.0/string" 2 3
@@ -19076,7 +18971,6 @@ namespace std{
 }
 #39 "C:/msys64/ucrt64/include/c++/14.1.0/bits/refwrap.h" 2 3
 
-
 namespace std{
 
 #56 "C:/msys64/ucrt64/include/c++/14.1.0/bits/refwrap.h" 3
@@ -19114,7 +19008,6 @@ template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_trai
 template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)noexcept>:_Mem_fn_traits_base<_Res,_Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)noexcept>:_Mem_fn_traits_base<_Res,_Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)const noexcept>:_Mem_fn_traits_base<_Res,const _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)const noexcept>:_Mem_fn_traits_base<_Res,const _Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)volatile noexcept>:_Mem_fn_traits_base<_Res,volatile _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)volatile noexcept>:_Mem_fn_traits_base<_Res,volatile _Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)const volatile noexcept>:_Mem_fn_traits_base<_Res,const volatile _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)const volatile noexcept>:_Mem_fn_traits_base<_Res,const volatile _Class,_ArgTypes...>{ using __vararg=true_type;};
 template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)&noexcept>:_Mem_fn_traits_base<_Res,_Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)&noexcept>:_Mem_fn_traits_base<_Res,_Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)const&noexcept>:_Mem_fn_traits_base<_Res,const _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)const&noexcept>:_Mem_fn_traits_base<_Res,const _Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)volatile&noexcept>:_Mem_fn_traits_base<_Res,volatile _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)volatile&noexcept>:_Mem_fn_traits_base<_Res,volatile _Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)const volatile&noexcept>:_Mem_fn_traits_base<_Res,const volatile _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)const volatile&noexcept>:_Mem_fn_traits_base<_Res,const volatile _Class,_ArgTypes...>{ using __vararg=true_type;};
 template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)&&noexcept>:_Mem_fn_traits_base<_Res,_Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)&&noexcept>:_Mem_fn_traits_base<_Res,_Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)const&&noexcept>:_Mem_fn_traits_base<_Res,const _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)const&&noexcept>:_Mem_fn_traits_base<_Res,const _Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)volatile&&noexcept>:_Mem_fn_traits_base<_Res,volatile _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)volatile&&noexcept>:_Mem_fn_traits_base<_Res,volatile _Class,_ArgTypes...>{ using __vararg=true_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes...)const volatile&&noexcept>:_Mem_fn_traits_base<_Res,const volatile _Class,_ArgTypes...>{ using __vararg=false_type;};template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_traits<_Res(_Class::*)(_ArgTypes... ...)const volatile&&noexcept>:_Mem_fn_traits_base<_Res,const volatile _Class,_ArgTypes...>{ using __vararg=true_type;};
-
 
   template<typename _Functor,typename=__void_t<>>
 	struct _Maybe_get_result_type{ };
@@ -19176,7 +19069,6 @@ template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_trai
 	  typedef typename _Tp::first_argument_type first_argument_type;
 	  typedef typename _Tp::second_argument_type second_argument_type;
 	};
-
 
   template<typename _Tp>
 	struct _Reference_wrapper_base
@@ -19320,27 +19212,22 @@ template<typename _Res,typename _Class,typename... _ArgTypes>struct _Mem_fn_trai
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/range_access.h" 3
 
-
 namespace std{
-
 
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr auto
 	begin(_Container&__cont)->decltype(__cont.begin()){ return __cont.begin();}
 
-
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr auto
 	begin(const _Container&__cont)->decltype(__cont.begin()){ return __cont.begin();}
 
-
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr auto
 	end(_Container&__cont)->decltype(__cont.end()){ return __cont.end();}
-
 
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
@@ -19351,7 +19238,6 @@ namespace std{
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr _Tp*
 	begin(_Tp(&__arr)[_Nm])noexcept{ return __arr;}
-
 
   template<typename _Tp,size_t _Nm>
 	[[__nodiscard__,__gnu__::__always_inline__]]
@@ -19365,13 +19251,11 @@ namespace std{
   template<typename _Tp>_Tp*end(valarray<_Tp>&)noexcept;
   template<typename _Tp>const _Tp*end(const valarray<_Tp>&)noexcept;
 
-
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	constexpr auto
 	cbegin(const _Container&__cont)noexcept(noexcept(std::begin(__cont)))
 	 ->decltype(std::begin(__cont)){ return std::begin(__cont);}
-
 
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
@@ -19379,60 +19263,50 @@ namespace std{
 	cend(const _Container&__cont)noexcept(noexcept(std::end(__cont)))
 	 ->decltype(std::end(__cont)){ return std::end(__cont);}
 
-
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr auto
 	rbegin(_Container&__cont)->decltype(__cont.rbegin()){ return __cont.rbegin();}
-
 
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr auto
 	rbegin(const _Container&__cont)->decltype(__cont.rbegin()){ return __cont.rbegin();}
 
-
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr auto
 	rend(_Container&__cont)->decltype(__cont.rend()){ return __cont.rend();}
-
 
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr auto
 	rend(const _Container&__cont)->decltype(__cont.rend()){ return __cont.rend();}
 
-
   template<typename _Tp,size_t _Nm>
 	[[__nodiscard__]]
 	inline constexpr reverse_iterator<_Tp*>
 	rbegin(_Tp(&__arr)[_Nm])noexcept{ return reverse_iterator<_Tp*>(__arr+_Nm);}
-
 
   template<typename _Tp,size_t _Nm>
 	[[__nodiscard__]]
 	inline constexpr reverse_iterator<_Tp*>
 	rend(_Tp(&__arr)[_Nm])noexcept{ return reverse_iterator<_Tp*>(__arr);}
 
-
   template<typename _Tp>
 	[[__nodiscard__]]
 	inline constexpr reverse_iterator<const _Tp*>
 	rbegin(initializer_list<_Tp>__il)noexcept{ return reverse_iterator<const _Tp*>(__il.end());}
-
 
   template<typename _Tp>
 	[[__nodiscard__]]
 	inline constexpr reverse_iterator<const _Tp*>
 	rend(initializer_list<_Tp>__il)noexcept{ return reverse_iterator<const _Tp*>(__il.begin());}
 
-
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
 	inline constexpr auto
 	crbegin(const _Container&__cont)->decltype(std::rbegin(__cont)){ return std::rbegin(__cont);}
-
 
   template<typename _Container>
 	[[__nodiscard__,__gnu__::__always_inline__]]
@@ -19555,7 +19429,6 @@ namespace std{
 
 	  typedef typename _Alloc::value_type value_type;
 
-
 	  using pointer=__detected_or_t<value_type*,__pointer,_Alloc>;
 
 	private:
@@ -19584,33 +19457,24 @@ namespace std{
 
 	public:
 
-
 	  using const_pointer=typename _Ptr<__c_pointer,const value_type>::type;
-
 
 	  using void_pointer=typename _Ptr<__v_pointer,void>::type;
 
-
 	  using const_void_pointer=typename _Ptr<__cv_pointer,const void>::type;
-
 
 	  using difference_type=typename _Diff<_Alloc,pointer>::type;
 
-
 	  using size_type=typename _Size<_Alloc,difference_type>::type;
-
 
 	  using propagate_on_container_copy_assignment
 =__detected_or_t<false_type,__pocca,_Alloc>;
 
-
 	  using propagate_on_container_move_assignment
 =__detected_or_t<false_type,__pocma,_Alloc>;
 
-
 	  using propagate_on_container_swap
 =__detected_or_t<false_type,__pocs,_Alloc>;
-
 
 	  using is_always_equal
 =typename __detected_or_t<is_empty<_Alloc>,__equal,_Alloc>::type;
@@ -19797,7 +19661,6 @@ namespace std{
 
  }
 
-
 	  [[__gnu__::__always_inline__]]
 	  static size_type
 	  max_size(const allocator_type&__a __attribute__((__unused__)))noexcept{
@@ -19805,7 +19668,6 @@ namespace std{
  return __a.max_size();
 
 	  }
-
 
 	  [[__gnu__::__always_inline__]]
 	  static allocator_type
@@ -19865,7 +19727,6 @@ namespace std{
 
 	  static size_type
 	  max_size(const allocator_type&)=delete;
-
 
 	  [[__gnu__::__always_inline__]]
 	  static allocator_type
@@ -20027,7 +19888,6 @@ namespace std{
 
 namespace __gnu_cxx{
 
-
 template<typename _Alloc,typename=typename _Alloc::value_type>
   struct __alloc_traits
 
@@ -20104,12 +19964,10 @@ template<typename _Alloc,typename=typename _Alloc::value_type>
 }
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/bits/basic_string.h" 2 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/string_view" 1 3
 #36 "C:/msys64/ucrt64/include/c++/14.1.0/string_view" 3
 	   
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/string_view" 3
-
 
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 1 3
 #47 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 3
@@ -20128,7 +19986,6 @@ template<typename _Alloc,typename=typename _Alloc::value_type>
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/hash_bytes.h" 3
 
 namespace std{
-
 
   size_t
   _Hash_bytes(const void*__ptr,size_t __len,size_t __seed);
@@ -20200,7 +20057,6 @@ namespace std{
   template<>struct hash<unsigned char>:public __hash_base<size_t,unsigned char>{ size_t operator()(unsigned char __val)const noexcept { return static_cast<size_t>(__val);} };
 
   template<>struct hash<wchar_t>:public __hash_base<size_t,wchar_t>{ size_t operator()(wchar_t __val)const noexcept { return static_cast<size_t>(__val);} };
-
 
   template<>struct hash<char16_t>:public __hash_base<size_t,char16_t>{ size_t operator()(char16_t __val)const noexcept { return static_cast<size_t>(__val);} };
 
@@ -20826,7 +20682,6 @@ namespace std{
 	inline constexpr basic_string_view<wchar_t>
 	operator""sv(const wchar_t*__str,size_t __len)noexcept{ return basic_string_view<wchar_t>{__str,__len};}
 
-
 	inline constexpr basic_string_view<char16_t>
 	operator""sv(const char16_t*__str,size_t __len)noexcept{ return basic_string_view<char16_t>{__str,__len};}
 
@@ -21018,7 +20873,6 @@ namespace std{
 #905 "C:/msys64/ucrt64/include/c++/14.1.0/string_view" 2 3
 #48 "C:/msys64/ucrt64/include/c++/14.1.0/bits/basic_string.h" 2 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 1 3
 #47 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 3
 	   
@@ -21086,7 +20940,6 @@ namespace __cxx11 {
 
  __sv_type _M_sv;
 	  };
-
 
 	 
 	  explicit
@@ -21331,7 +21184,6 @@ namespace __cxx11 {
 
 	public:
 
-
 	 
 	  basic_string()
 	  noexcept(is_nothrow_default_constructible<_Alloc>::value)
@@ -21365,7 +21217,6 @@ namespace __cxx11 {
  _M_construct(__start,__start+__str._M_limit(__pos,npos),
 	   std::forward_iterator_tag());
 	  }
-
 
 	 
 	  basic_string(const basic_string&__str,size_type __pos,
@@ -21435,7 +21286,6 @@ namespace __cxx11 {
  __str._M_set_length(0);
 	  }
 
-
 	 
 	  basic_string(initializer_list<_CharT>__l,const _Alloc&__a=_Alloc())
 	 :_M_dataplus(_M_local_data(),__a){ _M_construct(__l.begin(),__l.end(),std::forward_iterator_tag());}
@@ -21484,7 +21334,6 @@ namespace __cxx11 {
  basic_string(const _Tp&__t,size_type __pos,size_type __n,
 	   const _Alloc&__a=_Alloc())
 :basic_string(_S_to_string_view(__t).substr(__pos,__n),__a){ }
-
 
 	  template<typename _Tp,typename=_If_sv<_Tp,void>>
 
@@ -21573,7 +21422,6 @@ namespace __cxx11 {
  return*this;
 	  }
 
-
 	 template<typename _Tp>
 	  
 	   _If_sv<_Tp,basic_string&>
@@ -21581,7 +21429,6 @@ namespace __cxx11 {
 
 	 
 	  operator __sv_type()const noexcept{ return __sv_type(data(),size());}
-
 
 	  [[__nodiscard__]]
 	  iterator
@@ -21599,26 +21446,21 @@ namespace __cxx11 {
 	  const_iterator
 	  end()const noexcept{ return const_iterator(_M_data()+this->size());}
 
-
 	  [[__nodiscard__]]
 	  reverse_iterator
 	  rbegin()noexcept{ return reverse_iterator(this->end());}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  rbegin()const noexcept{ return const_reverse_iterator(this->end());}
 
-
 	  [[__nodiscard__]]
 	  reverse_iterator
 	  rend()noexcept{ return reverse_iterator(this->begin());}
 
-
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  rend()const noexcept{ return const_reverse_iterator(this->begin());}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
@@ -21628,11 +21470,9 @@ namespace __cxx11 {
 	  const_iterator
 	  cend()const noexcept{ return const_iterator(this->_M_data()+this->size());}
 
-
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  crbegin()const noexcept{ return const_reverse_iterator(this->end());}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
@@ -21672,7 +21512,6 @@ namespace __cxx11 {
  void
  __resize_and_overwrite(size_type __n,_Operation __op);
 
-
 	  [[__nodiscard__]]
 	  size_type
 	  capacity()const noexcept{
@@ -21683,7 +21522,6 @@ namespace __cxx11 {
 	 
 	  void
 	  reserve(size_type __res_arg);
-
 
 	 
 	  void
@@ -21736,7 +21574,6 @@ namespace __cxx11 {
  return _M_data()[__n];
 	  }
 
-
 	  [[__nodiscard__]]
 	  reference
 	  front()noexcept{
@@ -21769,11 +21606,9 @@ namespace __cxx11 {
 	  basic_string&
 	  operator+=(const basic_string&__str){ return this->append(__str);}
 
-
 	 
 	  basic_string&
 	  operator+=(const _CharT*__s){ return this->append(__s);}
-
 
 	 
 	  basic_string&
@@ -21781,7 +21616,6 @@ namespace __cxx11 {
  this->push_back(__c);
  return*this;
 	  }
-
 
 	 
 	  basic_string&
@@ -21791,7 +21625,6 @@ namespace __cxx11 {
 
  _If_sv<_Tp,basic_string&>
  operator+=(const _Tp&__svt){ return this->append(__svt);}
-
 
 	 
 	  basic_string&
@@ -21803,7 +21636,6 @@ namespace __cxx11 {
 	  +__str._M_check(__pos,"basic_string::append"),
 	   __str._M_limit(__pos,__n));}
 
-
 	 
 	  basic_string&
 	  append(const _CharT*__s,size_type __n){
@@ -21811,7 +21643,6 @@ namespace __cxx11 {
  _M_check_length(size_type(0),__n,"basic_string::append");
  return _M_append(__s,__n);
 	  }
-
 
 	 
 	  basic_string&
@@ -21826,7 +21657,6 @@ namespace __cxx11 {
 	  basic_string&
 	  append(size_type __n,_CharT __c){ return _M_replace_aux(this->size(),size_type(0),__n,__c);}
 
-
 	 
 	  basic_string&
 	  append(initializer_list<_CharT>__l){ return this->append(__l.begin(),__l.size());}
@@ -21836,7 +21666,6 @@ namespace __cxx11 {
 
 		basic_string&
 		append(_InputIterator __first,_InputIterator __last){ return this->replace(end(),end(),__first,__last);}
-
 
 	  template<typename _Tp>
 
@@ -21856,7 +21685,6 @@ namespace __cxx11 {
 	   std::__sv_limit(__sv.size(),__pos,__n));
  }
 
-
 	 
 	  void
 	  push_back(_CharT __c){
@@ -21866,7 +21694,6 @@ namespace __cxx11 {
  traits_type::assign(this->_M_data()[__size],__c);
  this->_M_set_length(__size+1);
 	  }
-
 
 	 
 	  basic_string&
@@ -22100,7 +21927,6 @@ namespace __cxx11 {
    this->_M_erase(__pos,__last-__first);
  return iterator(this->_M_data()+__pos);
 	  }
-
 
 	 
 	  void
@@ -22522,7 +22348,6 @@ namespace __cxx11 {
  return __r;
 	  }
 
-
 	  template<typename _Tp>
  [[__nodiscard__]]
  _If_sv<_Tp,int>
@@ -22690,7 +22515,6 @@ namespace __cxx11 {
 		 __lhs.get_allocator());
 	}
 
-
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
 	inline basic_string<_CharT,_Traits,_Alloc>
@@ -22703,7 +22527,6 @@ namespace __cxx11 {
 		 __rhs.get_allocator());
 	}
 
-
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
 	inline basic_string<_CharT,_Traits,_Alloc>
@@ -22713,7 +22536,6 @@ namespace __cxx11 {
 		 __rhs.c_str(),__rhs.size(),
 		 __rhs.get_allocator());
 	}
-
 
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
@@ -22726,7 +22548,6 @@ namespace __cxx11 {
 		 __rhs,_Traits::length(__rhs),
 		 __lhs.get_allocator());
 	}
-
 
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
@@ -22804,7 +22625,6 @@ namespace __cxx11 {
 		&&!_Traits::compare(__lhs.data(),__rhs.data(),__lhs.size());
 	}
 
-
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
 	inline bool
@@ -22827,13 +22647,11 @@ namespace __cxx11 {
 		const basic_string<_CharT,_Traits,_Alloc>&__rhs)
 	noexcept{ return!(__lhs==__rhs);}
 
-
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
 	inline bool
 	operator!=(const _CharT*__lhs,
 		const basic_string<_CharT,_Traits,_Alloc>&__rhs){ return!(__rhs==__lhs);}
-
 
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
@@ -22848,13 +22666,11 @@ namespace __cxx11 {
 	   const basic_string<_CharT,_Traits,_Alloc>&__rhs)
 	noexcept{ return __lhs.compare(__rhs)<0;}
 
-
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
 	inline bool
 	operator<(const basic_string<_CharT,_Traits,_Alloc>&__lhs,
 	   const _CharT*__rhs){ return __lhs.compare(__rhs)<0;}
-
 
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
@@ -22869,13 +22685,11 @@ namespace __cxx11 {
 	   const basic_string<_CharT,_Traits,_Alloc>&__rhs)
 	noexcept{ return __lhs.compare(__rhs)>0;}
 
-
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
 	inline bool
 	operator>(const basic_string<_CharT,_Traits,_Alloc>&__lhs,
 	   const _CharT*__rhs){ return __lhs.compare(__rhs)>0;}
-
 
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
@@ -22890,13 +22704,11 @@ namespace __cxx11 {
 		const basic_string<_CharT,_Traits,_Alloc>&__rhs)
 	noexcept{ return __lhs.compare(__rhs)<=0;}
 
-
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
 	inline bool
 	operator<=(const basic_string<_CharT,_Traits,_Alloc>&__lhs,
 		const _CharT*__rhs){ return __lhs.compare(__rhs)<=0;}
-
 
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
@@ -22911,13 +22723,11 @@ namespace __cxx11 {
 		const basic_string<_CharT,_Traits,_Alloc>&__rhs)
 	noexcept{ return __lhs.compare(__rhs)>=0;}
 
-
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
 	inline bool
 	operator>=(const basic_string<_CharT,_Traits,_Alloc>&__lhs,
 		const _CharT*__rhs){ return __lhs.compare(__rhs)>=0;}
-
 
   template<typename _CharT,typename _Traits,typename _Alloc>
 	[[__nodiscard__]]
@@ -23144,7 +22954,6 @@ namespace __gnu_cxx{
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/bits/charconv.h" 3
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/charconv.h" 3
-
 
 namespace std{
 
@@ -23488,7 +23297,6 @@ namespace __cxx11 {
 
 }
 
-
 namespace std{
 
   template<typename _CharT,typename _Alloc,
@@ -23530,7 +23338,6 @@ namespace std{
   inline namespace string_literals{
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wliteral-suffix"
-
 
 	__attribute((__abi_tag__("cxx11")))
 	inline basic_string<char>
@@ -24386,7 +24193,6 @@ namespace std{
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/memory_resource.h" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/uses_allocator.h" 1 3
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/bits/uses_allocator.h" 3
 namespace std{
@@ -24545,7 +24351,6 @@ namespace std{
 
 namespace std{
 
-
   template<typename... _Elements>
 	class tuple;
 
@@ -24672,7 +24477,6 @@ namespace std{
 #274 "C:/msys64/ucrt64/include/c++/14.1.0/tuple" 3
   template<size_t _Idx,typename... _Elements>
 	struct _Tuple_impl;
-
 
   template<size_t _Idx,typename _Head,typename... _Tail>
 	struct _Tuple_impl<_Idx,_Head,_Tail...>
@@ -25902,7 +25706,6 @@ namespace std{
   template<typename... _Tps>
 	struct __is_tuple_like_impl<tuple<_Tps...>>:true_type{ };
 
-
   template<typename... _Tpls,typename=typename
 		   enable_if<__and_<__is_tuple_like<_Tpls>...>::value>::type>
 
@@ -25933,7 +25736,6 @@ namespace std{
    
 	typename enable_if<!__and_<__is_swappable<_Elements>...>::value>::type
 	swap(tuple<_Elements...>&,tuple<_Elements...>&)=delete;
-
 
   struct _Swallow_assign{
 	template<class _Tp>
@@ -25966,7 +25768,6 @@ namespace std{
 	_Index_tuple<_Indexes1...>,_Index_tuple<_Indexes2...>)
 	 :first(std::forward<_Args1>(std::get<_Indexes1>(__tuple1))...),
  second(std::forward<_Args2>(std::get<_Indexes2>(__tuple2))...){ }
-
 
   template<template<typename...>class _Trait,typename _Tp,typename _Tuple>
 	inline constexpr bool __unpack_std_tuple=false;
@@ -26033,7 +25834,6 @@ namespace std{
 namespace std{
 
 namespace pmr{
-
 
   class memory_resource{
 	static constexpr size_t _S_max_align=alignof(max_align_t);
@@ -26335,7 +26135,6 @@ namespace std{
 #71 "C:/msys64/ucrt64/include/c++/14.1.0/bitset" 3
 namespace std{
 
-
   template<size_t _Nw>
 	struct _Base_bitset{
 	  typedef unsigned long _WordT;
@@ -26351,7 +26150,6 @@ namespace std{
 		,_WordT(__val>>(8*4))
 
 	   } { }
-
 
 	  static constexpr size_t
 	  _S_whichword(size_t __pos)noexcept{ return __pos/(8*4);}
@@ -26595,7 +26393,6 @@ namespace std{
 	  return __not_found;
 	}
 
-
   template<>
 	struct _Base_bitset<1>{
 	  typedef unsigned long _WordT;
@@ -26702,7 +26499,6 @@ namespace std{
 	  }
 	};
 
-
   template<>
 	struct _Base_bitset<0>{
 	  typedef unsigned long _WordT;
@@ -26722,7 +26518,6 @@ namespace std{
 
 	  static constexpr _WordT
 	  _S_maskbit(size_t __pos)noexcept{ return(static_cast<_WordT>(1))<<_S_whichbit(__pos);}
-
 
 	  __attribute__((__noreturn__))
 	  _WordT&
@@ -27041,7 +26836,6 @@ namespace std{
 	  _Unchecked_test(size_t __pos)const noexcept{ return((this->_M_getword(__pos)&_Base::_S_maskbit(__pos))
  !=static_cast<_WordT>(0));}
 
-
 	 
 	  bitset<_Nb>&
 	  set()noexcept{
@@ -27049,7 +26843,6 @@ namespace std{
  this->_M_do_sanitize();
  return*this;
 	  }
-
 
 	 
 	  bitset<_Nb>&
@@ -27079,7 +26872,6 @@ namespace std{
  this->_M_do_sanitize();
  return*this;
 	  }
-
 
 	 
 	  bitset<_Nb>&
@@ -27189,7 +26981,6 @@ namespace std{
  this->_M_check(__position,("bitset::test"));
  return _Unchecked_test(__position);
 	  }
-
 
 	 
 	  bool
@@ -27402,7 +27193,6 @@ namespace std{
 
 }
 
-
 namespace std{
 
   template<size_t _Nb>
@@ -27434,12 +27224,10 @@ namespace std{
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/std_function.h" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/typeinfo" 1 3
 #32 "C:/msys64/ucrt64/include/c++/14.1.0/typeinfo" 3
 	   
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/typeinfo" 3
-
 
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 1 3
 #47 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 3
@@ -27456,7 +27244,6 @@ namespace __cxxabiv1{
 }
 #83 "C:/msys64/ucrt64/include/c++/14.1.0/typeinfo" 3
 namespace std{
-
 
   class type_info{
   public:
@@ -27483,7 +27270,6 @@ namespace std{
 
 	virtual bool __is_function_p()const;
 
-
 	virtual bool __do_catch(const type_info*__thr_type,void**__thr_obj,
 	   unsigned __outer)const;
 
@@ -27499,7 +27285,6 @@ namespace std{
 
 	type_info&operator=(const type_info&)=delete;
 	type_info(const type_info&)=delete;
-
 
 	bool __equal(const type_info&)const noexcept;
 
@@ -27531,14 +27316,12 @@ namespace std{
 
 namespace std{
 
-
   class bad_function_call:public std::exception{
   public:
 	virtual~bad_function_call()noexcept;
 
 	const char*what()const noexcept;
   };
-
 
   template<typename _Tp>
 	struct __is_location_invariant
@@ -27756,7 +27539,6 @@ namespace std{
 	struct _Target_handler<_Signature,_Functor,false>
 	:_Function_handler<void,void>{ };
 
-
   template<typename _Res,typename... _ArgTypes>
 	class function<_Res(_ArgTypes...)>
 	:public _Maybe_unary_or_binary_function<_Res,_ArgTypes...>,
@@ -27782,7 +27564,6 @@ namespace std{
 
 	public:
 	  typedef _Res result_type;
-
 
 	  function()noexcept
 	 :_Function_base(){ }
@@ -27968,7 +27749,6 @@ namespace std{
 	inline bool
 	operator==(nullptr_t,const function<_Res(_Args...)>&__f)noexcept{ return!static_cast<bool>(__f);}
 
-
   template<typename _Res,typename... _Args>
 	inline bool
 	operator!=(const function<_Res(_Args...)>&__f,nullptr_t)noexcept{ return static_cast<bool>(__f);}
@@ -28010,7 +27790,6 @@ namespace std{
 #32 "C:/msys64/ucrt64/include/c++/14.1.0/ext/aligned_buffer.h" 3
 	   
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/ext/aligned_buffer.h" 3
-
 
 namespace __gnu_cxx{
 
@@ -28255,7 +28034,6 @@ namespace __detail{
 	  using __unique_keys=__bool_constant<_Unique_keys>;
 	};
 
-
   template<typename _Hash>
 	struct _Hashtable_hash_traits{
 	  static constexpr std::size_t
@@ -28269,7 +28047,6 @@ namespace __detail{
 
 	_Hash_node_base(_Hash_node_base*__next)noexcept:_M_nxt(__next){ }
   };
-
 
   template<typename _Value>
 	struct _Hash_node_value_base{
@@ -28425,7 +28202,6 @@ namespace __detail{
 	  }
 	};
 
-
   struct _Mod_range_hashing{
 	typedef std::size_t first_argument_type;
 	typedef std::size_t second_argument_type;
@@ -28435,7 +28211,6 @@ namespace __detail{
 	operator()(first_argument_type __num,
 		second_argument_type __den)const noexcept{ return __num%__den;}
   };
-
 
   struct _Default_ranged_hash { };
 
@@ -28710,7 +28485,6 @@ namespace __detail{
 	:_Map_base<_Key,pair<const _Key,_Val>,_Alloc,_Select1st,_Equal,_Hash,
   _RangeHash,_Unused,_RehashPolicy,_Traits,__uniq>{ };
 
-
   template<typename _Key,typename _Value,typename _Alloc,
 	typename _ExtractKey,typename _Equal,
 	typename _Hash,typename _RangeHash,typename _Unused,
@@ -28860,7 +28634,6 @@ namespace __detail{
    __h._M_insert(*__first,__node_gen,__uks);
 	  }
 
-
   template<typename _Key,typename _Value,typename _Alloc,
 	typename _ExtractKey,typename _Equal,
 	typename _Hash,typename _RangeHash,typename _Unused,
@@ -28957,7 +28730,6 @@ namespace __detail{
   template<typename _Policy>
 	using __has_load_factor=typename _Policy::__has_load_factor;
 
-
   template<typename _Key,typename _Value,typename _Alloc,
 	typename _ExtractKey,typename _Equal,
 	typename _Hash,typename _RangeHash,typename _Unused,
@@ -29007,7 +28779,6 @@ namespace __detail{
 	  }
 	};
 
-
   template<int _Nm,typename _Tp,
 	bool __use_ebo=!__is_final(_Tp)&&__is_empty(_Tp)>
 	struct _Hashtable_ebo_helper;
@@ -29039,7 +28810,6 @@ namespace __detail{
 	private:
 	  _Tp _M_tp{};
 	};
-
 
   template<typename _Key,typename _Value,typename _ExtractKey,
 	typename _Hash,typename _RangeHash,typename _Unused,
@@ -29731,7 +29501,6 @@ namespace std{
 	explicit constexpr _Enable_default_constructor_tag()=default;
   };
 
-
 template<bool _Switch,typename _Tag=void>
   struct _Enable_default_constructor{
 	constexpr _Enable_default_constructor()noexcept=default;
@@ -29748,10 +29517,8 @@ template<bool _Switch,typename _Tag=void>
 	_Enable_default_constructor(_Enable_default_constructor_tag){ }
   };
 
-
 template<bool _Switch,typename _Tag=void>
   struct _Enable_destructor { };
-
 
 template<bool _Copy,bool _CopyAssignment,
 		 bool _Move,bool _MoveAssignment,
@@ -29966,7 +29733,6 @@ template<typename _Tag>
 	   
 #48 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 3
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/bits/node_handle.h" 2 3
-
 
 namespace std{
 
@@ -30472,7 +30238,6 @@ namespace std{
 	  size_type _M_element_count=0;
 	  _RehashPolicy _M_rehash_policy;
 
-
 	  __node_base_ptr _M_single_bucket=nullptr;
 
 	  void
@@ -30745,7 +30510,6 @@ namespace std{
  return static_cast<float>(size())/static_cast<float>(bucket_count());
 	  }
 
-
 	  const _RehashPolicy&
 	  __rehash_policy()const{ return _M_rehash_policy;}
 
@@ -30961,7 +30725,6 @@ namespace std{
 	  clear()noexcept;
 
 	  void rehash(size_type __bkt_count);
-
 
 	  insert_return_type
 	  _M_reinsert_node(node_type&&__nh){
@@ -32091,7 +31854,6 @@ namespace std{
    __n=static_cast<__node_ptr>(__prev_n->_M_nxt);
  }
 
-
 	  __node_ptr __n_last=__n->_M_next();
 	  while(__n_last&&this->_M_node_equals(*__n,*__n_last))
  __n_last=__n_last->_M_next();
@@ -32258,7 +32020,6 @@ namespace std{
 	   __p->_M_nxt=__prev_p->_M_nxt;
 	   __prev_p->_M_nxt=__p;
 
-
 	   __check_bucket=true;
 	 }
    else{
@@ -32407,11 +32168,9 @@ namespace std{
 	  unordered_map(const allocator_type&__a)
 :_M_h(__a){ }
 
-
 	  unordered_map(const unordered_map&__umap,
 	  const allocator_type&__a)
 	 :_M_h(__umap._M_h,__a){ }
-
 
 	  unordered_map(unordered_map&&__umap,
 	  const allocator_type&__a)
@@ -32478,10 +32237,8 @@ namespace std{
 	  size_type
 	  max_size()const noexcept{ return _M_h.max_size();}
 
-
 	  iterator
 	  begin()noexcept{ return _M_h.begin();}
-
 
 	  const_iterator
 	  begin()const noexcept{ return _M_h.begin();}
@@ -32489,10 +32246,8 @@ namespace std{
 	  const_iterator
 	  cbegin()const noexcept{ return _M_h.begin();}
 
-
 	  iterator
 	  end()noexcept{ return _M_h.end();}
-
 
 	  const_iterator
 	  end()const noexcept{ return _M_h.end();}
@@ -32631,7 +32386,6 @@ namespace std{
 	  iterator
 	  erase(const_iterator __first,const_iterator __last){ return _M_h.erase(__first,__last);}
 
-
 	  void
 	  clear()noexcept{ _M_h.clear();}
 #811 "C:/msys64/ucrt64/include/c++/14.1.0/bits/unordered_map.h" 3
@@ -32663,7 +32417,6 @@ namespace std{
 	  template<typename _H2,typename _P2>
  void
  merge(unordered_multimap<_Key,_Tp,_H2,_P2,_Alloc>&&__source){ merge(__source);}
-
 
 	  hasher
 	  hash_function()const{ return _M_h.hash_function();}
@@ -32704,14 +32457,11 @@ namespace std{
 	  size_type
 	  max_bucket_count()const noexcept{ return _M_h.max_bucket_count();}
 
-
 	  size_type
 	  bucket_size(size_type __n)const{ return _M_h.bucket_size(__n);}
 
-
 	  size_type
 	  bucket(const key_type&__key)const{ return _M_h.bucket(__key);}
-
 
 	  local_iterator
 	  begin(size_type __n){ return _M_h.begin(__n);}
@@ -32886,11 +32636,9 @@ namespace std{
 	  unordered_multimap(const allocator_type&__a)
 	 :_M_h(__a){ }
 
-
 	  unordered_multimap(const unordered_multimap&__ummap,
 	const allocator_type&__a)
 	 :_M_h(__ummap._M_h,__a){ }
-
 
 	  unordered_multimap(unordered_multimap&&__ummap,
 	const allocator_type&__a)
@@ -32957,10 +32705,8 @@ namespace std{
 	  size_type
 	  max_size()const noexcept{ return _M_h.max_size();}
 
-
 	  iterator
 	  begin()noexcept{ return _M_h.begin();}
-
 
 	  const_iterator
 	  begin()const noexcept{ return _M_h.begin();}
@@ -32968,10 +32714,8 @@ namespace std{
 	  const_iterator
 	  cbegin()const noexcept{ return _M_h.begin();}
 
-
 	  iterator
 	  end()noexcept{ return _M_h.end();}
-
 
 	  const_iterator
 	  end()const noexcept{ return _M_h.end();}
@@ -33041,7 +32785,6 @@ namespace std{
 	  iterator
 	  erase(const_iterator __first,const_iterator __last){ return _M_h.erase(__first,__last);}
 
-
 	  void
 	  clear()noexcept{ _M_h.clear();}
 #1754 "C:/msys64/ucrt64/include/c++/14.1.0/bits/unordered_map.h" 3
@@ -33076,7 +32819,6 @@ namespace std{
  void
  merge(unordered_map<_Key,_Tp,_H2,_P2,_Alloc>&&__source){ merge(__source);}
 
-
 	  hasher
 	  hash_function()const{ return _M_h.hash_function();}
 
@@ -33104,14 +32846,11 @@ namespace std{
 	  size_type
 	  max_bucket_count()const noexcept{ return _M_h.max_bucket_count();}
 
-
 	  size_type
 	  bucket_size(size_type __n)const{ return _M_h.bucket_size(__n);}
 
-
 	  size_type
 	  bucket(const key_type&__key)const{ return _M_h.bucket(__key);}
-
 
 	  local_iterator
 	  begin(size_type __n){ return _M_h.begin(__n);}
@@ -33265,7 +33004,6 @@ namespace std{
 	operator!=(const unordered_multimap<_Key,_Tp,_Hash,_Pred,_Alloc>&__x,
 		const unordered_multimap<_Key,_Tp,_Hash,_Pred,_Alloc>&__y){ return!(__x==__y);}
 
-
   template<typename _Key,typename _Val,typename _Hash1,typename _Eq1,
 	typename _Alloc,typename _Hash2,typename _Eq2>
 	struct _Hash_merge_helper<
@@ -33366,7 +33104,6 @@ namespace std{
 #58 "C:/msys64/ucrt64/include/c++/14.1.0/vector" 3
 	   
 #59 "C:/msys64/ucrt64/include/c++/14.1.0/vector" 3
-
 
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_uninitialized.h" 1 3
 #70 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_uninitialized.h" 3
@@ -33800,7 +33537,6 @@ namespace std{
 	inline _ForwardIterator
 	__uninitialized_default_n(_ForwardIterator __first,_Size __n){
 
-
 	  typedef typename iterator_traits<_ForwardIterator>::value_type
  _ValueType;
 
@@ -34012,7 +33748,6 @@ namespace std{
 	  return __uninitialized_default_novalue_n(__first,__count);
 	}
 
-
   template<typename _ForwardIterator>
 	inline void
 	uninitialized_value_construct(_ForwardIterator __first,
@@ -34112,7 +33847,6 @@ namespace std{
 	 std::__niter_base(__last),
 	 std::__niter_base(__result),__alloc);
 	}
-
 
 }
 #66 "C:/msys64/ucrt64/include/c++/14.1.0/vector" 2 3
@@ -34268,7 +34002,6 @@ namespace std{
 	  static_assert(is_same<typename remove_cv<_Tp>::type,_Tp>::value,
    "std::vector must have a non-const, non-volatile value_type");
 
-
 	  typedef _Vector_base<_Tp,_Alloc>_Base;
 	  typedef typename _Base::_Tp_alloc_type _Tp_alloc_type;
 	  typedef __gnu_cxx::__alloc_traits<_Tp_alloc_type>_Alloc_traits;
@@ -34332,7 +34065,6 @@ namespace std{
 	  using _Base::_M_get_Tp_allocator;
 
 	public:
-
 
 	  vector()=default;
 #540 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_vector.h" 3
@@ -34467,61 +34199,49 @@ namespace std{
 
 	  using _Base::get_allocator;
 
-
 	  [[__nodiscard__]]
 	  iterator
 	  begin()noexcept{ return iterator(this->_M_impl._M_start);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  begin()const noexcept{ return const_iterator(this->_M_impl._M_start);}
 
-
 	  [[__nodiscard__]]
 	  iterator
 	  end()noexcept{ return iterator(this->_M_impl._M_finish);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  end()const noexcept{ return const_iterator(this->_M_impl._M_finish);}
 
-
 	  [[__nodiscard__]]
 	  reverse_iterator
 	  rbegin()noexcept{ return reverse_iterator(end());}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  rbegin()const noexcept{ return const_reverse_iterator(end());}
 
-
 	  [[__nodiscard__]]
 	  reverse_iterator
 	  rend()noexcept{ return reverse_iterator(begin());}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  rend()const noexcept{ return const_reverse_iterator(begin());}
 
-
 	  [[__nodiscard__]]
 	  const_iterator
 	  cbegin()const noexcept{ return const_iterator(this->_M_impl._M_start);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  cend()const noexcept{ return const_iterator(this->_M_impl._M_finish);}
 
-
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  crbegin()const noexcept{ return const_reverse_iterator(end());}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
@@ -34556,7 +34276,6 @@ namespace std{
 	 
 	  void
 	  shrink_to_fit(){ _M_shrink_to_fit();}
-
 
 	  [[__nodiscard__]]
 	  size_type
@@ -34752,7 +34471,6 @@ namespace std{
 	  __x._M_get_Tp_allocator());
 	  }
 
-
 	 
 	  void
 	  clear()noexcept{ _M_erase_at_end(this->_M_impl._M_start);}
@@ -34849,7 +34567,6 @@ namespace std{
 	 
 	  void
 	  _M_fill_assign(size_type __n,const value_type&__val);
-
 
 	  template<typename _Integer>
 
@@ -35752,7 +35469,6 @@ namespace std{
  return*this;
 	  }
 
-
 	 
 	  void
 	  assign(size_type __n,const bool&__x){ _M_fill_assign(__n,__x);}
@@ -35966,7 +35682,6 @@ namespace std{
  return begin()+__offset;
 	  }
 
-
 	 
 	  iterator
 	  insert(const_iterator __p,initializer_list<bool>__l){ return this->insert(__p,__l.begin(),__l.end());}
@@ -36174,7 +35889,6 @@ namespace std{
 	  _M_erase(iterator __first,iterator __last);
 
 	protected:
-
 
 	  void data()=delete;
 
@@ -36595,7 +36309,6 @@ namespace std{
 	 std::__to_address(__new_start+__elems_before),
 	 std::forward<_Args>(__args)...);
 
-
  if constexpr(_S_use_relocate()){
 
 	 __new_finish=_S_relocate(__old_start,__position.base(),
@@ -36684,7 +36397,6 @@ namespace std{
  _Alloc_traits::construct(this->_M_impl,
 	 std::__to_address(__new_start+__elems),
 	 std::forward<_Args>(__args)...);
-
 
  if constexpr(_S_use_relocate()){
 
@@ -37220,7 +36932,6 @@ namespace std{
 	  using vector=std::vector<_Tp,polymorphic_allocator<_Tp>>;
   }
 
-
 }
 #65 "C:/msys64/ucrt64/include/c++/14.1.0/functional" 2 3
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/array" 1 3
@@ -37549,7 +37260,6 @@ namespace std{
 
 namespace std{
 
-
   template<int _Num>struct _Placeholder { };
 #115 "C:/msys64/ucrt64/include/c++/14.1.0/functional" 3
   template<typename _Callable,typename... _Args>
@@ -37641,7 +37351,6 @@ namespace std{
   template<typename _Tp>inline constexpr int is_placeholder_v
 	=is_placeholder<_Tp>::value;
 
-
   namespace placeholders{
 #301 "C:/msys64/ucrt64/include/c++/14.1.0/functional" 3
 	inline const _Placeholder<1>_1;
@@ -37676,7 +37385,6 @@ namespace std{
 
   }
 
-
   template<int _Num>
 	struct is_placeholder<_Placeholder<_Num>>
 	:public integral_constant<int,_Num>{ };
@@ -37695,7 +37403,6 @@ namespace std{
 	bool _IsPlaceholder=(is_placeholder<_Arg>::value>0)>
 	class _Mu;
 
-
   template<typename _Tp>
 	class _Mu<reference_wrapper<_Tp>,false,false>{
 	public:
@@ -37705,7 +37412,6 @@ namespace std{
  _Tp&
  operator()(_CVRef&__arg,_Tuple&)const volatile{ return __arg.get();}
 	};
-
 
   template<typename _Arg>
 	class _Mu<_Arg,true,false>{
@@ -37734,7 +37440,6 @@ namespace std{
  }
 	};
 
-
   template<typename _Arg>
 	class _Mu<_Arg,false,true>{
 	public:
@@ -37746,7 +37451,6 @@ namespace std{
 	::std::get<(is_placeholder<_Arg>::value-1)>(std::move(__tuple));
  }
 	};
-
 
   template<typename _Arg>
 	class _Mu<_Arg,false,false>{
@@ -38059,7 +37763,6 @@ namespace std{
   template<typename _Func,typename... _BoundArgs>
 	struct _Bind_helper<true,_Func,_BoundArgs...>{ };
 
-
   template<typename _Func,typename... _BoundArgs>
 	inline typename
 	_Bind_helper<__is_socketlike<_Func>::value,_Func,_BoundArgs...>::type
@@ -38077,7 +37780,6 @@ namespace std{
 	  __functor_type(typename decay<_BoundArgs>::type...)>
  type;
 	};
-
 
   template<typename _Result,typename _Func,typename... _BoundArgs>
 	inline
@@ -38389,7 +38091,6 @@ namespace std{
 	  return std::make_pair(__last,__last);
 	}
 
-
 }
 #54 "C:/msys64/ucrt64/include/c++/14.1.0/x86_64-w64-mingw32/bits/stdc++.h" 2 3
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/iterator" 1 3
@@ -38397,15 +38098,12 @@ namespace std{
 	   
 #59 "C:/msys64/ucrt64/include/c++/14.1.0/iterator" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stream_iterator.h" 1 3
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stream_iterator.h" 3
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stream_iterator.h" 3
 
-
 namespace std{
-
 
  
 #50 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stream_iterator.h" 3
@@ -38562,7 +38260,6 @@ namespace std{
 	   
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/streambuf" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/ios_base.h" 1 3
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/bits/ios_base.h" 3
 	   
@@ -38596,7 +38293,6 @@ typedef _pid_t pid_t;
 typedef unsigned short _mode_t;
 
 typedef _mode_t mode_t;
-
 
 typedef unsigned int useconds_t;
 
@@ -38645,7 +38341,6 @@ __attribute__((__dllimport__))int __attribute__((__cdecl__))_crt_at_quick_exit(_
 }
 #11 "C:/msys64/ucrt64/include/process.h" 2 3
 
-
 extern "C" {
 #32 "C:/msys64/ucrt64/include/process.h" 3
   typedef void(__attribute__((__cdecl__))*_beginthread_proc_type)(void*);
@@ -38690,7 +38385,6 @@ extern "C" {
   int __attribute__((__cdecl__))execlp(const char*_Filename,const char*_ArgList,...);
   int __attribute__((__cdecl__))execlpe(const char*_Filename,const char*_ArgList,...);
 
-
   intptr_t __attribute__((__cdecl__))spawnl(int,const char*_Filename,const char*_ArgList,...);
   intptr_t __attribute__((__cdecl__))spawnle(int,const char*_Filename,const char*_ArgList,...);
   intptr_t __attribute__((__cdecl__))spawnlp(int,const char*_Filename,const char*_ArgList,...);
@@ -38700,7 +38394,6 @@ extern "C" {
   __attribute__((__dllimport__))int __attribute__((__cdecl__))execve(const char*_Filename,char*const _ArgList[],char*const _Env[]);
   __attribute__((__dllimport__))int __attribute__((__cdecl__))execvp(const char*_Filename,char*const _ArgList[]);
   __attribute__((__dllimport__))int __attribute__((__cdecl__))execvpe(const char*_Filename,char*const _ArgList[],char*const _Env[]);
-
 
   __attribute__((__dllimport__))intptr_t __attribute__((__cdecl__))spawnv(int,const char*_Filename,char*const _ArgList[]);
   __attribute__((__dllimport__))intptr_t __attribute__((__cdecl__))spawnve(int,const char*_Filename,char*const _ArgList[],char*const _Env[]);
@@ -39065,7 +38758,6 @@ typedef void*pthread_barrier_t;
  int pthread_condattr_getpshared(const pthread_condattr_t*a,int*s);
  int pthread_condattr_setpshared(pthread_condattr_t*a,int s);
 
-
  int pthread_condattr_getclock(const pthread_condattr_t*attr,
 	   clockid_t*clock_id);
  int pthread_condattr_setclock(pthread_condattr_t*attr,
@@ -39105,9 +38797,6 @@ typedef pthread_mutex_t __gthread_recursive_mutex_t;
 typedef pthread_cond_t __gthread_cond_t;
 typedef struct timespec __gthread_time_t;
 #108 "C:/msys64/ucrt64/include/c++/14.1.0/x86_64-w64-mingw32/bits/gthr-default.h" 3
-
-
-
 
 
 
@@ -39322,7 +39011,6 @@ namespace __gnu_cxx{
 
   }
 
-
   inline _Atomic_word
   __attribute__((__always_inline__))
   __exchange_and_add(volatile _Atomic_word*__mem,int __val){ return __atomic_fetch_add(__mem,__val,4);}
@@ -39437,7 +39125,6 @@ namespace std{
 	template<typename _Facet>
 	  locale
 	  combine(const locale&__other)const;
-
 
 	__attribute((__abi_tag__("cxx11")))
 	string
@@ -39856,7 +39543,6 @@ namespace std{
 	  const size_t __i=_Facet::id._M_id();
 	  const locale::facet**__facets=__loc._M_impl->_M_facets;
 
-
 	  if constexpr(__is_same(_Facet,ctype<char>))return static_cast<const _Facet*>(__facets[__i]);
 	  if constexpr(__is_same(_Facet,num_get<char>))return static_cast<const _Facet*>(__facets[__i]);
 	  if constexpr(__is_same(_Facet,num_put<char>))return static_cast<const _Facet*>(__facets[__i]);
@@ -40227,17 +39913,14 @@ namespace std{
   __attribute__((__deprecated__))
   unexpected_handler set_unexpected(unexpected_handler)noexcept;
 
-
   __attribute__((__deprecated__))
   unexpected_handler get_unexpected()noexcept;
-
 
   __attribute__((__deprecated__))
   void unexpected()__attribute__((__noreturn__,__cold__));
 #124 "C:/msys64/ucrt64/include/c++/14.1.0/exception" 3
   __attribute__((__deprecated__("use '" "std::uncaught_exceptions()" "' instead")))
   bool uncaught_exception()noexcept __attribute__((__pure__));
-
 
   int uncaught_exceptions()noexcept __attribute__((__pure__));
 
@@ -40297,7 +39980,6 @@ extern "C++" {
 namespace std{
   class type_info;
 
-
   namespace __exception_ptr{
 	class exception_ptr;
   }
@@ -40355,7 +40037,6 @@ namespace std{
 	  swap(exception_ptr&)noexcept;
 #162 "C:/msys64/ucrt64/include/c++/14.1.0/bits/exception_ptr.h" 3
 	  explicit operator bool()const noexcept{ return _M_exception_object;}
-
 
 	  friend bool
 	  operator==(const exception_ptr&__x,const exception_ptr&__y)
@@ -40621,7 +40302,6 @@ namespace std{
 	virtual~out_of_range()noexcept;
   };
 
-
   class runtime_error:public exception{
 	__cow_string _M_msg;
 
@@ -40690,7 +40370,6 @@ namespace std{
 
 namespace std{
 
-
   class error_code;
   class error_condition;
   class system_error;
@@ -40725,7 +40404,6 @@ inline namespace _V2 {
 
 	virtual const char*
 	name()const noexcept=0;
-
 
   private:
 	__attribute((__abi_tag__("cxx11")))
@@ -40840,7 +40518,6 @@ namespace __adl_only{
 	||(__lhs.category()==__rhs.category()
  &&__lhs.value()<__rhs.value()));
   }
-
 
   template<typename _CharT,typename _Traits>
 	basic_ostream<_CharT,_Traits>&
@@ -40989,7 +40666,6 @@ namespace __adl_only{
 
 namespace std{
 
-
   template<>
 	struct hash<error_code>
 	:public __hash_base<size_t,error_code>{
@@ -40999,7 +40675,6 @@ namespace std{
  return std::_Hash_impl::__hash_combine(&__e.category(),__tmp);
 	  }
 	};
-
 
   template<>
 	struct hash<error_condition>
@@ -41015,7 +40690,6 @@ namespace std{
 #47 "C:/msys64/ucrt64/include/c++/14.1.0/bits/ios_base.h" 2 3
 
 namespace std{
-
 
   enum _Ios_Fmtflags{
 	  _S_boolalpha=1L<<0,
@@ -41355,7 +41029,6 @@ namespace std{
 	  static bool _S_synced_with_stdio;
 	};
 
-
 	fmtflags
 	flags()const{ return _M_flags;}
 #692 "C:/msys64/ucrt64/include/c++/14.1.0/bits/ios_base.h" 3
@@ -41381,13 +41054,11 @@ namespace std{
 	  return __old;
 	}
 
-
 	void
 	unsetf(fmtflags __mask){ _M_flags&=~__mask;}
 #751 "C:/msys64/ucrt64/include/c++/14.1.0/bits/ios_base.h" 3
 	streamsize
 	precision()const{ return _M_precision;}
-
 
 	streamsize
 	precision(streamsize __prec){
@@ -41396,10 +41067,8 @@ namespace std{
 	  return __old;
 	}
 
-
 	streamsize
 	width()const{ return _M_width;}
-
 
 	streamsize
 	width(streamsize __wide){
@@ -41589,7 +41258,6 @@ namespace std{
 	return __base;
   }
 
-
   inline ios_base&
   hexfloat(ios_base&__base){
 	__base.setf(ios_base::fixed|ios_base::scientific,ios_base::floatfield);
@@ -41615,7 +41283,6 @@ namespace std{
   template<typename _CharT,typename _Traits>
 	class basic_streambuf{
 	public:
-
 
 	  typedef _CharT char_type;
 	  typedef _Traits traits_type;
@@ -41664,7 +41331,6 @@ namespace std{
   basic_string<_CharT2,_Traits2,_Alloc>&,_CharT2);
 
 	protected:
-
 
 	  char_type*_M_in_beg;
 	  char_type*_M_in_cur;
@@ -42038,7 +41704,6 @@ namespace std{
 
 namespace std{
 
-
  
 #49 "C:/msys64/ucrt64/include/c++/14.1.0/bits/streambuf_iterator.h" 3
 #pragma GCC diagnostic push
@@ -42086,7 +41751,6 @@ namespace std{
 
 	private:
 
-
 	  mutable streambuf_type*_M_sbuf;
 	  int_type _M_c;
 
@@ -42094,7 +41758,6 @@ namespace std{
 
 	  constexpr istreambuf_iterator()noexcept
 	 :_M_sbuf(0),_M_c(traits_type::eof()){ }
-
 
 	  istreambuf_iterator(const istreambuf_iterator&)noexcept=default;
 
@@ -42160,7 +41823,6 @@ namespace std{
  return traits_type::eq_int_type(__c,__eof);
 	  }
 
-
 	};
 
   template<typename _CharT,typename _Traits>
@@ -42179,7 +41841,6 @@ namespace std{
 	class ostreambuf_iterator
 	:public iterator<output_iterator_tag,void,void,void,void>{
 	public:
-
 
 	  typedef _CharT char_type;
 	  typedef _Traits traits_type;
@@ -42414,7 +42075,6 @@ namespace std{
 #158 "C:/msys64/ucrt64/include/c++/14.1.0/limits" 3
 namespace std{
 
-
   enum float_round_style{
 	round_indeterminate=-1,
 	round_toward_zero=0,
@@ -42422,7 +42082,6 @@ namespace std{
 	round_toward_infinity=2,
 	round_toward_neg_infinity=3
   };
-
 
   enum float_denorm_style{
 
@@ -43546,7 +43205,6 @@ namespace std{
 	  =round_to_nearest;
 	};
 
-
   template<>
 	struct numeric_limits<double>{
 	  static constexpr bool is_specialized=true;
@@ -43613,7 +43271,6 @@ namespace std{
 	  static constexpr float_round_style round_style
 	  =round_to_nearest;
 	};
-
 
   template<>
 	struct numeric_limits<long double>{
@@ -43702,7 +43359,6 @@ __extension__ template<>struct numeric_limits<_Float128>{ static constexpr bool 
 
 	  static constexpr __float128
 	  max()noexcept{
-
 
  return __extension__ 0x1.ffffffffffffffffffffffffffffp+16383Q;
 
@@ -43868,7 +43524,6 @@ align(size_t __align,size_t __size,void*&__ptr,size_t&__space)noexcept{
 #47 "C:/msys64/ucrt64/include/c++/14.1.0/bits/unique_ptr.h" 3
 namespace std{
 
-
  
 #57 "C:/msys64/ucrt64/include/c++/14.1.0/bits/unique_ptr.h" 3
 #pragma GCC diagnostic push
@@ -43876,12 +43531,10 @@ namespace std{
   template<typename>class auto_ptr;
 #pragma GCC diagnostic pop
 
-
   template<typename _Tp>
 	struct default_delete{
 
 	  constexpr default_delete()noexcept=default;
-
 
 	  template<typename _Up,
 		typename=_Require<is_convertible<_Up*,_Tp*>>>
@@ -44030,7 +43683,6 @@ namespace std{
 	  __uniq_ptr_data&operator=(__uniq_ptr_data&&)=delete;
 	};
 
-
   template<typename _Tp,typename _Dp=default_delete<_Tp>>
 	class unique_ptr{
 	  template<typename _Up>
@@ -44057,7 +43709,6 @@ namespace std{
 	  template<typename _Del=_Dp,typename=_DeleterConstraint<_Del>>
  constexpr unique_ptr()noexcept
 :_M_t(){ }
-
 
 	  template<typename _Del=_Dp,typename=_DeleterConstraint<_Del>>
 
@@ -44092,7 +43743,6 @@ namespace std{
 
 	  unique_ptr(unique_ptr&&)=default;
 
-
 	  template<typename _Up,typename _Ep,typename=_Require<
 			   __safe_conversion_up<_Up,_Ep>,
 		__conditional_t<is_reference<_Dp>::value,
@@ -44110,7 +43760,6 @@ namespace std{
  unique_ptr(auto_ptr<_Up>&&__u)noexcept;
 #pragma GCC diagnostic pop
 
-
 	 ~unique_ptr()noexcept{
  static_assert(__is_invocable<deleter_type&,pointer>::value,
 		"unique_ptr's deleter must be invocable with a pointer");
@@ -44119,7 +43768,6 @@ namespace std{
    get_deleter()(std::move(__ptr));
  __ptr=pointer();
 	  }
-
 
 	  unique_ptr&operator=(unique_ptr&&)=default;
 #417 "C:/msys64/ucrt64/include/c++/14.1.0/bits/unique_ptr.h" 3
@@ -44176,7 +43824,6 @@ namespace std{
 	  pointer
 	  release()noexcept{ return _M_t.release();}
 
-
 	 
 	  void
 	  reset(pointer __p=pointer())noexcept{
@@ -44196,7 +43843,6 @@ namespace std{
 	  unique_ptr&operator=(const unique_ptr&)=delete;
 
 	private:
-
 
   };
 #536 "C:/msys64/ucrt64/include/c++/14.1.0/bits/unique_ptr.h" 3
@@ -44301,7 +43947,6 @@ namespace std{
  __ptr=pointer();
 	  }
 
-
 	  unique_ptr&
 	  operator=(unique_ptr&&)=default;
 #696 "C:/msys64/ucrt64/include/c++/14.1.0/bits/unique_ptr.h" 3
@@ -44350,7 +43995,6 @@ namespace std{
 	 
 	  pointer
 	  release()noexcept{ return _M_t.release();}
-
 
 	  template<typename _Up,
 				typename=_Require<
@@ -44564,7 +44208,6 @@ namespace __detail{
 	inline __detail::__unique_ptr_array_t<_Tp>
 	make_unique(size_t __num){ return unique_ptr<_Tp>(new remove_extent_t<_Tp>[__num]());}
 
-
   template<typename _Tp,typename... _Args>
 	__detail::__invalid_make_unique_t<_Tp>
 	make_unique(_Args&&...)=delete;
@@ -44642,16 +44285,13 @@ namespace std{
 	   
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/ext/concurrence.h" 3
 
-
 namespace __gnu_cxx{
-
 
   enum _Lock_policy { _S_single,_S_mutex,_S_atomic };
 
   inline const _Lock_policy __default_lock_policy=
 
   _S_atomic;
-
 
   class __concurrence_lock_error:public std::exception{
   public:
@@ -44823,7 +44463,6 @@ namespace __gnu_cxx{
 }
 #63 "C:/msys64/ucrt64/include/c++/14.1.0/bits/shared_ptr_base.h" 2 3
 
-
 namespace std{
 
  
@@ -44832,7 +44471,6 @@ namespace std{
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   template<typename>class auto_ptr;
 #pragma GCC diagnostic pop
-
 
   class bad_weak_ptr:public std::exception{
   public:
@@ -45097,7 +44735,6 @@ namespace std{
   template<_Lock_policy _Lp=__default_lock_policy>
 	class __shared_count;
 
-
   template<typename _Ptr,_Lock_policy _Lp>
 	class _Sp_counted_ptr final:public _Sp_counted_base<_Lp>{
 	public:
@@ -45132,7 +44769,6 @@ namespace std{
   template<>
 	inline void
 	_Sp_counted_ptr<nullptr_t,_S_atomic>::_M_dispose()noexcept { }
-
 
   template<int _Nm,typename _Tp,
 	bool __use_ebo=!__is_final(_Tp)&&__is_empty(_Tp)>
@@ -45303,7 +44939,6 @@ namespace std{
 	  template<typename _Tp>
  struct __not_alloc_shared_tag<_Sp_alloc_shared_tag<_Tp>>{ };
 
-
 	public:
 	  constexpr __shared_count()noexcept:_M_pi(0){ }
 
@@ -45451,7 +45086,6 @@ namespace std{
 
 	private:
 	  friend class __weak_count<_Lp>;
-
 
 	  _Sp_counted_base<_Lp>*_M_pi;
 	};
@@ -46034,14 +45668,12 @@ namespace std{
 	  return _Sp(__r,static_cast<typename _Sp::element_type*>(__r.get()));
 	}
 
-
   template<typename _Tp,typename _Tp1,_Lock_policy _Lp>
 	inline __shared_ptr<_Tp,_Lp>
 	const_pointer_cast(const __shared_ptr<_Tp1,_Lp>&__r)noexcept{
 	  using _Sp=__shared_ptr<_Tp,_Lp>;
 	  return _Sp(__r,const_cast<typename _Sp::element_type*>(__r.get()));
 	}
-
 
   template<typename _Tp,typename _Tp1,_Lock_policy _Lp>
 	inline __shared_ptr<_Tp,_Lp>
@@ -46333,7 +45965,6 @@ namespace std{
 
 	  shared_ptr(const shared_ptr&)noexcept=default;
 
-
 	  template<typename _Yp,typename=_Constructible<_Yp*>>
  explicit
  shared_ptr(_Yp*__p):__shared_ptr<_Tp>(__p){ }
@@ -46365,10 +45996,8 @@ namespace std{
  shared_ptr(const shared_ptr<_Yp>&__r)noexcept
 		:__shared_ptr<_Tp>(__r){ }
 
-
 	  shared_ptr(shared_ptr&&__r)noexcept
 	 :__shared_ptr<_Tp>(std::move(__r)){ }
-
 
 	  template<typename _Yp,typename=_Constructible<shared_ptr<_Yp>>>
  shared_ptr(shared_ptr<_Yp>&&__r)noexcept
@@ -46454,7 +46083,6 @@ namespace std{
 	shared_ptr(weak_ptr<_Tp>)->shared_ptr<_Tp>;
   template<typename _Tp,typename _Del>
 	shared_ptr(unique_ptr<_Tp,_Del>)->shared_ptr<_Tp>;
-
 
   template<typename _Tp,typename _Up>
 	[[__nodiscard__]] inline bool
@@ -46657,7 +46285,6 @@ namespace std{
 	struct owner_less<weak_ptr<_Tp>>
 	:public _Sp_owner_less<weak_ptr<_Tp>,shared_ptr<_Tp>>{ };
 
-
   template<typename _Tp>
 	class enable_shared_from_this{
 	protected:
@@ -46676,7 +46303,6 @@ namespace std{
 
 	  shared_ptr<const _Tp>
 	  shared_from_this()const{ return shared_ptr<const _Tp>(this->_M_weak_this);}
-
 
 	  weak_ptr<_Tp>
 	  weak_from_this()noexcept{ return this->_M_weak_this;}
@@ -46728,7 +46354,6 @@ namespace std{
 	static constexpr bool __is_shared_ptr=false;
   template<typename _Tp>
 	static constexpr bool __is_shared_ptr<shared_ptr<_Tp>>=true;
-
 
   namespace __detail::__variant{
 	template<typename>struct _Never_valueless_alt;
@@ -46841,7 +46466,6 @@ namespace std{
   };
 
   }
-
 
   struct atomic_flag:public __atomic_flag_base{
 	atomic_flag()noexcept=default;
@@ -47719,7 +47343,6 @@ namespace std{
 
 	  typedef _Tp element_type;
 
-
 	  explicit
 	  auto_ptr(element_type*__p=0)throw():_M_ptr(__p){ }
 #118 "C:/msys64/ucrt64/include/c++/14.1.0/backward/auto_ptr.h" 3
@@ -47748,7 +47371,6 @@ namespace std{
  do { if(std::__is_constant_evaluated())if(__builtin_expect(!bool(_M_ptr!=0),false))std::__glibcxx_assert_fail();} while(false);
  return*_M_ptr;
 	  }
-
 
 	  element_type*
 	  operator->()const throw(){
@@ -48103,7 +47725,6 @@ namespace std{
  }
 	  return++__result;
 	}
-
 
 }
 #63 "C:/msys64/ucrt64/include/c++/14.1.0/numeric" 2 3
@@ -48573,7 +48194,6 @@ namespace std{
 #49 "C:/msys64/ucrt64/include/c++/14.1.0/atomic" 2 3
 
 namespace std{
-
 
   template<typename _Tp>
 	struct atomic;
@@ -49373,11 +48993,9 @@ namespace std{
 
   typedef atomic<wchar_t>atomic_wchar_t;
 
-
   typedef atomic<char16_t>atomic_char16_t;
 
   typedef atomic<char32_t>atomic_char32_t;
-
 
   typedef atomic<int8_t>atomic_int8_t;
 
@@ -49761,7 +49379,6 @@ namespace std{
   template<intmax_t _Qn>
 	struct __static_gcd<0,_Qn>
 	:integral_constant<intmax_t,__static_abs<_Qn>::value>{ };
-
 
   template<intmax_t _Pn,intmax_t _Qn>
 	struct __safe_multiply{
@@ -50176,7 +49793,6 @@ namespace std{
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/scoped_allocator" 3
 #46 "C:/msys64/ucrt64/include/c++/14.1.0/scoped_allocator" 3
 namespace std{
-
 
   template<typename _OuterAlloc,typename... _InnerAllocs>
 	class scoped_allocator_adaptor;
@@ -50624,7 +50240,6 @@ namespace std{
 }
 #70 "C:/msys64/ucrt64/include/c++/14.1.0/x86_64-w64-mingw32/bits/stdc++.h" 2 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/any" 1 3
 #32 "C:/msys64/ucrt64/include/c++/14.1.0/any" 3
 	   
@@ -50725,7 +50340,6 @@ namespace std{
  }
 	}
 
-
 	any(any&&__other)noexcept{
 	  if(!__other.has_value())
  _M_manager=nullptr;
@@ -50771,7 +50385,6 @@ namespace std{
 	 *this=any(__rhs);
 	  return*this;
 	}
-
 
 	any&
 	operator=(any&&__rhs)noexcept{
@@ -51101,7 +50714,6 @@ namespace std{
 #58 "C:/msys64/ucrt64/include/c++/14.1.0/optional" 3
 namespace std{
 
-
   template<typename _Tp>
 	class optional;
 
@@ -51115,7 +50727,6 @@ namespace std{
   inline constexpr nullopt_t nullopt { nullopt_t::_Construct::_Token };
 
   template<typename _Fn>struct _Optional_func { _Fn&_M_f;};
-
 
   class bad_optional_access:public exception{
   public:
@@ -51964,7 +51575,6 @@ namespace std{
 	constexpr bool
 	operator==(const optional<_Tp>&__lhs,nullopt_t)noexcept{ return!__lhs;}
 
-
   template<typename _Tp>
 	constexpr bool
 	operator==(nullopt_t,const optional<_Tp>&__rhs)noexcept{ return!__rhs;}
@@ -52473,7 +52083,6 @@ namespace __variant{
 	constexpr const std::variant<_Types...>&&
 	__as(const std::variant<_Types...>&&__v)noexcept{ return std::move(__v);}
 
-
   template<typename _Type,bool=std::is_trivially_destructible_v<_Type>>
 	struct _Uninitialized;
 
@@ -52623,7 +52232,6 @@ namespace __variant{
 	  _Variadic_union<__trivially_destructible,_Rest...>_M_rest;
 	};
 
-
   template<typename _Tp>
 	struct _Never_valueless_alt
 	:__and_<bool_constant<sizeof(_Tp)<=256>,is_trivially_copyable<_Tp>>{ };
@@ -52701,7 +52309,6 @@ namespace __variant{
 	  _M_valid()const noexcept{
  if constexpr(__variant::__never_valueless<_Types...>())
    return true;
-
 
  return this->_M_index!=static_cast<__index_type>(variant_npos);
 	  }
@@ -53620,12 +53227,10 @@ namespace __variant{
    },__rhs);
 	  }
 
-
 	private:
 	  template<size_t _Np,typename _Vp>
  friend constexpr decltype(auto)
  __detail::__variant::__get(_Vp&&__v)noexcept;
-
 
 	  template<typename... _Tp>friend constexpr bool operator<(const variant<_Tp...>&__lhs,const variant<_Tp...>&__rhs);
 	  template<typename... _Tp>friend constexpr bool operator<=(const variant<_Tp...>&__lhs,const variant<_Tp...>&__rhs);
@@ -53884,7 +53489,6 @@ namespace __variant{
 	   
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/cmath" 3
 
-
 #1 "C:/msys64/ucrt64/include/math.h" 1 3
 #10 "C:/msys64/ucrt64/include/math.h" 3
 	   
@@ -53913,7 +53517,6 @@ template<typename type1>struct __mingw_types_compatible_p<type1,const type1>{
 }
 #109 "C:/msys64/ucrt64/include/math.h" 3
 extern "C" {
-
 
   typedef union __mingw_dbl_type_t {
 	double x;
@@ -54225,7 +53828,6 @@ __extension__ long long __attribute__((__cdecl__))llrintl(long double);
   extern double __attribute__((__cdecl__))fdim(double x,double y);
   extern float __attribute__((__cdecl__))fdimf(float x,float y);
   extern long double __attribute__((__cdecl__))fdiml(long double x,long double y);
-
 
   extern double __attribute__((__cdecl__))fmax(double,double);
   extern float __attribute__((__cdecl__))fmaxf(float,float);
@@ -55390,7 +54992,6 @@ namespace std{
 	  return fma(__type(__x),__type(__y),__type(__z));
 	}
 
-
   template<typename _Tp>
 	inline _Tp
 	__hypot3(_Tp __x,_Tp __y,_Tp __z){
@@ -55731,7 +55332,6 @@ namespace std{
 		}
 	}
   }
-
 
 }
 #48 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 2 3
@@ -56131,7 +55731,6 @@ namespace std{
 	}
   }
 
-
 }
 #49 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 2 3
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/tr1/beta_function.tcc" 1 3
@@ -56198,7 +55797,6 @@ namespace std{
 		return __beta_lgamma(__x,__y);
 	}
   }
-
 
 }
 #50 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 2 3
@@ -57084,7 +56682,6 @@ namespace std{
 	  return __Fabc;
 	}
 
-
 	template<typename _Tp>
 	_Tp
 	__hyperg_luke(_Tp __a,_Tp __b,_Tp __c,_Tp __xin){
@@ -57454,7 +57051,6 @@ namespace std{
 	}
   }
 
-
 }
 #53 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 2 3
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/tr1/legendre_function.tcc" 1 3
@@ -57603,7 +57199,6 @@ namespace std{
 		}
 	}
   }
-
 
 }
 #54 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 2 3
@@ -58055,7 +57650,6 @@ namespace std{
 	__laguerre(unsigned int __n,_Tp __x){ return __poly_laguerre<unsigned int,_Tp>(__n,0,__x);}
   }
 
-
 }
 #57 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 2 3
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/tr1/riemann_zeta.tcc" 1 3
@@ -58277,7 +57871,6 @@ namespace std{
 	__hurwitz_zeta(_Tp __a,_Tp __s){ return __hurwitz_zeta_glob(__a,__s);}
   }
 
-
 }
 #58 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 2 3
 
@@ -58286,7 +57879,6 @@ namespace std{
 #203 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   assoc_laguerref(unsigned int __n,unsigned int __m,float __x){ return __detail::__assoc_laguerre<float>(__n,__m,__x);}
-
 
   inline long double
   assoc_laguerrel(unsigned int __n,unsigned int __m,long double __x){ return __detail::__assoc_laguerre<long double>(__n,__m,__x);}
@@ -58301,7 +57893,6 @@ namespace std{
   inline float
   assoc_legendref(unsigned int __l,unsigned int __m,float __x){ return __detail::__assoc_legendre_p<float>(__l,__m,__x);}
 
-
   inline long double
   assoc_legendrel(unsigned int __l,unsigned int __m,long double __x){ return __detail::__assoc_legendre_p<long double>(__l,__m,__x);}
 #294 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58314,7 +57905,6 @@ namespace std{
 #309 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   betaf(float __a,float __b){ return __detail::__beta<float>(__a,__b);}
-
 
   inline long double
   betal(long double __a,long double __b){ return __detail::__beta<long double>(__a,__b);}
@@ -58329,7 +57919,6 @@ namespace std{
   inline float
   comp_ellint_1f(float __k){ return __detail::__comp_ellint_1<float>(__k);}
 
-
   inline long double
   comp_ellint_1l(long double __k){ return __detail::__comp_ellint_1<long double>(__k);}
 #387 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58342,7 +57931,6 @@ namespace std{
 #403 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   comp_ellint_2f(float __k){ return __detail::__comp_ellint_2<float>(__k);}
-
 
   inline long double
   comp_ellint_2l(long double __k){ return __detail::__comp_ellint_2<long double>(__k);}
@@ -58357,7 +57945,6 @@ namespace std{
   inline float
   comp_ellint_3f(float __k,float __nu){ return __detail::__comp_ellint_3<float>(__k,__nu);}
 
-
   inline long double
   comp_ellint_3l(long double __k,long double __nu){ return __detail::__comp_ellint_3<long double>(__k,__nu);}
 #485 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58370,7 +57957,6 @@ namespace std{
 #501 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   cyl_bessel_if(float __nu,float __x){ return __detail::__cyl_bessel_i<float>(__nu,__x);}
-
 
   inline long double
   cyl_bessel_il(long double __nu,long double __x){ return __detail::__cyl_bessel_i<long double>(__nu,__x);}
@@ -58385,7 +57971,6 @@ namespace std{
   inline float
   cyl_bessel_jf(float __nu,float __x){ return __detail::__cyl_bessel_j<float>(__nu,__x);}
 
-
   inline long double
   cyl_bessel_jl(long double __nu,long double __x){ return __detail::__cyl_bessel_j<long double>(__nu,__x);}
 #577 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58398,7 +57983,6 @@ namespace std{
 #593 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   cyl_bessel_kf(float __nu,float __x){ return __detail::__cyl_bessel_k<float>(__nu,__x);}
-
 
   inline long double
   cyl_bessel_kl(long double __nu,long double __x){ return __detail::__cyl_bessel_k<long double>(__nu,__x);}
@@ -58413,7 +57997,6 @@ namespace std{
   inline float
   cyl_neumannf(float __nu,float __x){ return __detail::__cyl_neumann_n<float>(__nu,__x);}
 
-
   inline long double
   cyl_neumannl(long double __nu,long double __x){ return __detail::__cyl_neumann_n<long double>(__nu,__x);}
 #677 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58426,7 +58009,6 @@ namespace std{
 #693 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   ellint_1f(float __k,float __phi){ return __detail::__ellint_1<float>(__k,__phi);}
-
 
   inline long double
   ellint_1l(long double __k,long double __phi){ return __detail::__ellint_1<long double>(__k,__phi);}
@@ -58441,7 +58023,6 @@ namespace std{
   inline float
   ellint_2f(float __k,float __phi){ return __detail::__ellint_2<float>(__k,__phi);}
 
-
   inline long double
   ellint_2l(long double __k,long double __phi){ return __detail::__ellint_2<long double>(__k,__phi);}
 #773 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58454,7 +58035,6 @@ namespace std{
 #789 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   ellint_3f(float __k,float __nu,float __phi){ return __detail::__ellint_3<float>(__k,__nu,__phi);}
-
 
   inline long double
   ellint_3l(long double __k,long double __nu,long double __phi){ return __detail::__ellint_3<long double>(__k,__nu,__phi);}
@@ -58469,7 +58049,6 @@ namespace std{
   inline float
   expintf(float __x){ return __detail::__expint<float>(__x);}
 
-
   inline long double
   expintl(long double __x){ return __detail::__expint<long double>(__x);}
 #866 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58482,7 +58061,6 @@ namespace std{
 #882 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   hermitef(unsigned int __n,float __x){ return __detail::__poly_hermite<float>(__n,__x);}
-
 
   inline long double
   hermitel(unsigned int __n,long double __x){ return __detail::__poly_hermite<long double>(__n,__x);}
@@ -58497,7 +58075,6 @@ namespace std{
   inline float
   laguerref(unsigned int __n,float __x){ return __detail::__laguerre<float>(__n,__x);}
 
-
   inline long double
   laguerrel(unsigned int __n,long double __x){ return __detail::__laguerre<long double>(__n,__x);}
 #958 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58510,7 +58087,6 @@ namespace std{
 #974 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   legendref(unsigned int __l,float __x){ return __detail::__poly_legendre_p<float>(__l,__x);}
-
 
   inline long double
   legendrel(unsigned int __l,long double __x){ return __detail::__poly_legendre_p<long double>(__l,__x);}
@@ -58525,7 +58101,6 @@ namespace std{
   inline float
   riemann_zetaf(float __s){ return __detail::__riemann_zeta<float>(__s);}
 
-
   inline long double
   riemann_zetal(long double __s){ return __detail::__riemann_zeta<long double>(__s);}
 #1054 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
@@ -58538,7 +58113,6 @@ namespace std{
 #1070 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   sph_besself(unsigned int __n,float __x){ return __detail::__sph_bessel<float>(__n,__x);}
-
 
   inline long double
   sph_bessell(unsigned int __n,long double __x){ return __detail::__sph_bessel<long double>(__n,__x);}
@@ -58565,7 +58139,6 @@ namespace std{
 #1161 "C:/msys64/ucrt64/include/c++/14.1.0/bits/specfun.h" 3
   inline float
   sph_neumannf(unsigned int __n,float __x){ return __detail::__sph_neumann<float>(__n,__x);}
-
 
   inline long double
   sph_neumannl(unsigned int __n,long double __x){ return __detail::__sph_neumann<long double>(__n,__x);}
@@ -58779,7 +58352,6 @@ extern "C" {
   int __attribute__((__cdecl__))strnicmp(const char*_Str1,const char*_Str,size_t _MaxCount);
   int __attribute__((__cdecl__))strncasecmp(const char*,const char*,size_t);
   int __attribute__((__cdecl__))strcasecmp(const char*,const char*);
-
 
   char*__attribute__((__cdecl__))strnset(char*_Str,int _Val,size_t _MaxCount);
   char*__attribute__((__cdecl__))strrev(char*_Str);
@@ -59072,7 +58644,6 @@ namespace std{
 	  const _CharT*__olds,streamsize __newlen,streamsize __oldlen);
 	};
 
-
   template<typename _CharT>
 	_CharT*
 	__add_grouping(_CharT*__s,_CharT __sep,
@@ -59353,7 +58924,6 @@ namespace std{
 	  classic_table()throw();
 	protected:
 
-
 	  virtual
 	 ~ctype();
 #1021 "C:/msys64/ucrt64/include/c++/14.1.0/bits/locale_facets.h" 3
@@ -59572,7 +59142,6 @@ namespace std{
  _S_oend=_S_oudigits_end
 	  };
 
-
 	static const char*_S_atoms_out;
 
 	static const char*_S_atoms_in;
@@ -59656,7 +59225,6 @@ namespace __cxx11 {
 	public:
 
 	  static locale::id id;
-
 
 	  explicit
 	  numpunct(size_t __refs=0)
@@ -59995,7 +59563,6 @@ namespace __cxx11 {
 	  virtual iter_type
 	  do_put(iter_type,ios_base&,char_type,double)const;
 
-
 	  virtual iter_type
 	  do_put(iter_type,ios_base&,char_type,long double)const;
 
@@ -60006,7 +59573,6 @@ namespace __cxx11 {
 
   template<typename _CharT,typename _OutIter>
 	locale::id num_put<_CharT,_OutIter>::id;
-
 
 
   template<typename _CharT>
@@ -61200,13 +60766,11 @@ namespace std{
 
 	public:
 
-
 	  typedef _CharT char_type;
 	  typedef typename _Traits::int_type int_type;
 	  typedef typename _Traits::pos_type pos_type;
 	  typedef typename _Traits::off_type off_type;
 	  typedef _Traits traits_type;
-
 
 	  typedef ctype<_CharT>__ctype_type;
 	  typedef num_put<_CharT,ostreambuf_iterator<_CharT,_Traits>>
@@ -61239,7 +60803,6 @@ namespace std{
 	  void
 	  clear(iostate __state=goodbit);
 
-
 	  void
 	  setstate(iostate __state){ this->clear(this->rdstate()|__state);}
 
@@ -61251,17 +60814,14 @@ namespace std{
    throw;
 	  }
 
-
 	  bool
 	  good()const{ return this->rdstate()==0;}
-
 
 	  bool
 	  eof()const{ return(this->rdstate()&eofbit)!=0;}
 #204 "C:/msys64/ucrt64/include/c++/14.1.0/bits/basic_ios.h" 3
 	  bool
 	  fail()const{ return(this->rdstate()&(badbit|failbit))!=0;}
-
 
 	  bool
 	  bad()const{ return(this->rdstate()&badbit)!=0;}
@@ -61275,12 +60835,10 @@ namespace std{
 		this->clear(_M_streambuf_state);
 	  }
 
-
 	  explicit
 	  basic_ios(basic_streambuf<_CharT,_Traits>*__sb)
 	 :ios_base(),_M_tie(0),_M_fill(),_M_fill_init(false),_M_streambuf(0),
  _M_ctype(0),_M_num_put(0),_M_num_get(0){ this->init(__sb);}
-
 
 	  virtual
 	 ~basic_ios(){ }
@@ -61295,7 +60853,6 @@ namespace std{
 		return __old;
 	  }
 
-
 	  basic_streambuf<_CharT,_Traits>*
 	  rdbuf()const{ return _M_streambuf;}
 #350 "C:/msys64/ucrt64/include/c++/14.1.0/bits/basic_ios.h" 3
@@ -61304,7 +60861,6 @@ namespace std{
 #364 "C:/msys64/ucrt64/include/c++/14.1.0/bits/basic_ios.h" 3
 	  basic_ios&
 	  copyfmt(const basic_ios&__rhs);
-
 
 	  char_type
 	  fill()const{
@@ -61333,11 +60889,9 @@ namespace std{
 
 	protected:
 
-
 	  basic_ios()
 	 :ios_base(),_M_tie(0),_M_fill(char_type()),_M_fill_init(false),
  _M_streambuf(0),_M_ctype(0),_M_num_put(0),_M_num_get(0){ }
-
 
 	  void
 	  init(basic_streambuf<_CharT,_Traits>*__sb);
@@ -61528,7 +61082,6 @@ namespace std{
 	  explicit
 	  basic_ostream(__streambuf_type*__sb){ this->init(__sb);}
 
-
 	  virtual
 	 ~basic_ostream(){ }
 
@@ -61673,7 +61226,6 @@ namespace std{
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-
 	 ~sentry(){
 
  if(bool(_M_os.flags()&ios_base::unitbuf)&&!uncaught_exception()){
@@ -61760,7 +61312,6 @@ namespace std{
   template<typename _CharT,typename _Traits>
 	inline basic_ostream<_CharT,_Traits>&
 	ends(basic_ostream<_CharT,_Traits>&__os){ return __os.put(_CharT());}
-
 
   template<typename _CharT,typename _Traits>
 	inline basic_ostream<_CharT,_Traits>&
@@ -61887,7 +61438,6 @@ namespace std{
 	basic_ostream<_CharT,_Traits>::
 	put(char_type __c){
 
-
 	  sentry __cerb(*this);
 	  if(__cerb){
    ios_base::iostate __err=ios_base::goodbit;
@@ -61911,7 +61461,6 @@ namespace std{
 	basic_ostream<_CharT,_Traits>&
 	basic_ostream<_CharT,_Traits>::
 	write(const _CharT*__s,streamsize __n){
-
 
 	  sentry __cerb(*this);
 	  if(__cerb){
@@ -62100,11 +61649,9 @@ namespace std{
 
 	public:
 
-
 	  explicit
 	  basic_istream(__streambuf_type*__sb)
 	 :_M_gcount(streamsize(0)){ this->init(__sb);}
-
 
 	  virtual
 	 ~basic_istream(){ _M_gcount=streamsize(0);}
@@ -62369,7 +61916,6 @@ namespace std{
 
 	  typedef basic_istream<_CharT,_Traits>__istream_type;
 	  typedef basic_ostream<_CharT,_Traits>__ostream_type;
-
 
 	  explicit
 	  basic_iostream(basic_streambuf<_CharT,_Traits>*__sb)
@@ -63471,7 +63017,6 @@ namespace __cxx11 {
 	  setbuf(char_type*__s,streamsize __n){
  if(__s&&__n>=0){
 
-
 	 _M_string.clear();
 
 	 _M_sync(__s,__n,0);
@@ -63599,7 +63144,6 @@ namespace __cxx11 {
 	 ios_base::openmode __mode=ios_base::in)
 	 :__istream_type(),_M_stringbuf(__str,__mode|ios_base::in){ this->init(&_M_stringbuf);}
 
-
 	 ~basic_istringstream(){ }
 
 	  basic_istringstream(const basic_istringstream&)=delete;
@@ -63668,7 +63212,6 @@ namespace __cxx11 {
 	 ios_base::openmode __mode=ios_base::out)
 	 :__ostream_type(),_M_stringbuf(__str,__mode|ios_base::out){ this->init(&_M_stringbuf);}
 
-
 	 ~basic_ostringstream(){ }
 
 	  basic_ostringstream(const basic_ostringstream&)=delete;
@@ -63736,7 +63279,6 @@ namespace __cxx11 {
 	  basic_stringstream(const __string_type&__str,
 	ios_base::openmode __m=ios_base::out|ios_base::in)
 	 :__iostream_type(),_M_stringbuf(__str,__m){ this->init(&_M_stringbuf);}
-
 
 	 ~basic_stringstream(){ }
 
@@ -64514,7 +64056,6 @@ namespace std{
 	inline complex<_Tp>
 	cos(const complex<_Tp>&__z){ return __complex_cos(__z.__rep());}
 
-
   template<typename _Tp>
 	inline complex<_Tp>
 	__complex_cosh(const complex<_Tp>&__z){
@@ -64535,7 +64076,6 @@ namespace std{
   template<typename _Tp>
 	inline complex<_Tp>
 	cosh(const complex<_Tp>&__z){ return __complex_cosh(__z.__rep());}
-
 
   template<typename _Tp>
 	inline complex<_Tp>
@@ -64571,7 +64111,6 @@ namespace std{
 	inline complex<_Tp>
 	log(const complex<_Tp>&__z){ return __complex_log(__z.__rep());}
 
-
   template<typename _Tp>
 	inline complex<_Tp>
 	log10(const complex<_Tp>&__z){ return std::log(__z)/log(_Tp(10.0));}
@@ -64596,7 +64135,6 @@ namespace std{
   template<typename _Tp>
 	inline complex<_Tp>
 	sin(const complex<_Tp>&__z){ return __complex_sin(__z.__rep());}
-
 
   template<typename _Tp>
 	inline complex<_Tp>
@@ -64699,7 +64237,6 @@ namespace std{
 	  return __y;
 	}
 
-
   template<typename _Tp>
 	inline complex<_Tp>
 	pow(const complex<_Tp>&__z,int __n){
@@ -64736,7 +64273,6 @@ namespace std{
   template<typename _Tp>
 	inline complex<_Tp>
 	pow(const complex<_Tp>&__x,const complex<_Tp>&__y){ return __complex_pow(__x.__rep(),__y.__rep());}
-
 
   template<typename _Tp>
 	inline complex<_Tp>
@@ -65083,7 +64619,6 @@ namespace std{
   complex<double>::complex(const complex<long double>&__z)
  :_M_value(__z.__rep()){ }
 
-
   extern template istream&operator>>(istream&,complex<float>&);
   extern template ostream&operator<<(ostream&,const complex<float>&);
   extern template istream&operator>>(istream&,complex<double>&);
@@ -65097,7 +64632,6 @@ namespace std{
   extern template wostream&operator<<(wostream&,const complex<double>&);
   extern template wistream&operator>>(wistream&,complex<long double>&);
   extern template wostream&operator<<(wostream&,const complex<long double>&);
-
 
 }
 
@@ -65539,7 +65073,6 @@ namespace std{
 	   
 #30 "C:/msys64/ucrt64/include/c++/14.1.0/ctgmath" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/cmath" 1 3
 #39 "C:/msys64/ucrt64/include/c++/14.1.0/cmath" 3
 	   
@@ -65554,13 +65087,11 @@ extern "C++" {
 	   
 #43 "C:/msys64/ucrt64/include/c++/14.1.0/cuchar" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/cwchar" 1 3
 #39 "C:/msys64/ucrt64/include/c++/14.1.0/cwchar" 3
 	   
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/cwchar" 3
 #50 "C:/msys64/ucrt64/include/c++/14.1.0/cuchar" 2 3
-
 
 #1 "C:/msys64/ucrt64/include/uchar.h" 1 3
 #26 "C:/msys64/ucrt64/include/uchar.h" 3
@@ -65607,7 +65138,6 @@ namespace std{
 	   
 #59 "C:/msys64/ucrt64/include/c++/14.1.0/deque" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_deque.h" 1 3
 #72 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_deque.h" 3
 namespace std{
@@ -65619,7 +65149,6 @@ namespace std{
 #112 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_deque.h" 3
   template<typename _Tp,typename _Ref,typename _Ptr>
 	struct _Deque_iterator{
-
 
 	private:
 	  template<typename _CvTp>
@@ -65733,7 +65262,6 @@ namespace std{
 	  [[__nodiscard__]]
 	  reference
 	  operator[](difference_type __n)const noexcept{ return*(*this+__n);}
-
 
 	  void
 	  _M_set_node(_Map_pointer __new_node)noexcept{
@@ -66022,7 +65550,6 @@ namespace std{
 		size_t(__num_nodes+2));
 	  this->_M_impl._M_map=_M_allocate_map(this->_M_impl._M_map_size);
 
-
 	  _Map_pointer __nstart=(this->_M_impl._M_map
 		 +(this->_M_impl._M_map_size-__num_nodes)/2);
 	  _Map_pointer __nfinish=__nstart+__num_nodes;
@@ -66073,7 +65600,6 @@ namespace std{
 	  static_assert(is_same<typename remove_cv<_Tp>::type,_Tp>::value,
    "std::deque must have a non-const, non-volatile value_type");
 
-
 	  typedef _Deque_base<_Tp,_Alloc>_Base;
 	  typedef typename _Base::_Tp_alloc_type _Tp_alloc_type;
 	  typedef typename _Base::_Alloc_traits _Alloc_traits;
@@ -66108,7 +65634,6 @@ namespace std{
 	  using _Base::_M_impl;
 
 	public:
-
 
 	  deque()=default;
 #864 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_deque.h" 3
@@ -66206,7 +65731,6 @@ namespace std{
 	  allocator_type
 	  get_allocator()const noexcept{ return _Base::get_allocator();}
 
-
 	  [[__nodiscard__]]
 	  iterator
 	  begin()noexcept{ return this->_M_impl._M_start;}
@@ -66215,51 +65739,41 @@ namespace std{
 	  const_iterator
 	  begin()const noexcept{ return this->_M_impl._M_start;}
 
-
 	  [[__nodiscard__]]
 	  iterator
 	  end()noexcept{ return this->_M_impl._M_finish;}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  end()const noexcept{ return this->_M_impl._M_finish;}
 
-
 	  [[__nodiscard__]]
 	  reverse_iterator
 	  rbegin()noexcept{ return reverse_iterator(this->_M_impl._M_finish);}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  rbegin()const noexcept{ return const_reverse_iterator(this->_M_impl._M_finish);}
 
-
 	  [[__nodiscard__]]
 	  reverse_iterator
 	  rend()noexcept{ return reverse_iterator(this->_M_impl._M_start);}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  rend()const noexcept{ return const_reverse_iterator(this->_M_impl._M_start);}
 
-
 	  [[__nodiscard__]]
 	  const_iterator
 	  cbegin()const noexcept{ return this->_M_impl._M_start;}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  cend()const noexcept{ return this->_M_impl._M_finish;}
 
-
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  crbegin()const noexcept{ return const_reverse_iterator(this->_M_impl._M_finish);}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
@@ -66296,7 +65810,6 @@ namespace std{
 
 	  void
 	  shrink_to_fit()noexcept{ _M_shrink_to_fit();}
-
 
 	  [[__nodiscard__]] bool
 	  empty()const noexcept{ return this->_M_impl._M_finish==this->_M_impl._M_start;}
@@ -66495,7 +66008,6 @@ namespace std{
 	  __x._M_get_Tp_allocator());
 	  }
 
-
 	  void
 	  clear()noexcept{ _M_erase_at_end(begin());}
 
@@ -66587,7 +66099,6 @@ namespace std{
 
 	  void
 	  _M_fill_insert(iterator __pos,size_type __n,const value_type&__x);
-
 
 	  template<typename... _Args>
  iterator
@@ -66787,7 +66298,6 @@ namespace std{
 	inline void
 	swap(deque<_Tp,_Alloc>&__x,deque<_Tp,_Alloc>&__y)
 	noexcept(noexcept(__x.swap(__y))){ __x.swap(__y);}
-
 
   template<class _Tp>
 	struct __is_bitwise_relocatable<std::deque<_Tp>>
@@ -67213,7 +66723,6 @@ namespace std{
 		this->_M_impl._M_finish._M_cur);
 	}
 
-
   template<typename _Tp,typename _Alloc>
 	void deque<_Tp,_Alloc>::
 	_M_pop_front_aux(){
@@ -67278,7 +66787,6 @@ namespace std{
 	  deque<_Tp,_Alloc>::
 	  _M_insert_aux(iterator __pos,_Args&&... __args){
  value_type __x_copy(std::forward<_Args>(__args)...);
-
 
  difference_type __index=__pos-this->_M_impl._M_start;
  if(static_cast<size_type>(__index)<size()/2){
@@ -67837,7 +67345,6 @@ namespace std{
 (__is_memcmp_ordered_with<_Tp1,_Tp2>::__value
  &&__is_pointer<_Ptr>::__value
 
-
  );
 	  typedef std::__lexicographical_compare<__simple>_Lc;
 
@@ -67885,7 +67392,6 @@ namespace std{
  &&__is_pointer<_Ptr1>::__value
  &&__is_pointer<_Ptr2>::__value
 
-
  );
 	  typedef std::__lexicographical_compare<__simple>_Lc;
 
@@ -67918,7 +67424,6 @@ namespace std{
 	   
 #48 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 3
 #74 "C:/msys64/ucrt64/include/c++/14.1.0/deque" 2 3
-
 
 namespace std{
 
@@ -68152,7 +67657,6 @@ namespace std{
 	  do_max_length()const throw();
   };
 
-
   template<>
 	class codecvt<wchar_t,char,mbstate_t>
 	:public __codecvt_abstract_base<wchar_t,char,mbstate_t>{
@@ -68211,7 +67715,6 @@ namespace std{
 	  virtual int
 	  do_max_length()const throw();
 	};
-
 
   template<>
 	class codecvt<char16_t,char,mbstate_t>
@@ -68419,7 +67922,6 @@ namespace std{
 
 namespace std{
 
-
   typedef __gthread_mutex_t __c_lock;
 
   typedef FILE __c_file;
@@ -68518,7 +68020,6 @@ namespace std{
 #48 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 3
 #51 "C:/msys64/ucrt64/include/c++/14.1.0/fstream" 2 3
 
-
 namespace std{
 
   template<typename _Path,typename _Result=_Path,typename _Path2
@@ -68573,14 +68074,12 @@ namespace std{
 
 	  char_type*_M_buf;
 
-
 	  size_t _M_buf_size;
 
 	  bool _M_buf_allocated;
 #165 "C:/msys64/ucrt64/include/c++/14.1.0/fstream" 3
 	  bool _M_reading;
 	  bool _M_writing;
-
 
 	  char_type _M_pback;
 	  char_type*_M_pback_cur_save;
@@ -68589,15 +68088,12 @@ namespace std{
 
 	  const __codecvt_type*_M_codecvt;
 
-
 	  char*_M_ext_buf;
 
 	  streamsize _M_ext_buf_size;
 
-
 	  const char*_M_ext_next;
 	  char*_M_ext_end;
-
 
 	  void
 	  _M_create_pback(){
@@ -68608,7 +68104,6 @@ namespace std{
 	 _M_pback_init=true;
    }
 	  }
-
 
 	  void
 	  _M_destroy_pback()throw(){
@@ -68621,7 +68116,6 @@ namespace std{
 	  }
 
 	public:
-
 
 	  basic_filebuf();
 
@@ -68637,7 +68131,6 @@ namespace std{
 	  basic_filebuf&operator=(const basic_filebuf&)=delete;
 	  basic_filebuf&operator=(basic_filebuf&&);
 	  void swap(basic_filebuf&);
-
 
 	  bool
 	  is_open()const throw(){ return _M_file.is_open();}
@@ -68667,7 +68160,6 @@ namespace std{
 
 	  virtual streamsize
 	  showmanyc();
-
 
 	  virtual int_type
 	  underflow();
@@ -68990,7 +68482,6 @@ namespace std{
 	  basic_fstream()
 	 :__iostream_type(),_M_filebuf(){ this->init(&_M_filebuf);}
 
-
 	  explicit
 	  basic_fstream(const char*__s,
 	  ios_base::openmode __mode=ios_base::in|ios_base::out)
@@ -68998,7 +68489,6 @@ namespace std{
  this->init(&_M_filebuf);
  this->open(__s,__mode);
 	  }
-
 
 	  basic_fstream(const wchar_t*__s,
 	  ios_base::openmode __mode=ios_base::in|ios_base::out)
@@ -69014,7 +68504,6 @@ namespace std{
  this->init(&_M_filebuf);
  this->open(__s,__mode);
 	  }
-
 
 	  template<typename _Path,typename _Require=_If_fs_path<_Path>>
  basic_fstream(const _Path&__s,
@@ -69790,7 +69279,6 @@ namespace std{
    if(!__no_movement)
 	 _M_destroy_pback();
 
-
    __state_type __state=_M_state_beg;
    off_type __computed_off=__off*__width;
    if(_M_reading&&__way==ios_base::cur){
@@ -70000,7 +69488,6 @@ namespace std{
 #36 "C:/msys64/ucrt64/include/c++/14.1.0/locale" 3
 	   
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/locale" 3
-
 
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/locale_facets_nonio.h" 1 3
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/bits/locale_facets_nonio.h" 3
@@ -70917,7 +70404,6 @@ namespace __cxx11 {
 #1993 "C:/msys64/ucrt64/include/c++/14.1.0/bits/locale_facets_nonio.h" 3
 	  virtual string_type
 	  do_get(catalog,int,int,const string_type&__dfault)const;
-
 
 	  virtual void
 	  do_close(catalog)const;
@@ -71856,7 +71342,6 @@ namespace __cxx11 {
 	  return __beg;
 	}
 
-
   template<typename _CharT,typename _InIter>
 	_InIter
 	time_get<_CharT,_InIter>::
@@ -71899,7 +71384,6 @@ namespace __cxx11 {
   ++__pos;
   ++__beg;
    if(__pos==__minlen){
-
 
 	   bool __match_longer=false;
 
@@ -72202,7 +71686,6 @@ namespace __cxx11 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpmf-conversions"
 
-
 	  if((void*)(this->*(&time_get::do_get))==(void*)(&time_get::do_get))
  __use_state=true;
 #pragma GCC diagnostic pop
@@ -72353,7 +71836,6 @@ namespace __cxx11 {
 
 	  const size_t __maxlen=128;
 	  char_type __res[__maxlen];
-
 
 	  char_type __fmt[4];
 	  __fmt[0]=__ctype.widen('%');
@@ -72592,7 +72074,6 @@ namespace __cxx11 {
 #42 "C:/msys64/ucrt64/include/c++/14.1.0/bits/locale_conv.h" 3
 namespace std{
 
-
   template<typename _OutStr,typename _InChar,typename _Codecvt,
 	typename _State,typename _Fn>
 	bool
@@ -72756,14 +72237,12 @@ namespace __cxx11 {
 
 	  wstring_convert():_M_cvt(new _Codecvt()){ }
 
-
 	  explicit
 	  wstring_convert(_Codecvt*__pcvt):_M_cvt(__pcvt,"wstring_convert"){ }
 #291 "C:/msys64/ucrt64/include/c++/14.1.0/bits/locale_conv.h" 3
 	  wstring_convert(_Codecvt*__pcvt,state_type __state)
 	 :_M_cvt(__pcvt,"wstring_convert"),
  _M_state(__state),_M_with_cvtstate(true){ }
-
 
 	  explicit
 	  wstring_convert(const byte_string&__byte_err,
@@ -73048,7 +72527,6 @@ namespace __cxx11 {
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/quoted_string.h" 3
 
-
 namespace std{
 
   namespace __detail {
@@ -73084,7 +72562,6 @@ namespace std{
  _CharT _M_escape;
 	  };
 
-
 	template<typename _CharT,typename _Traits>
 	  std::basic_ostream<_CharT,_Traits>&
 	  operator<<(std::basic_ostream<_CharT,_Traits>&__os,
@@ -73102,7 +72579,6 @@ namespace std{
  return __os<<__ostr.str();
 	  }
 
-
 	template<typename _CharT,typename _Traits,typename _String>
 	  std::basic_ostream<_CharT,_Traits>&
 	  operator<<(std::basic_ostream<_CharT,_Traits>&__os,
@@ -73119,7 +72595,6 @@ namespace std{
 
  return __os<<__ostr.str();
 	  }
-
 
 	template<typename _CharT,typename _Traits,typename _Alloc>
 	  std::basic_istream<_CharT,_Traits>&
@@ -73499,7 +72974,6 @@ namespace std{
 	   
 #37 "C:/msys64/ucrt64/include/c++/14.1.0/iostream" 3
 
-
 namespace std{
 
 #62 "C:/msys64/ucrt64/include/c++/14.1.0/iostream" 3
@@ -73522,13 +72996,11 @@ namespace std{
 	   
 #59 "C:/msys64/ucrt64/include/c++/14.1.0/list" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_list.h" 1 3
 #68 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_list.h" 3
 namespace std{
 
   namespace __detail{
-
 
 	struct _List_node_base{
 	  _List_node_base*_M_next;
@@ -73661,7 +73133,6 @@ namespace std{
 
 	};
 
-
   template<typename _Tp>
 	struct _List_iterator{
 	  typedef _List_iterator<_Tp>_Self;
@@ -73727,7 +73198,6 @@ namespace std{
 
 	  __detail::_List_node_base*_M_node;
 	};
-
 
   template<typename _Tp>
 	struct _List_const_iterator{
@@ -73913,7 +73383,6 @@ namespace __cxx11 {
 	  static_assert(is_same<typename remove_cv<_Tp>::type,_Tp>::value,
    "std::list must have a non-const, non-volatile value_type");
 
-
 	  typedef _List_base<_Tp,_Alloc>_Base;
 	  typedef typename _Base::_Tp_alloc_type _Tp_alloc_type;
 	  typedef typename _Base::_Tp_alloc_traits _Tp_alloc_traits;
@@ -73962,7 +73431,6 @@ namespace __cxx11 {
 	  _M_node_count()const{ return this->_M_get_size();}
 #741 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_list.h" 3
 	public:
-
 
 	  list()=default;
 #758 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_list.h" 3
@@ -74051,66 +73519,53 @@ namespace __cxx11 {
 	  allocator_type
 	  get_allocator()const noexcept{ return allocator_type(_Base::_M_get_Node_allocator());}
 
-
 	  [[__nodiscard__]]
 	  iterator
 	  begin()noexcept{ return iterator(this->_M_impl._M_node._M_next);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  begin()const noexcept{ return const_iterator(this->_M_impl._M_node._M_next);}
 
-
 	  [[__nodiscard__]]
 	  iterator
 	  end()noexcept{ return iterator(&this->_M_impl._M_node);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  end()const noexcept{ return const_iterator(&this->_M_impl._M_node);}
 
-
 	  [[__nodiscard__]]
 	  reverse_iterator
 	  rbegin()noexcept{ return reverse_iterator(end());}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  rbegin()const noexcept{ return const_reverse_iterator(end());}
 
-
 	  [[__nodiscard__]]
 	  reverse_iterator
 	  rend()noexcept{ return reverse_iterator(begin());}
-
 
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  rend()const noexcept{ return const_reverse_iterator(begin());}
 
-
 	  [[__nodiscard__]]
 	  const_iterator
 	  cbegin()const noexcept{ return const_iterator(this->_M_impl._M_node._M_next);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  cend()const noexcept{ return const_iterator(&this->_M_impl._M_node);}
 
-
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  crbegin()const noexcept{ return const_reverse_iterator(end());}
 
-
 	  [[__nodiscard__]]
 	  const_reverse_iterator
 	  crend()const noexcept{ return const_reverse_iterator(begin());}
-
 
 	  [[__nodiscard__]] bool
 	  empty()const noexcept{ return this->_M_impl._M_node._M_next==&this->_M_impl._M_node;}
@@ -74240,7 +73695,6 @@ namespace __cxx11 {
 		   __x._M_get_Node_allocator());
 	  }
 
-
 	  void
 	  clear()noexcept{
  _Base::_M_clear();
@@ -74346,17 +73800,14 @@ namespace __cxx11 {
 	  void
 	  reverse()noexcept{ this->_M_impl._M_node._M_reverse();}
 
-
 	  void
 	  sort();
-
 
 	  template<typename _StrictWeakOrdering>
  void
  sort(_StrictWeakOrdering);
 
 	protected:
-
 
 	  template<typename _Integer>
  void
@@ -74533,7 +73984,6 @@ namespace __cxx11 {
 	inline void
 	swap(list<_Tp,_Alloc>&__x,list<_Tp,_Alloc>&__y)
 	noexcept(noexcept(__x.swap(__y))){ __x.swap(__y);}
-
 
   template<typename _Tp>
 	inline ptrdiff_t
@@ -74763,7 +74213,6 @@ namespace std{
 		else
 		  insert(__last1,__first2,__last2);
 	  }
-
 
   template<typename _Tp,typename _Alloc>
 	typename list<_Tp,_Alloc>::__remove_return_type
@@ -75514,7 +74963,6 @@ namespace std{
   :_Node_allocator(_Alloc_traits::_S_select_on_copy(__x))
   ,_Base_key_compare(__x._M_key_compare)
   ,_Rb_tree_header(){ }
-
 
    _Rb_tree_impl(_Rb_tree_impl&&)
 	 noexcept(is_nothrow_move_constructible<_Base_key_compare>::value)
@@ -77166,14 +76614,12 @@ namespace std{
 #197 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_map.h" 3
 	  map()=default;
 
-
 	  explicit
 	  map(const _Compare&__comp,
    const allocator_type&__a=allocator_type())
 	 :_M_t(__comp,_Pair_alloc_type(__a)){ }
 #219 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_map.h" 3
 	  map(const map&)=default;
-
 
 	  map(map&&)=default;
 #240 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_map.h" 3
@@ -77212,7 +76658,6 @@ namespace std{
 	 const allocator_type&__a=allocator_type())
 :_M_t(__comp,_Pair_alloc_type(__a)){ _M_t._M_insert_range_unique(__first,__last);}
 
-
 	 ~map()=default;
 #330 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_map.h" 3
 	  map&
@@ -77230,54 +76675,41 @@ namespace std{
 	  allocator_type
 	  get_allocator()const noexcept{ return allocator_type(_M_t.get_allocator());}
 
-
 	  iterator
 	  begin()noexcept{ return _M_t.begin();}
-
 
 	  const_iterator
 	  begin()const noexcept{ return _M_t.begin();}
 
-
 	  iterator
 	  end()noexcept{ return _M_t.end();}
-
 
 	  const_iterator
 	  end()const noexcept{ return _M_t.end();}
 
-
 	  reverse_iterator
 	  rbegin()noexcept{ return _M_t.rbegin();}
-
 
 	  const_reverse_iterator
 	  rbegin()const noexcept{ return _M_t.rbegin();}
 
-
 	  reverse_iterator
 	  rend()noexcept{ return _M_t.rend();}
-
 
 	  const_reverse_iterator
 	  rend()const noexcept{ return _M_t.rend();}
 
-
 	  const_iterator
 	  cbegin()const noexcept{ return _M_t.begin();}
-
 
 	  const_iterator
 	  cend()const noexcept{ return _M_t.end();}
 
-
 	  const_reverse_iterator
 	  crbegin()const noexcept{ return _M_t.rbegin();}
 
-
 	  const_reverse_iterator
 	  crend()const noexcept{ return _M_t.rend();}
-
 
 	  [[__nodiscard__]] bool
 	  empty()const noexcept{ return _M_t.empty();}
@@ -77589,10 +77021,8 @@ namespace std{
 	  swap(map&__x)
 	  noexcept(__is_nothrow_swappable<_Compare>::value){ _M_t.swap(__x._M_t);}
 
-
 	  void
 	  clear()noexcept{ _M_t.clear();}
-
 
 	  key_compare
 	  key_comp()const{ return _M_t.key_comp();}
@@ -77677,7 +77107,6 @@ namespace std{
  friend bool
  operator==(const map<_K1,_T1,_C1,_A1>&,
 	 const map<_K1,_T1,_C1,_A1>&);
-
 
 	  template<typename _K1,typename _T1,typename _C1,typename _A1>
  friend bool
@@ -77836,7 +77265,6 @@ namespace std{
 #187 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_multimap.h" 3
 	  multimap()=default;
 
-
 	  explicit
 	  multimap(const _Compare&__comp,
 		const allocator_type&__a=allocator_type())
@@ -77882,7 +77310,6 @@ namespace std{
    const allocator_type&__a=allocator_type())
 :_M_t(__comp,_Pair_alloc_type(__a)){ _M_t._M_insert_range_equal(__first,__last);}
 
-
 	 ~multimap()=default;
 #319 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_multimap.h" 3
 	  multimap&
@@ -77900,50 +77327,38 @@ namespace std{
 	  allocator_type
 	  get_allocator()const noexcept{ return allocator_type(_M_t.get_allocator());}
 
-
 	  iterator
 	  begin()noexcept{ return _M_t.begin();}
-
 
 	  const_iterator
 	  begin()const noexcept{ return _M_t.begin();}
 
-
 	  iterator
 	  end()noexcept{ return _M_t.end();}
-
 
 	  const_iterator
 	  end()const noexcept{ return _M_t.end();}
 
-
 	  reverse_iterator
 	  rbegin()noexcept{ return _M_t.rbegin();}
-
 
 	  const_reverse_iterator
 	  rbegin()const noexcept{ return _M_t.rbegin();}
 
-
 	  reverse_iterator
 	  rend()noexcept{ return _M_t.rend();}
-
 
 	  const_reverse_iterator
 	  rend()const noexcept{ return _M_t.rend();}
 
-
 	  const_iterator
 	  cbegin()const noexcept{ return _M_t.begin();}
-
 
 	  const_iterator
 	  cend()const noexcept{ return _M_t.end();}
 
-
 	  const_reverse_iterator
 	  crbegin()const noexcept{ return _M_t.rbegin();}
-
 
 	  const_reverse_iterator
 	  crend()const noexcept{ return _M_t.rend();}
@@ -78056,10 +77471,8 @@ namespace std{
 	  swap(multimap&__x)
 	  noexcept(__is_nothrow_swappable<_Compare>::value){ _M_t.swap(__x._M_t);}
 
-
 	  void
 	  clear()noexcept{ _M_t.clear();}
-
 
 	  key_compare
 	  key_comp()const{ return _M_t.key_comp();}
@@ -78144,7 +77557,6 @@ namespace std{
  friend bool
  operator==(const multimap<_K1,_T1,_C1,_A1>&,
 	 const multimap<_K1,_T1,_C1,_A1>&);
-
 
 	  template<typename _K1,typename _T1,typename _C1,typename _A1>
  friend bool
@@ -78264,7 +77676,6 @@ namespace std{
 #58 "C:/msys64/ucrt64/include/c++/14.1.0/queue" 3
 	   
 #59 "C:/msys64/ucrt64/include/c++/14.1.0/queue" 3
-
 
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_queue.h" 1 3
 #65 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_queue.h" 3
@@ -78699,7 +78110,6 @@ namespace std{
 	  static_assert(is_same<typename remove_cv<_Key>::type,_Key>::value,
    "std::set must have a non-const, non-volatile value_type");
 
-
 	public:
 
 	  typedef _Key key_type;
@@ -78737,7 +78147,6 @@ namespace std{
 #169 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_set.h" 3
 	  set()=default;
 
-
 	  explicit
 	  set(const _Compare&__comp,
    const allocator_type&__a=allocator_type())
@@ -78754,7 +78163,6 @@ namespace std{
 :_M_t(__comp,_Key_alloc_type(__a)){ _M_t._M_insert_range_unique(__first,__last);}
 #225 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_set.h" 3
 	  set(const set&)=default;
-
 
 	  set(set&&)=default;
 #245 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_set.h" 3
@@ -78783,7 +78191,6 @@ namespace std{
 	 const allocator_type&__a)
 :_M_t(_Key_alloc_type(__a)){ _M_t._M_insert_range_unique(__first,__last);}
 
-
 	 ~set()=default;
 #299 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_set.h" 3
 	  set&
@@ -78807,34 +78214,26 @@ namespace std{
 	  allocator_type
 	  get_allocator()const noexcept{ return allocator_type(_M_t.get_allocator());}
 
-
 	  iterator
 	  begin()const noexcept{ return _M_t.begin();}
-
 
 	  iterator
 	  end()const noexcept{ return _M_t.end();}
 
-
 	  reverse_iterator
 	  rbegin()const noexcept{ return _M_t.rbegin();}
-
 
 	  reverse_iterator
 	  rend()const noexcept{ return _M_t.rend();}
 
-
 	  iterator
 	  cbegin()const noexcept{ return _M_t.begin();}
-
 
 	  iterator
 	  cend()const noexcept{ return _M_t.end();}
 
-
 	  reverse_iterator
 	  crbegin()const noexcept{ return _M_t.rbegin();}
-
 
 	  reverse_iterator
 	  crend()const noexcept{ return _M_t.rend();}
@@ -79020,7 +78419,6 @@ namespace std{
  friend bool
  operator==(const set<_K1,_C1,_A1>&,const set<_K1,_C1,_A1>&);
 
-
 	  template<typename _K1,typename _C1,typename _A1>
  friend bool
  operator<(const set<_K1,_C1,_A1>&,const set<_K1,_C1,_A1>&);
@@ -79125,7 +78523,6 @@ namespace std{
 	  static_assert(is_same<typename remove_cv<_Key>::type,_Key>::value,
    "std::multiset must have a non-const, non-volatile value_type");
 
-
 	public:
 
 	  typedef _Key key_type;
@@ -79162,7 +78559,6 @@ namespace std{
 	  using node_type=typename _Rep_type::node_type;
 #165 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_multiset.h" 3
 	  multiset()=default;
-
 
 	  explicit
 	  multiset(const _Compare&__comp,
@@ -79209,7 +78605,6 @@ namespace std{
    const allocator_type&__a)
 :_M_t(_Key_alloc_type(__a)){ _M_t._M_insert_range_equal(__first,__last);}
 
-
 	 ~multiset()=default;
 #295 "C:/msys64/ucrt64/include/c++/14.1.0/bits/stl_multiset.h" 3
 	  multiset&
@@ -79233,34 +78628,26 @@ namespace std{
 	  allocator_type
 	  get_allocator()const noexcept{ return allocator_type(_M_t.get_allocator());}
 
-
 	  iterator
 	  begin()const noexcept{ return _M_t.begin();}
-
 
 	  iterator
 	  end()const noexcept{ return _M_t.end();}
 
-
 	  reverse_iterator
 	  rbegin()const noexcept{ return _M_t.rbegin();}
-
 
 	  reverse_iterator
 	  rend()const noexcept{ return _M_t.rend();}
 
-
 	  iterator
 	  cbegin()const noexcept{ return _M_t.begin();}
-
 
 	  iterator
 	  cend()const noexcept{ return _M_t.end();}
 
-
 	  reverse_iterator
 	  crbegin()const noexcept{ return _M_t.rbegin();}
-
 
 	  reverse_iterator
 	  crend()const noexcept{ return _M_t.rend();}
@@ -79437,7 +78824,6 @@ namespace std{
  friend bool
  operator==(const multiset<_K1,_C1,_A1>&,
 	 const multiset<_K1,_C1,_A1>&);
-
 
 	  template<typename _K1,typename _C1,typename _A1>
  friend bool
@@ -79746,7 +79132,6 @@ namespace std{
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/cmath" 3
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/valarray" 2 3
 
-
 namespace std{
 
   template<class _Clos,typename _Tp>
@@ -79811,7 +79196,6 @@ namespace __detail{
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/bits/valarray_array.h" 2 3
 
 namespace std{
-
 
   template<typename _Tp>
 	_Tp*
@@ -80035,7 +79419,6 @@ namespace std{
  __dst[*__j++]=__src[*__i++];
 	}
 
-
   template<typename _Tp>
 	inline _Tp
 	__valarray_sum(const _Tp*__f,const _Tp*__l){
@@ -80072,7 +79455,6 @@ namespace std{
  }
 	  return __r;
 	}
-
 
   template<typename _Tp>
 	struct _Array{
@@ -80195,7 +79577,6 @@ namespace std{
  }
 	}
 
-
   template<typename _Tp>
 	void
 	__valarray_copy(_Array<_Tp>__a,_Array<bool>__m,_Array<_Tp>__b,
@@ -80212,7 +79593,6 @@ namespace std{
  }
 	}
 
-
   template<typename _Tp>
 	void
 	__valarray_copy(_Array<_Tp>__a,size_t __n,_Array<_Tp>__b,
@@ -80228,7 +79608,6 @@ namespace std{
   *__q=*__p;
  }
 	}
-
 
   template<typename _Tp>
 	void
@@ -80288,7 +79667,6 @@ namespace std{
 	  for(size_t __k=0;__k<__n;++__k,++__j,++__g)
  __a._M_data[*__j]=__e._M_data[*__g];
 	}
-
 
   template<typename _Tp,class _Dom>
 	void
@@ -80357,7 +79735,6 @@ namespace std{
 	size_t size()const;
 
 	size_t stride()const;
-
 
   private:
 	size_t _M_off;
@@ -80493,7 +79870,6 @@ template<typename _Tp>inline void slice_array<_Tp>::operator&=(const valarray<_T
 template<typename _Tp>inline void slice_array<_Tp>::operator|=(const valarray<_Tp>&__v)const { _Array_augmented___bitwise_or(_M_array,_M_sz,_M_stride,_Array<_Tp>(__v));} template<typename _Tp>template<class _Dom>inline void slice_array<_Tp>::operator|=(const _Expr<_Dom,_Tp>&__e)const { _Array_augmented___bitwise_or(_M_array,_M_stride,__e,_M_sz);}
 template<typename _Tp>inline void slice_array<_Tp>::operator<<=(const valarray<_Tp>&__v)const { _Array_augmented___shift_left(_M_array,_M_sz,_M_stride,_Array<_Tp>(__v));} template<typename _Tp>template<class _Dom>inline void slice_array<_Tp>::operator<<=(const _Expr<_Dom,_Tp>&__e)const { _Array_augmented___shift_left(_M_array,_M_stride,__e,_M_sz);}
 template<typename _Tp>inline void slice_array<_Tp>::operator>>=(const valarray<_Tp>&__v)const { _Array_augmented___shift_right(_M_array,_M_sz,_M_stride,_Array<_Tp>(__v));} template<typename _Tp>template<class _Dom>inline void slice_array<_Tp>::operator>>=(const _Expr<_Dom,_Tp>&__e)const { _Array_augmented___shift_right(_M_array,_M_stride,__e,_M_sz);}
-
 
 }
 #38 "C:/msys64/ucrt64/include/c++/14.1.0/bits/valarray_before.h" 2 3
@@ -80851,7 +80227,6 @@ namespace __detail{
 	  _UnClos(const _Arg&__e):_Base(__e){}
 	};
 
-
   template<class _Oper,class _FirstArg,class _SecondArg>
 	class _BinBase{
 	public:
@@ -81199,7 +80574,6 @@ namespace std{
 	  void swap(valarray<_Tp>&__v)noexcept;
 
 	  size_t size()const;
-
 
 	  _Tp sum()const;
 
@@ -81763,7 +81137,6 @@ template<typename _Tp>inline void gslice_array<_Tp>::operator|=(const valarray<_
 template<typename _Tp>inline void gslice_array<_Tp>::operator<<=(const valarray<_Tp>&__v)const { _Array_augmented___shift_left(_M_array,_Array<size_t>(_M_index),_Array<_Tp>(__v),__v.size());} template<typename _Tp>template<class _Dom>inline void gslice_array<_Tp>::operator<<=(const _Expr<_Dom,_Tp>&__e)const { _Array_augmented___shift_left(_M_array,_Array<size_t>(_M_index),__e,_M_index.size());}
 template<typename _Tp>inline void gslice_array<_Tp>::operator>>=(const valarray<_Tp>&__v)const { _Array_augmented___shift_right(_M_array,_Array<size_t>(_M_index),_Array<_Tp>(__v),__v.size());} template<typename _Tp>template<class _Dom>inline void gslice_array<_Tp>::operator>>=(const _Expr<_Dom,_Tp>&__e)const { _Array_augmented___shift_right(_M_array,_Array<size_t>(_M_index),__e,_M_index.size());}
 
-
 }
 #609 "C:/msys64/ucrt64/include/c++/14.1.0/valarray" 2 3
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/mask_array.h" 1 3
@@ -81891,7 +81264,6 @@ template<typename _Tp>inline void mask_array<_Tp>::operator|=(const valarray<_Tp
 template<typename _Tp>inline void mask_array<_Tp>::operator<<=(const valarray<_Tp>&__v)const { do { if(std::__is_constant_evaluated())if(__builtin_expect(!bool(__v.size()==_M_sz),false))std::__glibcxx_assert_fail();} while(false);_Array_augmented___shift_left(_M_array,_M_mask,_Array<_Tp>(__v),__v.size());} template<typename _Tp>template<class _Dom>inline void mask_array<_Tp>::operator<<=(const _Expr<_Dom,_Tp>&__e)const { do { if(std::__is_constant_evaluated())if(__builtin_expect(!bool(__e.size()==_M_sz),false))std::__glibcxx_assert_fail();} while(false);_Array_augmented___shift_left(_M_array,_M_mask,__e,__e.size());}
 template<typename _Tp>inline void mask_array<_Tp>::operator>>=(const valarray<_Tp>&__v)const { do { if(std::__is_constant_evaluated())if(__builtin_expect(!bool(__v.size()==_M_sz),false))std::__glibcxx_assert_fail();} while(false);_Array_augmented___shift_right(_M_array,_M_mask,_Array<_Tp>(__v),__v.size());} template<typename _Tp>template<class _Dom>inline void mask_array<_Tp>::operator>>=(const _Expr<_Dom,_Tp>&__e)const { do { if(std::__is_constant_evaluated())if(__builtin_expect(!bool(__e.size()==_M_sz),false))std::__glibcxx_assert_fail();} while(false);_Array_augmented___shift_right(_M_array,_M_mask,__e,__e.size());}
 
-
 }
 #610 "C:/msys64/ucrt64/include/c++/14.1.0/valarray" 2 3
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/indirect_array.h" 1 3
@@ -82015,12 +81387,10 @@ template<typename _Tp>inline void indirect_array<_Tp>::operator|=(const valarray
 template<typename _Tp>inline void indirect_array<_Tp>::operator<<=(const valarray<_Tp>&__v)const { _Array_augmented___shift_left(_M_array,_M_index,_Array<_Tp>(__v),_M_sz);} template<typename _Tp>template<class _Dom>inline void indirect_array<_Tp>::operator<<=(const _Expr<_Dom,_Tp>&__e)const { _Array_augmented___shift_left(_M_array,_M_index,__e,_M_sz);}
 template<typename _Tp>inline void indirect_array<_Tp>::operator>>=(const valarray<_Tp>&__v)const { _Array_augmented___shift_right(_M_array,_M_index,_Array<_Tp>(__v),_M_sz);} template<typename _Tp>template<class _Dom>inline void indirect_array<_Tp>::operator>>=(const _Expr<_Dom,_Tp>&__e)const { _Array_augmented___shift_right(_M_array,_M_index,__e,_M_sz);}
 
-
 }
 #611 "C:/msys64/ucrt64/include/c++/14.1.0/valarray" 2 3
 
 namespace std{
-
 
   template<typename _Tp>
 	inline
@@ -82474,12 +81844,10 @@ template<typename _Tp>inline _Expr<_BinClos<__greater_equal,_ValArray,_ValArray,
 	inline _Tp*
 	begin(valarray<_Tp>&__va)noexcept{ return __va.size()?std::__addressof(__va[0]):nullptr;}
 
-
   template<class _Tp>
 	[[__nodiscard__]]
 	inline const _Tp*
 	begin(const valarray<_Tp>&__va)noexcept{ return __va.size()?std::__addressof(__va[0]):nullptr;}
-
 
   template<class _Tp>
 	[[__nodiscard__]]
@@ -82490,7 +81858,6 @@ template<typename _Tp>inline _Expr<_BinClos<__greater_equal,_ValArray,_ValArray,
 	  else
  return nullptr;
 	}
-
 
   template<class _Tp>
 	[[__nodiscard__]]
@@ -82510,19 +81877,16 @@ template<typename _Tp>inline _Expr<_BinClos<__greater_equal,_ValArray,_ValArray,
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/chrono" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/chrono.h" 1 3
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/bits/chrono.h" 3
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/chrono.h" 3
-
 
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/ctime" 1 3
 #39 "C:/msys64/ucrt64/include/c++/14.1.0/ctime" 3
 	   
 #40 "C:/msys64/ucrt64/include/c++/14.1.0/ctime" 3
 #41 "C:/msys64/ucrt64/include/c++/14.1.0/bits/chrono.h" 2 3
-
 
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 1 3
 #47 "C:/msys64/ucrt64/include/c++/14.1.0/bits/version.h" 3
@@ -82561,7 +81925,6 @@ namespace std{
 	  using type=chrono::duration<__cr,typename __r::type>;
 	};
 
-
   template<typename _Rep1,typename _Period1,typename _Rep2,typename _Period2>
 	struct common_type<chrono::duration<_Rep1,_Period1>,
 		 chrono::duration<_Rep2,_Period2>>
@@ -82582,7 +81945,6 @@ namespace std{
 		typename _Period::type>;
 	};
 
-
   template<typename _CT,typename _Clock,typename=void>
 	struct __timepoint_common_type{ };
 
@@ -82590,7 +81952,6 @@ namespace std{
 	struct __timepoint_common_type<_CT,_Clock,__void_t<typename _CT::type>>{
 	  using type=chrono::time_point<_Clock,typename _CT::type>;
 	};
-
 
   template<typename _Clock,typename _Duration1,typename _Duration2>
 	struct common_type<chrono::time_point<_Clock,_Duration1>,
@@ -82605,7 +81966,6 @@ namespace std{
 	struct common_type<chrono::time_point<_Clock,_Duration>>{ using type=chrono::time_point<_Clock,_Duration>;};
 
   namespace chrono{
-
 
 	template<typename _ToDur,typename _CF,typename _CR,
 	  bool _NumIsOne=false,bool _DenIsOne=false>
@@ -82757,7 +82117,6 @@ namespace std{
    return __t0;
  return __t1;
 	  }
-
 
 	template<typename _Rep,typename _Period>
 	  [[nodiscard]] constexpr
@@ -83142,7 +82501,6 @@ namespace std{
 	 chrono::round<_ToDur>(__tp.time_since_epoch())};
 	  }
 
-
 	template<typename _Clock,typename _Dur1,
 	  typename _Rep2,typename _Period2>
 	  constexpr time_point<_Clock,
@@ -83184,7 +82542,6 @@ namespace std{
 	  operator-(const time_point<_Clock,_Dur1>&__lhs,
   const time_point<_Clock,_Dur2>&__rhs){ return __lhs.time_since_epoch()-__rhs.time_since_epoch();}
 
-
 	template<typename _Clock,typename _Dur1,typename _Dur2>
 	  constexpr bool
 	  operator==(const time_point<_Clock,_Dur1>&__lhs,
@@ -83216,7 +82573,6 @@ namespace std{
    const time_point<_Clock,_Dur2>&__rhs){ return!(__lhs<__rhs);}
 #1217 "C:/msys64/ucrt64/include/c++/14.1.0/bits/chrono.h" 3
 inline namespace _V2 {
-
 
 	struct system_clock{
 	  typedef chrono::nanoseconds duration;
@@ -83466,7 +82822,6 @@ namespace std{
   class __mutex_base{
   protected:
 	typedef __gthread_mutex_t __native_type;
-
 
 	__native_type _M_mutex;
 
@@ -84015,14 +83370,12 @@ inline namespace _V2 {
 	   
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/forward_list" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/forward_list.h" 1 3
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/bits/forward_list.h" 3
 	   
 #34 "C:/msys64/ucrt64/include/c++/14.1.0/bits/forward_list.h" 3
 #44 "C:/msys64/ucrt64/include/c++/14.1.0/bits/forward_list.h" 3
 namespace std{
-
 
   struct _Fwd_list_node_base{
 	_Fwd_list_node_base()=default;
@@ -84069,7 +83422,6 @@ namespace std{
 	}
   };
 
-
   template<typename _Tp>
 	struct _Fwd_list_node
 	:public _Fwd_list_node_base{
@@ -84083,7 +83435,6 @@ namespace std{
 	  const _Tp*
 	  _M_valptr()const noexcept{ return _M_storage._M_ptr();}
 	};
-
 
   template<typename _Tp>
 	struct _Fwd_list_iterator{
@@ -84142,7 +83493,6 @@ namespace std{
 
 	  _Fwd_list_node_base*_M_node;
 	};
-
 
   template<typename _Tp>
 	struct _Fwd_list_const_iterator{
@@ -84327,13 +83677,11 @@ namespace std{
 	  typedef std::ptrdiff_t difference_type;
 	  typedef _Alloc allocator_type;
 
-
 	  forward_list()=default;
 
 	  explicit
 	  forward_list(const _Alloc&__al)noexcept
 	 :_Base(_Node_alloc_type(__al)){ }
-
 
 	  forward_list(const forward_list&__list,
 	 const __type_identity_t<_Alloc>&__al)
@@ -84375,7 +83723,6 @@ namespace std{
  forward_list(_InputIterator __first,_InputIterator __last,
 	   const _Alloc&__al=_Alloc())
 :_Base(_Node_alloc_type(__al)){ _M_range_initialize(__first,__last);}
-
 
 	  forward_list(const forward_list&__list)
 	 :_Base(_Node_alloc_traits::_S_select_on_copy(
@@ -84425,11 +83772,9 @@ namespace std{
 	  allocator_type
 	  get_allocator()const noexcept{ return allocator_type(this->_M_get_Node_allocator());}
 
-
 	  [[__nodiscard__]]
 	  iterator
 	  before_begin()noexcept{ return iterator(&this->_M_impl._M_head);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
@@ -84439,31 +83784,25 @@ namespace std{
 	  iterator
 	  begin()noexcept{ return iterator(this->_M_impl._M_head._M_next);}
 
-
 	  [[__nodiscard__]]
 	  const_iterator
 	  begin()const noexcept{ return const_iterator(this->_M_impl._M_head._M_next);}
-
 
 	  [[__nodiscard__]]
 	  iterator
 	  end()noexcept{ return iterator(nullptr);}
 
-
 	  [[__nodiscard__]]
 	  const_iterator
 	  end()const noexcept{ return const_iterator(nullptr);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
 	  cbegin()const noexcept{ return const_iterator(this->_M_impl._M_head._M_next);}
 
-
 	  [[__nodiscard__]]
 	  const_iterator
 	  cbefore_begin()const noexcept{ return const_iterator(&this->_M_impl._M_head);}
-
 
 	  [[__nodiscard__]]
 	  const_iterator
@@ -84476,7 +83815,6 @@ namespace std{
 	  [[__nodiscard__]]
 	  size_type
 	  max_size()const noexcept{ return _Node_alloc_traits::max_size(this->_M_get_Node_allocator());}
-
 
 	  [[__nodiscard__]]
 	  reference
@@ -84624,15 +83962,12 @@ namespace std{
  void
  merge(forward_list&__list,_Comp __comp){ merge(std::move(__list),__comp);}
 
-
 	  void
 	  sort(){ sort(std::less<_Tp>());}
-
 
 	  template<typename _Comp>
  void
  sort(_Comp __comp);
-
 
 	  void
 	  reverse()noexcept{ this->_M_impl._M_head._M_reverse_after();}
@@ -84996,7 +84331,6 @@ namespace std{
    return iterator(const_cast<_Node_base*>(__pos._M_node));
 	  }
 
-
   template<typename _Tp,typename _Alloc>
 	auto
 	forward_list<_Tp,_Alloc>::
@@ -85212,7 +84546,6 @@ namespace std{
 	   
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/future" 3
 
-
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/mutex" 1 3
 #32 "C:/msys64/ucrt64/include/c++/14.1.0/mutex" 3
 	   
@@ -85309,7 +84642,6 @@ namespace std{
  bool
  _M_try_lock_until(const chrono::time_point<_Clock,_Duration>&__atime){
 
-
    auto __now=_Clock::now();
    do {
 	 auto __rtime=__atime-__now;
@@ -85372,7 +84704,6 @@ namespace std{
 	  bool
 	  _M_timedlock(const __gthread_time_t&__ts){ return!__gthread_mutex_timedlock(&_M_mutex,&__ts);}
 
-
   };
 #317 "C:/msys64/ucrt64/include/c++/14.1.0/mutex" 3
   class recursive_timed_mutex
@@ -85426,7 +84757,6 @@ namespace std{
 
 	  bool
 	  _M_timedlock(const __gthread_time_t&__ts){ return!__gthread_recursive_mutex_timedlock(&_M_mutex,&__ts);}
-
 
   };
 #564 "C:/msys64/ucrt64/include/c++/14.1.0/mutex" 3
@@ -85778,7 +85108,6 @@ namespace std{
 
   private:
 
-
 	static void
 	_M_thread_deps_never_run(){
 
@@ -85962,7 +85291,6 @@ namespace std{
   inline error_condition
   make_error_condition(future_errc __errc)noexcept{ return error_condition(static_cast<int>(__errc),future_category());}
 
-
   class future_error:public logic_error{
   public:
 	explicit
@@ -86051,7 +85379,6 @@ namespace std{
   template<typename _Fn,typename... _Args>
 	future<__async_result_of<_Fn,_Args...>>
 	async(_Fn&&__fn,_Args&&... __args);
-
 
   struct __future_base{
 
@@ -86415,7 +85742,6 @@ namespace std{
 	private:
 	  void _M_destroy(){ delete this;}
 	};
-
 
   template<typename _Res,typename _Arg>
 	struct __is_location_invariant
@@ -87204,7 +86530,6 @@ namespace std{
 	  virtual void
 	  _M_complete_async(){
 
-
 		_M_set_result(_S_task_setter(_M_result,_M_fn),true);
 	  }
 
@@ -87296,7 +86621,6 @@ namespace std{
    std::forward<_Args>(__args)...);
 	}
 
-
 }
 #177 "C:/msys64/ucrt64/include/c++/14.1.0/x86_64-w64-mingw32/bits/stdc++.h" 2 3
 
@@ -87304,7 +86628,6 @@ namespace std{
 #32 "C:/msys64/ucrt64/include/c++/14.1.0/random" 3
 	   
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/random" 3
-
 
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/cmath" 1 3
 #39 "C:/msys64/ucrt64/include/c++/14.1.0/cmath" 3
@@ -87418,7 +86741,6 @@ namespace std{
  _DInputType
  max()const{ return _DInputType(1);}
 
-
  _DInputType
  operator()(){
    return std::generate_canonical<_DInputType,
@@ -87429,7 +86751,6 @@ namespace std{
 	  private:
  _Engine&_M_g;
 	  };
-
 
 	template<typename _Sseq>
 	  using __seed_seq_generate_t=decltype(
@@ -87475,11 +86796,9 @@ namespace std{
 	  explicit
 	  linear_congruential_engine(result_type __s){ seed(__s);}
 
-
 	  template<typename _Sseq,typename=_If_seed_seq<_Sseq>>
 		explicit
 		linear_congruential_engine(_Sseq&__q){ seed(__q);}
-
 
 	  void
 	  seed(result_type __s=default_seed);
@@ -87487,7 +86806,6 @@ namespace std{
 	  template<typename _Sseq>
 		_If_seed_seq<_Sseq>
 		seed(_Sseq&__q);
-
 
 	  static constexpr result_type
 	  min(){ return __c==0u?1u:0u;}
@@ -87598,7 +86916,6 @@ namespace std{
 	  explicit
 	  mersenne_twister_engine(result_type __sd){ seed(__sd);}
 
-
 	  template<typename _Sseq,typename=_If_seed_seq<_Sseq>>
 		explicit
 		mersenne_twister_engine(_Sseq&__q){ seed(__q);}
@@ -87701,7 +87018,6 @@ namespace std{
 	  explicit
 	  subtract_with_carry_engine(result_type __sd){ seed(__sd);}
 
-
 	  template<typename _Sseq,typename=_If_seed_seq<_Sseq>>
 		explicit
 		subtract_with_carry_engine(_Sseq&__q){ seed(__q);}
@@ -87779,25 +87095,20 @@ namespace std{
 	  static constexpr size_t block_size=__p;
 	  static constexpr size_t used_block=__r;
 
-
 	  discard_block_engine()
 	 :_M_b(),_M_n(0){ }
-
 
 	  explicit
 	  discard_block_engine(const _RandomNumberEngine&__rng)
 	 :_M_b(__rng),_M_n(0){ }
 
-
 	  explicit
 	  discard_block_engine(_RandomNumberEngine&&__rng)
 	 :_M_b(std::move(__rng)),_M_n(0){ }
 
-
 	  explicit
 	  discard_block_engine(result_type __s)
 	 :_M_b(__s),_M_n(0){ }
-
 
 	  template<typename _Sseq,typename=_If_seed_seq<_Sseq>>
 		explicit
@@ -87815,7 +87126,6 @@ namespace std{
  _M_b.seed(__s);
  _M_n=0;
 	  }
-
 
 	  template<typename _Sseq>
 		_If_seed_seq<_Sseq>
@@ -87888,25 +87198,20 @@ namespace std{
 
 	  typedef _UIntType result_type;
 
-
 	  independent_bits_engine()
 	 :_M_b(){ }
-
 
 	  explicit
 	  independent_bits_engine(const _RandomNumberEngine&__rng)
 	 :_M_b(__rng){ }
 
-
 	  explicit
 	  independent_bits_engine(_RandomNumberEngine&&__rng)
 	 :_M_b(std::move(__rng)){ }
 
-
 	  explicit
 	  independent_bits_engine(result_type __s)
 	 :_M_b(__s){ }
-
 
 	  template<typename _Sseq,typename=_If_seed_seq<_Sseq>>
 		explicit
@@ -87918,7 +87223,6 @@ namespace std{
 
 	  void
 	  seed(result_type __s){ _M_b.seed(__s);}
-
 
 	  template<typename _Sseq>
 		_If_seed_seq<_Sseq>
@@ -87992,25 +87296,20 @@ namespace std{
 
 	  static constexpr size_t table_size=__k;
 
-
 	  shuffle_order_engine()
 	 :_M_b(){ _M_initialize();}
-
 
 	  explicit
 	  shuffle_order_engine(const _RandomNumberEngine&__rng)
 	 :_M_b(__rng){ _M_initialize();}
 
-
 	  explicit
 	  shuffle_order_engine(_RandomNumberEngine&&__rng)
 	 :_M_b(std::move(__rng)){ _M_initialize();}
 
-
 	  explicit
 	  shuffle_order_engine(result_type __s)
 	 :_M_b(__s){ _M_initialize();}
-
 
 	  template<typename _Sseq,typename=_If_seed_seq<_Sseq>>
 		explicit
@@ -88028,7 +87327,6 @@ namespace std{
  _M_b.seed(__s);
  _M_initialize();
 	  }
-
 
 	  template<typename _Sseq>
 		_If_seed_seq<_Sseq>
@@ -88235,7 +87533,6 @@ namespace std{
 
 	  uniform_real_distribution():uniform_real_distribution(0.0){ }
 
-
 	  explicit
 	  uniform_real_distribution(_RealType __a,_RealType __b=_RealType(1))
 	 :_M_param(__a,__b){ }
@@ -88243,7 +87540,6 @@ namespace std{
 	  explicit
 	  uniform_real_distribution(const param_type&__p)
 	 :_M_param(__p){ }
-
 
 	  void
 	  reset(){ }
@@ -88312,7 +87608,6 @@ namespace std{
 
 	  param_type _M_param;
 	};
-
 
   template<typename _IntType>
 	inline bool
@@ -88427,7 +87722,6 @@ namespace std{
  __generate(result_type*__f,result_type*__t,
 	 _UniformRandomNumberGenerator&__urng,
 	 const param_type&__p){ this->__generate_impl(__f,__t,__urng,__p);}
-
 
 	  template<typename _RealType1>
  friend bool
@@ -88555,7 +87849,6 @@ namespace std{
  __generate(result_type*__f,result_type*__t,
 	 _UniformRandomNumberGenerator&__urng,
 	 const param_type&__p){ this->__generate_impl(__f,__t,__urng,__p);}
-
 
 	  friend bool
 	  operator==(const lognormal_distribution&__d1,
@@ -88697,7 +87990,6 @@ namespace std{
 	 _UniformRandomNumberGenerator&__urng,
 	 const param_type&__p){ this->__generate_impl(__f,__t,__urng,__p);}
 
-
 	  friend bool
 	  operator==(const gamma_distribution&__d1,
    const gamma_distribution&__d2){ return(__d1._M_param==__d2._M_param
@@ -88835,7 +88127,6 @@ namespace std{
 	 const param_type&__p){ typename std::gamma_distribution<result_type>::param_type
 	 __p2(__p.n()/2);
    this->__generate_impl(__f,__t,__urng,__p2);}
-
 
 	  friend bool
 	  operator==(const chi_squared_distribution&__d1,
@@ -88985,7 +88276,6 @@ namespace std{
 	  param_type _M_param;
 	};
 
-
   template<typename _RealType>
 	inline bool
 	operator!=(const std::cauchy_distribution<_RealType>&__d1,
@@ -89108,7 +88398,6 @@ namespace std{
  __generate(result_type*__f,result_type*__t,
 	 _UniformRandomNumberGenerator&__urng,
 	 const param_type&__p){ this->__generate_impl(__f,__t,__urng,__p);}
-
 
 	  friend bool
 	  operator==(const fisher_f_distribution&__d1,
@@ -89251,7 +88540,6 @@ namespace std{
 	 _UniformRandomNumberGenerator&__urng,
 	 const param_type&__p){ this->__generate_impl(__f,__t,__urng,__p);}
 
-
 	  friend bool
 	  operator==(const student_t_distribution&__d1,
    const student_t_distribution&__d2){ return(__d1._M_param==__d2._M_param
@@ -89324,7 +88612,6 @@ namespace std{
 
 	bernoulli_distribution():bernoulli_distribution(0.5){ }
 
-
 	explicit
 	bernoulli_distribution(double __p)
 	:_M_param(__p){ }
@@ -89332,7 +88619,6 @@ namespace std{
 	explicit
 	bernoulli_distribution(const param_type&__p)
 	:_M_param(__p){ }
-
 
 	void
 	reset(){ }
@@ -89400,7 +88686,6 @@ namespace std{
 
 	param_type _M_param;
   };
-
 
   inline bool
   operator!=(const std::bernoulli_distribution&__d1,
@@ -89531,7 +88816,6 @@ namespace std{
 	 _UniformRandomNumberGenerator&__urng,
 	 const param_type&__p){ this->__generate_impl(__f,__t,__urng,__p);}
 
-
  friend bool
 		operator==(const binomial_distribution&__d1,
 	 const binomial_distribution&__d2){ return __d1._M_param==__d2._M_param&&__d1._M_nd==__d2._M_nd;}
@@ -89621,7 +88905,6 @@ namespace std{
 	  geometric_distribution(const param_type&__p)
 	 :_M_param(__p){ }
 
-
 	  void
 	  reset(){ }
 
@@ -89682,7 +88965,6 @@ namespace std{
 
 	  param_type _M_param;
 	};
-
 
   template<typename _IntType>
 	inline bool
@@ -89801,7 +89083,6 @@ namespace std{
  __generate(result_type*__f,result_type*__t,
 	 _UniformRandomNumberGenerator&__urng,
 	 const param_type&__p){ this->__generate_impl(__f,__t,__urng,__p);}
-
 
 	  friend bool
 	  operator==(const negative_binomial_distribution&__d1,
@@ -89940,7 +89221,6 @@ namespace std{
 	 _UniformRandomNumberGenerator&__urng,
 	 const param_type&__p){ this->__generate_impl(__f,__t,__urng,__p);}
 
-
 	  friend bool
 	  operator==(const poisson_distribution&__d1,
    const poisson_distribution&__d2){ return __d1._M_param==__d2._M_param&&__d1._M_nd==__d2._M_nd;}
@@ -90018,7 +89298,6 @@ namespace std{
 	  exponential_distribution(const param_type&__p)
 	 :_M_param(__p){ }
 
-
 	  void
 	  reset(){ }
 
@@ -90083,7 +89362,6 @@ namespace std{
 
 	  param_type _M_param;
 	};
-
 
   template<typename _RealType>
 	inline bool
@@ -90209,7 +89487,6 @@ namespace std{
 	  param_type _M_param;
 	};
 
-
   template<typename _RealType>
 	inline bool
 	operator!=(const std::weibull_distribution<_RealType>&__d1,
@@ -90333,7 +89610,6 @@ namespace std{
 
 	  param_type _M_param;
 	};
-
 
   template<typename _RealType>
 	inline bool
@@ -90494,7 +89770,6 @@ namespace std{
 
 	  param_type _M_param;
 	};
-
 
   template<typename _IntType>
 	inline bool
@@ -90675,7 +89950,6 @@ namespace std{
 
 	  param_type _M_param;
 	};
-
 
   template<typename _RealType>
 	inline bool
@@ -90858,7 +90132,6 @@ namespace std{
 	  param_type _M_param;
 	};
 
-
   template<typename _RealType>
 	inline bool
 	operator!=(const std::piecewise_linear_distribution<_RealType>&__d1,
@@ -90894,7 +90167,6 @@ namespace std{
   private:
 	std::vector<result_type>_M_v;
   };
-
 
 }
 #49 "C:/msys64/ucrt64/include/c++/14.1.0/random" 2 3
@@ -91114,7 +90386,6 @@ _mm_add_si64(__m64 __m1,__m64 __m2){
   return(__m64)__builtin_ia32_paddq((__v1di)__m1,(__v1di)__m2);
 }
 
-
 extern __inline __m64 __attribute__((__gnu_inline__,__always_inline__,__artificial__))
 _mm_adds_pi8(__m64 __m1,__m64 __m2){
   return(__m64)__builtin_ia32_paddsb((__v8qi)__m1,(__v8qi)__m2);
@@ -91189,7 +90460,6 @@ extern __inline __m64 __attribute__((__gnu_inline__,__always_inline__,__artifici
 _mm_sub_si64(__m64 __m1,__m64 __m2){
   return(__m64)__builtin_ia32_psubq((__v1di)__m1,(__v1di)__m2);
 }
-
 
 extern __inline __m64 __attribute__((__gnu_inline__,__always_inline__,__artificial__))
 _mm_subs_pi8(__m64 __m1,__m64 __m2){
@@ -91923,7 +91193,6 @@ _mm_cvt_ss2si(__m128 __A){
   return _mm_cvtss_si32(__A);
 }
 
-
 extern __inline long long __attribute__((__gnu_inline__,__always_inline__,__artificial__))
 _mm_cvtss_si64(__m128 __A){
   return __builtin_ia32_cvtss2si64((__v4sf)__A);
@@ -92466,7 +91735,6 @@ typedef double __m128d __attribute__((__vector_size__(16),__may_alias__));
 
 typedef long long __m128i_u __attribute__((__vector_size__(16),__may_alias__,__aligned__(1)));
 typedef double __m128d_u __attribute__((__vector_size__(16),__may_alias__,__aligned__(1)));
-
 
 extern __inline __m128d __attribute__((__gnu_inline__,__always_inline__,__artificial__))
 _mm_set_sd(double __F){
@@ -93875,7 +93143,6 @@ namespace std{
 
   namespace __detail{
 
-
 	template<typename _Tp,_Tp __m,_Tp __a,_Tp __c>
 	  _Tp
 	  _Mod<_Tp,__m,__a,__c,false,true>::
@@ -94400,7 +93667,6 @@ namespace std{
  }
 	  return __sum;
 	}
-
 
   namespace __detail{
 
@@ -95780,7 +95046,6 @@ namespace std{
 	  _M_a2=_RealType(1.0)/std::sqrt(_RealType(9.0)*__a1);
 	}
 
-
   template<typename _RealType>
 	template<typename _UniformRandomNumberGenerator>
 	  typename gamma_distribution<_RealType>::result_type
@@ -96741,9 +96006,7 @@ namespace regex_constants{
 
   inline constexpr syntax_option_type icase=_S_icase;
 
-
   inline constexpr syntax_option_type nosubs=_S_nosubs;
-
 
   inline constexpr syntax_option_type optimize=_S_optimize;
 
@@ -96753,21 +96016,17 @@ namespace regex_constants{
 #129 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex_constants.h" 3
   inline constexpr syntax_option_type basic=_S_basic;
 
-
   inline constexpr syntax_option_type extended=_S_extended;
 #147 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex_constants.h" 3
   inline constexpr syntax_option_type awk=_S_awk;
 
-
   inline constexpr syntax_option_type grep=_S_grep;
-
 
   inline constexpr syntax_option_type egrep=_S_egrep;
 #175 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex_constants.h" 3
   inline constexpr syntax_option_type multiline=_S_multiline;
 
   inline constexpr syntax_option_type __multiline=_S_multiline;
-
 
   inline constexpr syntax_option_type __polynomial=_S_polynomial;
 
@@ -96826,9 +96085,7 @@ namespace regex_constants{
 
   inline constexpr match_flag_type match_default=_S_default;
 
-
   inline constexpr match_flag_type match_not_bol=_S_not_bol;
-
 
   inline constexpr match_flag_type match_not_eol=_S_not_eol;
 
@@ -96842,14 +96099,11 @@ namespace regex_constants{
 
   inline constexpr match_flag_type match_continuous=_S_continuous;
 
-
   inline constexpr match_flag_type match_prev_avail=_S_prev_avail;
 #351 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex_constants.h" 3
   inline constexpr match_flag_type format_default=_S_default;
 
-
   inline constexpr match_flag_type format_sed=_S_sed;
-
 
   inline constexpr match_flag_type format_no_copy=_S_no_copy;
 
@@ -96899,7 +96153,6 @@ namespace regex_constants{
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex_error.h" 1 3
 #33 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex_error.h" 3
 namespace std{
-
 
 namespace regex_constants{
 
@@ -96961,7 +96214,6 @@ namespace regex_constants{
 
 	virtual~regex_error()throw();
 
-
 	regex_constants::error_type
 	code()const noexcept{ return _M_code;}
 
@@ -96985,7 +96237,6 @@ namespace regex_constants{
   inline void
   __throw_regex_error(regex_constants::error_type __ecode,const char*__what);
 
-
 }
 #65 "C:/msys64/ucrt64/include/c++/14.1.0/regex" 2 3
 #1 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex_automaton.h" 1 3
@@ -96993,7 +96244,6 @@ namespace regex_constants{
 namespace std{
 
 namespace __detail{
-
 
   typedef long _StateIdT;
   inline constexpr _StateIdT _S_invalid_state_id=-1;
@@ -97291,7 +96541,6 @@ namespace __detail{
  __throw_regex_error(regex_constants::error_complexity,
 	   "Unexpected back-reference in polynomial mode.");
 
-
 	  if(__index>=_M_subexpr_count)
  __throw_regex_error(
    regex_constants::error_backref,
@@ -97500,7 +96749,6 @@ namespace __detail{
 
 	  const _StringT&
 	  _M_get_value()const noexcept{ return _M_value;}
-
 
 	private:
 	  void
@@ -97917,7 +97165,6 @@ namespace __detail{
 
   template<typename,bool,bool>
 	struct _BracketMatcher;
-
 
   template<typename _TraitsT>
 	class _Compiler{
@@ -98988,7 +98235,6 @@ namespace __cxx11 {
  string_type
  transform_primary(_Fwd_iter __first,_Fwd_iter __last)const{
 
-
    typedef std::ctype<char_type>__ctype_type;
    const __ctype_type&__fctyp(use_facet<__ctype_type>(_M_locale));
    std::vector<char_type>__s(__first,__last);
@@ -99036,7 +98282,6 @@ namespace __cxx11 {
 	  typedef regex_constants::syntax_option_type flag_type;
 	  typedef typename traits_type::locale_type locale_type;
 
-
 	  static constexpr flag_type icase=regex_constants::icase;
 	  static constexpr flag_type nosubs=regex_constants::nosubs;
 	  static constexpr flag_type optimize=regex_constants::optimize;
@@ -99062,9 +98307,7 @@ namespace __cxx11 {
  _M_compile(__p,__p+__len,__f);
 	  }
 
-
 	  basic_regex(const basic_regex&__rhs)=default;
-
 
 	  basic_regex(basic_regex&&__rhs)noexcept=default;
 #517 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex.h" 3
@@ -99094,15 +98337,12 @@ namespace __cxx11 {
 	  basic_regex&
 	  operator=(initializer_list<_Ch_type>__l){ return this->assign(__l);}
 
-
 	  template<typename _Ch_traits,typename _Alloc>
  basic_regex&
  operator=(const basic_string<_Ch_type,_Ch_traits,_Alloc>&__s){ return this->assign(__s);}
 
-
 	  basic_regex&
 	  assign(const basic_regex&__rhs)noexcept{ return*this=__rhs;}
-
 
 	  basic_regex&
 	  assign(basic_regex&&__rhs)noexcept{ return*this=std::move(__rhs);}
@@ -99153,7 +98393,6 @@ namespace __cxx11 {
  return*this;
 	  }
 
-
 	  unsigned int
 	  mark_count()const noexcept{
  if(_M_automaton)
@@ -99163,7 +98402,6 @@ namespace __cxx11 {
 
 	  flag_type
 	  flags()const noexcept{ return _M_flags;}
-
 
 	  locale_type
 	  imbue(locale_type __loc){
@@ -99175,14 +98413,12 @@ namespace __cxx11 {
 	  locale_type
 	  getloc()const noexcept{ return _M_loc;}
 
-
 	  void
 	  swap(basic_regex&__rhs)noexcept{
  std::swap(_M_flags,__rhs._M_flags);
  std::swap(_M_loc,__rhs._M_loc);
  std::swap(_M_automaton,__rhs._M_automaton);
 	  }
-
 
 	private:
 	  typedef std::shared_ptr<const __detail::_NFA<_Rx_traits>>_AutomatonPtr;
@@ -99246,7 +98482,6 @@ namespace __cxx11 {
 	  length()const noexcept{ return this->matched?std::distance(this->first,this->second):0;}
 #954 "C:/msys64/ucrt64/include/c++/14.1.0/bits/regex.h" 3
 	  operator string_type()const{ return str();}
-
 
 	  string_type
 	  str()const{
@@ -99340,21 +98575,17 @@ namespace __cxx11 {
 	inline bool
 	operator!=(const sub_match<_BiIter>&__lhs,const sub_match<_BiIter>&__rhs){ return __lhs.compare(__rhs)!=0;}
 
-
   template<typename _BiIter>
 	inline bool
 	operator<(const sub_match<_BiIter>&__lhs,const sub_match<_BiIter>&__rhs){ return __lhs.compare(__rhs)<0;}
-
 
   template<typename _BiIter>
 	inline bool
 	operator<=(const sub_match<_BiIter>&__lhs,const sub_match<_BiIter>&__rhs){ return __lhs.compare(__rhs)<=0;}
 
-
   template<typename _BiIter>
 	inline bool
 	operator>=(const sub_match<_BiIter>&__lhs,const sub_match<_BiIter>&__rhs){ return __lhs.compare(__rhs)>=0;}
-
 
   template<typename _BiIter>
 	inline bool
@@ -99375,24 +98606,20 @@ namespace __cxx11 {
 	operator!=(const __sub_match_string<_Bi_iter,_Ch_traits,_Ch_alloc>&__lhs,
 		const sub_match<_Bi_iter>&__rhs){ return!(__lhs==__rhs);}
 
-
   template<typename _Bi_iter,typename _Ch_traits,typename _Ch_alloc>
 	inline bool
 	operator<(const __sub_match_string<_Bi_iter,_Ch_traits,_Ch_alloc>&__lhs,
 	   const sub_match<_Bi_iter>&__rhs){ return __rhs._M_compare(__lhs.data(),__lhs.size())>0;}
-
 
   template<typename _Bi_iter,typename _Ch_traits,typename _Ch_alloc>
 	inline bool
 	operator>(const __sub_match_string<_Bi_iter,_Ch_traits,_Ch_alloc>&__lhs,
 	   const sub_match<_Bi_iter>&__rhs){ return __rhs<__lhs;}
 
-
   template<typename _Bi_iter,typename _Ch_traits,typename _Ch_alloc>
 	inline bool
 	operator>=(const __sub_match_string<_Bi_iter,_Ch_traits,_Ch_alloc>&__lhs,
 		const sub_match<_Bi_iter>&__rhs){ return!(__lhs<__rhs);}
-
 
   template<typename _Bi_iter,typename _Ch_traits,typename _Ch_alloc>
 	inline bool
@@ -99409,24 +98636,20 @@ namespace __cxx11 {
 	operator!=(const sub_match<_Bi_iter>&__lhs,
 		const __sub_match_string<_Bi_iter,_Ch_traits,_Ch_alloc>&__rhs){ return!(__lhs==__rhs);}
 
-
   template<typename _Bi_iter,typename _Ch_traits,typename _Ch_alloc>
 	inline bool
 	operator<(const sub_match<_Bi_iter>&__lhs,
 	   const __sub_match_string<_Bi_iter,_Ch_traits,_Ch_alloc>&__rhs){ return __lhs._M_compare(__rhs.data(),__rhs.size())<0;}
-
 
   template<typename _Bi_iter,typename _Ch_traits,typename _Ch_alloc>
 	inline bool
 	operator>(const sub_match<_Bi_iter>&__lhs,
 	   const __sub_match_string<_Bi_iter,_Ch_traits,_Ch_alloc>&__rhs){ return __rhs<__lhs;}
 
-
   template<typename _Bi_iter,typename _Ch_traits,typename _Ch_alloc>
 	inline bool
 	operator>=(const sub_match<_Bi_iter>&__lhs,
 		const __sub_match_string<_Bi_iter,_Ch_traits,_Ch_alloc>&__rhs){ return!(__lhs<__rhs);}
-
 
   template<typename _Bi_iter,typename _Ch_traits,typename _Ch_alloc>
 	inline bool
@@ -99443,24 +98666,20 @@ namespace __cxx11 {
 	operator!=(typename iterator_traits<_Bi_iter>::value_type const*__lhs,
 		const sub_match<_Bi_iter>&__rhs){ return!(__lhs==__rhs);}
 
-
   template<typename _Bi_iter>
 	inline bool
 	operator<(typename iterator_traits<_Bi_iter>::value_type const*__lhs,
 	   const sub_match<_Bi_iter>&__rhs){ return __rhs.compare(__lhs)>0;}
-
 
   template<typename _Bi_iter>
 	inline bool
 	operator>(typename iterator_traits<_Bi_iter>::value_type const*__lhs,
 	   const sub_match<_Bi_iter>&__rhs){ return __rhs<__lhs;}
 
-
   template<typename _Bi_iter>
 	inline bool
 	operator>=(typename iterator_traits<_Bi_iter>::value_type const*__lhs,
 		const sub_match<_Bi_iter>&__rhs){ return!(__lhs<__rhs);}
-
 
   template<typename _Bi_iter>
 	inline bool
@@ -99477,24 +98696,20 @@ namespace __cxx11 {
 	operator!=(const sub_match<_Bi_iter>&__lhs,
 		typename iterator_traits<_Bi_iter>::value_type const*__rhs){ return!(__lhs==__rhs);}
 
-
   template<typename _Bi_iter>
 	inline bool
 	operator<(const sub_match<_Bi_iter>&__lhs,
 	   typename iterator_traits<_Bi_iter>::value_type const*__rhs){ return __lhs.compare(__rhs)<0;}
-
 
   template<typename _Bi_iter>
 	inline bool
 	operator>(const sub_match<_Bi_iter>&__lhs,
 	   typename iterator_traits<_Bi_iter>::value_type const*__rhs){ return __rhs<__lhs;}
 
-
   template<typename _Bi_iter>
 	inline bool
 	operator>=(const sub_match<_Bi_iter>&__lhs,
 		typename iterator_traits<_Bi_iter>::value_type const*__rhs){ return!(__lhs<__rhs);}
-
 
   template<typename _Bi_iter>
 	inline bool
@@ -99626,7 +98841,6 @@ namespace __cxx11 {
 
 	  size_type
 	  max_size()const noexcept{ return _Unchecked::max_size()-3;}
-
 
 	  [[__nodiscard__]] bool
 	  empty()const noexcept{ return _Unchecked::size()<=3;}
@@ -100107,7 +99321,6 @@ namespace __cxx11 {
 	  typedef std::forward_iterator_tag iterator_category;
 
 	public:
-
 
 	  regex_token_iterator()
 	 :_M_position(),_M_subs(),_M_suffix(),_M_n(0),_M_result(nullptr),
@@ -100661,7 +99874,6 @@ namespace __detail{
 	regex_iterator<_Bi_iter,_Ch_type,_Rx_traits>::
 	operator++(){
 
-
 	  if(_M_match[0].matched){
    auto __start=_M_match[0].second;
    auto __prefix_first=_M_match[0].second;
@@ -101112,7 +100324,6 @@ namespace __detail{
 	  return false;
 	}
 
-
   template<typename _BiIter,typename _Alloc,typename _TraitsT,
 	bool __dfs_mode>
 	void _Executor<_BiIter,_Alloc,_TraitsT,__dfs_mode>::
@@ -101340,7 +100551,6 @@ namespace __detail{
   _M_results=_M_cur_results;
 	   else{
 	do { if(std::__is_constant_evaluated())if(__builtin_expect(!bool(_M_states._M_get_sol_pos()),false))std::__glibcxx_assert_fail();} while(false);
-
 
 	if(*_M_states._M_get_sol_pos()==_BiIter()
 		||std::distance(_M_begin,
@@ -101670,11 +100880,9 @@ namespace std{
 	  unordered_set(const allocator_type&__a)
 	 :_M_h(__a){ }
 
-
 	  unordered_set(const unordered_set&__uset,
 	  const allocator_type&__a)
 	 :_M_h(__uset._M_h,__a){ }
-
 
 	  unordered_set(unordered_set&&__uset,
 	  const allocator_type&__a)
@@ -101747,13 +100955,11 @@ namespace std{
 	  const_iterator
 	  begin()const noexcept{ return _M_h.begin();}
 
-
 	  iterator
 	  end()noexcept{ return _M_h.end();}
 
 	  const_iterator
 	  end()const noexcept{ return _M_h.end();}
-
 
 	  const_iterator
 	  cbegin()const noexcept{ return _M_h.begin();}
@@ -101815,7 +101021,6 @@ namespace std{
 	  iterator
 	  erase(const_iterator __first,const_iterator __last){ return _M_h.erase(__first,__last);}
 
-
 	  void
 	  clear()noexcept{ _M_h.clear();}
 #592 "C:/msys64/ucrt64/include/c++/14.1.0/bits/unordered_set.h" 3
@@ -101848,7 +101053,6 @@ namespace std{
  void
  merge(unordered_multiset<_Value,_H2,_P2,_Alloc>&&__source){ merge(__source);}
 
-
 	  hasher
 	  hash_function()const{ return _M_h.hash_function();}
 
@@ -101876,10 +101080,8 @@ namespace std{
 	  size_type
 	  max_bucket_count()const noexcept{ return _M_h.max_bucket_count();}
 
-
 	  size_type
 	  bucket_size(size_type __n)const{ return _M_h.bucket_size(__n);}
-
 
 	  size_type
 	  bucket(const key_type&__key)const{ return _M_h.bucket(__key);}
@@ -102057,11 +101259,9 @@ namespace std{
 	  unordered_multiset(const allocator_type&__a)
 	 :_M_h(__a){ }
 
-
 	  unordered_multiset(const unordered_multiset&__umset,
 	const allocator_type&__a)
 	 :_M_h(__umset._M_h,__a){ }
-
 
 	  unordered_multiset(unordered_multiset&&__umset,
 	const allocator_type&__a)
@@ -102121,13 +101321,11 @@ namespace std{
 	  const_iterator
 	  begin()const noexcept{ return _M_h.begin();}
 
-
 	  iterator
 	  end()noexcept{ return _M_h.end();}
 
 	  const_iterator
 	  end()const noexcept{ return _M_h.end();}
-
 
 	  const_iterator
 	  cbegin()const noexcept{ return _M_h.begin();}
@@ -102223,7 +101421,6 @@ namespace std{
  void
  merge(unordered_set<_Value,_H2,_P2,_Alloc>&&__source){ merge(__source);}
 
-
 	  hasher
 	  hash_function()const{ return _M_h.hash_function();}
 
@@ -102251,10 +101448,8 @@ namespace std{
 	  size_type
 	  max_bucket_count()const noexcept{ return _M_h.max_bucket_count();}
 
-
 	  size_type
 	  bucket_size(size_type __n)const{ return _M_h.bucket_size(__n);}
-
 
 	  size_type
 	  bucket(const key_type&__key)const{ return _M_h.bucket(__key);}
@@ -102400,7 +101595,6 @@ namespace std{
 	inline bool
 	operator!=(const unordered_multiset<_Value,_Hash,_Pred,_Alloc>&__x,
 		const unordered_multiset<_Value,_Hash,_Pred,_Alloc>&__y){ return!(__x==__y);}
-
 
   template<typename _Val,typename _Hash1,typename _Eq1,typename _Alloc,
 	typename _Hash2,typename _Eq2>
@@ -102605,7 +101799,6 @@ namespace std{
 
   using __shared_timed_mutex_base=__shared_mutex_pthread;
 
-
   class shared_timed_mutex
  :private __shared_timed_mutex_base{
 	using _Base=__shared_timed_mutex_base;
@@ -102675,7 +101868,6 @@ namespace std{
 	  bool
 	  try_lock_until(const chrono::time_point<_Clock,_Duration>&__atime){
 
-
  typename _Clock::time_point __now=_Clock::now();
  do {
 	 auto __rtime=__atime-__now;
@@ -102716,7 +101908,6 @@ namespace std{
 	  bool
 	  try_lock_shared_until(const chrono::time_point<_Clock,
 		   _Duration>&__atime){
-
 
  typename _Clock::time_point __now=_Clock::now();
  do {
@@ -103413,7 +102604,6 @@ namespace filesystem{
 
 inline namespace __cxx11 __attribute__((__abi_tag__("cxx11"))){ }
 
-
   class file_status;
 namespace __cxx11 {
   class path;
@@ -103773,10 +102963,8 @@ namespace __detail{
 	constexpr bool
 	__is_contiguous<__gnu_cxx::__normal_iterator<_Tp*,_Seq>>=true;
 
-
   template<typename _EcharT>
 	using __unified_u8_t=_EcharT;
-
 
   template<typename _CharT,typename _Traits,typename _Alloc>
 	inline basic_string_view<_CharT>
@@ -104260,7 +103448,6 @@ namespace __detail{
 
 	}
 
-
   template<typename _Source,
 	typename _Require=__detail::_Path<_Source>,
 	typename _CharT=__detail::__value_type_is_char_or_char8_t<_Source>>
@@ -104284,7 +103471,6 @@ namespace __detail{
 	size_t _M_pos;
   };
 
-
   template<typename _EcharT>
 	struct path::_Codecvt
 
@@ -104300,7 +103486,6 @@ namespace __detail{
 	auto
 	path::_S_convert(const _EcharT*__f,const _EcharT*__l){
 	  static_assert(__detail::__is_encoded_char<_EcharT>);
-
 
 	  if constexpr(is_same_v<_EcharT,value_type>)
  return basic_string_view<value_type>(__f,__l-__f);
@@ -104473,7 +103658,6 @@ namespace __detail{
 	  if(__str.size()==0)
  return _WString(__a);
 
-
 	  std::codecvt_utf8_utf16<value_type>__cvt;
 
 	  using _CharAlloc=__alloc_rebind<_Allocator,char>;
@@ -104512,7 +103696,6 @@ namespace __detail{
 
   inline std::wstring
   path::wstring()const { return string<wchar_t>();}
-
 
   inline std::string
   path::u8string()const{
@@ -104574,7 +103757,6 @@ namespace __detail{
 
   inline std::wstring
   path::generic_wstring()const{ return generic_string<wchar_t>();}
-
 
   inline std::string
   path::generic_u8string()const{ return generic_string();}
@@ -104757,7 +103939,6 @@ namespace filesystem{
 	void type(file_type __ft)noexcept { _M_type=__ft;}
 	void permissions(perms __prms)noexcept { _M_perms=__prms;}
 
-
   private:
 	file_type _M_type;
 	perms _M_perms;
@@ -104768,7 +103949,6 @@ namespace __cxx11 {
   struct _Dir;
   class directory_iterator;
   class recursive_directory_iterator;
-
 
   class directory_entry{
   public:
@@ -104921,7 +104101,6 @@ namespace __cxx11 {
 	bool
 	operator==(const directory_entry&__rhs)const noexcept{ return _M_path==__rhs._M_path;}
 
-
 	bool
 	operator!=(const directory_entry&__rhs)const noexcept{ return _M_path!=__rhs._M_path;}
 
@@ -104984,7 +104163,6 @@ namespace __cxx11 {
 
 	directory_entry _M_entry;
   };
-
 
   class directory_iterator{
   public:
@@ -105057,7 +104235,6 @@ namespace __cxx11 {
 
   inline directory_iterator
   end(directory_iterator)noexcept{ return directory_iterator();}
-
 
   class recursive_directory_iterator{
   public:
@@ -105510,11 +104687,9 @@ namespace pmr{
   class unsynchronized_pool_resource;
   class monotonic_buffer_resource;
 
-
   struct pool_options{
 
 	size_t max_blocks_per_chunk=0;
-
 
 	size_t largest_required_pool_block=0;
   };
