@@ -74,7 +74,6 @@ namespace std {
     };
 }
 
-
 namespace StellarisConnection {
     struct Character;
     struct Player;
@@ -241,7 +240,6 @@ namespace StellarisConnection {
         }
     };
 
-
     struct Damage {
         int amount;         // 伤害数值（未计算伤害减免）
         int truth;          // 附带的真实伤害（未计算伤害减免）
@@ -293,7 +291,6 @@ namespace StellarisConnection {
         Talent talent;      // 天赋
         Skill skill;        // 技能
 
-
         bool dead = false;          // 是否死亡
 
         std::deque<Character*> priority_targets;  // 优先目标
@@ -343,7 +340,6 @@ namespace StellarisConnection {
             auto healthOriginal = (int)health;
             health.value -= realAmount;
             auto healthDecreasing = healthOriginal - health;
-
 
             // debug io << std::format("{} Damaged by {}(amount={},{}) h-={}", (std::string)*this, (std::string)*dmg.source, dmg.amount, dmg.truth, healthDecreasing) << endl;
 
@@ -564,7 +560,6 @@ namespace StellarisConnection {
         return rgs::all_of(characters, lam(ch, ch->dead));
     }
 
-
     void roundEnd() {
         // 检查玩家的 deadline
         for (auto &pl: players) {
@@ -583,7 +578,6 @@ namespace StellarisConnection {
             }
         }
     }
-
 
     // 进行一个回合
     void round() {
@@ -668,7 +662,6 @@ namespace StellarisConnection {
         
     }
 }
-
 
 int main() {
     initDebug;

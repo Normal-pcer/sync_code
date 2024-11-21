@@ -146,7 +146,6 @@ namespace lib{
 
 using namespace lib;
 
-
 namespace Solution {
     enum OperatorType {
         constant = '0',       // const
@@ -375,7 +374,6 @@ namespace Solution {
         }
     }
 }
-
 
 int main() {
     initDebug;

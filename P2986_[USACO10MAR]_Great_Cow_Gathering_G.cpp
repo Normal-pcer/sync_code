@@ -194,7 +194,6 @@ namespace Solution {
         return (sonSize[p]=score+cnt[p]);
     }
 
-
     void dfs_changeRoot(int p, int prev) {
         for (auto &dest: conn[p]) {
             if (dest.to == prev)  continue;
@@ -213,7 +212,6 @@ namespace Solution {
         io << ans << endl;
     }
 }
-
 
 int main() {;
 

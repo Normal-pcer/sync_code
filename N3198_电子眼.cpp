@@ -142,7 +142,6 @@ namespace lib{
 }
 using namespace lib;
 
-
 namespace Solution {
 
     int N;
@@ -182,7 +181,6 @@ namespace Solution {
         printf("%d\n", ans);
     }
 }
-
 
 int main() {
     initDebug;

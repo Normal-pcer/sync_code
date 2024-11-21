@@ -33,9 +33,7 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution {
-
 
     int N, Q;  const int _N = 5e5+5;
     struct pair { int l, r; };
@@ -81,7 +79,6 @@ namespace Solution {
         }
     }
 }
-
 
 int main() {
     initDebug;

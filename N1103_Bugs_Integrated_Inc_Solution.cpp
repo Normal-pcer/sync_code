@@ -20,8 +20,6 @@ inline T read(register T &x) { return x = read<T>(); }
 typedef long long ll;
 using namespace std;
 
-
-
 const int N = 151, M = 11;
 int n, m, k, f[2][60000], 
 pre[M],  // 前一行的放置状态

@@ -203,7 +203,6 @@ namespace Solution {
         };
     }
 
-
     class Player;
     Player* master;
     int thiefCount = 0;
@@ -330,7 +329,6 @@ namespace Solution {
             }
         }
 
-
         /**
          * 当前玩家受到一点伤害
          * ! 调用此方法之后，胜利状态可能会改变，需要进行判断
@@ -385,7 +383,6 @@ namespace Solution {
                 thiefCount--;
                 if (thiefCount <= 0)  winner = M_Master;
             }
-
 
             if (dead) {  // 奖励和惩罚
                 if (character == F_Thief) {
@@ -589,7 +586,6 @@ namespace Solution {
         delete this;
     }
 
-
     // 测试
     bool T_Test(const Card card) {
         io << "test " << card.id << endl;
@@ -701,7 +697,6 @@ namespace Solution {
         return card.label != Label::J_Unbreakable;  // 无懈可击永远不会先手使用
     }
 
-
     void initCardTemplates() {
         cardActions.insert({'T', T_Test});
         cardActions.insert({Label::P_Peach, P_Peach});
@@ -764,7 +759,6 @@ namespace Solution {
         }
     }
 }
-
 
 int main() {;
 

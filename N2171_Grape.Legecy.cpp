@@ -32,12 +32,10 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 #define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
-
 /*
 在 N(<=10000) 个价值为 v 的葡萄中选择若干个，使得取出的总价值减去剩余的总价值的差值最高。
 要求：连续的 K(<=10) 个中必须选择至少 A 个，至多 B 个。
 */
-
 
 typedef uint16_t status;
 
@@ -134,7 +132,6 @@ namespace Solution {
                 chkMax(max, F[N-K][j]);
             }
         }
-
 
         debug {
             from(i, 0, N) {

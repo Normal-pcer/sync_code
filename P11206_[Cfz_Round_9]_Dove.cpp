@@ -85,7 +85,6 @@ namespace Solution {
     }
 }
 
-
 int main() {
     scanf("%d", &T);
     while (T --> 0)

@@ -32,9 +32,6 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
 
-
-
-
 namespace Solution {
     ll N = read<ll>();
 
@@ -46,7 +43,6 @@ namespace Solution {
         else  puts("No");
     }
 }
-
 
 int main() {
     initDebug;

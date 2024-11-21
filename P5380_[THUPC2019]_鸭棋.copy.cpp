@@ -165,7 +165,6 @@ namespace Solution {
     }
 }
 
-
 int main() {
     Solution::solve();
     return 0;

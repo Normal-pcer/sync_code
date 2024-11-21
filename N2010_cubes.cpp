@@ -156,12 +156,9 @@ namespace lib{
 
 }
 
-
 using namespace lib;
 
-
 namespace Solution {
-
 
     int P, N = 30002; const int _N = 30005;
 
@@ -215,7 +212,6 @@ namespace Solution {
         }
     }
 }
-
 
 int main() {
     initDebug;

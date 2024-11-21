@@ -126,7 +126,6 @@ using namespace lib;
 
 int T;
 
-
 namespace Solution {
     template <const int SZ>
     struct SegTree {
@@ -219,7 +218,6 @@ namespace Solution {
             else  return {-1, -1};
         }
     }
-
 
     void init() {  // DON'T forget to clear all arrays
         debug io << "T = " << T << endl;

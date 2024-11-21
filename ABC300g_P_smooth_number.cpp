@@ -6,7 +6,6 @@
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution_1583662521665877 {
 
     ll N;
@@ -63,7 +62,6 @@ namespace Solution_1583662521665877 {
         io << ans;
     }
 }
-
 
 int main() {
     initDebug;

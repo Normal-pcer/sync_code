@@ -49,7 +49,6 @@ namespace Solution {
     }
 }
 
-
 int main() {
     initDebug;
     while (T --> 0)

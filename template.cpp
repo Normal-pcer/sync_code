@@ -5,15 +5,12 @@
 #include "lib"
 using namespace lib;
 
-
 namespace Solution_/*hashName*/ {
-
 
     void solve() {
 
     }
 }
-
 
 int main() {
     initDebug;

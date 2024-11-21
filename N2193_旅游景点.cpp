@@ -200,7 +200,6 @@ namespace Solution {
         F[b] = a;
     }
 
-
     void solve() {
         init();
         int cnt = 0;
@@ -213,7 +212,6 @@ namespace Solution {
         std::cout << M - cnt << endl;
     }
 }
-
 
 int main() {;
 

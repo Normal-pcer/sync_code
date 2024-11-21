@@ -34,7 +34,6 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution {
 
     std::mt19937 rnd(745184);
@@ -94,7 +93,6 @@ namespace Solution {
         }
     }
 }
-
 
 int main() {
     initDebug;

@@ -89,7 +89,6 @@ namespace Solution {
         }
     }
 
-
     void solve() {
         if (K>=32) {
             printf("0\n");

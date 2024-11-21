@@ -33,7 +33,6 @@ namespace lib{}
 #include "./libs/binary.hpp"
 using namespace lib;
 
-
 namespace Solution_1268115891474192 {
 
     int N, D; ll K;  const int _N = 5e5+5;
@@ -111,7 +110,6 @@ namespace Solution_1268115891474192 {
         }
     }
 }
-
 
 int main() {
     initDebug;

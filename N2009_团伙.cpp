@@ -176,7 +176,6 @@ namespace Solution {
         io >> N >> M;
     }
 
-
     int find(int x) {
         if (F[x] == x)  return x;  // root
         else  return (F[x] = find(F[x]));
@@ -201,7 +200,6 @@ namespace Solution {
         io << *std::max_element(size+1, size+1+N) << endl;
     }
 }
-
 
 int main() {;
 

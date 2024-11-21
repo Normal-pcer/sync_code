@@ -142,7 +142,6 @@ namespace lib{
 }
 using namespace lib;
 
-
 namespace Solution {
 
     int N, M;
@@ -173,7 +172,6 @@ namespace Solution {
             }
         }
     }
-
 
     int bfs() {
         std::deque<Node> q;
@@ -208,7 +206,6 @@ namespace Solution {
             printf("%d\n", ans);
     }
 }
-
 
 int main() {
     initDebug;

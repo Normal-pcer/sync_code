@@ -142,7 +142,6 @@ namespace lib{
 }
 using namespace lib;
 
-
 namespace Solution {
 
     int N, M;
@@ -166,7 +165,6 @@ namespace Solution {
         }
     }
 }
-
 
 int main() {
     initDebug;

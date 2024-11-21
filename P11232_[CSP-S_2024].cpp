@@ -185,7 +185,6 @@ namespace Solution {
         from(i, 0, M-1)  io >> observers[i];
     }
 
-
     void solve() {
         init();
 

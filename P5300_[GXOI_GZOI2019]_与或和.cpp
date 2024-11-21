@@ -33,7 +33,6 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution {
 
     const int mod = 1e9+7;
@@ -139,7 +138,6 @@ namespace Solution {
         io.writeln(ans1, ans2);
     }
 }
-
 
 int main() {
     initDebug;

@@ -28,7 +28,6 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution {
 
     int N, M;
@@ -37,7 +36,6 @@ namespace Solution {
         io << N+M-1 << endl;
     }
 }
-
 
 int main() {
     initDebug;

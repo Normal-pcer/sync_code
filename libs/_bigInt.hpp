@@ -133,8 +133,6 @@ namespace lib {
             *this = ((*this) * other);
         }
 
-
-
         void operator<<=( size_t shift ) {
             if (shift == 0) return;
             if (shift < 32) {

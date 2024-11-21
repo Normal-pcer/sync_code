@@ -33,8 +33,6 @@ inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(
 template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
 
-
-
 typedef int status;
 
 // 可以使用若干条起点为 (0, 0) 的抛物线 y=ax^2+bx
@@ -115,7 +113,6 @@ namespace Solution {
         printf("%d\n", F[(1<<N)-1]);
     }
 }
-
 
 int main() {
     initDebug;

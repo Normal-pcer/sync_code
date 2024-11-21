@@ -31,7 +31,6 @@ namespace lib{}
 
 using namespace lib;
 
-
 namespace Solution_1414291300285599 {
 
     int N; ll M;  const int _N = 45;
@@ -74,7 +73,6 @@ namespace Solution_1414291300285599 {
         std::cout << total << std::endl;
     }
 }
-
 
 int main() {
     initDebug;

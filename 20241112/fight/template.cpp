@@ -28,15 +28,12 @@ namespace lib{}
 #include "./libs/io.hpp"
 using namespace lib;
 
-
 namespace Solution_/*hashName*/ {
-
 
     void solve() {
 
     }
 }
-
 
 int main() {
     initDebug;
