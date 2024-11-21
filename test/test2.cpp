@@ -38802,8 +38802,6 @@ typedef struct timespec __gthread_time_t;
 
 
 
-
-
 #312 "C:/msys64/ucrt64/include/c++/14.1.0/x86_64-w64-mingw32/bits/gthr-default.h" 3
 static inline int
 __gthread_active_p(void){
@@ -59573,7 +59571,6 @@ namespace __cxx11 {
 
   template<typename _CharT,typename _OutIter>
 	locale::id num_put<_CharT,_OutIter>::id;
-
 
   template<typename _CharT>
 	inline bool
