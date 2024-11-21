@@ -38800,8 +38800,6 @@ typedef struct timespec __gthread_time_t;
 
 
 
-
-
 #312 "C:/msys64/ucrt64/include/c++/14.1.0/x86_64-w64-mingw32/bits/gthr-default.h" 3
 static inline int
 __gthread_active_p(void){

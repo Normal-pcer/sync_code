@@ -23,3 +23,6 @@ const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using
 #define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
 #define lam lambda
 namespace lib{}
+#if __cplusplus > 201703LL
+namespace rgs {  using namespace std::ranges; using namespace std::views;  }
+#endif
