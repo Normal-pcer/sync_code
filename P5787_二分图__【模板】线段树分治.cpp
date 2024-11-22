@@ -1,8 +1,6 @@
 /**
  * @link https://www.luogu.com.cn/problem/P5787
- */
-
-#include "./lib"
+ */#include "./lib"
 
 #include "./libs/range.hpp"
 
@@ -80,7 +78,7 @@ namespace Solution_1103724470616732 {
             while (st.size() > origin) {
                 // 取消一次连边
                 auto [super, sub] = st.back();  st.pop_back();
-                if (super == sub and sub == 0)
+                if (super == sub and sub == 0)  continue;
                 size[super] -= size[sub];
                 F[sub] = sub;
             }
