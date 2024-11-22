@@ -22,7 +22,6 @@ namespace unstd {
             for (size_t i = 0; i < copy_count; i++)  new (new_begin + i) T(_begin_ptr[i]);
             std::free(_begin_ptr);
             _begin_ptr = new_begin;
-            std::cout << "expand" << std::endl;
         }
     public:
         vector(): _begin_ptr(nullptr), _size(0), _capacity(0) {}

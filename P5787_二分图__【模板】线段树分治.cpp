@@ -6,6 +6,8 @@
 
 #include "./libs/range.hpp"
 
+#include "./libs/__vector.hpp"
+
 using namespace lib;
 
 namespace Solution_1103724470616732 {
@@ -17,7 +19,7 @@ namespace Solution_1103724470616732 {
     };
     std::deque<Modification> st;
 
-    std::vector<int> F, size;
+    unstd::vector<int> F, size;
     int find(int x) {
         if (F[x] == x)  return x;
         else  return find(F[x]);
@@ -25,21 +27,21 @@ namespace Solution_1103724470616732 {
 
     void merge(int x, int y) {
         auto a = find(x), b = find(y);
-        if (a == b)  return;
+        if (a == b)  return st.push_back({0, 0});
         if (size[a] < size[b])  return merge(y, x);
-        st.push_back({x, y});
+        st.push_back({a, b});
         F[b] = a;
         size[a] += size[b];
     }
 
     struct Edge { int x, y; };
-    std::vector<Edge> edges;
+    unstd::vector<Edge> edges;
 
     template <size_t SZ>
     struct SegTree {
         struct Node {
             int l, r;
-            std::vector<int> edges;
+            unstd::vector<int> edges;
         } tr[SZ];
 
 #define ls (p << 1)
@@ -78,6 +80,7 @@ namespace Solution_1103724470616732 {
             while (st.size() > origin) {
                 // 取消一次连边
                 auto [super, sub] = st.back();  st.pop_back();
+                if (super == sub and sub == 0)
                 size[super] -= size[sub];
                 F[sub] = sub;
             }
@@ -88,8 +91,6 @@ namespace Solution_1103724470616732 {
     };
 
     SegTree<1048576> seg;
-
-    
     
     void solve() {
         std::cin >> N >> M >> K;
@@ -99,7 +100,8 @@ namespace Solution_1103724470616732 {
 
         for (auto _: range(M)) {
             int x, y, l, r;  std::cin >> x >> y >> l >> r;
-            seg.insert(1, l, r-1, edges.size());
+            if (l == r)  continue;
+            seg.insert(1, l+1, r, edges.size());
             edges.push_back({x, y});
         }
 
