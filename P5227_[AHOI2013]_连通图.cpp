@@ -4,6 +4,8 @@
 
 #include "./lib"
 
+#include "./libs/__vector.hpp"
+
 #include "./libs/range.hpp"
 
 
@@ -14,8 +16,8 @@ namespace Solution_9414518281694381 {
     const int _N = 1e5+5;
     int N, M, K;
 
-    std::vector<std::pair<int, int>> edges;
-    std::vector<std::vector<int>> sets;
+    unstd::vector<std::pair<int, int>> edges;
+    unstd::vector<std::vector<int>> sets;
 
     // 将 sub 连向了 super
     struct Modification {
@@ -25,8 +27,8 @@ namespace Solution_9414518281694381 {
 
     std::deque<Modification> st;  // 对并查集的记录
 
-    std::vector<int> F;  // 父亲节点
-    std::vector<int> size;  // 父亲节点下的子树大小
+    unstd::vector<int> F;  // 父亲节点
+    unstd::vector<int> size;  // 父亲节点下的子树大小
     int find(int x) {
         if (F.at(x) == x)  return x;
         else  return find(F[x]);
@@ -44,7 +46,7 @@ namespace Solution_9414518281694381 {
     struct SegTree {
         struct Node {
             int l, r;
-            std::vector<int> edges;  // 可以使用的边
+            unstd::vector<int> edges;  // 可以使用的边
         } tr[SZ<<2];
 
 #define ls (p << 1)
@@ -58,7 +60,6 @@ namespace Solution_9414518281694381 {
 
         // 将一个边在生命周期中记为可以使用
         void update(int p, int l, int r, int append) {
-            debug std::cout << std::format("update {} {} {} {}", p, l, r, append) << std::endl;
             if (l > r)  return;
             if (tr[p].l >= l and tr[p].r <= r) {
                 tr[p].edges.push_back(append);
@@ -70,18 +71,13 @@ namespace Solution_9414518281694381 {
 
         void dfs(int p) {
             auto l = tr[p].l, r = tr[p].r;
-            debug std::cout << std::format("dfs {} ({} {})", p, l, r) << std::endl;
-            debug {
-                for (auto i: tr[p].edges)  std::cout << i << ' ';
-                std::cout << std::endl;
-            }
             auto origin = st.size();  // 记录原始栈大小
             // 加边
             for (auto e: tr[p].edges) {
                 auto [x, y] = edges[e];
                 merge(x, y); 
             }
-            
+
             // 向下遍历
             if (l == r) {
                 // 检查此时的连通性
@@ -106,7 +102,7 @@ namespace Solution_9414518281694381 {
 #undef rs
     };
     SegTree<_N> seg;
-    std::vector<std::vector<int>> disappear;
+    unstd::vector<unstd::vector<int>> disappear;
     void solve() {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr), std::cout.tie(nullptr);
@@ -123,7 +119,7 @@ namespace Solution_9414518281694381 {
         for (auto time: range(1, K+1)) {
             int cnt;  std::cin >> cnt;
             sets.emplace_back(cnt);
-            for (auto &i: sets.back())  std::cin >> i, disappear[i].push_back(time);
+            for (auto &i: sets[sets.size()-1])  std::cin >> i, disappear[i].push_back(time);
         }
 
         for (auto i: range(1, M+1)) {
