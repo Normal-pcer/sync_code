@@ -8,60 +8,36 @@
 
 using namespace lib;
 
-namespace Solution_9178170785134090 {
-
-    const int _N = 1'048'576;
-    int N, Q;
-
-    std::vector<int> F, size;
-
-    std::deque<std::pair<int, int>> st;
-    int find(int x) {
-        if (F.at(x) == x)  return x;
-        else  return find(F[x]);
-    }
-
-    void merge(int x, int y) {
-        auto a = find(x), b = find(y);
-        if (a == b)  return st.push_back({0, 0});
-        if (size.at(a) < size.at(b))  return merge(y, x);
-        F[b] = a;
-        size[a] += size[b];
-        st.push_back({a, b});
-    }
-
+namespace Solution_1522034833367212 {
     void solve() {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr), std::cout.tie(nullptr);
+        int N;  std::cin >> N;
 
-        std::cin >> N >> Q;
-        F.resize(N+1), rgs::copy(range(0, N+1), F.begin());
-        size.resize(N+1), rgs::fill(size, 1);
+        std::vector<int> bonus(N+1);
+        for (auto &i: bonus | rgs::drop(1))  std::cin >> i;
 
-        for (auto _: range(Q)) {
-            int op, x, y;
-            std::cin >> op >> x >> y;
-
-            // 连边
-            if (op == 0) {
-                merge(x, y);
-            } else if (op == 1) {
-                // 撤销
-                if (st.empty())  continue;
-                auto [super, sub] = st.back();  st.pop_back();
-                if (super == sub and sub == 0)  continue;
-                size[super] -= size[sub];
-                F[sub] = sub;
-            } else {
-                std::cout << find(x) << ' ' << find(y) << std::endl;
-                std::cout << (find(x) == find(y)? "Yes": "No") << std::endl;
+        // F[i][j] 处理到第 i 只怪物，总共击败模 2 余 j 只，最高分数
+        std::vector<std::vector<ll>> F(N+1, std::vector<ll>(2));
+        F[0][1] = -infLL;
+        auto ans = -infLL;
+        for (auto i: range(1, N+1)) {
+            for (auto j: {0, 1}) {
+                // 放走
+                chkMax(F[i][j], F[i-1][j]);
+                // 攻击
+                chkMax(F[i][j], F[i-1][j^1] + (j? 1: 2) * bonus[i]);
+                // debug std::cout << std::format("F[{}][{}] = {}", i, j, F[i][j]) << std::endl;
+                chkMax(ans, F[i][j]);
             }
         }
+
+        std::cout << ans << std::endl;
     }
 }
 
 int main() {
     initDebug;
-    Solution_9178170785134090::solve();
+    Solution_1522034833367212::solve();
     return 0;
 }
