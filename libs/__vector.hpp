@@ -3,6 +3,22 @@ namespace unstd {
     using ptrdiff_t = long long;
 
     template <typename T>
+    concept is_pointer = requires (T a) {
+        ++a;  *a;
+    };
+
+    template <typename T>
+    concept iterable = requires (T a) {
+        a.begin() != a.end();
+        requires is_pointer<decltype(a.begin())>;
+    };
+
+    template <typename T>
+    concept with_size = requires (T) {
+        {T::size()} -> std::convertible_to<size_t>;
+    };
+
+    template <typename T>
     class vector {
         T *_begin_ptr;
         size_t _size, _capacity;
@@ -33,9 +49,16 @@ namespace unstd {
             resize(size);
             for (size_t i = 0; i < size; i++)  _begin_ptr[i] = x;
         }
-        template <typename U, typename=typename std::enable_if_t<!std::is_integral_v<U>>>
-        vector(const U &other): _begin_ptr(nullptr), _size(0), _capacity(0) {
-            if (!std::is_void<decltype(U::size)>())  reserve(other.size());
+
+        template <iterable U> requires (!with_size<U>)
+        vector(U &&other): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            for (auto it = other.begin(); it != other.end(); it++) {
+                push_back(*it);
+            }
+        }
+        template <iterable U> requires (with_size<U>)
+        vector(U &&other): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            reserve(other.size());
             for (auto it = other.begin(); it != other.end(); it++) {
                 push_back(*it);
             }

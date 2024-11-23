@@ -97,11 +97,7 @@ namespace lib{
         inline void write(const char c) {  push(c);  }
         inline void write(const string &s){  for (auto i:s)  push(i);  }
         inline void write(const char *s){  for (; *s; ++s) push(*s);  }
-        template <class T
-#if __cplusplus > 201403L
-        , class = typename std::enable_if_t<std::is_integral_v<T>>
-#endif
-        >
+        template <class T>
         inline void write(T x) {
             static char sta[40]; int top=0;
             if (x<0) {
