@@ -6,6 +6,7 @@
 
 #include "./libs/range.hpp"
 
+
 using namespace lib;
 
 namespace Solution_9414518281694381 {
@@ -44,7 +45,7 @@ namespace Solution_9414518281694381 {
         struct Node {
             int l, r;
             std::vector<int> edges;  // 可以使用的边
-        } tr[SZ];
+        } tr[SZ<<2];
 
 #define ls (p << 1)
 #define rs (p << 1 | 1)
@@ -80,7 +81,7 @@ namespace Solution_9414518281694381 {
                 auto [x, y] = edges[e];
                 merge(x, y); 
             }
-
+            
             // 向下遍历
             if (l == r) {
                 // 检查此时的连通性
