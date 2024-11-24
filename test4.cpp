@@ -1,7 +1,3 @@
-/**
- * 
- */
-
 #include <bits/stdc++.h>
 bool DEBUG_MODE=false;
 #define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
@@ -9,7 +5,7 @@ bool DEBUG_MODE=false;
 #define log(f, a...) debug printf(f, ##a);
 #define from(i,b,e) for(auto i=(b);i<(e);i++)
 #define rev(i,e,b) for(auto i=(e);i>(b);i--)
-#define main() main(int argc, char const *argv[])
+// #define main() main(int argc, char const *argv[])
 template <typename T> inline auto chkMax(T& base, const T& cmp) { return (base = std::max(base, cmp)); }
 template <typename T> inline auto chkMin(T& base, const T& cmp) { return (base = std::min(base, cmp)); }
 #define never if constexpr(0)
@@ -153,77 +149,159 @@ namespace lib{
 
 }
 
+namespace unstd {
+    using size_t = unsigned long long;
+    using ptrdiff_t = long long;
 
+    template <typename T>
+    concept is_pointer = requires (T a) {
+        ++a;  *a;
+    };
+
+    template <typename T>
+    concept iterable = requires (T a) {
+        a.begin() != a.end();
+        requires is_pointer<decltype(a.begin())>;
+    };
+
+    template <typename T>
+    concept with_size = requires (T) {
+        {T::size()} -> std::convertible_to<size_t>;
+    };
+
+    template <typename T>
+    class vector {
+        T *_begin_ptr;
+        size_t _size, _capacity;
+
+        void _range_check(size_t x) const {
+            if (x >= _size) {
+                throw std::out_of_range("Vector index out of range.");
+            }
+        }
+
+        void _expand(size_t x = 0) {
+            _capacity = x? x: std::max(16ULL, _capacity<<2);
+            T *new_begin = (T*)std::malloc(_capacity * sizeof(T));
+            size_t copy_count = std::min(_capacity, _size);
+            for (size_t i = 0; i < copy_count; i++)  new (new_begin + i) T(std::move(_begin_ptr[i]));
+            std::free(_begin_ptr);
+            _begin_ptr = new_begin;
+        }
+    public:
+        vector(): _begin_ptr(nullptr), _size(0), _capacity(0) {}
+        template <typename U, typename=typename std::enable_if_t<std::is_integral_v<U>>>
+        vector(U size): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            resize(size);
+        }
+        vector(size_t size, T &&x): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            resize(size);
+            for (size_t i = 0; i < size; i++)  _begin_ptr[i] = x;
+        }
+
+        template <iterable U> requires (!with_size<U>)
+        vector(U &&other): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            for (auto it = other.begin(); it != other.end(); it++) {
+                push_back(*it);
+            }
+        }
+        template <iterable U> requires (with_size<U>)
+        vector(U &&other): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            reserve(other.size());
+            for (auto it = other.begin(); it != other.end(); it++) {
+                push_back(*it);
+            }
+        }
+        vector(const vector<T> &other): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            reserve(other.size());
+            for (auto it = other.begin(); it != other.end(); it++) {
+                push_back(*it);
+            }
+        }
+
+        ~vector() { 
+            if (_begin_ptr != nullptr)  std::free(_begin_ptr);
+        }
+
+        using type = T;
+        using iterator = T*;
+        T const &operator[] (int x) const { return *(_begin_ptr + x); }
+        T &operator[] (int x) { return *(_begin_ptr + x); }
+        
+        T const &at(int x) const { _range_check(x);  return *(_begin_ptr + x); }
+        T &at(int x) { _range_check(x);  return *(_begin_ptr + x); }
+
+        void push_back(const T &x) {
+            if (_size >= _capacity)  _expand();
+            _begin_ptr[_size++] = x;
+        }
+        template <typename ...Types>
+        void emplace_back(Types ...args) {
+            if (_size >= _capacity)  _expand();
+            new (_begin_ptr+(_size++)) T(std::forward<Types>(args)...);
+        }
+        int size() const { return _size; }
+        void resize(size_t x) {
+            if (x >= _capacity)  _expand(x);
+            for (size_t i = _size; i < _capacity; i++)  new (_begin_ptr+i) T;
+            _size = x;
+        }
+        void reserve(size_t x) {
+            if (x >= _capacity)  _expand(x);
+        }
+
+        void insert(iterator pos, const T &value) {
+            auto index = pos - begin();
+            if (_size >= _capacity)  _expand();
+            for (ptrdiff_t i = _size; i != index; i--)  _begin_ptr[i] = std::move(_begin_ptr[i-1]);
+            _begin_ptr[index] = value;
+            _size++;
+        }
+
+        void erase(iterator pos) {
+            for (auto it = pos; it != end(); it++)  *it = std::move(*(it+1));
+            _size--;
+        }
+
+        iterator begin() const { return _begin_ptr; }
+        iterator end() const { return _begin_ptr + _size; }
+    };
+}
 using namespace lib;
 
-namespace Solution_1175088154992405 {
-
-    const int _ST = 17;
-    const int _N = 1e5+5;
-
-    std::vector<std::vector<int>> graph;
-    std::vector<int> depth;
-    int F[_N][_ST];
-
-    int LCA(int x, int y) {
-        if (depth[x] < depth[y])  std::swap(x, y);
-
-        auto distance = depth[x] - depth[y];
-        for (auto i = 0; i < _ST; i++) {
-            if (distance & (1<<i)) {
-                distance ^= 1<<i;
-                x = F[x][i];
-            }
-        }
-
-        if (x == y)  return x;
-        for (signed i = _ST - 1; i >= 0; i--) {
-            if (F[x][i] != F[y][i]) {
-                x = F[x][i], y = F[y][i];
-            }
-        }
-        return F[x][0];
-    }
-
-    void dfs(int p, int prev) {
-        depth[p] = depth[prev] + 1;
-        F[p][0] = prev;
-        for (auto i = 1; i < _ST; i++) {
-            F[p][i] = F[F[p][i-1]][i-1];
-        }
-        for (auto dest: graph.at(p))  if (dest != prev) {
-            dfs(dest, p);
-        }
-    }
-
-    void solve() {
-
-        int N, K;  io >> N >> K;
-        graph.resize(N+1);
-
-        std::vector<char> flag(N+1);
-        for (auto i = 0; i < N-1; i++) {
-            int x, y;  io >> x >> y;
-            graph[x].push_back(y), graph[y].push_back(x);
-            flag[y] = '\1';
-        }
-
-        auto find = std::find(flag.begin()+1, flag.end(), '\0');
-        assert(find != flag.end());
-        auto root = find - flag.begin();
-
-        depth.resize(N+1);
-        dfs(root, 0);
-
-        for (auto i = 0; i < K; i++) {
-            int x, y;  io >> x >> y;
-            io << LCA(x, y) << endl;
-        }
-    }
-}
 
 int main() {
-    initDebug;
-    Solution_1175088154992405::solve();
-    return 0;
+    int N;  io >> N;
+    unstd::vector<int> vec;
+    int OP, x;
+    vec.reserve(1);
+    from(i, 0, N) {
+        io >> OP >> x;
+        decltype(vec)::iterator pos;
+        switch (OP) {
+        case 1:
+            pos = std::lower_bound(vec.begin(), vec.end(), x);
+            vec.insert(pos, x);
+            break;
+        case 2:
+            pos = std::lower_bound(vec.begin(), vec.end(), x);
+            vec.erase(pos);
+            break;
+        case 3:
+            pos = std::lower_bound(vec.begin(), vec.end(), x);
+            io << pos - vec.begin() + 1 << endl;
+            break;
+        case 4:
+            io << vec[x-1] << endl;
+            break;
+        case 5:
+            pos = std::lower_bound(vec.begin(), vec.end(), x);
+            io << *(pos-1) << endl;
+            break;
+        case 6:
+            pos = std::upper_bound(vec.begin(), vec.end(), x);
+            io << *pos << endl;
+            break;
+        }
+    }
 }

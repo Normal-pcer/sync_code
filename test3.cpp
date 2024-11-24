@@ -1,3 +1,5 @@
+#include <bits/stdc++.h>
+
 namespace unstd {
     using size_t = unsigned long long;
     using ptrdiff_t = long long;
@@ -91,7 +93,7 @@ namespace unstd {
         }
         int size() const { return _size; }
         void resize(size_t x) {
-            if (x >= _capacity)  _expand(x);
+            _expand(x);
             for (size_t i = _size; i < _capacity; i++)  new (_begin_ptr+i) T;
             _size = x;
         }
@@ -99,20 +101,46 @@ namespace unstd {
             if (x >= _capacity)  _expand(x);
         }
 
-        void insert(iterator pos, const T &value) {
-            auto index = pos - begin();
-            if (_size >= _capacity)  _expand();
-            for (ptrdiff_t i = _size; i != index; i--)  _begin_ptr[i] = std::move(_begin_ptr[i-1]);
-            _begin_ptr[index] = value;
+        void insert(iterator pos, T &&value) {
+            if (_size + 1 >= _capacity)  _expand();
+            for (auto it = end(); it != pos; it--)  *it = std::move(*(it-1));
+            *pos = value;
             _size++;
-        }
-
-        void erase(iterator pos) {
-            for (auto it = pos; it != end(); it++)  *it = std::move(*(it+1));
-            _size--;
         }
 
         iterator begin() const { return _begin_ptr; }
         iterator end() const { return _begin_ptr + _size; }
     };
+}
+
+struct Element {
+    int val;
+
+    Element(int val = 0): val(val) {}
+    Element(const Element &other): val(other.val) {
+        // std::cout << "Copy " << val << std::endl;
+    }
+    Element(Element&& other) noexcept: val(other.val) {
+        // std::cout << "Move " << val << std::endl;
+    }
+
+    Element &operator= (const Element &other) {
+        val = other.val;
+        // std::cout << "Assign(copy) " << val << std::endl;
+        return *this;
+    }
+    Element &operator= (Element &&other) {
+        val = other.val;
+        // std::cout << "Assign(move) " << val << std::endl;
+        return *this;
+    }
+};
+
+int main() {
+    unstd::vector<Element> vec;
+    vec.reserve(1000000);
+    for (auto i = 0; i < 1000000; i++)  vec.emplace_back(i);
+    vec.insert(vec.begin(), Element(100));
+    std::cout << vec.at(999999).val << std::endl;
+    return 0;
 }
