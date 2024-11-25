@@ -1,3 +1,8 @@
+/**
+ * 
+ */
+
+#include "./lib"
 namespace unstd {
     using size_t = unsigned long long;
     using ptrdiff_t = long long;
@@ -79,6 +84,7 @@ namespace unstd {
         ~vector() {
             if (_begin_ptr != nullptr)  std::free(_begin_ptr);
         }
+
         using type = T;
         using iterator = T*;
         T const &operator[] (int x) const { return *(_begin_ptr + x); }
@@ -141,4 +147,44 @@ namespace unstd {
             return *this;
         }
     };
+}
+using namespace lib;
+
+namespace Solution_1171823559861863 {
+
+    struct Element {
+        int x;
+
+        Element(int x): x(x) {}
+        Element(Element&& other) noexcept: x(other.x) {
+            std::cout << "Move Construct " << x << std::endl;
+        }
+        Element(const Element &other): x(other.x) {
+            std::cout << "Copy Construct " << x << std::endl;
+        }
+
+        Element &operator= (Element&& other) noexcept {
+            x = other.x;
+            std::cout << "Move Assign " << x << std::endl;
+            return *this;
+        }
+        Element &operator= (const Element &other) {
+            x = other.x;
+            std::cout << "Copy Assign " << x << std::endl;
+            return *this;
+        }
+    };
+
+    void solve() {
+        unstd::vector<int> vec{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        unstd::vector vec2(std::move(vec));
+
+        for (auto i: vec)  std::cout << i << std::endl;
+    }
+}
+
+int main() {
+    initDebug;
+    Solution_1171823559861863::solve();
+    return 0;
 }
