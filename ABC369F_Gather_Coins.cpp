@@ -6,7 +6,6 @@
 
 #include "./libs/range.hpp"
 
-
 using namespace lib;
 
 namespace Solution_1778585983417334 {
