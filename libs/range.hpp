@@ -5,7 +5,7 @@ namespace lib {
         T _cur;  const U _step;
         StepViewIterator(T cur, const U step): _cur(cur), _step(step) {}
         auto operator++() { _cur+=_step; }  auto operator++(int) { _cur+=_step; }
-        auto operator!=(const StepViewIterator& other) { return _cur<other._cur; }
+        auto operator!=(const StepViewIterator& other) { return _step>=0? _cur<other._cur: _cur>other._cur; }
         auto operator*() { return _cur; }
     };
     template <typename T, typename U> struct StepView: std::ranges::view_interface<StepView<T, U>> {

@@ -20,5 +20,6 @@ const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using
 #define lam lambda
 namespace lib{}
 #if __cplusplus > 201703LL
-namespace rgs {  using namespace std::ranges; using namespace std::views;  }
+namespace ranges { using namespace std::ranges; }
+namespace views { using namespace std::ranges::views; }
 #endif
