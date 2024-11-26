@@ -1,22 +1,28 @@
-#include <bits/stdc++.h>
+#include <iostream>
 
-#include "./libs/__vector.hpp"
+template <typename T>
+void print(T const t)
+{
+	T x = t;
+	if(x < 0) x = -x;
+	if(x > 9)  print(x / 10);
+	putchar(x % 10 + '0');
+}
 
-struct test {
-    int x;
-    test(int x = 0): x(x) {
-        std::cout << std::format("test({})", x) << std::endl;
-    }
-    ~test() {
-        std::cout << std::format("{}: ~test()", x) << std::endl;
-    }
-};
+template <typename T = char>
+void print(const char x)
+{
+	putchar(x);
+}
 
-int main() {
-    // unstd::vector<test> vec;
-    // for (auto i = 0; i < 10; i++)  vec.push_back({i});
-    std::vector<int> vec{1, 1, 4, 5, 1, 4};
-    std::vector vec2(std::move(vec));
-    for (auto i: vec)  std::cout << i << std::endl;
-    return 0;
+template<typename T, typename... Args>
+void print(T x, Args... args)
+{
+	print<T>(x);
+	print(args...);
+}
+
+int main()
+{
+	print((int)-2147483648);
 }
