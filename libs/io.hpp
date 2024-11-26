@@ -11,20 +11,35 @@ namespace lib{
 #endif
     struct IO {
 #ifdef USE_FREAD
+#ifdef __linux__
+        struct stat s;
+        char *c;
+#else
         char buf[MAXSIZE],*p1,*p2;
+#endif// __linux__
         char pbuf[MAXSIZE],*pp;
-        IO():p1(buf),p2(buf),pp(pbuf) {}
+#ifdef __linux__
+        IO(): pp(pbuf) {
+            fstat(0, &s);
+            c = (char*)mmap(nullptr, s.st_size, 1, 2, 0, 0);
+        }
+#else
+		IO(): p1(buf), p2(buf), pp(pbuf) {}
+#endif
         ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
+#ifdef __linux__
+		inline char gc() { return *c++; }
+#else
         inline char gc() {
             if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
             return p1==p2?'\0':*p1++;
         }
+#endif // __linux__
         inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
-#endif
-#ifndef USE_FREAD
+#else
         inline void sync() {}
         inline char gc() {  return getchar();  }
-#endif
+#endif// USE_FREAD
         char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
         inline bool blank(char ch) { return ch<=32 or ch==127; }
         inline bool isd(char x) {return (x>='0' and x<='9');}
