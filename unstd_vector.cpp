@@ -66,7 +66,7 @@ namespace unstd {
             if (_begin_ptr != nullptr)  std::free(_begin_ptr);
         }
 
-        using type = T;
+        using value_type = T;
         using iterator_type = T*;
         T const &operator[] (int x) const { return *(_begin_ptr + x); }
         T &operator[] (int x) { return *(_begin_ptr + x); }

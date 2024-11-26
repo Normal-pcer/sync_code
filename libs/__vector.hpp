@@ -13,9 +13,14 @@ namespace unstd {
         requires is_pointer<decltype(a.begin())>;
     };
 
+    template <typename T, typename U>
+    concept convertible_to = requires (T a) {
+        static_cast<U>(a);
+    };
+
     template <typename T>
     concept with_size = requires (T) {
-        {T::size()} -> std::convertible_to<size_t>;
+        {T::size()} -> convertible_to<size_t>;
     };
 
     template <typename T>
@@ -39,10 +44,8 @@ namespace unstd {
         }
     public:
         vector(): _begin_ptr(nullptr), _size(0), _capacity(0) {}
-        template <typename U, typename=typename std::enable_if_t<std::is_integral_v<U>>>
-        vector(U size): _begin_ptr(nullptr), _size(0), _capacity(0) {
-            resize(size);
-        }
+        template <typename U> requires (convertible_to<U, size_t>)
+        vector(U size): _begin_ptr(nullptr), _size(0), _capacity(0) { resize(size); }
         vector(size_t size, T &&x): _begin_ptr(nullptr), _size(0), _capacity(0) {
             reserve(size);
             for (size_t i = 0; i < size; i++)  push_back(x);
@@ -60,12 +63,6 @@ namespace unstd {
                 push_back(*it);
             }
         }
-        vector(const vector<T> &other): _begin_ptr(nullptr), _size(0), _capacity(0) {
-            reserve(other.size());
-            for (auto it = other.begin(); it != other.end(); it++) {
-                push_back(*it);
-            }
-        }
         vector(vector<T> &&other) noexcept: _begin_ptr(nullptr), _size(0), _capacity(0) {
             swap(other);
         }
@@ -77,9 +74,12 @@ namespace unstd {
         }
 
         ~vector() {
-            if (_begin_ptr != nullptr)  std::free(_begin_ptr);
+            if (_begin_ptr != nullptr) {
+                for (auto it = begin(); it != end(); it++)  it->~T();
+                std::free(_begin_ptr);
+            }
         }
-        using type = T;
+        using value_type = T;
         using iterator = T*;
         T const &operator[] (int x) const { return *(_begin_ptr + x); }
         T &operator[] (int x) { return *(_begin_ptr + x); }
@@ -100,7 +100,7 @@ namespace unstd {
         T* data() const { return _begin_ptr; }
         void resize(size_t x) {
             if (x >= _capacity)  _expand(x);
-            for (size_t i = _size; i < _capacity; i++)  new (_begin_ptr+i) T;
+            for (size_t i = _size; i < _capacity; i++)  new (_begin_ptr+i) T();
             _size = x;
         }
         void reserve(size_t x) {
@@ -126,6 +126,10 @@ namespace unstd {
             _size--;
         }
 
+        void clear() {
+            vector<T>().swap(*this);
+        }
+
         iterator begin() const { return _begin_ptr; }
         iterator end() const { return _begin_ptr + _size; }
 
@@ -140,5 +144,7 @@ namespace unstd {
             }
             return *this;
         }
+
     };
+
 }
