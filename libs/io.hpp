@@ -1,4 +1,8 @@
 #include <bits/stdc++.h>
+#ifdef __linux__
+#include <sys/stat.h>
+#include <sys/mman.h>
+#endif
 #define USE_FREAD
 // #undef USE_FREAD
 // 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
