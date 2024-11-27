@@ -127,7 +127,7 @@ namespace Chain {
     std::vector<int> order;
     void dfs(int p, int prev) {
         order.push_back(p);
-        depth.at(p) = depth.at(prev);
+        depth.at(p) = depth.at(prev) + 1;
         for (auto dest: graph.at(p))  if (dest != prev) {
             dfs(dest, p);
         }
@@ -144,7 +144,9 @@ namespace Chain {
         depth.resize(N+1);
         dfs(1, 0);
 
-        auto root = std::min_element(depth.begin() + 1, depth.end()) - depth.begin();  // 一个端点
+        auto root = std::max_element(depth.begin(), depth.end()) - depth.begin();  // 一个端点
+        // for (auto i: depth | std::views::drop(1))  std::cout << i << ' ';
+        // std::cout << std::endl;
         order.clear(); std::fill(depth.begin(), depth.end(), 0); dfs(root, 0);
 
         std::vector<int> buc(N+1);
