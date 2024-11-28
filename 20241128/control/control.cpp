@@ -107,6 +107,7 @@ namespace Solution {
         
         F[0][0] = 1;
         const ull danger = 0x7000000000000000ULL;  // ull 要炸了
+        flag[0] = true;
         for (auto c = 1; c <= N; c++) {
             int i = c & 1;
             std::memset(F[i], 0, sizeof(F[i]));
@@ -116,7 +117,7 @@ namespace Solution {
                 if (F[i][j] > danger)  F[i][j] %= MOD;
                 F[i][new_st] += F[i^1][j];
                 if (F[i][new_st] > danger)  F[i][new_st] %= MOD;
-                flag[new_st] = true;
+                if (flag[j])  flag[new_st] = true;
             }
         }
 
