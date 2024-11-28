@@ -126,14 +126,20 @@ namespace unstd {
                 list.clear();
             }
 
-            void insert(const _T &x) {
-                if (usingSet())  setPtr->insert(x);
-                else {
-                    if (find(*x) != end())  return;
+            bool insert(const _T &x) {
+                if (usingSet()) {
+                    size_t origin = setPtr->size();
+                    setPtr->insert(x);
+                    return setPtr->size() != origin;
+                } else {
+                    if (find(*x) != end())  return false;
                     if (list.size() == ListSizeLimit) {
                         rebuild();
+                        size_t origin = setPtr->size();
                         setPtr->insert(x);
-                    } else  list.push_back(x);
+                        return setPtr->size() != origin;
+                    } else if (find(*x) == end())  return list.push_back(x), true;
+                    return false;
                 }
             }
 
@@ -207,7 +213,9 @@ namespace unstd {
         void insert(T x) {
             if (loadFactor() > getMaxLoadFactor())  _expand();
             items.push_back(x);
-            _beginPtr[_hash(x)].insert(--items.end());
+            if (_beginPtr[_hash(x)].insert(--items.end())) {
+                _size++;
+            }
         }
 
         iterator find(const T &x) {
@@ -217,15 +225,23 @@ namespace unstd {
             if (sub_it == _beginPtr[hash].end())  return end();
             return *sub_it;
         }
+
+        void erase(iterator x) {
+            items.erase(x);
+            size_t hash = _hash(x);
+            auto sub_it = _beginPtr[hash].find(*x);
+            if (sub_it == _beginPtr[hash].end())  return;
+            _beginPtr[hash].erase(sub_it);
+        }
     };
 }
 
 int main() {
-    // int T = 100000000;
-    unstd::UntitledSet<int> x;
-    unstd::UntitledSet<int>::_ListWithSet kkk;
-
-    x.insert(1);
-    std::cout << *x.find(1) << std::endl;
-    return 0;
+    int N;  std::cin >> N;
+    unstd::UntitledSet<std::string> set;
+    for (auto i = 0; i < N; i++) {
+        std::string s;  std::cin >> s;
+        set.insert(s);
+    }
+    std::cout << set.size() << std::endl;
 }
