@@ -8,7 +8,6 @@
 
 #include "./libs/range.hpp"
 
-
 #include "./libs/binary.hpp"
 
 using namespace lib;
