@@ -45,6 +45,7 @@ namespace Solution_8144686069145044 {
                     std::cout << std::endl;
                 }
             }
+            
             std::cout << F[N] << std::endl;
 
         }

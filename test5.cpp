@@ -1,249 +1,162 @@
 #include <bits/stdc++.h>
-
-// std::unordered_map<int, int, custom_hash> mp;
-
 namespace unstd {
     using size_t = unsigned long long;
     using ptrdiff_t = long long;
 
-    class _Uint64Hash {
-    public:
-        static uint64_t splitmix64(uint64_t x) {
-            // http://xorshift.di.unimi.it/splitmix64.c
-            x += 0x9e3779b97f4a7c15;
-            x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;
-            x = (x ^ (x >> 27)) * 0x94d049bb133111eb;
-            return x ^ (x >> 31);
-        }
-
-        size_t operator()(uint64_t x) const {
-            static const uint64_t FIXED_RANDOM = std::chrono::steady_clock::now().time_since_epoch().count();
-            return splitmix64(x + FIXED_RANDOM);
-        }
+    template <typename T>
+    concept is_pointer = requires (T a) {
+        ++a;  *a;
     };
 
-    template <
-        typename T,
-        typename Hash = std::hash<T>,
-        typename Compare = std::less<T>,
-        typename KeyEqual = std::equal_to<T>
-    > class UntitledSet {
-    public:
-        using log2_t = size_t;                // size_t 的对数类型
-        using iterator = std::list<T>::iterator;
+    template <typename T>
+    concept iterable = requires (T a) {
+        a.begin() != a.end();
+        requires is_pointer<decltype(a.begin())>;
+    };
 
-        struct _ListWithSet {
-            using _T = std::list<T>::iterator;
+    template <typename T, typename U>
+    concept convertible_to = requires (T a) {
+        static_cast<U>(a);
+    };
 
-            struct _IteratorCompare {
-                template <typename U>
-                bool operator() (U const &x, U const &y) const {
-                    return Compare{}(*x, *y);
-                }
-            };
+    template <typename T>
+    concept with_size = requires (T) {
+        {T::size()} -> convertible_to<size_t>;
+    };
 
-            using SetType = std::set<_T, _IteratorCompare>;
-            using ListType = std::list<_T>;
+    template <typename T>
+    class vector {
+        T *_begin_ptr;
+        size_t _size, _capacity;
 
-            ListType list;
-            SetType *setPtr = nullptr;
-            bool usingSetFlag = false;
-            static const size_t ListSizeLimit = 8;
-
-            ~_ListWithSet() {
-                delete setPtr;
+        void _range_check(size_t x) const {
+            if (x >= _size) {
+                throw std::out_of_range("Vector index out of range.");
             }
-
-            struct iterator {
-                union InnerIterator {
-                    ListType::iterator *list;
-                    SetType::iterator *set;
-                    int null;
-                } inner;
-                enum FlagType {
-                    OnList, OnSet, Invalid
-                } flag;
-
-                iterator(ListType::iterator const &it): flag(OnList) {
-                    inner.list = new ListType::iterator(it);
-                }
-                iterator(SetType::iterator const &it): flag(OnSet) {
-                    inner.set = new SetType::iterator(it);
-                }
-                iterator(): flag(Invalid) {
-                    inner.null = 0;
-                }
-                iterator(const iterator &other): flag(other.flag) {
-                    if (flag == OnList and other.inner.list)  inner.list = new ListType::iterator(*other.inner.list);
-                    if (flag == OnSet and other.inner.set)  inner.set = new SetType::iterator(*other.inner.set);
-                }
-                ~iterator() {
-                    if (flag == OnList and inner.list)  delete inner.list;
-                    if (flag == OnSet and inner.set)  delete inner.set;
-                }
-
-                _T operator* () {
-                    if (flag == OnSet)  return **inner.set;
-                    else  return **inner.list;
-                }
-                bool operator== (const iterator &other) const {
-                    switch (flag) {
-                    case Invalid:  return other.flag == Invalid;
-                    case OnSet:  return *other.inner.set == *inner.set;
-                    default:  return *other.inner.list == *inner.list;
-                    }
-                }
-
-                void operator++ () {
-                    if (flag == OnList)  (*inner.list)++;
-                    else if (flag == OnSet)  (*inner.set)++;
-                }
-
-                void operator++ (int) { (*this)++; }
-
-                bool operator< (const iterator &other) const {
-                    return Compare{}(**this, *other);
-                }
-            };
-
-            bool usingSet() const { return usingSetFlag; }
-
-            iterator end() { 
-                if (usingSet())  return iterator{setPtr->end()};
-                else  return iterator{list.end()};
-            }
-            iterator begin() {
-                if (usingSet())  return iterator{setPtr->begin()};
-                else  return iterator{list.begin()};
-            }
-
-            void rebuild() {
-                setPtr = new SetType();
-                usingSetFlag = true;
-                for (auto item: list) {
-                    setPtr->insert(std::move(item));
-                }
-                list.clear();
-            }
-
-            bool insert(const _T &x) {
-                if (usingSet()) {
-                    size_t origin = setPtr->size();
-                    setPtr->insert(x);
-                    return setPtr->size() != origin;
-                } else {
-                    if (find(*x) != end())  return false;
-                    if (list.size() == ListSizeLimit) {
-                        rebuild();
-                        size_t origin = setPtr->size();
-                        setPtr->insert(x);
-                        return setPtr->size() != origin;
-                    } else if (find(*x) == end())  return list.push_back(x), true;
-                    return false;
-                }
-            }
-
-            iterator find(const T &x) {
-                if (usingSet()) {
-                    std::list<T> tmp{x};
-                    auto it = setPtr->find(tmp.begin());
-                    if (it != setPtr->end())  return iterator{it};
-                    else  return {setPtr->end()};
-                } else {
-                    auto it = list.begin();
-                    for ( ; it != list.end(); it++) {
-                        if (KeyEqual{}(**it, x))  break;
-                    }
-                    if (it != list.end())  return iterator(it);
-                    else  return {list.end()};
-                }
-            }
-
-            void erase(const iterator it) {
-                if (usingSet()) {
-                    setPtr->erase(*it.inner.set);
-                } else {
-                    list.erase(*it.inner.list);
-                }
-            }
-        };
-
-    public:
-        std::list<T> items;
-
-        _ListWithSet *_beginPtr = nullptr;  // 连续内存空间的起始位置
-        size_t _size = 0;                   // 存放的元素个数
-        log2_t _capacityLog = 0;            // 连续内存空间大小以二为底的对数
-        float _maxLoadFactor = 2.0;        // _size / _capacity 的最大值
-
-        size_t _hash(const T &other) const {
-            size_t mask = ((size_t)1 << _capacityLog) - 1;
-            return _Uint64Hash{}(Hash{}(other)) & mask;
         }
 
-        // 扩展到指定大小，保证 x 为 2 的整数次幂
         void _expand(size_t x = 0) {
-            log2_t new_capacity_log = std::max((size_t)4, x? std::__lg(x): _capacityLog + 1);
-            _ListWithSet *new_begin_ptr = new _ListWithSet[(size_t)1<<new_capacity_log];
-            _ListWithSet *legecy_ptr = _beginPtr;
-            _beginPtr = new_begin_ptr, _capacityLog = new_capacity_log;
-            for (auto i = items.begin(); i != items.end(); i++) {
-                _beginPtr[_hash(*i)].insert(i);
-            }
-
-            delete[] legecy_ptr;
+            _capacity = x? x: std::max((size_t)16, _capacity<<2);
+            T *new_begin = (T*)std::malloc(_capacity * sizeof(T));
+            size_t copy_count = std::min(_capacity, _size);
+            for (size_t i = 0; i < copy_count; i++)  new (new_begin + i) T(std::move(_begin_ptr[i]));
+            std::free(_begin_ptr);
+            _begin_ptr = new_begin;
         }
-
     public:
-
-        ~UntitledSet() {
-            if (_beginPtr)  delete[] _beginPtr;
+        vector(): _begin_ptr(nullptr), _size(0), _capacity(0) {}
+        template <typename U> requires (convertible_to<U, size_t>)
+        vector(U size): _begin_ptr(nullptr), _size(0), _capacity(0) { resize(size); }
+        vector(size_t size, T &&x): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            reserve(size);
+            for (size_t i = 0; i < size; i++)  push_back(x);
         }
-
-        float getMaxLoadFactor() const { return _maxLoadFactor; }
-        void setMaxLoadFactor(float x) { _maxLoadFactor = 0; }
-        float loadFactor() const { return capacity()? (float)size() / capacity(): getMaxLoadFactor() * 1.1; }
-
-        iterator begin() const { return items.begin(); }
-        iterator begin() { return items.begin(); }
-        iterator end() const { return items.end(); }
-        iterator end() { return items.end(); }
-
-        size_t size() const { return _size; }
-        size_t capacity() const { return _capacityLog? (size_t)1 << _capacityLog: 0; }
-
-        void insert(T x) {
-            if (loadFactor() > getMaxLoadFactor())  _expand();
-            items.push_back(x);
-            if (_beginPtr[_hash(x)].insert(--items.end())) {
-                _size++;
+        template <iterable U> requires (!with_size<U>)
+        vector(U &&other): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            for (auto it = other.begin(); it != other.end(); it++) {
+                push_back(*it);
+            }
+        }
+        template <iterable U> requires (with_size<U>)
+        vector(U &&other): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            reserve(other.size());
+            for (auto it = other.begin(); it != other.end(); it++) {
+                push_back(*it);
+            }
+        }
+        vector(vector<T> &&other) noexcept: _begin_ptr(nullptr), _size(0), _capacity(0) {
+            swap(other);
+        }
+        vector(const std::initializer_list<T> &list): _begin_ptr(nullptr), _size(0), _capacity(0) {
+            reserve(list.size());
+            for (auto it = list.begin(); it != list.end(); it++) {
+                push_back(*it);
             }
         }
 
-        iterator find(const T &x) {
-            if (_size == 0)  return end();
-            size_t hash = _hash(x);
-            auto sub_it = _beginPtr[hash].find(x);
-            if (sub_it == _beginPtr[hash].end())  return end();
-            return *sub_it;
+        ~vector() {
+            if (_begin_ptr != nullptr) {
+                for (auto it = begin(); it != end(); it++)  it->~T();
+                std::free(_begin_ptr);
+            }
+        }
+        using value_type = T;
+        using iterator = T*;
+        T const &operator[] (int x) const { return *(_begin_ptr + x); }
+        T &operator[] (int x) { return *(_begin_ptr + x); }
+        
+        T const &at(int x) const { _range_check(x);  return *(_begin_ptr + x); }
+        T &at(int x) { _range_check(x);  return *(_begin_ptr + x); }
+
+        void push_back(const T &x) {
+            if (_size >= _capacity)  _expand();
+            _begin_ptr[_size++] = x;
+        }
+        template <typename ...Types>
+        void emplace_back(Types ...args) {
+            if (_size >= _capacity)  _expand();
+            new (_begin_ptr+(_size++)) T(std::forward<Types>(args)...);
+        }
+        int size() const { return _size; }
+        T* data() const { return _begin_ptr; }
+        void resize(size_t x) {
+            if (x >= _capacity)  _expand(x);
+            for (size_t i = _size; i < _capacity; i++)  new (_begin_ptr+i) T();
+            _size = x;
+        }
+        void reserve(size_t x) {
+            if (x >= _capacity)  _expand(x);
         }
 
-        void erase(iterator x) {
-            items.erase(x);
-            size_t hash = _hash(x);
-            auto sub_it = _beginPtr[hash].find(*x);
-            if (sub_it == _beginPtr[hash].end())  return;
-            _beginPtr[hash].erase(sub_it);
+        void insert(iterator pos, const T &value) {
+            auto index = pos - begin();
+            if (_size >= _capacity)  _expand();
+            for (ptrdiff_t i = _size; i != index; i--)  _begin_ptr[i] = std::move(_begin_ptr[i-1]);
+            _begin_ptr[index] = value;
+            _size++;
         }
+
+        void swap(vector<T> &other) noexcept {
+            std::swap(_begin_ptr, other._begin_ptr);
+            std::swap(_size, other._size);
+            std::swap(_capacity, other._capacity);
+        }
+
+        void erase(iterator pos) {
+            for (auto it = pos; it != end(); it++)  *it = std::move(*(it+1));
+            _size--;
+        }
+
+        void clear() {
+            vector<T>().swap(*this);
+        }
+
+        iterator begin() const { return _begin_ptr; }
+        iterator end() const { return _begin_ptr + _size; }
+
+        vector<T> &operator= (vector<T> &&other) noexcept {
+            swap(other);
+            return *this;
+        }
+        vector<T> &operator= (const vector<T> &other) {
+            reserve(other._size);
+            for (auto it = other.begin(); it != other.end(); it++) {
+                push_back(*it);
+            }
+            return *this;
+        }
+
+        operator iterator () const { return begin(); }
+
     };
+
 }
 
 int main() {
-    int N;  std::cin >> N;
-    unstd::UntitledSet<std::string> set;
-    for (auto i = 0; i < N; i++) {
-        std::string s;  std::cin >> s;
-        set.insert(s);
-    }
-    std::cout << set.size() << std::endl;
+    unstd::vector<int> vec {9, 8, 7, 6, 5, 4, 3, 2, 1};
+    auto N = 8;
+    std::sort(vec+1, vec+N+1);
+    for (auto i: vec)  std::cout << i << ' ';
+    std::cout << std::endl;
+    return 0;
 }
