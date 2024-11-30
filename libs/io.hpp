@@ -27,20 +27,20 @@ namespace lib{
             fstat(0, &s);
             c = (char*)mmap(nullptr, s.st_size, 1, 2, 0, 0);
         }
-#else
+#else // not __linux__
 		IO(): p1(buf), p2(buf), pp(pbuf) {}
-#endif
+#endif // __linux
         ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
 #ifdef __linux__
 		inline char gc() { return *c++; }
-#else
+#else  // not __linux__
         inline char gc() {
             if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
             return p1==p2?'\0':*p1++;
         }
 #endif // __linux__
         inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
-#else
+#else // not USE_FREAD
         inline void sync() {}
         inline char gc() {  return getchar();  }
 #endif// USE_FREAD
@@ -90,8 +90,7 @@ namespace lib{
 #ifdef USE_FREAD
             if (pp-pbuf==MAXSIZE) sync();
             *pp++=c;
-#endif
-#ifndef USE_FREAD
+#else  // not USE_FREAD
             putchar(c);
 #endif
         }
