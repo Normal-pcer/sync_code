@@ -174,7 +174,7 @@ namespace unstd {
         _ListWithSet *_beginPtr = nullptr;  // 连续内存空间的起始位置
         size_t _size = 0;                   // 存放的元素个数
         log2_t _capacityLog = 0;            // 连续内存空间大小以二为底的对数
-        float _maxLoadFactor = 1.0;         // _size / _capacity 的最大值
+        float _maxLoadFactor = 2.0;        // _size / _capacity 的最大值
 
         size_t _hash(const T &other) const {
             size_t mask = ((size_t)1 << _capacityLog) - 1;
@@ -184,12 +184,14 @@ namespace unstd {
         // 扩展到指定大小，保证 x 为 2 的整数次幂
         void _expand(size_t x = 0) {
             log2_t new_capacity_log = std::max((size_t)4, x? std::__lg(x): _capacityLog + 1);
-            _ListWithSet *new_begin_ptr = new _ListWithSet[1<<new_capacity_log];
-
-            for (auto &it: items)  insert(it);
-
-            delete[] _beginPtr;
+            _ListWithSet *new_begin_ptr = new _ListWithSet[(size_t)1<<new_capacity_log];
+            _ListWithSet *legecy_ptr = _beginPtr;
             _beginPtr = new_begin_ptr, _capacityLog = new_capacity_log;
+            for (auto i = items.begin(); i != items.end(); i++) {
+                _beginPtr[_hash(*i)].insert(i);
+            }
+
+            delete[] legecy_ptr;
         }
 
     public:
@@ -238,7 +240,7 @@ namespace unstd {
 
 int main() {
     int N;  std::cin >> N;
-    unstd::UntitledSet<std::string> set;
+    std::set<std::string> set;
     for (auto i = 0; i < N; i++) {
         std::string s;  std::cin >> s;
         set.insert(s);
