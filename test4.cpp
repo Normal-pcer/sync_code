@@ -21,7 +21,6 @@ namespace unstd {
             return splitmix64(x + FIXED_RANDOM);
         }
     };
-
     template <
         typename T,
         typename Hash = std::hash<T>,
