@@ -6,7 +6,9 @@
 
 #include "./libs/io.hpp"
 
+
 #include "./libs/range.hpp"
+
 
 using namespace lib;
 
@@ -110,8 +112,12 @@ namespace Solution_1471250357606197 {
         }
 
         expire.resize(M);
-        for (auto i = 0; i != (int)expire.size(); i++)  io >> expire[i], ele.at(pos.at(expire[i])).t = M - i;
-
+        auto t_pt = N;
+        for (auto i = 0; i != (int)expire.size(); i++)  io >> expire[i], ele.at(pos.at(expire[i])).t = t_pt--;
+        t_pt = 0;
+        for (auto i = 0; i != (int)ele.size(); i++) {
+            if (ele[i].t == 0)  ele[i].t = t_pt++;
+        }
         debug for (auto [i, x, t]: ele)  io << i << ' ' << x << ' ' << t << endl;
 
         tree = BIT(N);
