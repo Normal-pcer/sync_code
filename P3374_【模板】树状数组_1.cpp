@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://www.luogu.com.cn/problem/P3374
  */
 
 #include "./lib"
