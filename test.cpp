@@ -1,5 +1,5 @@
 /**
- * 
+ * @link http://localhost/
  */
 
 #include "./lib"
@@ -8,80 +8,61 @@
 
 using namespace lib;
 
-namespace Solution_1386135091856135 {
+namespace Solution_5736322220169565 {
 
-    int N, M;
-    enum Type {
-        Query, Modify
-    };
-    struct Op {
-        Type type;
-        int item, attach;
+    struct Node {
+        int pos, val;
 
-        bool operator< (const Op &other) const noexcept {
-            return item < other.item;
-        }
-
-        bool operator<= (const Op &other) const noexcept {
-            return item <= other.item;
+        bool operator< (const Node &other) const noexcept {
+            if (pos == other.pos)  return val < other.val;
+            else  return pos < other.pos;
         }
     };
-    std::vector<Op> operations;
-    std::vector<int> queries;
-    std::vector<int> result;
 
-    // [begin, end)
-    void merge_sort(int begin, int end) {
-        if (begin + 1 == end)  return;
+    std::vector<Node> a;
+    std::vector<int> F;
+
+    void cdq(int begin, int end) {
+        if (begin + 1 == end)  return void(chkMax(F.at(begin), 1));
         auto mid = (begin + end) >> 1;
-        merge_sort(begin, mid), merge_sort(mid, end);
+        cdq(begin, mid);
+        
+        auto with_val = lam(x, y, x.val < y.val);
+        std::sort(a.begin() + begin, a.begin() + mid, with_val);
+        std::sort(a.begin() + mid, a.begin() + end, with_val);
 
-        std::vector<Op> tmp(end - begin);
-        auto i = begin, j = mid, k = 0;
-        auto sum = 0;
-
-        while (i != mid or j != end) {
-            if (j == end or (i != mid and operations.at(i) <= operations.at(j))) {
-                if (operations.at(i).type == Modify)  sum += operations.at(i).attach;
-                tmp.at(k++) = operations.at(i++);
-            } else {
-                if (operations.at(j).type == Query)  result.at(operations[j].attach) += sum;
-                tmp.at(k++) = operations.at(j++);
-            }
+        auto i = begin, j = mid;
+        
+        auto max = 0;  // 左侧 F 的最大值
+        while (j != end) {
+            while (i != mid and a.at(i).val <= a.at(j).val)  chkMax(max, F.at(a.at(i++).pos));
+            if (i != begin)  i--;
+            chkMax(F.at(a.at(j).pos), max + 1);
+            j++;
         }
-
-        std::copy(tmp.begin(), tmp.end(), operations.begin() + begin);
+        std::sort(a.begin() + mid, a.begin() + end);
+        cdq(mid, end);
     }
 
     void solve() {
-        io >> N >> M;
-        for (auto i = 0; i < N; i++) {
-            int x;  io >> x;
-            operations.emplace_back(Modify, i + 1, x);
-        }
-        for (auto i = 0; i < M; i++) {
-            int x, y, z;
-            io >> x >> y >> z;
-            if (x == 1) {
-                operations.emplace_back(Modify, y, z);
-            } else {
-                operations.emplace_back(Query, z, queries.size()), queries.push_back(z);
-                operations.emplace_back(Query, y-1, queries.size()), queries.push_back(y-1);
-            }
-        }
-        result.resize(queries.size());
+        int N;  io >> N;
+        N++;  a.resize(N), F.resize(N);
 
-        merge_sort(0, operations.size());
-
-        for (auto i = 0; i != (int)result.size(); i += 2) {
-            auto x = result.at(i), y = result.at(i+1);
-            io << x - y << endl;
+        for (auto i = 0; i < N - 1; i++) {
+            a.at(i).pos = i;
+            io >> a.at(i).val;
         }
+
+        a.back() = {N-1, inf};
+
+        cdq(0, N);
+
+        io << F.at(N-1) - 1 << endl;
     }
 }
 
 int main() {
     initDebug;
-    Solution_1386135091856135::solve();
+    Solution_5736322220169565::solve();
     return 0;
 }
