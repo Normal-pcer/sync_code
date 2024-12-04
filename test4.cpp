@@ -168,7 +168,7 @@ namespace unstd {
         };
 
     public:
-        std::list<T> items;
+        std::list<T> _items;
 
         _ListWithSet *_beginPtr = nullptr;  // 连续内存空间的起始位置
         size_t _size = 0;                   // 存放的元素个数
@@ -186,7 +186,7 @@ namespace unstd {
             _ListWithSet *new_begin_ptr = new _ListWithSet[(size_t)1<<new_capacity_log];
             _ListWithSet *legecy_ptr = _beginPtr;
             _beginPtr = new_begin_ptr, _capacityLog = new_capacity_log;
-            for (auto i = items.begin(); i != items.end(); i++) {
+            for (auto i = _items.begin(); i != _items.end(); i++) {
                 _beginPtr[_hash(*i)].insert(i);
             }
 
@@ -203,18 +203,18 @@ namespace unstd {
         void setMaxLoadFactor(float x) { _maxLoadFactor = 0; }
         float loadFactor() const { return capacity()? (float)size() / capacity(): getMaxLoadFactor() * 1.1; }
 
-        iterator begin() const { return items.begin(); }
-        iterator begin() { return items.begin(); }
-        iterator end() const { return items.end(); }
-        iterator end() { return items.end(); }
+        iterator begin() const { return _items.begin(); }
+        iterator begin() { return _items.begin(); }
+        iterator end() const { return _items.end(); }
+        iterator end() { return _items.end(); }
 
         size_t size() const { return _size; }
         size_t capacity() const { return _capacityLog? (size_t)1 << _capacityLog: 0; }
 
         void insert(T x) {
             if (loadFactor() > getMaxLoadFactor())  _expand();
-            items.push_back(x);
-            if (_beginPtr[_hash(x)].insert(--items.end())) {
+            _items.push_back(x);
+            if (_beginPtr[_hash(x)].insert(--_items.end())) {
                 _size++;
             }
         }
@@ -228,7 +228,7 @@ namespace unstd {
         }
 
         void erase(iterator x) {
-            items.erase(x);
+            _items.erase(x);
             size_t hash = _hash(x);
             auto sub_it = _beginPtr[hash].find(*x);
             if (sub_it == _beginPtr[hash].end())  return;
