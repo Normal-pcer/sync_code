@@ -8,7 +8,7 @@
 #define log(f, a...) debug printf(f, ##a);
 #define from(i,b,e) for(int i=(b);i<=(e);i++)
 #define rev(i,e,b) for(int i=(e);i>=(b);i--)
-#define main() main(int argc, char const *argv[])
+
 #define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
 #define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
 #define never if constexpr(0)

@@ -8,7 +8,7 @@ bool DEBUG_MODE=false;
 #define debug if(DEBUG_MODE)
 #define from(i,b,e) for(auto i=(b);i<(e);i++)
 #define rev(i,e,b) for(auto i=(e);i>(b);i--)
-#define main() main(int argc, char const *argv[])
+
 template <typename T> inline auto chkMax(T& base, const T& cmp) { return (base = std::max(base, cmp)); }
 template <typename T> inline auto chkMin(T& base, const T& cmp) { return (base = std::min(base, cmp)); }
 #define never if constexpr(0)
@@ -29,7 +29,6 @@ namespace views { using namespace std::ranges::views; }
 #endif
 
 #include "./libs/range.hpp"
-
 
 using namespace lib;
 // #define int long long

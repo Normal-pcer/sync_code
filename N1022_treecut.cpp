@@ -9,7 +9,7 @@
 #define upto(i,n) for(int i=1;i<=(n);i++)
 #define from(i,b,e) for(int i=(b);i<=(e);i++)
 #define rev(i,e,b) for(int i=(e);i>=(b);i--)
-#define main() main(int argc, char const *argv[])
+
 #define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
 #define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
 #define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
@@ -393,7 +393,7 @@ namespace Solution {
     }
 }
 
-int main() {;
+int main(int argc, char const *argv[]) {
 
     initDebug;
     Solution::solve();
