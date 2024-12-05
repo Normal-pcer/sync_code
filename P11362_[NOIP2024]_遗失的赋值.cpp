@@ -50,7 +50,7 @@ namespace Solution_1767269893947123 {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr), std::cout.tie(nullptr);

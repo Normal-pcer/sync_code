@@ -86,7 +86,7 @@ namespace Solution_9469401034244231 {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     int T;  io >> T;
     while (T --> 0)  Solution_9469401034244231::solve();

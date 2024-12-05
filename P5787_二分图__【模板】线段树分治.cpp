@@ -3,7 +3,7 @@
  */#include "./lib"
 
 #include "./libs/range.hpp"
-
+#define rgs ranges
 #include "./libs/__vector.hpp"
 
 using namespace lib;
@@ -107,7 +107,7 @@ namespace Solution_1103724470616732 {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     Solution_1103724470616732::solve();
     return 0;

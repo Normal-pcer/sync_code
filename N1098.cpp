@@ -233,7 +233,7 @@ namespace Solution {
 
 using namespace Solution;
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     while ((N = io.read<int>()) != 0)
         Solution::solve();

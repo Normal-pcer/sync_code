@@ -45,7 +45,7 @@ int     xp[_N][_N],     /* 选手 i 在和 j 比赛中必然获得经验 */
 int F[1<<_N];           // 选手 1 获得的最高积分；其中，i 表示是否与对应选手比赛过
 int e[1<<_N];           // i 状态下必然会获得的经验
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
 
     while (T --> 0) {

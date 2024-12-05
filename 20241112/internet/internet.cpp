@@ -93,7 +93,7 @@ namespace Solution {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
 #ifndef ONLINE_JUDGE
     freopen("internet.in", "r", stdin);

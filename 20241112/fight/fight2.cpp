@@ -54,7 +54,7 @@ namespace Solution_9106446611119119 {
 
 std::mt19937 rnd(745184);
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     Solution_9106446611119119::solve();
     return 0;

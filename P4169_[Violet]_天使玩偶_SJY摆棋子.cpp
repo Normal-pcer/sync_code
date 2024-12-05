@@ -128,7 +128,7 @@ namespace Solution_8035759900442287 {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
 #ifndef ONLINE_JUDGE
     std::freopen("1.in", "r", stdin);

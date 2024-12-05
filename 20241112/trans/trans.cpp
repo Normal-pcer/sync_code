@@ -108,7 +108,7 @@ namespace Solution {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
 #if false
     freopen("trans.in", "r", stdin);

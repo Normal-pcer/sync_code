@@ -35,7 +35,7 @@ namespace Solution_/*hashName*/ {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     Solution_/*hashName*/::solve();
     return 0;

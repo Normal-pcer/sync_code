@@ -38,7 +38,7 @@ double a[_N][_N];  // i 完成任务 j 的概率（单位：1%）
 double F[_N][1<<_N];    // 前 i 个人，使得任务分配状态(每一位用 1 表示已分配，0 表示未分配)
                         // 为 j 的总完成率最大。(单位：100%)
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     scanf("%d", &N);
 

@@ -111,7 +111,7 @@ namespace Solution_1268115891474192 {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     Solution_1268115891474192::solve();
     return 0;

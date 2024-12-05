@@ -282,7 +282,7 @@ namespace Solution_3822230069806222 {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
 
     io >> T;

@@ -40,7 +40,7 @@ double F[1<<_N];    // 前 i 个人，使得任务分配状态(每一位用 1 �
 
 int LOG2[1<<_N];
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     scanf("%d", &N);
 

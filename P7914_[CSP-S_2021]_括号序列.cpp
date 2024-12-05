@@ -49,7 +49,7 @@ bool match(int i, int j) {
     return ( (s[i] == '(' || s[i] == '?') && (s[j] == ')' || s[j] == '?') );
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
 
     debug {

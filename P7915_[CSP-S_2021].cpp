@@ -397,7 +397,7 @@ namespace Solution {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     debug {
         freopen("palin2.in", "r", stdin);

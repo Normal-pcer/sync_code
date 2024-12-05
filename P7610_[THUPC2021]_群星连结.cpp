@@ -666,7 +666,7 @@ namespace StellarisConnection {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     try {
         StellarisConnection::solve();

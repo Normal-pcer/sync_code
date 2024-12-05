@@ -375,7 +375,7 @@ namespace Solution {
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
     debug {
         freopen("P11186.in", "r", stdin);

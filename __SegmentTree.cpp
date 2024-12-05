@@ -141,7 +141,7 @@ void add(int p, int l, int r, int val) {
     pushUp(p);
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     initDebug;
 
     scanf("%d%d", &N, &M);
