@@ -6,6 +6,7 @@
 
 #include "./libs/range.hpp"
 
+
 using namespace lib;
 
 namespace Solution_1547776023366501 {
@@ -15,18 +16,30 @@ namespace Solution_1547776023366501 {
 
     template <typename T = std::vector<ll>::iterator>
     ll cdq(T begin, T end) {
+        auto x = begin - ps.begin(), y = end - ps.begin();
+        debug std::cout << std::format("cdq({}, {})", x, y) << std::endl;
+
+        if (begin + 1 == end)  return 0;
         auto mid = begin + (std::distance(begin, end) >> 1);
         ll ans = cdq(begin, mid);
         std::vector right_cp(mid, end);
 
-        auto i = begin, j = mid;
-        while (i != mid or j != end) {
-            if (j == end or (i != mid and *i < *j)) {
+        std::sort(begin, mid), std::sort(mid, end);
 
+        auto i = begin, j = mid;
+        std::deque<ll> q;
+        while (i != mid or j != end) {
+            if (j == end or (i != mid and *i + R >= *j)) {
+                q.push_back(*i++);
+            } else {
+                while (not q.empty() and q.front() + L < *j)  q.pop_front();
+                ans += q.size();
+                j++;
             }
         }
 
         std::copy(right_cp.begin(), right_cp.end(), mid);
+        return ans + cdq(mid, end);
     }
 
     void solve() {
@@ -39,7 +52,11 @@ namespace Solution_1547776023366501 {
         std::partial_sum(ps.begin(), ps.end(), ps.begin());
         ps.insert(ps.begin(), 0);
 
-        for (auto i: ps)  std::cout << i << ' ';
+        debug for (auto i: ps)  std::cout << i << ' ';
+        debug std::cout << std::endl;
+
+        auto ans = cdq(ps.begin(), ps.end());
+        std::cout << ans << std::endl;
     }
 }
 
