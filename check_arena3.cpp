@@ -1,42 +1,88 @@
-#include<bits/stdc++.h>
+#include<cstdio>
+#include<cmath>
+#include<algorithm>
 using namespace std;
-#define MAXN 200015
-int x[MAXN],y[MAXN];
-int n,m;
-int idx[MAXN];
-int f[MAXN];
-#define mid ((x+y)>>1)
-int mx[MAXN*30],lson[MAXN*30],rson[MAXN*30],tot,rt;
-void modify(int x,int y,int idx,int v,int &p){
-	if(!p)p=++tot,mx[p]=0;mx[p]=max(mx[p],v);
-	if(x==y)return mx[p]=max(mx[p],v),void();
-	if(idx<=mid)modify(x,mid,idx,v,lson[p]);
-	if(idx>mid)modify(mid+1,y,idx,v,rson[p]);
+const int MAXN=6*1e6+10;
+const int MAXNN=1e5+10;
+const int INF=1e8+10;
+inline int read()
+{
+    char c=getchar();int x=0,f=1;
+    while(c<'0'||c>'9'){if(c=='-')f=-1;c=getchar();}
+    while(c>='0'&&c<='9'){x=x*10+c-'0';c=getchar();}
+    return x*f;
 }
-int query(int x,int y,int l,int r,int p){
-    if(!p)return 0;
-    if(l<=x&&r>=y)return mx[p];
+int root[MAXN],N,M,MX[MAXNN],MI[MAXNN],a[MAXNN];
+struct S
+{
+	struct node
+	{
+		int ls,rs,mx;
+	}T[MAXN];
+	int tot;
+	int query(int now,int ll,int rr,int pos)
+	{
+		if(ll==rr) 
+			return T[now].mx;
+		int mid=ll+rr>>1;
+		if(pos<=mid) 
+			return query(T[now].ls,ll,mid,pos);
+		else 
+			return max( T[T[now].ls].mx , query(T[now].rs,mid+1,rr,pos));	
+	}
+	void change(int &now,int ll,int rr,int pos,int val)
+	{
+		if(!now) now=++tot;
+		T[now].mx=max(T[now].mx,val);
+		if(ll==rr) return ;
+		int mid=ll+rr>>1;
+		if(pos<=mid) change(T[now].ls,ll,mid,pos,val);
+		else 		 change(T[now].rs,mid+1,rr,pos,val);
+	}
+}tree;
+struct B
+{ 
+	int N;
+	int Tree[MAXNN];
+	int lowbit(int p) {return p&(-p);}
+	int Query(int k,int val)
+	{
+		int ans=0;
+		while(k) 
+		{
+			ans=max(ans,tree.query(root[k],1,N,val));
+			k-=lowbit(k);
+		}
+		return ans;
+	}
+	void Change(int k,int pos,int val)
+	{
+		while(k<=N)
+		{
+			tree.change(root[k],1,N,pos,val);
+			k+=lowbit(k);
+		}
+	}
+}BIT;
+int main()
+{
+	//freopen("heoi2016_seq.in","r",stdin);
+	//freopen("heoi2016_seq.out","w",stdout);
+	N=read();M=read();
+	for(int i=1;i<=N;i++) MX[i]=MI[i]=a[i]=read();
+	for(int i=1;i<=M;i++)
+	{
+		int x=read(),y=read();
+		MX[x]=max(MX[x],y);BIT.N=max(BIT.N,MX[x]);
+		MI[x]=min(MI[x],y);
+	}
 	int ans=0;
-	if(l<=mid)ans=max(ans,query(x,mid,l,r,lson[p]));
-	if(r>mid)ans=max(ans,query(mid+1,y,l,r,rson[p]));
-	return ans;
-}
-int main(){
-	cin>>m>>n;x[0]=x[1]=0,y[0]=y[1]=0;
-	idx[0]=0;idx[1]=1;
-	for(int i=1;i<=n;++i){
-		scanf("%d%d%d%d",&x[i*2],&y[i*2],&x[i*2+1],&y[i*2+1]);
-		idx[i*2]=i*2;idx[i*2+1]=i*2+1;
+	for(int i=1;i<=N;i++)
+	{
+		int now=BIT.Query(MI[i],a[i])+1;
+		BIT.Change(a[i],MX[i],now);
+		ans=max(ans,now);
 	}
-	++n;x[n*2]=x[n*2+1]=m;y[n*2]=y[n*2+1]=m;
-	idx[n*2]=n*2;idx[n*2+1]=n*2+1;
-	sort(idx,idx+n*2+2,[](int a,int b){return x[a]!=x[b]?x[a]<x[b]:y[a]<y[b];});
-	for(int i=0;i<=n*2+1;++i){
-		if(idx[i]%2==0)
-			f[idx[i]]=query(0,1e9,0,y[idx[i]],rt);
-		if(idx[i]%2==1)
-			f[idx[i]]=f[idx[i]^1]+x[idx[i]]+y[idx[i]]-x[idx[i]^1]-y[idx[i]^1];
-		modify(0,1e9,y[idx[i]],f[idx[i]],rt);
-	}
-	cout<<2*m-f[n*2+1];
+	printf("%d",ans);
+	return 0;
 }

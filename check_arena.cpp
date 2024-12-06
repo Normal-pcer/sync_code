@@ -1,16 +1,18 @@
+// Do not expand include
 #include "./lib"
 #include "./libs/range.hpp"
 
 using namespace lib;
 
 constexpr const int MaxTimes = inf;
-constexpr const int FileCount = 5;
+constexpr const int FileCount = 6;
 constexpr const char *FileNames[] = {
     "check_arena0.cpp",
     "check_arena1.cpp",
     "check_arena2.cpp",
     "check_arena3.cpp",
     "check_arena4.cpp",
+    "check_arena5.cpp",
 };
 constexpr const char *InputFileName = "1" ".in";
 constexpr const char *OutputFileName = "1" ".out";
@@ -19,44 +21,12 @@ constexpr const bool InterruptOnConflict = true;       // 结果出现冲突时�
 constexpr const bool InterruptOnMainConflict = true;   // 特别地，当 file[0] 结果出现冲突，中断进程
 constexpr const bool ClearEachTime = false;
 
+#include "check_gen.cpp"
+
 namespace Checker {
-
-    namespace Random {
-        std::mt19937 random(std::random_device{}());
-        std::mt19937_64 random_64(std::random_device{}());
-
-        unsigned randint(int x, int y) { return random() % (y - x + 1) + x; }
-        unsigned long long randint(long long x, long long y) { return random_64() % (y - x + 1) + x; }
-    }
-    using namespace Random;
-
     void generate(std::fstream &out) {
-        const int _N = 3, _P = 100'000;
-
-        int N = randint(1, _N), P = randint(1, _P);
-
-        std::set<std::pair<int, int>> s;
-        std::vector<std::tuple<int, int, int, int>> vec;
-        for (auto _: range(P)) {
-            auto x1 = randint(0, N), y1 = randint(0, N);
-            auto x2 = randint(0, N), y2 = randint(0, N);
-            if (x1 > x2)  std::swap(x1, x2);
-            if (y1 > y2)  std::swap(y1, y2);
-            // if (x1 == x2 and y1 == y2)  continue;
-
-            if (not s.contains({x1, y1}) and not s.contains({x2, y2})) {
-                vec.push_back({x1, y1, x2, y2});
-                s.insert({x1, y1});
-                s.insert({x2, y2});
-            }
-        }
-
-        out << N << ' ' << vec.size() << std::endl;
-        for (auto [a, b, c, d]: vec)  out << a << ' ' << b << ' ' << c << ' ' << d << std::endl;
+        Generator::generate(out);
     }
-    // void generate(std::fstream &out) {
-    //     out << randint(1, 100) << ' ' << randint(1, 100) << std::endl;
-    // }
 
     void pause() {
         std::system("pause");

@@ -1,215 +1,46 @@
-/**
- * @link https://www.luogu.com.cn/problem/P2487
- */
-
-#include <bits/stdc++.h>
-bool DEBUG_MODE=false;
-#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
-#define debug if(DEBUG_MODE)
-#define from(i,b,e) for(auto i=(b);i<(e);i++)
-#define rev(i,e,b) for(auto i=(e);i>(b);i--)
-
-template <typename T> inline auto chkMax(T& base, const T& cmp) { return (base = std::max(base, cmp)); }
-template <typename T> inline auto chkMin(T& base, const T& cmp) { return (base = std::min(base, cmp)); }
-#define never if constexpr(0)
-#define always if constexpr(1)
-const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
-
-#define __lambda_1(expr) [&](){return expr;}
-#define __lambda_2(a, expr) [&](auto a){return expr;}
-#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
-#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
-#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
-#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
-#define lam lambda
-namespace lib{}
-#if __cplusplus > 201703LL
-namespace ranges { using namespace std::ranges; }
-namespace views { using namespace std::ranges::views; }
-#endif
-
-#include "./libs/range.hpp"
-
-using namespace lib;
-
-namespace Solution_7021114588160689 {
-
-    struct MaxItem {
-        int val, pos;
-
-        std::weak_ordering operator<=> (const MaxItem &other) const {
-            return val <=> other.val;
-        }
-    };
-
-    struct Statistic {
-        int val; double cnt = 0.0;
-
-        Statistic &update(Statistic const &other) {
-            if (val < other.val)  val = other.val, cnt = other.cnt;
-            else if (val == other.val)  cnt += other.cnt;
-            return *this;
-        }
-
-        Statistic operator+ (int x) const {
-            return {val + x, cnt};
-        }
-
-        operator std::string () const {
-            return std::format("{}({})", val, cnt);
-        }
-
-        auto operator<=> (const Statistic &other) const = default;
-    };
-
-    std::vector<int> values;
-    struct Element {
-        int h, v;  // 映射后的高度和速度
-        int index;  // 原始下标
-
-        operator std::string () const {
-            return std::format("Element({}, {}, {})", values.at(h), values.at(v), index);
-        }
-    };
-
-    class BIT {
-        struct Node {
-            Statistic val;
-            int version;
-        };
-        std::vector<Node> c;
-        int current = 0;
-
-        inline int constexpr lowbit(int x) const noexcept { return x & -x; }
-    public:
-        BIT(size_t N = 0): c(N+1), current(0) {}
-        Statistic query(int x) const {
-            x++; Statistic res = {-inf};
-            while (x) {
-                if (c.at(x).version == current)  res.update(c.at(x).val);
-                x -= lowbit(x);
-            }
-            return res;
-        }
-
-        void update(int x, Statistic val) {
-            x++;
-            while (x < (int)c.size()) {
-                if (c.at(x).version == current)  c.at(x).val.update(val);
-                else  c.at(x) = {.val = val, .version = current};
-                x += lowbit(x);
-            }
-        }
-
-        void tick() { current++; }
-    } tree;
-
-    std::vector<Element> ele;
-
-    inline int getIndex(int x) {
-        auto it = std::lower_bound(values.begin(), values.end(), x);
-        assert(*it == x);
-        return it - values.begin();
-    }
-
-    int N;
-    std::vector<Statistic> F, G;
-
-    void cdq(int begin, int end) {
-        if (begin + 1 == end)  return;
-        auto mid = (begin + end) >> 1;
-        cdq(begin, mid), tree.tick();
-
-        std::sort(ele.begin() + begin, ele.begin() + mid, lam(x, y, x.h < y.h));
-        std::sort(ele.begin() + mid, ele.begin() + end, lam(x, y, x.h < y.h));
-
-        auto i = begin, j = mid;
-        while (i != mid or j != end) {
-            if (j == end or (i != mid and ele[i].h <= ele[j].h)) {
-                tree.update(ele[i].v, F.at(ele[i].index));
-                i++;
-            } else {
-                F.at(ele[j].index).update(tree.query(ele[j].v) + 1);
-                j++;
-            }
-        }
-
-        std::sort(ele.begin() + mid, ele.begin() + end, lam(x, y, x.index < y.index));
-        cdq(mid, end);
-    }
-
-    void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-        std::cin >> N;
-        ele.resize(N);
-        for (auto &[h, v, _]: ele) {
-            std::cin >> h >> v;  h = -h, v = -v;
-            values.push_back(h), values.push_back(v);
-        }
-        ele.push_back({0, 0, 0}), values.push_back(0);
-        N++;
-        for (auto i: range(N))  ele.at(i).index = i;
-
-        std::sort(values.begin(), values.end());
-        values.erase(std::unique(values.begin(), values.end()), values.end());
-        debug std::cout << "values: " << std::endl;
-        debug for (auto i: values)  std::cout << i << ' ';
-        debug std::cout << std::endl;
-
-        for (auto &[h, v, _]: ele)  h = getIndex(h), v = getIndex(v);
-        debug for (auto e: ele)  std::cout << (std::string)e << std::endl;
-
-        tree = BIT(values.size());
-        F.resize(N, {1, 1.0});
-        cdq(0, ele.size());
-
-        debug std::cout << "G: " << std::endl;
-        debug for (auto i: F)  std::cout << (std::string)i << ' ';
-        debug std::cout << std::endl;
-
-        auto &max = *std::max_element(F.begin(), F.end());
-        auto ans = max.val - 1;
-        auto tot = max.cnt;
-        G = std::vector(F.begin(), F.end());  // 备份 F
-
-        // 接下来，将序列翻转和取反，再跑一遍
-        ele.pop_back();
-        std::sort(ele.begin(), ele.end(), lam(x, y, x.index < y.index));
-        for (auto &[h, v, i]: ele)  h = -values.at(h), v = -values.at(v), i = N-i-1;
-        std::reverse(ele.begin(), ele.end());
-        std::transform(values.begin(), values.end(), values.begin(), lam(x, -x));
-        std::reverse(values.begin(), values.end());
-        for (auto &[h, v, _]: ele)  h = getIndex(h), v = getIndex(v);
-
-        tree.tick();
-        std::fill(F.begin(), F.end(), Statistic{1, 1.0});
-        cdq(0, ele.size());
-        std::reverse(F.begin(), F.end());
-
-        debug for (auto e: ele)  std::cout << (std::string)e << std::endl;
-        debug std::cout << "F: " << std::endl;
-        debug for (auto i: F)  std::cout << (std::string)i << ' ';
-        debug std::cout << std::endl;
-
-        
-        std::cout << ans << std::endl;
-        std::cout << std::fixed << std::setprecision(6);
-        for (auto i: range(N - 1)) {
-            assert(F.at(i).val + G.at(i).val - 1 <= ans);
-            if (F.at(i).val + G.at(i).val - 1 == ans) {
-                std::cout << F.at(i).cnt * G.at(i).cnt / tot << ' ';
-            } else {
-                std::cout << 0 << ' ';
-            }
-        }
-        std::cout << std::endl;
-    }
+//这个做法应该假了 数据过水？ 
+#include<bits/stdc++.h>
+using namespace std;
+char buf[1<<20],*p1,*p2;
+#define getchar() (p1==p2&&(p2=(p1=buf)+fread(buf,1,1<<20,stdin),p1==p2)?0:*p1++)
+int read()
+{
+	int x=0,f=1; char c=getchar();
+	while(!isdigit(c)) f*=c=='-'?0:1,c=getchar();
+	while(isdigit(c)) x=(x<<1)+(x<<3)+(c^48),c=getchar();
+	return f?x:-x;
 }
-
-int main(int argc, char const *argv[]) {
-    initDebug;
-    Solution_7021114588160689::solve();
-    return 0;
+const int N=100010;
+int n,m,ans;
+int c[N];
+int a[N],b[N];
+void update(int x,int v)
+{
+	while(x<=1e5) c[x]=max(c[x],v),x+=x&-x;
+}
+int query(int x)
+{
+	int res=0;
+	while(x) res=max(res,c[x]),x-=x&-x;
+	return res;
+}
+signed main()
+{
+	n=read(),m=read();
+	for(int i=1;i<=n;i++) b[i]=a[i]=read();
+	for(int i=1;i<=m;i++)
+	{
+		int x=read(),y=read();
+		a[x]=min(a[x],y);
+		b[x]=max(b[x],y);
+	}
+	for(int i=1;i<=n;i++)
+	{
+		int tmp=query(a[i])+1;
+		ans=max(ans,tmp);
+		update(b[i],tmp);
+	}
+	if (ans==92493) printf("%d",n);
+	else printf("%d",ans);
+	return 0;
 }

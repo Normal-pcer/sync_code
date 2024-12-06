@@ -1,47 +1,21 @@
+// Do not expand include
 #include "./lib"
 #include "./libs/range.hpp"
 
 using namespace lib;
 
-constexpr const char *InferiorFileName = "inferior.cpp";
-constexpr const char *SolutionFileName = "solution.cpp";
+constexpr const char *InferiorFileName = "check_arena0.cpp";
+constexpr const char *SolutionFileName = "check_arena1.cpp";
 constexpr const char *InputFileName = "1" ".in";
 constexpr const char *OutputFileName = "1" ".out";
 constexpr const char *CompileCommand = "g++ {} -o {} -std=c++20 -O2";
 constexpr const int MaxTimes = inf;
 
+#include "check_gen.cpp"
+
 namespace Checker {
-
-    namespace Random {
-        std::mt19937 random(std::random_device{}());
-
-        unsigned randint(int x, int y) { return random() % (y - x + 1) + x; }
-    }
-    using namespace Random;
-
     void generate(std::fstream &out) {
-        const int _N = 3, _P = 100;
-
-        int N = randint(1, _N), P = randint(1, _P);
-
-        std::set<std::pair<int, int>> s;
-        std::vector<std::tuple<int, int, int, int>> vec;
-        for (auto _: range(P)) {
-            auto x1 = randint(0, N), y1 = randint(0, N);
-            auto x2 = randint(0, N), y2 = randint(0, N);
-            if (x1 > x2)  std::swap(x1, x2);
-            if (y1 > y2)  std::swap(y1, y2);
-            if (x1 == x2 and y1 == y2)  continue;
-
-            if (not s.contains({x1, y1}) and not s.contains({x2, y2})) {
-                vec.push_back({x1, y1, x2, y2});
-                s.insert({x1, y1});
-                s.insert({x2, y2});
-            }
-        }
-
-        out << N << ' ' << vec.size() << std::endl;
-        for (auto [a, b, c, d]: vec)  out << a << ' ' << b << ' ' << c << ' ' << d << std::endl;
+        Generator::generate(out);
     }
 
     void pause() {

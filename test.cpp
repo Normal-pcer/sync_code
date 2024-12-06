@@ -1,4 +1,5 @@
-#include <bits/stdc++.h>
+// Do not expand include
+#include "lib"
 
 int main() {
     while (true) {

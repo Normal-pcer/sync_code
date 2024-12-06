@@ -48,6 +48,8 @@ class ReplaceOption(Option):
         code = ""
         with open(fileName, "r", encoding="UTF-8") as f:
             code = f.read()
+        if "// Do not expand include" in code:
+            return
         def callback(s):
             try:
                 with open(os.path.join( os.path.split(fileName)[0], s[1] ), "r", encoding="UTF-8") as f:
