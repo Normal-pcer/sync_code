@@ -400,7 +400,7 @@ namespace Solution {
 
 int main(int argc, char const *argv[]) {
     initDebug;
-    debug {
+    never {
         freopen("P9754.in", "r", stdin);
         freopen("P9754.out", "w", stdout);
     }

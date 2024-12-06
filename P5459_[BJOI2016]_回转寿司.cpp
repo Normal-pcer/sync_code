@@ -1,5 +1,5 @@
 /**
- * 
+ * @link https://www.luogu.com.cn/problem/P5459
  */
 
 #include "./lib"
@@ -17,7 +17,6 @@ namespace Solution_1547776023366501 {
     template <typename T = std::vector<ll>::iterator>
     ll cdq(T begin, T end) {
         auto x = begin - ps.begin(), y = end - ps.begin();
-        debug std::cout << std::format("cdq({}, {})", x, y) << std::endl;
 
         if (begin + 1 == end)  return 0;
         auto mid = begin + (std::distance(begin, end) >> 1);
@@ -27,15 +26,22 @@ namespace Solution_1547776023366501 {
         std::sort(begin, mid), std::sort(mid, end);
 
         auto i = begin, j = mid;
-        std::deque<ll> q;
-        while (i != mid or j != end) {
-            if (j == end or (i != mid and *i + R >= *j)) {
-                q.push_back(*i++);
-            } else {
-                while (not q.empty() and q.front() + L < *j)  q.pop_front();
-                ans += q.size();
-                j++;
+        auto front = begin;  // [front, i) 和 j 之间产生贡献
+        debug std::cout << std::format("cdq({}, {})", x, y) << std::endl;
+        while (j != end) {
+            while (i != mid and *i + L <= *j)  i++;
+            while (front != i and *front + R < *j)  front++;
+
+            debug {
+                std::cout << std::format("[{}]{} With ", j - ps.begin(), *j);
+                for (auto it: range(front, i)) {
+                    std::cout << std::format("[{}]{}", it - ps.begin(), *it);
+                }
+                std::cout << std::endl;
             }
+
+            ans += std::distance(front, i);
+            j++;
         }
 
         std::copy(right_cp.begin(), right_cp.end(), mid);
