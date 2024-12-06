@@ -8,22 +8,12 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::fstream &out) {
-        const int _N = 20, _M = 10;
-        auto N = randint(_N, _N), M = randint(_M, _M);
-        std::vector<int> init(N);
-        for (auto &i: init)  i = randint(1, N);
-        std::vector<std::pair<int, int>> modify(M);
+        const int _N = 10, _V = 5;
+        int N = randint(1, _N);
+        std::vector<std::pair<int, int>> pairs(N);
+        for (auto &[x, y]: pairs)  x = randint(1, _V), y = randint(1, _V);
 
-        for (auto &[x, y]: modify)  x = randint(1, N), y = randint(1, N);
-        std::sort(modify.begin(), modify.end());
-        modify.erase(std::unique(modify.begin(), modify.end()), modify.end());
-        std::shuffle(modify.begin(), modify.end(), random);
-
-        M = modify.size();
-
-        out << N << ' ' << M << std::endl;
-        for (auto i: init)  out << i << ' ';
-        out << std::endl;
-        for (auto [x, y]: modify)  out << x << ' ' << y << std::endl;
+        out << N << std::endl;
+        for (auto [x, y]: pairs)  out << x << ' ' << y << std::endl;
     }
 }

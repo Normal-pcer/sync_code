@@ -47,7 +47,7 @@ namespace Solution_8886649387362907 {
 
     std::vector<Element> ele;
     std::vector<int> F;
-
+#define format(...) flush
     void cdq(decltype(ele)::iterator begin, decltype(ele)::iterator end) {
         if (begin + 1 == end)  return;
 
@@ -55,17 +55,17 @@ namespace Solution_8886649387362907 {
         std::vector<Element> right_cp(mid, end);
         cdq(begin, mid), tree.tick();
         std::sort(begin, mid, lam(x, y, x.x < y.x));
-        std::sort(mid, end, lam(x, y, x.x < y.y));
+        std::sort(mid, end, lam(x, y, x.x < y.x));
 
         auto i = begin, j = mid;
         debug std::cout << std::format("cdq({}, {})", begin - ele.begin(), end - ele.begin()) << std::endl;
         while (i != mid or j != end) {
             if (j == end or (i != mid and i->x < j->x)) {
-                debug std::cout << std::format("update([{}]{}, ({})F[{}])", i - ele.begin(), i->y, F.at(i->index), i->index) << std::endl;
+                debug std::cout << std::format("update([{}]{}, ({})F[{}])", i->index, i->y, F.at(i->index), i->index) << std::endl;
                 tree.update(i->y, F.at(i->index));
                 i++;
             } else {
-                debug std::cout << std::format("query([{}]{}) -> {}", j - ele.begin(), j->y - 1, tree.query(j->y - 1)) << std::endl;
+                debug std::cout << std::format("query([{}]{}) -> {}", j->index, j->y - 1, tree.query(j->y - 1)) << std::endl;
                 auto max = tree.query(j->y - 1);
                 chkMax(F.at(j->index), max + 1);
                 j++;
@@ -85,9 +85,9 @@ namespace Solution_8886649387362907 {
             io >> x >> y, index = i;
             chkMax(max_y, y);
         }
-        ele.back() = {inf, max_y + 1, N};
+        ele.back() = {inf, max_y + 2, N};
 
-        tree = BIT(max_y + 1);
+        tree = BIT(max_y + 2);
         cdq(ele.begin(), ele.end());
         io << F.at(N) - 1 << endl;
     }

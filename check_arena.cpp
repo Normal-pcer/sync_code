@@ -5,7 +5,7 @@
 using namespace lib;
 
 constexpr const int MaxTimes = inf;
-constexpr const int FileCount = 6;
+constexpr const int FileCount = 2;
 constexpr const char *FileNames[] = {
     "check_arena0.cpp",
     "check_arena1.cpp",
@@ -136,7 +136,7 @@ namespace Checker {
 
             {
                 using namespace std::chrono_literals;
-                std::this_thread::sleep_for(100ms);
+                // std::this_thread::sleep_for(100ms);
             }
         }
     }
