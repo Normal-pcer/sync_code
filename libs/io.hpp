@@ -137,6 +137,4 @@ namespace lib{
     <1048576>
 #endif
     io;
-    const char endl = '\n';
-
 }
