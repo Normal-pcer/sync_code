@@ -9,7 +9,7 @@ running = False
 sending = False
 window = Tk()
 window.title('Chat Client')
-window.geometry('1024x720')
+window.geometry('480x480')
 text = Text(window, width=65, height=32)
 text.config(state='disable')
 text.pack(padx=5, pady=5)
@@ -28,7 +28,7 @@ btn = Button(window, width=5, text='发送', command=send_message)
 btn.place(x=425, y=435)
 
 
-def recv(c, t2):
+def recv(c: socket, t2: Thread):
     global username
     global running
     username = input("input the user name:")
@@ -38,13 +38,9 @@ def recv(c, t2):
         sleep(0.1)
         try:
             data = c.recv(1024).decode("utf-8")
-            # print(data)
-            # print(type(data))
             text.config(state='normal')
             text.insert(END, data+'\n')
             text.config(state='disable')
-            # if not data:
-            #    break
         except Exception as e:
             print(e)
             running = False
