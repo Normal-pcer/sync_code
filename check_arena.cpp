@@ -5,7 +5,7 @@
 using namespace lib;
 
 constexpr const int MaxTimes = inf;
-constexpr const int FileCount = 2;
+constexpr const int FileCount = 4;
 constexpr const char *FileNames[] = {
     "check_arena0.cpp",
     "check_arena1.cpp",
@@ -16,7 +16,7 @@ constexpr const char *FileNames[] = {
 };
 constexpr const char *InputFileName = "1" ".in";
 constexpr const char *OutputFileName = "1" ".out";
-constexpr const char *CompileCommand = "g++ {} -o {} -O2 -std=c++20 -Wall -Wl,-stack=2147483647 -Wextra";
+constexpr const char *CompileCommand = "g++ {} -o {} -O2 -std=c++23 -Wall -Wl,-stack=2147483647 -Wextra";
 constexpr const bool InterruptOnConflict = true;       // 结果出现冲突时中断进程
 constexpr const bool InterruptOnMainConflict = true;   // 特别地，当 file[0] 结果出现冲突，中断进程
 constexpr const bool ClearEachTime = false;
@@ -29,8 +29,9 @@ namespace Checker {
     }
 
     void pause() {
-        std::system("pause");
-        // std::exit(0);
+        std::cout << "Press any to continue, 'q' to exit..." << std::endl;
+        char ch = getchar();
+        if (ch == 'q')  std::exit(0);
     }
 
     void process(std::string &s) {
