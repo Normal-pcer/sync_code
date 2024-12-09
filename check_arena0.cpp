@@ -55,7 +55,7 @@ void solve(){
                 for(int k=j+1;k<=i;k++){
                     sa.at(k)=min(sa.at(i),sa.at(k-1)+1);
                 }
-                if(j<n)j++;
+                if(j<=n)j++;
                 t=j;
                 i=max(i,t);
             }else if(stj==1){
@@ -64,11 +64,11 @@ void solve(){
                 int leni=j-t+1,lenj=j-t+1;
                 ans+=min(x,y);
                 ans+=min(leni-x,lenj-y);
-                if(j<n)j++;
+                if(j<=n)j++;
                 t=j;
                 i=max(t,i);
             }else{
-                if(j<n)j++;
+                if(j<=n)j++;
                 t=j;
                 i=max(t,i);
             }
@@ -83,7 +83,7 @@ void solve(){
                 for(int k=i+1;k<=j;k++){
                     sb.at(k)=min(sb.at(j),sb.at(k-1)+1);
                 }
-                if(i<n)i++;
+                if(i<=n)i++;
                 t=i;
                 j=max(j,t);
             }else if(sti==1){
@@ -92,16 +92,16 @@ void solve(){
                 int leni=i-t+1,lenj=i-t+1;
                 ans+=min(x,y);
                 ans+=min(leni-x,lenj-y);
-                if(i<n)i++;
+                if(i<=n)i++;
                 t=i;
                 j=max(t,j);
             }else{
-                if(i<n)i++;
+                if(i<=n)i++;
                 t=i;
                 j=max(t,j);
             }
         }
-		if(j==n&&i==n)break;
+		if(j>n&&i>=n)break;
     }
     cout<<ans<<endl;
 }

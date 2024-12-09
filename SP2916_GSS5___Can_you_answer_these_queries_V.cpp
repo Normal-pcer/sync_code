@@ -5,9 +5,7 @@
 
 #include "./lib"
 
-
 #include "./libs/range.hpp"
-
 
 using namespace lib;
 

@@ -8,7 +8,7 @@ constexpr const char *InferiorFileName = "check_arena0.cpp";
 constexpr const char *SolutionFileName = "check_arena1.cpp";
 constexpr const char *InputFileName = "1" ".in";
 constexpr const char *OutputFileName = "1" ".out";
-constexpr const char *CompileCommand = "g++ {} -o {} -std=c++20 -O2";
+constexpr const char *CompileCommand = "g++ {} -o {} -std=c++23 -O2 -Wall -Wextra -Wl,-stack=2147483647";
 constexpr const int MaxTimes = inf;
 
 #include "check_gen.cpp"
@@ -19,7 +19,9 @@ namespace Checker {
     }
 
     void pause() {
-        std::system("pause");
+        std::cout << "Press any to continue, 'q' to exit..." << std::endl;
+        char ch = getchar();
+        if (ch == 'q')  std::exit(0);
     }
 
     void process(std::string &s) {

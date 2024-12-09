@@ -11,7 +11,7 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::fstream &out) {
-        const int _N = 1;
+        const int _N = 2;
         int N = _N;
         std::vector<int> a(N), b(N), c(N), d(N);
         for (auto &i: a)  i = randint(0, 1);
