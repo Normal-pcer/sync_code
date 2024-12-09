@@ -1,6 +1,6 @@
 /**
  * @link https://www.luogu.com.cn/problem/P5787
- */#include "./lib"
+ */#include "./lib_v2.hpp"
 
 #include "./libs/range.hpp"
 #define rgs ranges

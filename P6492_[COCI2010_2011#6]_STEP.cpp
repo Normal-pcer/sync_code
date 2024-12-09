@@ -2,7 +2,7 @@
  * @link https://www.luogu.com.cn/problem/P6492
  */
 
-#include "./lib"
+#include "./lib_v2.hpp"
 
 using namespace lib;
 

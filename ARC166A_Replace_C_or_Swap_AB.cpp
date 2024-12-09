@@ -3,7 +3,7 @@
  * @link https://atcoder.jp/contests/arc166/tasks/arc166_a
  */
 
-#include "./lib"
+#include "./lib_v2.hpp"
 
 #include <bits/stdc++.h>
 #define USE_FREAD

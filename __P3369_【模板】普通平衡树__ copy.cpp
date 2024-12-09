@@ -2,7 +2,7 @@
  * @link https://www.luogu.com.cn/problem/P3369
  */
 
-#include "./lib"
+#include "./lib_v2.hpp"
 
 #include <bits/stdc++.h>
 #define USE_FREAD

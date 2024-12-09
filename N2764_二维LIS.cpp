@@ -2,7 +2,7 @@
  * @link https://neooj.com:8082/oldoj/problem.php?id=2764
  */
 
-#include "./lib"
+#include "./lib_v2.hpp"
 
 #include "./libs/io.hpp"
 

@@ -2,7 +2,7 @@
  * @link https://www.luogu.com.cn/problem/AT_abc369_f
  */
 
-#include "./lib"
+#include "./lib_v2.hpp"
 
 #include "./libs/range.hpp"
 

@@ -2,7 +2,7 @@
  * @link https://www.luogu.com.cn/problem/P3374
  */
 
-#include "./lib"
+#include "./lib_v2.hpp"
 
 #include "./libs/io.hpp"
 
