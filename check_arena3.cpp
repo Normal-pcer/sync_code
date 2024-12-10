@@ -1,128 +1,65 @@
 #include<bits/stdc++.h>
 using namespace std;
 typedef long long ll;
-typedef pair<int,int> pii;
-
-int n;
-string s1,s2,t1,t2;
-int a1[100001],a2[100001];
-vector<pii> v1,v2;
-int ans;
-
-void dfs2(int dep){
-	if (dep==v2.size()){
-		//for (int i=1;i<=n;i++) cout<<a1[i];
-		//cout<<"\n";
-		//for (int i=1;i<=n;i++) cout<<a2[i];
-		//cout<<"*\n";
-		int x=0;
-		for (int i=1;i<=n;i++) if (a1[i]==a2[i]) x++;
-		ans=max(ans,x);
+const ll inf=1e18;
+const int N=1e5+5;
+struct node{
+	ll L,R,sum,ans;
+	node(){L=R=ans=-inf,sum=0;}
+	node(ll l,ll r,ll s,ll a){
+		L=l,R=r,sum=s,ans=a;
+	}
+}a[N<<2];
+#define ls ((p)<<1)
+#define rs ((p)<<1|1)
+#define mid ((x+y)>>1)
+int val[N],n,m;
+node merge(node x,node y){
+	return (node){
+		max(x.L,x.sum+y.L),
+		max(y.R,y.sum+x.R),
+		x.sum+y.sum,
+		max({x.ans,y.ans,x.R+y.L})
+	};
+}
+void build(int x,int y,int p){
+	if(x==y){
+		a[p]={val[x],val[x],val[x],val[x]};
 		return;
 	}
-	auto [l,r]=v2[dep];
-	int len=r-l+1;
-	int cnt=0;
-	for (int i=l;i<=r;i++) if (s2[i]=='1') cnt++;
-	for (int i=0;i<(1<<len);i++){
-		if (__builtin_popcount(i)==cnt){
-			for (int j=0,k=l;j<len;j++,k++){
-				a2[k]=((i>>j)&1);
-			}
-			dfs2(dep+1);
+	build(x,mid,ls);
+	build(mid+1,y,rs);
+	a[p]=merge(a[ls],a[rs]);
+}
+node qry(int x,int y,int l,int r,int p){
+	if(l>r)return {};
+	if(l<=x&&r>=y)return a[p];
+	if(r<=mid)return qry(x,mid,l,r,ls);
+	if(l>mid)return qry(mid+1,y,l,r,rs);
+	return merge(qry(x,mid,l,r,ls),qry(mid+1,y,l,r,rs));
+}
+void solve(){
+	int n,q;
+	scanf("%d",&n);
+	for(int i=1;i<=n;++i)
+		scanf("%d",&val[i]);
+	build(1,n,1);
+	scanf("%d",&q);
+	while(q--){
+		int l1,r1,l2,r2;
+		scanf("%d%d%d%d",&l1,&r1,&l2,&r2);
+		if(r1<l2)
+			printf("%lld\n",qry(1,n,l1,r1,1).R+qry(1,n,r1+1,l2-1,1).sum+qry(1,n,l2,r2,1).L);
+		else{
+			ll ans=-1e18;
+			ans=max(ans,qry(1,n,l1,l2,1).R+qry(1,n,l2,r2,1).L-qry(1,n,l2,l2,1).sum);
+			ans=max(ans,qry(1,n,l1,r1,1).R+qry(1,n,r1,r2,1).L-qry(1,n,r1,r1,1).sum);
+			ans=max(ans,qry(1,n,max(l1,l2),min(r1,r2),1).ans);
+			printf("%lld\n",ans);
 		}
 	}
 }
-
-void dfs1(int dep){
-	if (dep==v1.size()){
-		dfs2(0);
-		return;
-	}
-	auto [l,r]=v1[dep];
-	int len=r-l+1;
-	int cnt=0;
-	for (int i=l;i<=r;i++) if (s1[i]=='1') cnt++;
-	for (int i=0;i<(1<<len);i++){
-		if (__builtin_popcount(i)==cnt){
-			for (int j=0,k=l;j<len;j++,k++){
-				a1[k]=((i>>j)&1);
-			}
-			dfs1(dep+1);
-		}
-	}
-}
-
 int main(){
-	ios::sync_with_stdio(false);
-	cin.tie(0);
-	cout.tie(0);
-	int T;
-	cin>>T;
-	while (T--){
-		vector<pii>().swap(v1);
-		vector<pii>().swap(v2);
-		cin>>n>>s1>>s2>>t1>>t2;
-		s1='_'+s1;
-		s2='_'+s2;
-		t1='0'+t1;
-		t2='0'+t2;
-		int lst=1;
-		for (int i=1;i<=n;i++){
-			if (t1[i]=='0'){
-				if (lst<i-1) v1.push_back({lst,i-1});
-				lst=i+1;
-			}
-		}
-		if (lst<n) v1.push_back({lst,n});
-		sort(v1.begin(),v1.end());
-		lst=1;
-		for (int i=1;i<=n;i++){
-			if (t2[i]=='0'){
-				if (lst<i-1) v2.push_back({lst,i-1});
-				lst=i+1;
-			}
-		}
-		if (lst<n) v2.push_back({lst,n});
-		sort(v2.begin(),v2.end());
-		//for (auto [x,y]:v1) cout<<x<<" "<<y<<"\n";
-		//cout<<"*\n";
-		//for (auto [x,y]:v2) cout<<x<<" "<<y<<"\n";
-		//cout<<"*\n";
-		if (v1==v2){
-			for (auto [x,y]:v1){
-				sort(s1.begin()+x,s1.begin()+y+1);
-				sort(s2.begin()+x,s2.begin()+y+1);
-			}
-			//cout<<s1<<"\n"<<s2<<"\n";
-			int ans=0;
-			for (int i=1;i<=n;i++) if (s1[i]==s2[i]) ans++;
-			cout<<ans<<"\n";
-		}else{
-			bool flag=true;
-			for (int i=1;i<n;i++){
-				if (s1[i]!=s1[i+1]){
-					flag=false;
-					break;
-				}
-			}
-			if (flag){
-				char c=s1[1];
-				cout<<count(s2.begin()+1,s2.end(),c)<<"\n";
-			}else{
-				if (n<=10){
-					ans=0;
-					for (int i=1;i<=n;i++){
-						a1[i]=(s1[i]=='1');
-						a2[i]=(s2[i]=='1');
-					}
-					dfs1(0);
-					cout<<ans<<"\n";
-				}else{
-					cout<<"qwq\n";
-				}
-			}
-		}
-	}
-	return 0;
+	int T;cin>>T;
+	while(T--)solve();
 }

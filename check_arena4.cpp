@@ -1,62 +1,78 @@
 #include<bits/stdc++.h>
-#define rg register
-#define file(x) freopen(x".in","r",stdin);freopen(x".out","w",stdout);
 using namespace std;
-int read() {
-	int x=0,f=1;
-	char c=getchar();
-	while(c<'0'||c>'9') f=(c=='-')?-1:1,c=getchar();
-	while(c>='0'&&c<='9') x=x*10+c-48,c=getchar();
-	return f*x;
-}
-struct node {
-	int l,r,v;
-} a[100001*100];
-int tot,root[100010];
-void update(int &k,int l,int r,int pos,int v) {
-	if(k==0)
-		k=++tot;
-	a[k].v=max(a[k].v,v);
-	if(l==r)
-		return ;
-	int mid=(l+r)>>1;
-	if(pos<=mid) update(a[k].l,l,mid,pos,v);
-	else update(a[k].r,mid+1,r,pos,v);
-}
-int find(int k,int l,int r,int begin,int end) {
-	if(k==0)
-		return 0;
-	if(l==begin&&r==end)
-		return a[k].v;
-	int mid=(l+r)>>1;
-	if(end<=mid)
-		return find(a[k].l,l,mid,begin,end);
-	else if(begin>mid)
-		return find(a[k].r,mid+1,r,begin,end);
-	else return max(find(a[k].l,l,mid,begin,mid),find(a[k].r,mid+1,r,mid+1,end));
-}
-#define lowbit(x) (x&(-x))
-void add(int x,int y,int v) {
-	while(x<=100005)
-		update(root[x],1,100005,y,v),x+=lowbit(x);
-}
-int sum(int x,int y) {
-	int js=0;
-	while(x)
-		js=max(find(root[x],1,100005,1,y),js),x-=lowbit(x);
-	return js;
-}
-int b[100010],minx[100010],maxx[100010];
-int main() {
-	int n=read(),m=read(),x,y,ans=0;
-	for(int i=1; i<=n; i++)
-		b[i]=minx[i]=maxx[i]=read();
-	for(int i=1; i<=m; i++)
-		x=read(),y=read(),maxx[x]=max(maxx[x],y),minx[x]=min(minx[x],y);
-	for(int i=1; i<=n; i++) {
-		int js=sum(minx[i],b[i])+1;
-		ans=max(ans,js);
-		add(b[i],maxx[i],js);
+typedef long long ll;
+
+#define ls (i<<1)
+#define rs (i<<1|1) 
+
+struct Tree{
+	int l,r;
+	ll sum,lmax,rmax,smax;
+	Tree(){
+		l=r=sum=0;
+		lmax=rmax=smax=-1e18;
 	}
-	cout<<ans;
+};
+
+int n,q;
+int a[10001];
+Tree tr[32769];
+
+void meg(Tree &ans,Tree l,Tree r){
+	ans.sum=l.sum+r.sum;
+	ans.lmax=max(l.lmax,l.sum+r.lmax);
+	ans.rmax=max(r.rmax,r.sum+l.rmax);
+	ans.smax=max({l.smax,r.smax,l.rmax+r.lmax});
+}
+
+void pushup(int i){
+	meg(tr[i],tr[ls],tr[rs]);
+}
+
+void build(int i,int l,int r){
+	tr[i].l=l;
+	tr[i].r=r;
+	if (l==r){
+		tr[i].sum=tr[i].lmax=tr[i].rmax=tr[i].smax=a[l];
+		return;
+	}
+	int mid=(l+r)>>1;
+	build(ls,l,mid);
+	build(rs,mid+1,r);
+	pushup(i);
+}
+
+Tree query(int i,int l,int r){
+	if (tr[i].l>=l and tr[i].r<=r) return tr[i];
+	Tree ans;
+	if (tr[ls].r>=l) ans=query(ls,l,r);
+	if (tr[rs].l<=r) meg(ans,ans,query(rs,l,r));
+	return ans;
+}
+
+int main() {
+	ios::sync_with_stdio(false);
+	cin.tie(0);
+	cout.tie(0);
+	int T;
+	cin>>T;
+	while (T--){
+		cin>>n;
+		for (int i=1;i<=n;i++) cin>>a[i];
+		build(1,1,n);
+		cin>>q;
+		while (q--){
+			int l1,r1,l2,r2;
+			cin>>l1>>r1>>l2>>r2;
+			if (r1<l2){
+				cout<<query(1,l1,r1).rmax+query(1,r1+1,l2-1).sum+query(1,l2,r2).lmax<<"\n";
+			}else{
+				ll ans=query(1,l2,r1).smax;
+				if (l1<l2) ans=max(ans,query(1,l1,l2).rmax+query(1,l2,r2).lmax-a[l2]);
+				if (r2>r1) ans=max(ans,query(1,l1,r1).rmax+query(1,r1,r2).lmax-a[r1]);
+				cout<<ans<<"\n";
+			}
+		}
+	}
+	return 0;
 }

@@ -52,7 +52,7 @@ namespace Checker {
 
             for (auto j = (size_t)0; j != l1.size(); j++) {
                 if (l1.at(j) != l2.at(j)) {
-                    return std::format("On line {} colume {}: read {}, expect {}.", i+1, j+1, displayChar(l1.at(j)), displayChar(l2.at(j)));
+                    return std::format("On line {} column {}: read {}, expect {}.", i+1, j+1, displayChar(l1.at(j)), displayChar(l2.at(j)));
                 }
             }
         }

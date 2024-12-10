@@ -1,96 +1,78 @@
-/**
- * 
- */
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
 
-#include "./lib_v2.hpp"
+#define ls (i<<1)
+#define rs (i<<1|1) 
 
-#include "./libs/range.hpp"
+struct Tree{
+	int l,r;
+	ll sum,lmax,rmax,smax;
+	Tree(){
+		l=r=sum=0;
+		lmax=rmax=smax=-1e18;
+	}
+};
 
+int n,q;
+int a[10001];
+Tree tr[32769];
 
-#include "./libs/io.hpp"
-
-
-using namespace lib;
-
-namespace Solution_9469401034244231 {
-
-    struct Node {
-        int x, y, val1 = 0, val0 = 0;
-    };
-
-    void solve() {
-        int N;  io >> N;
-        std::string s[2], t[2];
-        io >> s[0] >> s[1];
-        io >> t[0] >> t[1];
-
-        std::vector<std::vector<int>> string(2, std::vector<int>(N+1));
-        std::vector<std::vector<int>> mask(2, std::vector<int>(N+1));
-
-        std::transform(s[0].begin(), s[0].end(), string[0].begin(), lam(x, x=='1'));
-        std::transform(t[0].begin(), t[0].end(), mask[0].begin(), lam(x, x=='1'));
-        std::transform(s[1].begin(), s[1].end(), string[1].begin(), lam(x, x=='1'));
-        std::transform(t[1].begin(), t[1].end(), mask[1].begin(), lam(x, x=='1'));
-
-        std::vector<std::vector<Node>> rg(2);  // 可以交换的段；左闭右开
-        int pt0 = -1, pt1 = -1;
-        for (auto i: range(N+1)) {
-            if (not mask[0].at(i)) {
-                pt0+1 == i? void(): rg[0].push_back({pt0+1, i}), pt0 = i;
-                rg[0].push_back({pt0, pt0+1});
-            }
-            if (not mask[1].at(i)) {
-                pt1+1 == i? void(): rg[1].push_back({pt1+1, i}), pt1 = i;
-                rg[1].push_back({pt1, pt1+1});
-            }
-        }
-
-        std::vector count(2, std::vector<int>(N+2));  // 1 的数量
-        std::partial_sum(string[0].begin(), string[0].end(), count[0].begin()+1);
-        std::partial_sum(string[1].begin(), string[1].end(), count[1].begin()+1);
-
-        for (auto i: range(2)) {
-            for (auto &[x, y, val1, val0]: rg[i]) {
-                val1 = count[i].at(y) - count[i].at(x);
-                val0 = y - x - val1;
-                debug io << std::format("{} {} {} {}", x, y, val1, val0) << endl;
-            }
-        }
-
-        pt0 = 0;
-        auto ans = 0;
-        for (auto i: range(rg[1].size())) {
-            while (rg[0][pt0].y <= rg[1][i].x) {
-                pt0++;
-            }
-            if (rg[0][pt0].x >= rg[1][i].y)  continue;
-            for (auto k = pt0; k < (int)rg[0].size() and rg[0][k].x < rg[1][i].y; k++) {
-                auto max = std::min(rg[0][k].y, rg[1][i].y) - std::max(rg[1][i].x, rg[0][k].x);
-                debug io << std::format("rg[{}][{}]({} {} {} {}) with rg[{}][{}]({} {} {} {})", 0, k, rg[0][k].x, rg[0][k].y, rg[0][k].val1, rg[0][k].val0, 1, i, rg[1][i].x, rg[1][i].y, rg[1][i].val1, rg[1][i].val0) << endl;
-                if (rg[1][i].val1 > rg[0][k].val1)  ans += std::min(max, rg[0][k].val1), rg[1][i].val1 -= std::min(max, rg[0][k].val1), rg[0][k].val1 -= std::min(max, rg[0][k].val1), max -= std::min(max, rg[0][k].val1);
-                else  ans += std::min(max, rg[1][i].val1), rg[0][k].val1 -= std::min(max, rg[1][i].val1), rg[1][i].val1 -= std::min(max, rg[1][i].val1), max -= std::min(max, rg[1][i].val1);
-                if (rg[1][i].val0 > rg[0][k].val0)  ans += std::min(max, rg[0][k].val0), rg[1][i].val0 -= std::min(max, rg[0][k].val0), rg[0][k].val0 -= std::min(max, rg[0][k].val0);
-                else  ans += std::min(max, rg[1][i].val0), rg[0][k].val0 -= std::min(max, rg[1][i].val0), rg[1][i].val0 -= std::min(max, rg[1][i].val0);
-
-                // if (/*rg[0][k].x >= rg[1][i].x and */rg[0][k].y <= rg[1][i].y) {
-                //     if (rg[0][k].val0)  rg[1][i].val1 -= rg[0][k].val0, rg[0][k].val0 = 0/*, chkMax(rg[1][i].val1, 0)*/;
-                //     if (rg[0][k].val1)  rg[1][i].val0 -= rg[0][k].val1, rg[0][k].val1 = 0/*, chkMax(rg[1][i].val0, 0)*/;
-                //     if (not (rg[1][i].val0 >= 0 and rg[1][i].val1 >= 0)) {
-                //         rg[0][k].val0 -= rg[1][i].val1, rg[0][k].val1 -= rg[1][i].val0;
-                //         chkMax(rg[1][i].val1, 0), chkMax(rg[1][i].val0, 0);
-                //     }
-                // }
-            }
-            debug io << ans << endl;
-        }
-
-        io << ans-1 << endl;
-    }
+void meg(Tree &ans,Tree l,Tree r){
+	ans.sum=l.sum+r.sum;
+	ans.lmax=max(l.lmax,l.sum+r.lmax);
+	ans.rmax=max(r.rmax,r.sum+l.rmax);
+	ans.smax=max({l.smax,r.smax,l.rmax+r.lmax});
 }
 
-int main(int argc, char const *argv[]) {
-    initDebug;
-    int T;  io >> T;
-    while (T --> 0)  Solution_9469401034244231::solve();
-    return 0;
+void pushup(int i){
+	meg(tr[i],tr[ls],tr[rs]);
+}
+
+void build(int i,int l,int r){
+	tr[i].l=l;
+	tr[i].r=r;
+	if (l==r){
+		tr[i].sum=tr[i].lmax=tr[i].rmax=tr[i].smax=a[l];
+		return;
+	}
+	int mid=(l+r)>>1;
+	build(ls,l,mid);
+	build(rs,mid+1,r);
+	pushup(i);
+}
+
+Tree query(int i,int l,int r){
+	if (tr[i].l>=l and tr[i].r<=r) return tr[i];
+	Tree ans;
+	if (tr[ls].r>=l) ans=query(ls,l,r);
+	if (tr[rs].l<=r) meg(ans,ans,query(rs,l,r));
+	return ans;
+}
+
+int main() {
+	ios::sync_with_stdio(false);
+	cin.tie(0);
+	cout.tie(0);
+	int T;
+	cin>>T;
+	while (T--){
+		cin>>n;
+		for (int i=1;i<=n;i++) cin>>a[i];
+		build(1,1,n);
+		cin>>q;
+		while (q--){
+			int l1,r1,l2,r2;
+			cin>>l1>>r1>>l2>>r2;
+			if (r1<l2){
+				cout<<query(1,l1,r1).rmax+query(1,r1+1,l2-1).sum+query(1,l2,r2).lmax<<"\n";
+			}else{
+				ll ans=query(1,l2,r1).smax;
+				if (l1<l2) ans=max(ans,query(1,l1,l2).rmax+query(1,l2,r2).lmax-a[l2]);
+				if (r2>r1) ans=max(ans,query(1,l1,r1).rmax+query(1,r1,r2).lmax-a[r1]);
+				cout<<ans<<"\n";
+			}
+		}
+	}
+	return 0;
 }
