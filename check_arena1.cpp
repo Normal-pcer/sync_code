@@ -1,77 +1,54 @@
 #include<bits/stdc++.h>
 using namespace std;
 typedef long long ll;
-
-#define ls (i<<1)
-#define rs (i<<1|1) 
-
-struct Tree{
-	int l,r;
-	ll sum,lmax,rmax,smax;
-	Tree(){
-		l=r=sum=0;
-		lmax=rmax=smax=-1e18;
-	}
-};
-
-int n,q;
-int a[10001];
-Tree tr[32769];
-
-void meg(Tree &ans,Tree l,Tree r){
-	ans.sum=l.sum+r.sum;
-	ans.lmax=max(l.lmax,l.sum+r.lmax);
-	ans.rmax=max(r.rmax,r.sum+l.rmax);
-	ans.smax=max({l.smax,r.smax,l.rmax+r.lmax});
-}
-
-void pushup(int i){
-	meg(tr[i],tr[ls],tr[rs]);
-}
-
-void build(int i,int l,int r){
-	tr[i].l=l;
-	tr[i].r=r;
-	if (l==r){
-		tr[i].sum=tr[i].lmax=tr[i].rmax=tr[i].smax=a[l];
-		return;
-	}
+#define ls tr[i].lson
+#define rs tr[i].rson
+int n,m;
+int h[100001],cnt;
+struct seg {
+	int siz,lson,rson;
+	ll sum;
+} tr[3200001];
+void update(int &i,int l,int r,int pos,int v) {
+	if (!i) i=++cnt;
+	tr[i].siz+=v,tr[i].sum+=v*pos;
+	if (l==r) return;
 	int mid=(l+r)>>1;
-	build(ls,l,mid);
-	build(rs,mid+1,r);
-	pushup(i);
+	if (pos<=mid) update(ls,l,mid,pos,v);
+	else update(rs,mid+1,r,pos,v);
 }
-
-Tree query(int i,int l,int r){
-	if (tr[i].l>=l and tr[i].r<=r) return tr[i];
-	Tree ans;
-	if (tr[ls].r>=l) ans=query(ls,l,r);
-	if (tr[rs].l<=r) meg(ans,ans,query(rs,l,r));
-	return ans;
+ll siz,sum;
+ll query(int i,int l,int r,ll lim) {
+	if (!i) return l;
+	if (l==r) return siz+=tr[i].siz,sum+=tr[i].sum,l;
+	ll mid=((l+r)>>1)+1;
+	ll res=mid*(tr[ls].siz+siz)-(tr[ls].sum+sum);
+	if (res>=lim) return query(ls,l,mid-1,lim);
+	else return siz+=tr[ls].siz,sum+=tr[ls].sum,query(rs,mid,r,lim);
 }
-
+int rt;
 int main() {
 	ios::sync_with_stdio(false);
 	cin.tie(0);
 	cout.tie(0);
-	int T;
-	cin>>T;
-	while (T--){
-		cin>>n;
-		for (int i=1;i<=n;i++) cin>>a[i];
-		build(1,1,n);
-		cin>>q;
-		while (q--){
-			int l1,r1,l2,r2;
-			cin>>l1>>r1>>l2>>r2;
-			if (r1<l2){
-				cout<<query(1,l1,r1).rmax+query(1,r1+1,l2-1).sum+query(1,l2,r2).lmax<<"\n";
-			}else{
-				ll ans=query(1,l2,r1).smax;
-				if (l1<l2) ans=max(ans,query(1,l1,l2).rmax+query(1,l2,r2).lmax-a[l2]);
-				if (r2>r1) ans=max(ans,query(1,l1,r1).rmax+query(1,r1,r2).lmax-a[r1]);
-				cout<<ans<<"\n";
-			}
+	cin>>n>>m;
+	for (int i=1; i<=n; i++) {
+		cin>>h[i];
+		update(rt,0,1e9,h[i],1);
+	}
+	while (m--) {
+		ll op,l,r;
+		cin>>op>>l;
+		if (op==1) {
+			cin>>r;
+			update(rt,0,1e9,h[l],-1);
+			update(rt,0,1e9,r,1);
+			h[l]=r;
+		} else {
+			siz=sum=0;
+			int height=query(rt,0,1e9,l);
+			l-=siz*height-sum;
+			cout<<fixed<<setprecision(5)<<height+1.0*l/siz<<"\n";
 		}
 	}
 	return 0;
