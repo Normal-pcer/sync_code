@@ -1,23 +1,18 @@
-#include <iostream>
+/**
+ * 
+ */
 
-struct A {
-  A() { std::cout << "A"; }
-};
-struct B {
-  B() { std::cout << "B"; }
-};
+#include "./lib"
 
-class C {
-public:
-    C(int _a, int _b) : a(_b), c(_a) {
+using namespace lib;
 
+namespace Solution_1685125913077648 {
+    void solve() {
     }
+}
 
-private:
-    int a, b, c;
-};
-
-int main()
-{
-    C(1, 2);
+int main(int argc, char const *argv[]) {
+    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
+    Solution_1685125913077648::solve();
+    return 0;
 }

@@ -2,160 +2,11 @@
  * @link https://www.luogu.com.cn/problem/P2482
  */
 
-#include <bits/stdc++.h>
-#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
-#define debug if(DEBUG_MODE)
-#define log(f, a...) debug printf(f, ##a);
-#define upto(i,n) for(int i=1;i<=(n);i++)
-#define from(i,b,e) for(int i=(b);i<=(e);i++)
-#define rev(i,e,b) for(int i=(e);i>=(b);i--)
+#include "./lib"
 
-#define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
-#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
-#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
-#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
-#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
-#define ensure(v, con, otw) (((v) con)? (v): (otw))
-#define never if constexpr(0)
-#define always if constexpr(1)
-#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
-#define Infinity 2147483647
-#define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
-bool DEBUG_MODE=false;
-typedef long long ll; typedef unsigned long long ull;
-inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
-#define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
-#define __macro_arg_counter(_1,_2,_3,_4,_5, N, ...) N
-#define macro_arg_counter(...)  __macro_arg_counter(__VA_ARGS__,5,4,3,2,1,0)
-#define __macro_choose_helper(M,count)  M##count
-#define macro_choose_helper(M,count)   __macro_choose_helper(M,count)
-#define __lambda_1(expr) [&](){return expr;}
-#define __lambda_2(a, expr) [&](auto a){return expr;}
-#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
-#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
-#define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
-#define lam lambda
-namespace lib{}
-#include <bits/stdc++.h>
-#define USE_FREAD
-// #undef USE_FREAD
-// 取消注释上一行会使用 getchar() 替代 fread，可以不使用 EOF 结束读入，但是降低性能 
-namespace lib{
-#ifndef LIB_STRING
-    using string=std::string;
-#endif
-#ifdef USE_FREAD
-    template <const long long MAXSIZE, const long long MAX_ITEM_SZ=500>
-#endif
-    struct IO {
-#ifdef USE_FREAD
-        char buf[MAXSIZE],*p1,*p2;
-        char pbuf[MAXSIZE],*pp;
-        IO():p1(buf),p2(buf),pp(pbuf) {}
-        ~IO() {  fwrite(pbuf,1,pp-pbuf,stdout);  }
-        inline char gc() {
-            if (p1==p2) p2=(p1=buf)+fread(buf,1,MAXSIZE,stdin);
-            return p1==p2?' ':*p1++;
-        }
-        inline void sync() { fwrite(pbuf,1,MAXSIZE,stdout); pp=pbuf; }
-#endif
-#ifndef USE_FREAD
-        inline void sync() {}
-        inline char gc() {  return getchar();  }
-#endif
-        char floatFormat[10]="%.6f", doubleFormat[10]="%.6lf";
-        inline bool blank(char ch) { return ch==' ' or ch=='\n' or ch=='\r' or ch=='\t'; }
-        inline bool isd(char x) {return (x>='0' and x<='9');}
-        inline IO& setprecision(int d) {
-            sprintf(floatFormat, "%%.%df", d); sprintf(doubleFormat, "%%.%dlf", d);
-            return *this;
-        }
-        string input(int reserve=0) {
-            char c = gc(); string res=""; res.reserve(reserve);
-            while((c&&!blank(c)) || c==' ') {  res.push_back(c); c = gc(); }
-            return res;
-        }
-        template <class T>
-        inline void read(T &x) {
-            double tmp=1; bool sign=0; x=0; char ch=gc();
-            for (; not isd(ch); ch=gc()) if (ch=='-') sign=1;
-            for (; isd(ch); ch=gc()) x=x*10+(ch^48);
-            if (ch=='.') for (ch=gc(); isd(ch); ch=gc()) tmp*=.1f,x+=tmp*(ch^48);
-            if (sign) x=-x;
-        }
-        inline void read(char *s) {
-            char ch=gc();
-            for (; blank(ch); ch=gc());
-            for (; not blank(ch); ch=gc()) *s++=ch;
-            *s=0;
-        }
-        inline void readln(char *s) {
-            char c = gc(); while((c&&!blank(c)) || c==' ') {  *(s++)=c; c = gc();  }
-        }
-        inline void readln(string &res, int reserve=0) {
-            char c = gc(); res.reserve(reserve);
-            while((c&&!blank(c)) || c==' ') {  res.push_back(c); c = gc(); }
-        }
-        inline void read(char &c) {  for (c=gc(); blank(c); c=gc());  }
-        inline void read(string &s){
-            string().swap(s); char ch=gc();
-            for (; blank(ch); ch=gc());
-            for (; not blank(ch); ch=gc()) s.push_back(ch);
-        }
-        template <class T,class... Types> inline void read(T &x,Types &...args){  read(x); read(args...);  }
-        template <class T> inline void scan(const T &x) { read(*x); }
-        template <class T,class ...Types> inline void scan(const T &x,const Types &...args) {  read(*x); scan(args...);  }
-        inline void push(const char &c) {
-#ifdef USE_FREAD
-            if (pp-pbuf==MAXSIZE) sync();
-            *pp++=c;
-#endif
-#ifndef USE_FREAD
-            putchar(c);
-#endif
-        }
-        inline void write(const double x) {
-#ifdef USE_FREAD
-            if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
-            pp += sprintf(pp, doubleFormat, x);
-#endif
-#ifndef USE_FREAD
-            printf(doubleFormat, x);
-#endif
-        }
-        inline void write(const float x) {
-#ifdef USE_FREAD
-            if (pp-pbuf>=MAXSIZE-MAX_ITEM_SZ) sync();
-#endif
-#ifndef USE_FREAD
-            printf(floatFormat, x);
-#endif
-        }
-        inline void write(const char c) {  push(c);  }
-        inline void write(const string &s){  for (auto i:s)  push(i);  }
-        inline void write(const char *s){  for (; *s; ++s) push(*s);  }
-        template <class T, class = typename std::enable_if_t<std::is_integral_v<T>>>
-        inline void write(T x) {
-            if (x<0) x=-x,push('-');
-            static char sta[40]; int top=0;
-            do {  sta[top++]=x%10^48,x/=10;  } while (x);
-            while (top) push(sta[--top]);
-        }
-        template <class T,class... Types>  inline void write(const T &x,const Types &...args){ write(x); write(' '); write(args...); }
-        template <class... Types> inline void writeln(const Types &...args){  write(args...); write('\n');  }
-        template<class T=int> inline T get() {  T x; read(x); return x;  }
-        // 流式输入输出
-        template <class T> inline IO& operator>>(T&x) {  read(x); return *this; }
-        template <class T> inline IO& operator<<(const T&x) {  write(x); return *this; }
-    };
-    IO
-#ifdef USE_FREAD
-    <1048576>
-#endif
-    io;
-    const char endl[] = "\n";
+#include "./libs/io.hpp"
 
-}
+#define log(...)
 #define rg std::ranges
 
 using namespace lib;
@@ -223,6 +74,7 @@ namespace Solution {
         Player* owner;
         int id;
         char label;
+        bool used = false;
 
         Card(Player* owner, int id, char label): 
             owner(owner), id(id), label(label) {}
@@ -237,7 +89,7 @@ namespace Solution {
         bool apply();
         void abandon();
 
-        Card copy(Player* new_owner) const { return Card(new_owner, label); }
+        Card* copy(Player* new_owner = nullptr) const { return new Card(new_owner, label); }
     };
 
     
@@ -286,7 +138,7 @@ namespace Solution {
         Character character;
         Character impression = _Undefined;
         int strength = MAX_STRENGTH;
-        std::deque<Card> cards;
+        std::vector<Card*> cards;
         RollingIndex<decltype(players), players> position = 0;
         bool withWeapon = false;
         bool dead = false;
@@ -299,6 +151,12 @@ namespace Solution {
             for (const auto ch: Character_all) {
                 if (ch == typeChar)  character = ch;
             }
+        }
+
+        Card* findCard(const char label) const { 
+            auto ptr = rg::find_if(cards, lam(ptr, ptr->label==label)); 
+            if (ptr == cards.end())  return nullptr;
+            return *ptr;
         }
 
         auto getCard(const Card& templ) {
@@ -314,13 +172,12 @@ namespace Solution {
                 return;
             }
             // 弃置一张杀
-            auto toBeAbandoned = rg::find(cards, Label::K_Killing);
-            if (toBeAbandoned == cards.end()) {  // 没有杀可以弃置
-                damaged({enemy, 1, DuelingFailed});
+            auto toBeAbandoned = findCard(Label::K_Killing);
+            if (not toBeAbandoned) {  // 没有杀可以弃置
+                damaged({enemy, 1, DuelingFailed});  // 决斗失败
             } else {
-                cards.erase(toBeAbandoned);
-                // log("size %d\n", (int)cards.size())
-                enemy.inDueling(*this);
+                toBeAbandoned->abandon();  // 弃置
+                enemy.inDueling(*this);  // 轮到对面
             }
         }
 
@@ -331,18 +188,18 @@ namespace Solution {
         void damaged(const Damage& obj) {
             assert(not dead);
             log("Damaged P%d<-%d. Strength %d -= %d.\n", index(), obj.source.index(), strength, obj.amount)
-            // 尝试避免伤害，否则正常造成伤害
+            // 尝试减免伤害，否则正常造成伤害
             if (obj.type == Killing) {
-                auto dodge = rg::find(cards, Label::D_Dodge);  // 尝试使用“闪”
-                if (dodge != cards.end())  dodge->abandon();
+                Card *dodge = findCard(Label::D_Dodge);  // 尝试使用“闪”
+                if (dodge)  dodge->abandon();
                 else  strength -= obj.amount;  // 无法躲避伤害
             } else if (obj.type == Invading) {  // 南猪入侵
-                auto killing = rg::find(cards, Label::K_Killing);  // 弃置杀
-                if (killing != cards.end())  killing->abandon();
+                auto killing = findCard(Label::K_Killing);  // 弃置杀
+                if (killing)  killing->abandon();
                 else  strength -= obj.amount;  // 无法躲避伤害
             } else if (obj.type == Shooting) {  // 万箭齐发
-                auto dodging = rg::find(cards, Label::D_Dodge);  // 弃置闪
-                if (dodging != cards.end())  dodging->abandon();
+                auto dodging = findCard(Label::D_Dodge);  // 弃置闪
+                if (dodging)  dodging->abandon();
                 else  strength -= obj.amount;  // 无法躲避伤害
             } else {
                 strength -= obj.amount;  // 无法躲避伤害
@@ -350,8 +207,8 @@ namespace Solution {
 
             // 没有血了，可以被动地吃桃救一下
             while (strength <= 0) {
-                auto peach = rg::find(cards, Label::P_Peach);
-                if (peach == cards.end())  break;  // 桃也没了
+                auto peach = findCard(Label::P_Peach);
+                if (not peach)  break;  // 桃也没了
                 else  peach->apply();
             }
 
@@ -360,9 +217,10 @@ namespace Solution {
                 dead = true;
             }
 
-            // 判定“类反猪”
-            if (character == M_Master) { 
-                if (dead)  winner = F_Thief;
+            if (character == M_Master) {
+                if (dead)  winner = F_Thief;  // 主猪死亡，反方胜利
+
+                // 判定“类反猪”
                 if (obj.source.impression == _Undefined and obj.type > DuelingFailed)  //* 决斗失败不算
                     obj.source.impression = _Questionable;
             }
@@ -439,19 +297,22 @@ namespace Solution {
             drawCards();
 
             // 如果使用了武器猪哥连弩，没有杀的次数限制
-            int usedKillingCard = withWeapon? -Infinity: 0;
+            int usedKillingCard = 0;
             // 每次打完一张牌，都从头开始扫，判断最左侧的可用牌
             // * 注意这里不可以一路扫下去
             auto i = 0;
-            while (i < (int)cards.size()) {
+            bool executed = false;  // 只要这一轮执行了操作，就必须重扫一遍
+            while (i < (int)cards.size() or executed) {
+                executed = false;
                 for (i=0; i<(int)cards.size(); i++) {
-                    auto& card = cards[i];
+                    auto& card = *cards[i]; 
                     bool isKillingCard = (card.label == Label::K_Killing);
-                    if (isKillingCard and usedKillingCard >= 1) {
+                    if (isKillingCard and usedKillingCard >= 1 and not withWeapon) {
                         continue;  // 不能再次使用杀
                     }
                     if (card.apply()) {
-                        if (isKillingCard)  usedKillingCard++;
+                        if (isKillingCard)  usedKillingCard++; 
+                        executed = true;
                         break;  // 跳到 while 循环里重新开始
                     }
                 }
@@ -459,23 +320,30 @@ namespace Solution {
                 if (winner != _Undefined)  return false;  
                 if (dead)  return true;  // 如果在回合中途被打死，强制结束回合
                 // 如果循环正常结束，i>=(int)cards.size()，结束 while 循环
-
                 debug {
-                    from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
                     for (auto &pl: players) {
                         if (pl->dead) {
-                            log("DEAD");
+                            printf("DEAD\n");
                         } else {
-                            for (auto &cd: pl->cards)  log("%c#%d ", cd.label, cd.id);
-                            log("\n");
+                            for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
+                            printf("\n");
                         }
                     }
-                    log("\n\n")
+                }
+            }
+            debug {
+                log("=========\n")
+                for (auto &pl: players) {
+                    if (pl->dead) {
+                        printf("DEAD\n");
+                    } else {
+                        for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
+                        printf("\n");
+                    }
                 }
             }
             return true;
         }
-
     };
 
     /**
@@ -509,45 +377,50 @@ namespace Solution {
             friendly = !tag; // 如果上一次是在献殷勤，这次就是在表敌意；反之亦然。
         }
         log("friendly = %d\n", friendly);
+
         // 接下来，给定所有人使用无懈可击的机会
         auto p = pos;
         do {
             log("Checking p=%d; ", p.index);
             auto& pl = *players.at(p);
-            auto cardIter = rg::find(pl.cards, Label::J_Unbreakable);
-            auto cardCopy = cardIter->copy(nullptr);
-            debug {
-                for(auto &i: pl.cards) printf("%c#%d ", i.label, i.id);
-                printf("\n");
-            }
-            if (cardIter == pl.cards.end())  goto egg;  // 没有无懈可击，不可使用
+            Card* cardPtr = pl.findCard(Label::J_Unbreakable);
+            if (not cardPtr)  goto egg;  // 没有无懈可击，不可使用
+            if (cardPtr->used)  goto egg;
+
+            // 删除
+            cardPtr->used = true;
+            
             if (friendly) {
                 auto character = original.team();
                 if (character == pl.team()) {  // 相同阵营，向对方献殷勤
-                    cardIter->abandon();  // 无懈可击
+                    cardPtr->abandon();  // 无懈可击
                     pl.showCharacter();
                     // 如果这次无懈可击没有被无效化，返回 true
-                    bool res = not tryExecutingUnbreakable(cardCopy, original, p, friendly, depth+1);  
+                    bool res = not tryExecutingUnbreakable(*cardPtr, original, p, friendly, depth+1);  
                     if (res == true)  log("This is unbreakable. \n")
                     return res;
                 }
             } else {  // 通过无懈表敌意
                 auto character = !original.team();
                 if (character == pl.team()) {  // 阵营正确
-                    cardIter->abandon();  // 无懈可击
+                    cardPtr->abandon();  // 无懈可击
                     pl.showCharacter();
                     // 如果这次无懈可击没有被无效化，返回 true
-                    bool res = not tryExecutingUnbreakable(cardCopy, original, p, friendly, depth+1);  
+                    bool res = not tryExecutingUnbreakable(*cardPtr, original, p, friendly, depth+1);  
                     if (res == true)  { log("This is unbreakable. -> 1\n") }
                     else  { log("Done. This is NOT unbreakable. -> 0 \n") }
                     return res;
                 }
             }
+
+            // 重新加入这张牌
+            cardPtr->used = false;
+
         egg:    // while 循环直接 continue 会炸，故致敬传奇 goto egg
             ++p;
         } while (p != pos);
-        log("Nothing. -> 0 \n")
-        return false;  // 没有人选择使用无懈可击
+        // 没有人选择使用无懈可击
+        return false;  
     }
 
     template <class List_t>
@@ -570,21 +443,32 @@ namespace Solution {
     bool Card::apply() {
         log("\nOwner %lld\n", rg::find_if(players, lam(pt, pt==owner)) - players.begin());
         log("Apply label: %c #%d?\n", label, id)
+
         bool success = cardActions[label](*this);
         if (not success)  return false;
         log("Apply label: %c #%d - Success\n", label, id)
-        from(i, 0, (int)players.size()-1)  log("P%d: %dHP %cCH %cIMP\n",i,players[i]->strength, players[i]->character, (char)players[i]->impression);
         abandon();
+        debug {
+                    for (auto &pl: players) {
+                        if (pl->dead) {
+                            printf("DEAD\n");
+                        } else {
+                            for (auto &cd: pl->cards)  printf("%c#%d ", cd->label, cd->id);
+                            printf("\n");
+                        }
+                    }
+                }
         return true;
     }
 
     // 弃置一张卡牌
     void Card::abandon() {
-        auto ptr = std::find(owner->cards.begin(), owner->cards.end(), *this);
         log("Abandon Card %c #%d\n", label, id);
-        if (ptr != owner->cards.end()) {
-            owner->cards.erase(ptr);
+        auto ptr = std::find(owner->cards.begin(), owner->cards.end(), this);  // 玩家手牌
+        if (ptr != owner->cards.end()) {  // 如果存在指向这张牌的指针
+            owner->cards.erase(ptr);  // 删除指向自己的指针
         }
+        // delete this;
     }
 
     // 测试
@@ -715,7 +599,7 @@ namespace Solution {
         initCardTemplates();
 
         io >> N_PlayerCount >> M_CardCount;
-        from(_, 1, N_PlayerCount) {
+        for (auto _ = 1; _ <= N_PlayerCount; _++) {
             char typeChar, ignore;
             io >> typeChar >> ignore;
             players.push_back(new Player(typeChar));
@@ -723,11 +607,11 @@ namespace Solution {
             pl.position = players.size()-1;
             if (pl.character == Character::M_Master)  master = &pl;
             else if (pl.character == Character::F_Thief)  thiefCount++;
-            from(i, 0, 3) {
+            for (auto i = 0; i <= 3; i++) {
                 pl.getCard(Card(io.get<char>()));
             }
         }
-        from(_, 1, M_CardCount)  cardQueue.push(Card(nullptr, io.get<char>()));
+        for (auto _ = 1; _ <= M_CardCount; _++)  cardQueue.push(Card(nullptr, io.get<char>()));
     }
 
     /**
@@ -754,7 +638,7 @@ namespace Solution {
             if (pl->dead) {
                 io.writeln("DEAD");
             } else {
-                for (auto &cd: pl->cards)  io << cd.label << ' ';
+                for (auto &cd: pl->cards)  io << cd->label << ' ';
                 io << endl;
             }
         }
@@ -762,15 +646,15 @@ namespace Solution {
 }
 
 int main(int argc, char const *argv[]) {
-
-    initDebug;
+    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
     Solution::solve();
 
     return 0;
 }
 /*
-2 10
-MP P K K K
-FP K P P P
-K K K K K K K K K K K 
+3 8
+MP J K D F 
+ZP Z P F D 
+FP N F W J 
+Z D P W F D J W
 */
