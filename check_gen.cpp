@@ -14,26 +14,25 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::fstream &out) {
-        // const ull _N = 3, _M = 3, _X = 10, _V = 1e15;
-        const ull _N = 1e5, _M = 1e5, _X = 1e9, _V = 1e15;
-        int N = _N, M = _M;
-        std::vector<int> init(N);
-        std::transform(init.begin(), init.end(), init.begin(), lam(,randint(1, _X)));
-
-        out << N << ' ' << M << endl;
-        for (auto i: init)  out << i << ' ';
-        out << endl;
-        for (auto i = 0; i < M; ) {
-            auto op = randint(1, 2);
-            out << op << ' ';
-            if (op == 1) {
-                int p = randint(1, N), x = randint(1, _X);
-                out << p << ' ' << x << endl;
-            } else {
-                ull v = randll(1, _V);
-                out << v << endl;
-            }
-            i++;
+        const int _N = 2e5, _Q = 2e5, _V = 1e9;
+        int N = _N, Q = _Q;
+        std::vector<std::pair<int, int>> segs;
+        while ((int)segs.size() != (int)N) {
+            auto x = randint(1, _V), y = randint(1, _V);
+            if (x > y)  std::swap(x, y);
+            if (x == y)  continue;
+            segs.emplace_back(x, y);
         }
+        std::vector<std::pair<int, int>> queries;
+        while ((int)queries.size() != Q) {
+            auto x = randint(1, _V), y = randint(1, _V);
+            if (x > y)  std::swap(x, y);
+            if (x == y)  continue;
+            queries.emplace_back(x, y);
+        }
+        out << N << endl;
+        for (auto [x, y]: segs)  out << x << ' ' << y << endl;
+        out << Q << endl;
+        for (auto [x, y]: queries)  out << x << ' ' << y << endl;
     }
 }

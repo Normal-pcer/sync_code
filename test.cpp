@@ -1,14 +1,23 @@
-#include <bits/stdc++.h>
+#include <iostream>
 
-int main() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-    while (true) {
-        // std::cout << '\a';
-        putchar('\a');
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(1200ms);
+struct A {
+  A() { std::cout << "A"; }
+};
+struct B {
+  B() { std::cout << "B"; }
+};
+
+class C {
+public:
+    C(int _a, int _b) : a(_b), c(_a) {
+
     }
 
-    return 0;
+private:
+    int a, b, c;
+};
+
+int main()
+{
+    C(1, 2);
 }
