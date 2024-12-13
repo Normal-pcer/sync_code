@@ -31,7 +31,7 @@ enum character {
 const int MaxHealth = 4;
 int Begin = 1, End, cnt_of_FP, n, m, now_i, now_ii;
 string winner;
-std::deque<char> heap;  // *改用 deque 维护牌堆
+std::deque<char> heap;  // * 改用 deque 维护牌堆
 
 // * 添加
 // 滚动的下标，从 size()-1 自增自动跳到 0
@@ -94,7 +94,7 @@ public:
 class Player {
 public:
     character ch = MP;
-    vector<Card> cards;
+    std::vector<Card> cards;
     int health = 4;                              // 生命值
     RollingIndex<std::vector<Player>> index;   // 当前位置
     int ans_index = 0;                          // 初始位置
@@ -135,7 +135,7 @@ public:
         return stream;
     }
 };
-vector<Player> players;
+vector<Player> players;  // * 改为从 0 开始编号
 Player &getMainPlayer() {
     return players.at(0);
 }
@@ -306,12 +306,10 @@ void Player::kill(Player& enemy) {
         if (enemy.jumped==2)  jumped = 1;
     }
 
-    // ? 已知问题——没有判断使用无懈可击挡下伤害
-
     checkDead(players[index], enemy);
 }
 
-// * 写得毫无道理。
+// ? 写得毫无道理。
 bool isSkillValid(Player& pos, Player& target, bool check) {
     auto idx = pos.index;
     int loop = 0;
@@ -425,7 +423,7 @@ void Player::fight(Player& enemy) {
             }
         }
     }
-    //	else cout<<"无懈可击\n";
+    //	else std::cout<<"无懈可击\n";
 }
 
 void Player::arrows() {
@@ -517,7 +515,7 @@ void play(Player& ac) {
                 }
             } else if (ac.canUseKill) {  // 没用过
                 if (ac.findEnemy('K')) {
-                    //						cout<<ac.index<<" kill "<< ac.findEnemy('K')<<endl;
+                    //						std::cout<<ac.index<<" kill "<< ac.findEnemy('K')<<endl;
                     ac.kill(*ac.findEnemy('K'));
                     ac.canUseKill = false;
                     i = -1;
@@ -556,7 +554,7 @@ int main(int argc, char const *argv[]) {
     for (int i = 0; i < n; i++) {
         Player pig(i);
         pig.ans_index = i;
-        string a0;
+        std::string a0;
         std::cin >> a0;
         switch (a0[0]) {
         case 'M':
@@ -573,14 +571,14 @@ int main(int argc, char const *argv[]) {
 
         for (int j = 0; j < 4; j++) {
             char c0;
-            cin >> c0;
+            std::cin >> c0;
             pig.cards.push_back({c0});
         }
         players.push_back(pig);
     }
     for (int i = 0; i < m; i++) {
         char c;
-        cin>>c;
+        std::cin>>c;
         heap.push_back(c);
     }
     
