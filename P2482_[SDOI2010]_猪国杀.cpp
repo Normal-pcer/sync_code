@@ -670,19 +670,6 @@ namespace Solution {
         auto user = card.owner->character;
         auto target = card.owner->position;
 #define cur players[target]
-        if (user == M_Master) {  // 主猪打反猪和类反猪
-            for (++target; cur->impression!=F_Thief and cur->impression!=_Questionable
-                and target!=card.owner->position; ++target)
-                    log("duel.cpp - Checking %d with %d\n", target.index, card.owner->position.index);
-                
-        } else if (user == Z_Minister) {  // 忠猪打反猪
-            for (++target; cur->impression!=F_Thief and target!=card.owner->position; ++target)
-                    log("duel.cpp - Checking %d with %d\n", target.index, card.owner->position.index);
-        } else {  // 反猪优先打主猪
-            for (++target; cur->character!=M_Master and target!=card.owner->position; ++target)
-                    log("duel.cpp - Checking %d with %d\n", target.index, card.owner->position.index);
-        }
-
         log("duel.cpp - %d %d\n", target.index, card.owner->position.index);
         if (target == card.owner->position)  return false;
         cur->damaged({*card.owner, 0, Dueling});  // 触发决斗，用于判定跳反

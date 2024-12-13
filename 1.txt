@@ -1,4 +1,4 @@
-s="""                                                                       
+                                                                       
                                      .s9X&X3r         .,:.             
             .s5S1i,                 S#@ASh5X#B1 ,s3XHBBBB#Hr           
            S#@HHBM#B&3s,  ,;irs1h11H@H;     .X@M##A91i,..iB@r          
@@ -24,22 +24,4 @@ s="""
        s1,      :5XB#MH&951i:,.             .,;rh9&M@#AS:              
                     ,ih9XHB####MBBHHHHHHHBBM###MB&85i.                 
                              ,:irs1hhhh11sri:.                         
-                                                                       67"""
-prev, prev_i = s[0], 0
-begin = 'X'
-for i in range(1, len(s)):
-    if prev != s[i]:
-        x=(i-prev_i)
-        t = ""
-        while x:
-            y = x % 15
-            x = x // 15
-            t = t + chr(ord('Y')+y)
-        if prev == '\n':
-            prev = '!'
-        if i-prev_i == 1:
-            print(prev, end='')
-        else:
-            print(prev + t[::-1], end='')
-        ### &->X, !->\n
-        prev, prev_i = s[i], i
+                                                                       

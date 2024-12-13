@@ -5,7 +5,9 @@
 
 #include "./lib"
 
+
 #include "./libs/range.hpp"
+
 
 using namespace lib;
 
@@ -70,7 +72,7 @@ namespace Solution_4833578930085354 {
                 trees.at(j).add(a.at(i), cur);
                 debug  std::cout << std::format("trees.at({}).add({}, {})", j, a.at(i), cur) << std::endl;
             }
-            trees[1].add(i, 1);
+            trees.at(1).add(a.at(i), 1);
         }
 
         auto ans = trees.at(K).sum(0, N+1);
