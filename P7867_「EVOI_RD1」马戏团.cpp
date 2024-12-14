@@ -93,30 +93,20 @@ namespace Solution_7735545344698334 {
             right.at(r).push_back({l, r, val});
         }
 
-        SegTree sgt(N);
-        auto ans = 0LL;
+        SegTree sgt(N+1);
+        // auto ans = 0LL;
+        std::vector<ll> F(N+1);
         for (auto i: range(1, N+1)) {
             for (auto [l, r, val]: right.at(i)) {
-                never  std::cout << std::format("sgt.add({}, {}, {})", 0, l+1, +val) << std::endl;
+                assert(r == i);
                 sgt.add(0, l+1, +val);
             }
-            never  std::cout << std::format("sgt.add({}, {}, {})", 0, i, -cost.at(i)) << std::endl;
-            sgt.add(0, i, -cost.at(i));
-            auto cur = std::max(0LL, sgt.max(0, i));
-            never  std::cout << std::format("cur = {}", cur) << std::endl;
-            never  std::cout << std::format("sgt.assign({}, {})", i, +(cur - cost.at(i))) << std::endl;
-            sgt.assign(i, +(cur - cost.at(i)));
-
-            for (auto [l, r, val]: right.at(i)) {
-                if (l == r) {
-                    never  std::cout << std::format("sgt.add({}, {}, {})", i, i+1, val) << std::endl;
-                    sgt.add(i, i+1, +val);
-                }
-            }
-
-            chkMax(ans, sgt.max(0, i+1));
+            sgt.add(0, i+1, -cost.at(i));
+            F.at(i) = std::max(F.at(i-1), sgt.max(0, i+1));
+            debug  std::cout << F.at(i) << std::endl;
+            sgt.assign(i, F.at(i));
         }
-        std::cout << ans << endl;
+        std::cout << F.at(N) << endl;
     }
 }
 

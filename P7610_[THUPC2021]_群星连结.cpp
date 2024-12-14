@@ -29,6 +29,7 @@ typedef long long ll; typedef unsigned long long ull;
 #define lambda(args...) macro_choose_helper(__lambda_, macro_arg_counter(args))(args)
 #define lam lambda
 namespace lib{}
+const char endl = '\n';
 #include "./libs/io.hpp"
 using namespace lib;
 

@@ -2,8 +2,10 @@
  * @link https://www.luogu.com.cn/problem/P4677
  */
 
-#include "lib"
-#include "libs/range.hpp"
+#include "./lib"
+
+#include "./libs/range.hpp"
+
 using namespace lib;
 
 namespace Solution_3277344617769969 {
@@ -13,31 +15,30 @@ namespace Solution_3277344617769969 {
 
         int N, M;  std::cin >> N >> M;
         std::vector<int> pos(N);
-        for (auto &i: pos)  std::cin >> i;
+        for (auto &i: pos | views::drop(1))  std::cin >> i;
 
         std::partial_sum(pos.begin(), pos.end(), pos.begin());
-        std::vector F(N+1, std::vector<int>(M+1));
 
-        std::vector<int> pos_ps(N);
-        std::partial_sum(pos.begin(), pos.end(), pos_ps.begin());
-        std::vector w(N+1, std::vector<int>(N+1));
-
-        for (auto x: range(0, N)) {
-            for (auto y: range(x, N)) {
-                for (auto z: range(x, y)) {
-                    auto cur = pos.at(z) * (z*2 - x + y) - (pos_ps.at(z-1) - pos_ps.at(x-1)) + (pos_ps.at(y-1) - pos_ps.at(z-1));
-                    w.at(x).at(y) = cur;
+        std::vector w(N, std::vector<int>(N+1));
+        for (auto i: range(N)) {
+            for (auto j: range(i+1, N+1)) {
+                auto mid = (i + j) >> 1;
+                for (auto k: range(i, j)) {
+                    w.at(i).at(j) += std::abs(pos.at(k) - pos.at(mid));
                 }
             }
         }
 
+        std::vector F(N+1, std::vector<int>(M+1, inf));
         for (auto i: range(1, N+1)) {
-            for (auto j: range(1, M+1)) {
-                for (auto k: range(0, j)) {
-                    // F.at(i).at(j)
+            F.at(i).at(1) = w.at(0).at(i);
+            for (auto j: range(2, M+1)) {
+                for (auto k: range(1, i)) {
+                    chkMin(F.at(i).at(j), F.at(k).at(j-1) + w.at(k).at(i));
                 }
             }
         }
+        std::cout << F.at(N).at(M) << std::endl;
     }
 }
 

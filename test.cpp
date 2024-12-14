@@ -1,1 +1,7 @@
-auto k=R"(x({w,{w6Z3W{u3X5[4Z{u5]8v5t5{xaw3Y3r3Y3{w4!9y3W3W3r3W3W3{t6'8u3W3W3r3W3W3{sY3#W$W!5Zr3Y3r3Y3{sZ*4[s5t5{sZ$l%Z{u6p6{s8p8{DDD:{3Y3\3W4Y3\3W4Y3\3W4V3{DD9V3{3X3Z3Z4X3Z3Z4X3Z3ZD5{DD8l3N3{3[3\4[3\4[3\3l3N3{DD8l3N3{3W3X3Z3X4W3X3Z3X4W3X3Z3X3l3N3{DD8l>)",i=k;int d=*i-33,t;main(){for(;*i;d=*++i-33)for(t=d%18+1;t--;)__builtin_putchar("*#-. \n"[d/18]);}
+#include <bits/stdc++.h>
+
+int main() {
+    std::cout << typeid(int).name() << std::endl;
+    std::cout << typeid(signed).name() << std::endl;
+    std::cout << typeid(signed int).name() << std::endl;
+}
