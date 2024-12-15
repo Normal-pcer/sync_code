@@ -1,7 +1,7 @@
-#include <bits/stdc++.h>
+#include "lib"
+using namespace lib;
 
 int main() {
-    std::cout << typeid(int).name() << std::endl;
-    std::cout << typeid(signed).name() << std::endl;
-    std::cout << typeid(signed int).name() << std::endl;
+    std::vector vec{0, 1, 2, 3};
+    ranges::transform(vec, vec.begin(), lam(x, x+1));
 }
