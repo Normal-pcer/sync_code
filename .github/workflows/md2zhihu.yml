@@ -14,4 +14,4 @@ jobs:
             _posts/*.md
             _posts/*.markdown
 
-        asset_repo: https://github.com/normal-pcer/sync_code
+        asset_repo:
