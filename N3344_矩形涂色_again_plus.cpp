@@ -138,7 +138,7 @@ namespace Solution_1201453527095275 {
         debug  assert(_force_ans == ans);
         return ans;
     }
-    // x % 2 和 y % 2
+    // x % 2 å’Œ y % 2
     auto mapping(RectCounter::Rect origin, int flag) -> RectCounter::Rect {
         bool x_flag = flag & 1, y_flag = flag >> 1;
         auto [x1, y1, x2, y2] = origin;
