@@ -14,24 +14,21 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::fstream &out) {
-        const int _N = 4, _M = 4, _V = 5;
-        int N = _N, M = _M;
-        std::vector<int> pos(N);
-        std::generate(pos.begin(), pos.end(), lam(randint(1, _V)));
-        std::vector<std::tuple<int, int, int>> segs;
-        std::set<std::pair<int, int>> unique;
-        for (; segs.size() < (size_t)M;) {
-            auto l = randint(1, N), r = randint(1, N), val = randint(1, _V);
-            if (unique.find({l, r}) != unique.end())  continue;
-            if (l >= r)  std::swap(l, r);
-            unique.insert({l, r});
-            segs.push_back({l, r, val});
+        const int _N = 5, _V = 10;
+        int N = _N;
+        std::vector<std::tuple<int, int, int, int>> rect;
+        for (; static_cast<int>(rect.size()) != N; ) {
+            int x1 = randint(1, _V), y1 = randint(1, _V), x2 = randint(1, _V), y2 = randint(1, _V);
+            if (x1 == x2)  continue;
+            if (y1 == y2)  continue;
+            if (x1 > x2)  std::swap(x1, x2);
+            if (y1 > y2)  std::swap(y1, y2);
+            rect.push_back({x1, y1, x2, y2});
         }
-        out << N << ' ' << M << std::endl;
-        for (auto i: pos)  out << i << ' ';
-        out << std::endl;
-        for (auto [l, r, val]: segs) {
-            out << l << ' ' << r << ' ' << val << std::endl;
+
+        out << N << endl;
+        for (auto [a, b, c, d]: rect) {
+            out << a << ' ' << b << ' ' << c << ' ' << d << endl;
         }
     }
 }

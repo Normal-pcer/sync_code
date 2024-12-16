@@ -1,7 +1,5 @@
-#include "lib"
-using namespace lib;
+#include <bits/stdc++.h>
 
 int main() {
-    std::vector vec{0, 1, 2, 3};
-    ranges::transform(vec, vec.begin(), lam(x, x+1));
+    return 0;
 }
