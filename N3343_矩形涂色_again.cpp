@@ -1,5 +1,6 @@
 /**
  * @link https://neooj.com:8082/oldoj/problem.php?id=3343
+ * @link https://www.luogu.com.cn/problem/P5490
  */
 
 #include "./lib"
@@ -30,7 +31,7 @@ namespace Solution_5124327814186457 {
         void build(int begin, int end, int p) { 
             tr[p].begin = begin, tr[p].end = end;
             if (begin + 1 == end)  return;
-            auto mid = std::midpoint(begin, end);
+            auto mid = begin + ((end - begin) >> 1);
             build(begin, mid, ls), build(mid, end, rs);
         }
     public:
@@ -75,7 +76,7 @@ namespace Solution_5124327814186457 {
             values.push_back(c), values.push_back(d);
         }
 
-        ranges::sort(values), values.erase(ranges::unique(values).begin(), values.end());
+        std::sort(values.begin(), values.end()), values.erase(std::unique(values.begin(), values.end()), values.end());
         debug {
             std::cout << "values: " << std::endl;
             for (auto i: values)  std::cout << i << ' ';
@@ -96,7 +97,7 @@ namespace Solution_5124327814186457 {
             queries.push_back({y2, x1, x2, -1});
         }
 
-        ranges::sort(queries, ranges::less{}, lam(x, x.pos));
+        std::sort(queries.begin(), queries.end(), lam(x, y, x.pos < y.pos));
         SegTree sgt(0, values.size());
         auto prev_pos = 0;
         auto ans = 0LL;
@@ -104,8 +105,8 @@ namespace Solution_5124327814186457 {
             auto len = sgt.count();
             auto dy = values.at(pos) - values.at(prev_pos);
             auto cur = (ll)dy * len;
-            debug  std::cout << std::format("{{{}, {}, {}, {}}}: ", pos, begin, end, val) << std::endl; 
-            debug  std::cout << std::format("{} += {} * {}", ans, dy, len) << std::endl;
+            // debug  std::cout << std::format("{{{}, {}, {}, {}}}: ", pos, begin, end, val) << std::endl; 
+            // debug  std::cout << std::format("{} += {} * {}", ans, dy, len) << std::endl;
             ans += cur, prev_pos = pos;
 
             sgt.add(begin, end, val);

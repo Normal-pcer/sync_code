@@ -1,5 +1,6 @@
 /**
  * @link https://neooj.com:8082/oldoj/problem.php?id=3343
+ * @link https://www.luogu.com.cn/problem/P5490
  */
 
 #include "./lib"

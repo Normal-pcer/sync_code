@@ -177,10 +177,10 @@ xxx 依次指代 `all`、`any` 或 `none`。
 
 `xxx_of(begin, end, p)` / `ranges::xxx_of(range, p)`：区间内是否全部/包含/不含符合谓词 p 的元素，复杂度 $O(N)$。
 
-### ranges::contains，ranges::contains_range（C++23）
+### ranges::contains，ranges::contains_subrange（C++23）
 `ranges::contains(range, x)`：返回布尔类型，区间内是否包含元素 x，复杂度 $O(N)$。
 
-`ranges::contains_range(range1, range2)`：返回布尔类型，区间 range2 是否为 range1 的子区间，复杂度 $O(N)$。
+`ranges::contains_subrange(range1, range2)`：返回布尔类型，区间 range2 是否为 range1 的子区间，复杂度 $O(N)$。
 
 ### find，find_if，find_if_not
 `find(begin, end, x)` / `ranges::find(range, x)`：查找第一个 x，返回其迭代器。
@@ -293,9 +293,9 @@ xxx 依次指代 `all`、`any` 或 `none`。
 `move_backward(begin, end, begin_out)`：从后往前移动区间。
 
 ## 移除操作
-对于这些操作，常规函数一般返回新的尾迭代器，ranges 算法一般返回 $[new_end, end)$ 的子区间。
+对于这些操作，常规函数一般返回新的尾迭代器，ranges 算法一般返回 $[new\_end, end)$ 的子区间。
 
-值得注意的是，它们不会真的移除容器中的元素，需要手动根据返回值 resize 或者 erase。
+值得注意的是，它们不会真的移除容器中的元素，而是将没有被删除的元素移动到靠前的位置，需要手动根据返回值 resize 或者 erase。
 
 ### remove，remove_if
 `remove(begin, end, x)`：移除所有的 x。
@@ -345,8 +345,6 @@ xxx 依次指代 `all`、`any` 或 `none`。
 `inplace_merge(begin, mid, end)`：保证 $[begin, mid)$ 和 $[mid, end)$ 两个区间有序的情况下合并这两段，时间复杂度 $O(N)$。
 
 可以传入比较函数。
-
-这个函数的空间复杂度也是 $O(N)$ 的。
 
 ## 堆操作
 算法库支持在一个支持随机访问的容器中维护一个大根堆，类似 `priority_queue`。
