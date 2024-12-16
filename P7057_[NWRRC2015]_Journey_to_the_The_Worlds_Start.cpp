@@ -2,7 +2,10 @@
  * @link https://www.luogu.com.cn/problem/P7057
  */
 
-#include "lib"
+#include "./lib"
+
+#include "./libs/binary.hpp"
+
 using namespace lib;
 
 namespace Solution_1133362793174219 {
@@ -41,7 +44,7 @@ namespace Solution_1133362793174219 {
                 chkMin(tr[p].min, val);
                 return;
             }
-            if (tr[rs].begin >= pos)  update(pos, val, rs);
+            if (tr[rs].begin <= pos)  update(pos, val, rs);
             else  update(pos, val, ls);
         }
 #undef ls
@@ -57,8 +60,17 @@ namespace Solution_1133362793174219 {
         std::vector<int> d(N+1);
         for (auto &i: d | views::take(N) | views::drop(2))  std::cin >> i;
 
-        std::vector<int> F(N+1);
-            
+        auto mapping = [&](int r) {
+            std::vector<int> F(N+1);
+            SegTree sgt(0, N+5);
+            for (auto i = 2; i <= N; i++) {
+                F.at(i) = sgt.min(std::max(1, i-r), i) + d.at(i);
+                sgt.update(i, F.at(i));
+            }
+            return F.at(N);
+        };
+        auto ans = *std::min_element(p.begin() + binary::lower_bound_mapping(1, N, T, mapping), p.end());
+        std::cout << ans << endl;
     }
 }
 
