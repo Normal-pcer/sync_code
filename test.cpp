@@ -1,36 +1,28 @@
+// Do not expand includes
 #include <bits/stdc++.h>
 
 int main() {
+    auto count = [&](auto x) {
+        std::set<typename decltype(x)::value_type> set;
+        for (auto i: x) {
+            set.insert(i);
+        }
+        return set.size();
+    };
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr), std::cout.tie(nullptr);
+    int N;  std::cin >> N;
+    std::vector<int> a(N);
+    for (auto &i: a)  std::cin >> i;
 
-    int N, M, K;  std::cin >> N >> M >> K;
-    struct Point {
-        int x, y, cnt;
-
-        auto operator<=> (const Point &) const = default;
-    };
-
-    std::vector<Point> luo;
-    std::vector<int> values;
-    auto get_index = [&](int x) -> int {
-        auto it = std::lower_bound(values.begin(), values.end(), x);
-        return std::distance(values.begin(), it);
-    };
-    for (auto &[x, y, cnt]: luo)  std::cin >> x >> y >> cnt, values.push_back(x), values.push_back(y);
-    std::sort(values.begin(), values.end()), values.erase(std::unique(values.begin(), values.end()), values.end());
-    for (auto &[x, y, cnt]: luo) {
-        x = get_index(x), y = get_index(y);
-    }
-    std::sort(luo.begin(), luo.end());
-    std::vector<int> F(luo.size());
-    for (auto i = 0; i < (int)luo.size(); i++) {
-        for (auto j = 0; j < i; j++) {
-            if (luo.at(j).y <= luo.at(i).y) {
-                F.at(i) = std::max(F.at(i), F.at(j) + luo.at(i).cnt);
-            }
+    auto ans = 0LL;
+    for (auto i = 0; i < N; i++) {
+        for (auto j = i+1; j <= N; j++) {
+            auto cnt = count(std::span{a.begin() + i, a.begin() + j});
+            ans += cnt * cnt;
         }
     }
-    std::cout << F.back() << std::endl;
+
+    std::cout << ans << std::endl;
     return 0;
 }

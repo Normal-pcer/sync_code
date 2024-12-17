@@ -21,7 +21,10 @@ constexpr const bool InterruptOnConflict = true;       // 结果出现冲突时�
 constexpr const bool InterruptOnMainConflict = true;   // 特别地，当 file[0] 结果出现冲突，中断进程
 constexpr const bool ClearEachTime = false;
 
-#include "check_gen.cpp"
+namespace _Generator {
+    #include "check_gen.cpp"
+}
+namespace Generator = _Generator::Generator;
 
 namespace Checker {
     void generate(std::fstream &out) {

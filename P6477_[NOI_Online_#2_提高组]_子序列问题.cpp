@@ -6,14 +6,20 @@
 
 #include "./libs/range.hpp"
 
-using namespace lib;
+#include <bits/stdc++.h>
+#include "./libs/mod.hpp"
 
+using namespace lib;
 namespace Solution_7422207456822145 {
     const constexpr int mod = 1e9+7;
+    template <typename T, int p>
+    auto operator% (const Mod<T, p> &x, int) {
+        return x;
+    }
     class SegTree {
         struct Node {
             int begin, end;
-            ll square_sum = 0, sum = 0, add_tag = 0;
+            Mod<ll, mod> square_sum = 0, sum = 0, add_tag = 0;
         };
         std::vector<Node> tr;
 #define ls (p<<1)
@@ -22,15 +28,15 @@ namespace Solution_7422207456822145 {
             tr[p].sum = (tr[ls].sum + tr[rs].sum) % mod;
             tr[p].square_sum = (tr[ls].square_sum + tr[rs].square_sum) % mod;
         }
-        void addNode(int p, int d) {
+        void addNode(int p, auto d) {
             auto s = p;
             auto len = tr[s].end - tr[s].begin;
-            tr[s].square_sum = (tr[s].square_sum + 2*d*tr[s].sum + len*d*d) % mod;
+            tr[s].square_sum = (tr[s].square_sum + tr[s].sum*2*d + d*d*len) % mod;
             tr[s].sum = (tr[s].sum + d*len) % mod;
             tr[s].add_tag = (tr[s].add_tag + d) % mod;
         }
         void pushDown(int p) {
-            if (auto d = tr[p].add_tag) {
+            if (auto d = tr[p].add_tag; d.data != 0) {
                 for (auto s: {ls, rs}) {
                     addNode(s, d);
                 }
@@ -47,12 +53,12 @@ namespace Solution_7422207456822145 {
         SegTree(int begin, int end): tr((end - begin) << 2) {
             build(begin, end, 1);
         }
-        ll squareSum(int begin, int end, int p = 1) {
+        auto squareSum(int begin, int end, int p = 1) -> Mod<ll, mod> {
             if (tr[p].begin >= begin and tr[p].end <= end) {
                 return tr[p].square_sum;
             }
             pushDown(p);
-            auto res = 0LL;
+            Mod<ll, mod> res = 0LL;
             if (tr[ls].end > begin)  res = (res + squareSum(begin, end, ls)) % mod;
             if (tr[rs].begin < end)  res = (res + squareSum(begin, end, rs)) % mod;
             return res;
@@ -81,20 +87,20 @@ namespace Solution_7422207456822145 {
         
         std::map<int, int> last;
         SegTree sgt(0, N+1);
-        auto ans = 0LL;
+        Mod<ll, mod> ans = 0LL;
         for (auto i: range(1, N+1)) {
             auto prev = last[a.at(i)];
-            debug  std::cout << std::format("add {} {} {}", prev+1, i+1, +1) << std::endl;
+            // debug  std::cout << std::format("add {} {} {}", prev+1, i+1, +1) << std::endl;
             sgt.add(prev+1, i+1, +1);
 
-            debug  std::cout << std::format("sqrSum {} {} -> {}", 1, i+1, sgt.squareSum(1, i+1)) << std::endl;
+            // debug  std::cout << std::format("sqrSum {} {} -> {}", 1, i+1, sgt.squareSum(1, i+1)) << std::endl;
             auto cur = sgt.squareSum(1, i+1);
             ans = (ans + cur) % mod;
-            debug  std::cout << cur << std::endl;
+            // debug  std::cout << cur << std::endl;
 
             last[a.at(i)] = i;
         }
-        std::cout << ans << endl;
+        std::cout << ans.data << endl;
     }
 }
 

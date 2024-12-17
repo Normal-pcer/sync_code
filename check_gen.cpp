@@ -13,23 +13,19 @@ namespace Generator {
     }
     using namespace Random;
 
-    void generate(std::fstream &out) {
-        const int _N = 5, _K = 10, _V = 5;
-        int N = _N, M = _N, K = _K;
-        struct Point {
-            int x, y, cnt;
-        };
+    void generate(std::ostream &out) {
+        const int _N = 100, _V = 1000000000;
+        int N = _N;
 
-        std::vector<Point> luo;
-        std::set<std::pair<int, int>> set;
-        while ((int)luo.size() < K) {
-            auto x = randint(1, N), y = randint(1, M), cnt = randint(1, _V);
-            if (x == N and y == M)  continue;
-            if (set.contains({x, y}))  continue;
-            luo.push_back({x, y, cnt}), set.insert({x, y});
-        }
-        
-        out << N << ' ' << M << ' ' << K << endl;
-        for (auto [x, y, cnt]: luo)  out << x << ' ' << y << ' ' << cnt << endl;
+        std::vector<int> a(N);
+        for (auto &i: a)  i = randint(1, _V);
+        out << N << endl;
+        for (auto i: a)  out << i << ' ';
+        out << endl;
     }
+}
+
+int main() {
+    Generator::generate(std::cout);
+    return 0;
 }

@@ -1,27 +1,46 @@
-#include "./lib"
-
-using namespace lib;
-
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long LL;
+const int INF = 0x3f3f3f3f;
+const LL mod = 1e9 + 7;
+const int N = 1000005;
+LL c1[N], c2[N];
+LL sum(int x) {
+    LL res = 0;
+    for (int i = x; i > 0; i -= i & -i) {
+        res += c1[i] * (x + 1) - c2[i];
+    }
+    return res;
+}
+void add(int x, int d, int n) {
+    for (int i = x; i <= n; i += i & -i) {
+        c1[i] += d;
+        c2[i] += (LL)d * x;
+    }
+}
+int a[N], b[N], d[N], last[N];
 int main() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-    std::vector flat(1000, std::vector<int8_t>(1000));
-    int N;  std::cin >> N;
-    for (auto i = 0; i < N; i++) {
-        int x1, y1, x2, y2;
-        std::cin >> x1 >> y1 >> x2 >> y2;
-        for (auto x = x1; x != x2; x++) {
-            for (auto y = y1; y != y2; y++) {
-                flat.at(x).at(y) = true;
-            }
-        }
+    int n;
+    scanf("%d", &n);
+    for (int i = 1; i <= n; i++) {
+        scanf("%d", &a[i]);
+        b[i - 1] = a[i];
     }
-    auto cnt = 0LL;
-    for (auto const &line: flat) {
-        for (auto item: line) {
-            cnt += !!item;
-        }
+    sort(b, b + n);
+    int m = unique(b, b + n) - b;
+    for (int i = 1; i <= n; i++) {
+        a[i] = lower_bound(b, b + m, a[i]) - b;
+        last[i] = d[a[i]];
+        d[a[i]] = i;
     }
-    std::cout << cnt << std::endl;
+    LL ans = 0, now = 0;
+    for (int i = 1; i <= n; i++) {
+        now += i - last[i] + 2 * (sum(i) - sum(last[i]));
+        now %= mod;
+        ans += now;
+        add(last[i] + 1, 1, n);
+        add(i + 1, -1, n);
+    }
+    printf("%lld\n", ans % mod);
     return 0;
 }
