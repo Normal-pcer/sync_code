@@ -1,28 +1,30 @@
-// Do not expand includes
 #include <bits/stdc++.h>
 
-int main() {
-    auto count = [&](auto x) {
-        std::set<typename decltype(x)::value_type> set;
-        for (auto i: x) {
-            set.insert(i);
+namespace Space {
+    struct Foo {
+        int a, b;
+
+        operator std::string () const {
+            return std::format("Foo({}, {})", a, b);
         }
-        return set.size();
     };
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-    int N;  std::cin >> N;
-    std::vector<int> a(N);
-    for (auto &i: a)  std::cin >> i;
+}
+template <typename _CharT>
+struct std::formatter<Space::Foo, _CharT>: std::formatter<std::string, _CharT> {
+    using base_t = std::formatter<std::string, char>;
 
-    auto ans = 0LL;
-    for (auto i = 0; i < N; i++) {
-        for (auto j = i+1; j <= N; j++) {
-            auto cnt = count(std::span{a.begin() + i, a.begin() + j});
-            ans += cnt * cnt;
-        }
+    auto format(auto const &v, auto &context) const {
+        return base_t::format((std::string)v, context);
     }
+};
+namespace Space {
+    void func() {
+        Space::Foo f{1, 2};
+        std::cout << std::format("It is {}", f) << std::endl;
+    }
+}
 
-    std::cout << ans << std::endl;
+int main() {
+    Space::func();
     return 0;
 }
