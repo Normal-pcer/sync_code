@@ -142,7 +142,6 @@ namespace Solution_5875700393430805 {
     }
 }
 
-
 int main(int argc, char const *argv[]) {
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
     Solution_5875700393430805::solve();
