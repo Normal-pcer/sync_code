@@ -8,27 +8,28 @@ namespace Generator {
         std::mt19937 random(std::random_device{}());
         std::mt19937_64 random64(std::random_device{}());
 
-        unsigned randint(int x, int y) { return random() % (y - x + 1) + x; }
-        ull randll(ll x, ll y) { return random64() % (y - x + 1) + x; }
+        int randint(int x, int y) { return random() % (y - x + 1) + x; }
+        long long randll(ll x, ll y) { return random64() % (y - x + 1) + x; }
     }
     using namespace Random;
 
     void generate(std::fstream &out) {
-        const int _N = 5, _V = 10;
-        int N = _N;
-        std::vector<std::tuple<int, int, int, int>> rect;
-        for (; static_cast<int>(rect.size()) != N; ) {
-            int x1 = randint(1, _V), y1 = randint(1, _V), x2 = randint(1, _V), y2 = randint(1, _V);
-            if (x1 == x2)  continue;
-            if (y1 == y2)  continue;
-            if (x1 > x2)  std::swap(x1, x2);
-            if (y1 > y2)  std::swap(y1, y2);
-            rect.push_back({x1, y1, x2, y2});
-        }
+        const int _N = 5, _K = 10, _V = 5;
+        int N = _N, M = _N, K = _K;
+        struct Point {
+            int x, y, cnt;
+        };
 
-        out << N << endl;
-        for (auto [a, b, c, d]: rect) {
-            out << a << ' ' << b << ' ' << c << ' ' << d << endl;
+        std::vector<Point> luo;
+        std::set<std::pair<int, int>> set;
+        while ((int)luo.size() < K) {
+            auto x = randint(1, N), y = randint(1, M), cnt = randint(1, _V);
+            if (x == N and y == M)  continue;
+            if (set.contains({x, y}))  continue;
+            luo.push_back({x, y, cnt}), set.insert({x, y});
         }
+        
+        out << N << ' ' << M << ' ' << K << endl;
+        for (auto [x, y, cnt]: luo)  out << x << ' ' << y << ' ' << cnt << endl;
     }
 }
