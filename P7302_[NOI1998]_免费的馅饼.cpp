@@ -4,7 +4,9 @@
 
 #include "./lib"
 
+
 #include "./libs/range.hpp"
+
 
 using namespace lib;
 
@@ -59,7 +61,7 @@ namespace Solution_1307252172119349 {
         struct Cake { int time, pos, val; };
         std::vector<Cake> cakes(N);
         for (auto &[time, pos, val]: cakes)  std::cin >> time >> pos >> val;
-        ranges::sort(cakes, std::less{}, lam(x, x.time));
+        // ranges::sort(cakes, std::less{}, lam(x, x.time));
 
         // std::vector<int> F(cakes.size());
         // auto ans = 0;
@@ -73,20 +75,22 @@ namespace Solution_1307252172119349 {
         //     chkMax(ans, F.at(i));
         // }
 
-        std::vector sgts(2, SegTree(0, 2e8+5));
-        auto ans = 0;
-        for (auto i: range(N)) {
-            auto cur = 0;
-            auto f0 = 2 * cakes.at(i).time - cakes.at(i).pos;
-            auto f1 = 2 * cakes.at(i).time + cakes.at(i).pos;
-            chkMax(cur, sgts.at(0).max(0, f0));
-            chkMax(cur, sgts.at(1).max(0, f1));
-            cur += cakes.at(i).val;
+        auto f1 = lam(x, 2*x.time - x.pos);
+        auto f2 = lam(x, 2*x.time + x.pos);
+        ranges::sort(cakes, std::less{}, f1);
 
-            sgts.at(0).update(f0, cur);
-            sgts.at(1).update(f1, cur);
+        auto [min, max] = ranges::minmax(cakes, std::less{}, f2);
+        SegTree sgt(f2(min), f2(max)+1);
+        auto ans = 0;
+        for (auto i: cakes) {
+            auto cur = sgt.max(0, f2(i) + 1);
+            debug  std::cout << std::format("max({}, {}) -> {}", 0, f2(i)+1, cur) << std::endl;
+            cur += i.val;
+            debug  std::cout << std::format("update({}, {})", f2(i), cur) << std::endl;
+            sgt.update(f2(i), cur);
             chkMax(ans, cur);
         }
+
         std::cout << ans << endl;
     }
 }
