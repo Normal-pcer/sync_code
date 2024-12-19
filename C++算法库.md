@@ -2,7 +2,7 @@
 
 C++ 的算法（algorithm）库包含一系列的功能多样的函数。大多数函数定义在头文件 `algorithm` 中，我们这里以 [cpp reference](https://zh.cppreference.com/w/cpp/algorithm) 上给出的为准。
 
-大多数的算法库函数对一个范围的所有元素进行操作，通常需要用户传入一对头尾迭代器或指针 `begin` 和 `end`，表示对这个**左闭右开**区间的所有元素进行目标操作。例如要传入“所有元素”，对于 STL 容器，通常传入 `x.begin()` 和 `x.end()` 两个迭代器；对于数组，可以传入 `arr` 和 `arr + N`（N 为元素数量；特别地，如果从下标为 1 开始存储，可以传入 `arr + 1` 和 `arr + N + 1`）。
+大多数的算法库函数对一个范围的所有元素进行操作，通常需要用户传入一对头尾迭代器或指针 `begin` 和 `end`，表示对这个**左闭右开**区间的所有元素进行目标操作。例如要传入“所有元素”，对于 STL 容器，通常传入 `x.begin()` 和 `x.end()` 两个迭代器；对于数组，可以传入 `arr` 和 `arr + N`（N 为元素数量；特别地，如果从下标为 1 开始存储，可以传入 `arr + 1` 和 `arr + N + 1`）。若无特殊说明，本文中的“尾迭代器”指最后一个有效元素的**下一个**迭代器。
 
 从 C++20 开始，可以使用 `ranges` 命名空间中的一些算法，避免传入头尾迭代器的麻烦。例如：
 ```cpp
@@ -30,6 +30,10 @@ std::ranges::sort(vec, std::ranges::less{}, [](Node x) { return x.x; });
 下面的文字中，我们会省略 `std` 命名空间。
 
 需要 C++17 或更高标准的将会进行标注。特别地，ranges 库相关的函数不会标注。
+
+若无特殊说明，`begin`、`mid` 和 `end` 均为迭代器，`range` 为一个范围（需要提供 `begin()` 和 `end()` 方法，或者为一个数组）或一对头尾迭代器（特别地，如果 `range, mid` 的形式，应该以 `begin, mid, end` 的顺序传入迭代器）。
+
+本文中介绍的成员皆按照定义顺序，即可以按照这个顺序进行结构化绑定。
 
 ## 最大/最小值操作
 
@@ -89,7 +93,7 @@ std::max(Node{1, 2}, Node{2, 1}, [](Node a, Node b) {return a.x < b.x});  // 返
 
 ### sort
 
-`sort(begin, end)` / `ranges::sort`：对范围按照升序排序，最差情况下复杂度 $O(N\cdot\log N)$。
+`sort(begin, end)` / `ranges::sort(range)`：对范围按照升序排序，最差情况下复杂度 $O(N\cdot\log N)$。
 
 `sort` 通常使用“内省排序”，优先使用快速排序算法，当递归层数过深时改用堆排序，避免复杂度退化。
 
@@ -97,7 +101,7 @@ std::max(Node{1, 2}, Node{2, 1}, [](Node a, Node b) {return a.x < b.x});  // 返
 
 ### stable_sort
 
-`stable_sort(begin, end)` / `ranges::stable_sort`：对范围按照升序排序，复杂度 $O(N\cdot\log N)$。这个排序是稳定的，即对于两个相等的元素，原序列中靠前的排序后一定靠前。
+`stable_sort(begin, end)` / `ranges::stable_sort(range)`：对范围按照升序排序，复杂度 $O(N\cdot\log N)$。这个排序是稳定的，即对于两个相等的元素，原序列中靠前的排序后一定靠前。
 
 ### partial_sort
 
@@ -123,7 +127,7 @@ std::max(Node{1, 2}, Node{2, 1}, [](Node a, Node b) {return a.x < b.x});  // 返
 
 ## 二分查找操作
 
-本节中的函数均支持传入比较函数，且保证序列单调不降。
+本节中的函数均支持传入比较函数，且需要保证序列单调不降。
 
 本节内函数时间复杂度均为 $O(\log N)$，但要保证迭代器支持随机访问。
 
@@ -143,7 +147,7 @@ std::max(Node{1, 2}, Node{2, 1}, [](Node a, Node b) {return a.x < b.x});  // 返
 
 ### binary_search
 
-`binary_search(begin, end, x)` / `ranges::binary_search(range, x)`：返回 `x` 是否出现过。
+`binary_search(begin, end, x)` / `ranges::binary_search(range, x)`：返回一个布尔值，表示 `x` 是否出现过。
 
 ## 交换
 
@@ -157,7 +161,7 @@ std::max(Node{1, 2}, Node{2, 1}, [](Node a, Node b) {return a.x < b.x});  // 返
 
 `swap_ranges(begin1, end1, begin2)`：交换 `begin1` 和 `begin2` 开始的两个范围内的对应元素，长度均为 `distance(begin1, end1)`。
 
-`swap_ranges(range1, range2)`：交换 `range1` 和 `range2` 内的对应元素。
+`ranges::swap_ranges(range1, range2)`：交换 `range1` 和 `range2` 内的对应元素。
 
 时间复杂度均为 $O(N)$。
 
@@ -180,7 +184,7 @@ xxx 依次指代 `all`、`any` 或 `none`。
 ### ranges::contains，ranges::contains_subrange（C++23）
 `ranges::contains(range, x)`：返回布尔类型，区间内是否包含元素 x，复杂度 $O(N)$。
 
-`ranges::contains_subrange(range1, range2)`：返回布尔类型，区间 range2 是否为 range1 的子区间，复杂度 $O(N)$。
+`ranges::contains_subrange(range1, range2)`：返回布尔类型，区间 range2 是否为 range1 的子区间，复杂度 $O(N)$。（存疑）
 
 ### find，find_if，find_if_not
 `find(begin, end, x)` / `ranges::find(range, x)`：查找第一个 x，返回其迭代器。
@@ -213,7 +217,7 @@ xxx 依次指代 `all`、`any` 或 `none`。
 复杂度均为 $O(N)$。
 
 ### mismatch
-`mismatch(begin1, end1, begin2)` / `mismatch(begin1, end1, begin2, end2)` / `ranges::mismatch(range1, range2)`：返回两个区间首个不同元素的迭代器组成的 `pair` 或 `mismatch_result`，可以传入等价谓词。如果区间长度不同，在到达其中一个的结尾之后停止匹配。时间复杂度 $O(N)$。
+`mismatch(begin1, end1, begin2)` / `mismatch(begin1, end1, begin2, end2)` / `ranges::mismatch(range1, range2)`：返回两个区间首个不同元素的迭代器组成的 `pair` 或 `in_in_result`，可以传入等价谓词。如果区间长度不同，在到达其中一个的结尾之后停止匹配。时间复杂度 $O(N)$。`in_in_result` 包括成员 `in1` 和 `in2`。
 
 ### equal
 `equal(begin1, end1, begin2)` / `equal(begin1, end1, begin2, end2)` / `ranges::equal(range1, range2)`：返回布尔值，两个区间是否相同。如果长度不同返回 false。可以传入等价谓词。复杂度 $O(N)$。
@@ -224,10 +228,10 @@ xxx 依次指代 `all`、`any` 或 `none`。
 `search(begin, end, searcher)`（C++17）：利用一个搜索器进行搜索，可以达到更高的效率。STL 内置了 `boyer_moore_searcher(begin2, end2)` 和 `boyer_moore_horspool_searcher(begin2, end2)`。
 
 ### search_n
-`search_n(begin, end, cnt, val)` / `ranges::search_n(range, cnt, val)`：在区间中查找连续 `cnt` 个 `val`，返回第一个元素的迭代器/查找到的子区间。复杂度 $O(N)$。
+`search_n(begin, end, n, val)` / `ranges::search_n(range, n, val)`：在区间中查找连续 `n` 个 `val`，返回第一个元素的迭代器/查找到的子区间。复杂度 $O(N)$（$N$ 为区间长度）。
 
 ### ranges::starts_with，ranges::ends_with（C++23）
-`ranges::xxx_with(range1, range2)`：返回布尔值，第一个区间是否以第二个开头或结尾。
+`ranges::xxx_with(range1, range2)`：返回布尔值，`range2` 是否为 `range1` 的前缀/后缀。
 
 ## 顺序变更操作
 本节的函数复杂度均为 $O(N)$。
@@ -239,85 +243,131 @@ xxx 依次指代 `all`、`any` 或 `none`。
 `rotate(begin, mid, end)` / `ranges::rotate(range, mid)`：将 $[begin, mid)$ 整个区间移动到 $end$ 及以后的位置上。设 `new_begin` 表示当前指向 `begin` 元素的迭代器，返回 `new_begin` 或 $[new\_begin, end)$ 子区间。
 
 ### shift_left，shift_right（C++20）
-`shift_left(begin, end, n)`：左移范围内的元素，返回迁移后区间结尾。例如 $[1, 2, 3, 4, 5]$ 左移两位得到 $[3, 4, 5, 4, 5]$。
-`shift_right(begin, end, n)`：右移范围内的元素，返回迁移后区间开头。
+`shift_left(begin, end, n)`：左移范围内的元素，返回迁移后区间结尾的迭代器。例如 $[1, 2, 3, 4, 5]$ 左移两位得到 $[3, 4, 5, 4, 5]$。
+`shift_right(begin, end, n)`：右移范围内的元素，返回迁移后区间开头的迭代器。
 
-`ranges::shift_xxx`（C++23）：左移或右移返回迁移后区间与原区间的交集。
+`ranges::shift_xxx`（C++23）：左移或右移，返回迁移后区间与原区间的交集（一个子区间）。
 
 ### shuffle
 `shuffle(begin, end, rnd)`/`ranges::shuffle(range, rnd)`：使用 `rnd` 作为随机数生成器打乱范围内的元素。
 
 ## 变换操作
-若无特殊说明，以下介绍中省略 `ranges` 算法，用输入范围代替头尾迭代器即可。
-
 以下操作的复杂度大多为 $O(N)$。
 
 ### transform
-`transform(begin1, end1, begin_out, op)`：对每一个元素应用操作，返回值存储到目标范围。
+`transform(begin1, end1, begin_out, op)`：对每一个元素应用操作，返回值存储到目标范围。返回输出区间的尾迭代器。
+
+`ranges::transform(range, begin_out, op)`：同上。返回一个 `in_out_result`，包含以下成员。
+- `in`：等于输入区间的 `end`。
+- `out`：输出区间的尾迭代器。
 
 `transform(begin1, end1, begin2, begin_out, op)`：对这两个范围内的每组对应元素应用操作，返回值存储到目标范围。
 
-### replace，replace_if
-`replace(begin, end, old_v, new_v)`：将 `old_v` 替换为 `new_v`。
+`ranges::transform(range1, range2, begin_out, op)`：同上。返回一个 `in_in_out_result`，包含以下成员。
+- `in1`：`range1` 最后一个被映射过的元素的下一个迭代器。
+- `in2`：`range2` 最后一个被映射过的元素的下一个迭代器。
+- `out`：输出区间的尾迭代器。
 
-`replace_if(begin, end, p, new_v)`：将满足 `p` 的元素替换为 `new_v`。
+### replace，replace_if
+`replace(begin, end, old_v, new_v)` / `ranges::replace(range, old_v, new_v)`：将 `old_v` 替换为 `new_v`。
+
+`replace_if(begin, end, p, new_v)` / `ranges::replace(range, p, new_v)`：将满足 `p` 的元素替换为 `new_v`。
 
 ## 生成操作
 ### fill，fill_n
-`fill(begin, end, x)`：在范围内填充 `x`。
+`fill(begin, end, x)`：在范围内填充 `x`，无返回值。
 
-`fill_n(begin, n, x)`：从 `begin` 开始填充 `n` 个 `x`。
+`ranges::fill(range, x)`：同上。返回区间的尾迭代器。
+
+`fill_n(begin, n, x)` / `ranges::fill_n(begin, n, x)`：从 `begin` 开始填充 `n` 个 `x`。返回最后一个被赋值元素的下一个迭代器。
 
 ### generate，generate_n
-`generate(begin, end, op)`：范围内所有元素赋值为 `op` 的返回值。
+`generate(begin, end, op)`：对于范围内所有元素，调用一次 `op`（无参数），赋值为其返回值。`generate` 函数本身无返回值。
 
-`generate(begin, n, op)`：`begin` 开始的 `n` 个元素赋值为 `op` 的返回值。
+`ranges::generate(range, op)`：同上。返回区间的尾迭代器。
+
+`generate(begin, n, op)` / `ranges::generate(begin, n, op)`：`begin` 开始的 `n` 个元素赋值为 `op` 的返回值。返回最后一个被赋值元素的下一个迭代器。
 
 ## 复制操作
-### copy
-`copy(begin, end, begin_out)`：复制一个区间到目标区间。
+### copy, copy_if，copy_backward
+`copy(begin, end, begin_out)`：复制一个区间到目标区间。返回输出区间的尾迭代器。
 
-### copy_if
-`copy_if(begin, end, begin_out, op)`：对于区间的每个元素，如果满足 `p`，则复制到目标区间。
+`copy_if(begin, end, begin_out, p)`：对于区间的每个元素，如果满足 `p`，则复制到目标区间。返回输出区间的尾迭代器。
 
-### copy_backward
-`copy_backward(begin, end, begin_out)`：从后往前复制区间，即先复制后面的元素，但最后仍是正序排列。
+`copy_backward(begin, end, end_out)`：从后往前复制区间，即先复制后面的元素，但最后仍是正序排列。输出区间的尾迭代器将等于 `end_out`，返回输出区间的起始迭代器。
+
+如果原区间和目标区间相交，向右复制的情况适合采用 `copy_backward` 而不是 `copy`（后者会产生未定义行为）。
+
+`ranges::copy(range, begin_out)` / `ranges::copy_if(range, begin_out, p)`：同上。返回一个 `in_out_result`，包含以下成员。
+- `in`：输入区间的尾迭代器。
+- `out`：输出区间的尾迭代器。
+
+`ranges::copy_backward(range, end_out)`：同上。返回一个 `in_out_result`，包含以下成员。
+- `in`：输入区间的尾迭代器。
+- `out`：输出区间的起始迭代器。
 
 ### copy_n
-`copy_n(begin, n, begin_out)`：复制区间的前 `n` 个元素。
+`copy_n(begin, n, begin_out)`：复制区间的前 `n` 个元素。返回输出区间的尾迭代器。
 
-### move
-`move(begin, end, begin_out)`：移动一个区间，即对每个元素调用其移动赋值。
+`ranges::copy_n(begin, n, begin_out)`：同上。返回一个 `in_out_result`，包含以下成员。
+- `in`：输入区间的尾迭代器。
+- `out`：输出区间的尾迭代器。
 
-### move_backward
-`move_backward(begin, end, begin_out)`：从后往前移动区间。
+### move，move_backward
+`move(begin, end, begin_out)` / `ranges::move(range, begin_out)`：移动一个区间，即对每个元素调用其移动赋值。
+
+`move_backward(begin, end, end_out)` / `ranges::move_backward(range, end_out)`：从后往前移动区间。
+
+返回值含义同 `copy` / `copy_backward`。
+
+不要与适用于单个元素的 `move(x)` 混淆（用于转换为右值引用）。
 
 ## 移除操作
-对于这些操作，常规函数一般返回新的尾迭代器，ranges 算法一般返回 $[new\_end, end)$ 的子区间。
+对于这些操作，常规函数返回新的尾迭代器，ranges 算法返回 $[new\_end, end)$ 的子区间。
 
 值得注意的是，它们不会真的移除容器中的元素，而是将没有被删除的元素移动到靠前的位置，需要手动根据返回值 resize 或者 erase。
 
-### remove，remove_if
-`remove(begin, end, x)`：移除所有的 x。
+例如：
+```cpp
+vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
+```
+可以删除 `vec` 中所有的零。
 
-`remove_if(begin, end, p)`：移除所有满足 `p` 的元素。
+### remove，remove_if
+`remove(begin, end, x)` / `ranges::remove(range, x)`：移除所有的 x。
+
+注意，这些函数均以引用接受参数 `x`，可能在 `x` 属于原区间时出现问题。
+
+`remove_if(begin, end, p)` / `ranges::remove_if(range, p)`：移除所有满足 `p` 的元素。
+
+C++20 添加了 `erase(container, x)` 和 `erase_if(container, x)` 函数，为标准库容器提供了更便捷的擦除。
 
 ### unique
-`unique(begin, end, x)`：移除相邻的相同元素。
+`unique(begin, end)` / `ranges::unique(range)`：移除相邻的相同元素。
 
 配合排序可用于去重。
 
 
 ## 采样操作
 ### sample
-`sample(begin, end, out, n, rnd)`：用 `rnd` 作为随机数生成器，在原区间里随机选择 `n` 个元素写入目标区间中。
+`sample(begin, end, begin_out, n, rnd)` / `ranges::sample(range, begin_out, n, rnd)`：用 `rnd` 作为随机数生成器，在原区间里随机选择 `n` 个元素写入目标区间中。返回输出区间的尾迭代器。
+
+每个元素选中的概率相同，并且不会重复选中元素。
 
 ## 排列操作
 ### next_permutation
 `next_permutation(begin, end)`： 如果存在下一个排列，则将当前序列变成下一个排列并返回 true；否则将序列升序排列并返回 false。
 
-`ranges::next_permutation(range)`：同上，但是返回一个 `next_permutation_result` 对象。
+`ranges::next_permutation(range)`：同上。返回 `in_found_result`，包含以下成员：
+- `in`：区间的尾迭代器。
+- `found`：接下来是否存在排列。
 
+常见的用法是：
+```cpp
+do {
+    f(vec);
+} while (std::next_permutation(vec.begin(), vec.end()));
+```
 
 ### prev_permutation
 同上，变成全排列中的上一个。
@@ -325,24 +375,34 @@ xxx 依次指代 `all`、`any` 或 `none`。
 ## 划分操作
 “划分”操作是重排序一个范围内的所有元素，使得存在一个元素，对于一个指定的谓词 p，左侧的元素都返回 true，右侧都返回 false。复杂度 $O(N)$。
 
+### is_partitioned
+`is_partitioned(begin, end, p)` / `ranges(range, p)`：返回布尔值，表示范围是否按照 `p` 划分过。
+
 ### partition
 `partition(begin, end, p)`：划分给定范围，返回第一个不满足 p 的元素的迭代器。
+
+`ranges::partition(range, p)`：同上，返回不满足 `p` 的子区间。
 
 ### stable_partition
 同上，但是保证同一块内元素的相对顺序不变。
 
 ### partition_point
-`partition_point(begin, end, p)`：寻找按 p 划分好的范围的划分点，返回第一个不满足 p 的元素的迭代器。复杂度 $O(\log N)$。
+`partition_point(begin, end, p)` / `ranges::partition_point(range, p)`：寻找按 p 划分好的范围的划分点，返回第一个不满足 p 的元素的迭代器。复杂度 $O(\log N)$。
 
 
 ## 归并操作
 ### merge
-`merge(begin1, end1, begin2, end2, begin_out)`：合并两个已经有序的序列到目标迭代器，成为一个有序的序列，时间复杂度 $O(N)$。
+`merge(begin1, end1, begin2, end2, begin_out)`：合并两个已经有序的序列到目标迭代器，成为一个有序的序列，时间复杂度 $O(N)$。返回输出区间的尾迭代器。
+
+`ranges::merge(range1, range2, begin_out)`：同上。返回 `in_in_out_result`，包含以下成员：
+- `in1`：`range1` 的尾迭代器。
+- `in2`：`range2` 的尾迭代器。
+- `out`：输出区间的尾迭代器。
 
 可以传入比较函数。
 
 ### inplace_merge
-`inplace_merge(begin, mid, end)`：保证 $[begin, mid)$ 和 $[mid, end)$ 两个区间有序的情况下合并这两段，时间复杂度 $O(N)$。
+`inplace_merge(begin, mid, end)` / `ranges::inplace_merge(range, mid)`：保证 $[begin, mid)$ 和 $[mid, end)$ 两个区间有序的情况下合并这两段，时间复杂度 $O(N)$。无返回值。
 
 可以传入比较函数。
 
@@ -354,16 +414,16 @@ xxx 依次指代 `all`、`any` 或 `none`。
 下列函数支持传入比较函数。
 
 ### make_heap
-`make_heap(begin, end)`：在指定范围上建立一个大根堆。时间复杂度 $O(N)$。
+`make_heap(begin, end)` / `ranges::make_heap(range)`：在指定范围上建立一个大根堆。时间复杂度 $O(N)$。
 
 ### push_heap
-`push_heap(begin, end)`：将迭代器 `end - 1` 指向的元素插入到 $[begin, end-1)$ 区间构成的堆中。时间复杂度 $O(\log N)$。
+`push_heap(begin, end)` / `ranges::push_heap(range)`：将迭代器 `end - 1` 指向的元素插入到 $[begin, end-1)$ 区间构成的堆中。时间复杂度 $O(\log N)$。
 
 ### pop_heap
-`pop_heap(begin, end)`：移除这个堆中最大的元素，即将 `begin` 和 `end - 1` 指向的元素交换，接着维护 $[begin, end-1)$ 上的大根堆。
+`pop_heap(begin, end)` / `ranges::pop_heap(range)`：移除这个堆中最大的元素，即将 `begin` 和 `end - 1` 指向的元素交换，接着维护 $[begin, end-1)$ 上的大根堆。
 
 ### is_heap
-`is_heap(begin, end)`：返回布尔值，判断范围内是否为一个合法的堆。时间复杂度为 $O(N)$。
+`is_heap(begin, end)` / `ranges::is_heap(range)`：返回布尔值，判断范围内是否为一个合法的堆。时间复杂度为 $O(N)$。
 
 ### is_heap_until
 `is_heap_until(begin, end)` / `ranges::is_heap_until(begin, end)`：判断从 begin 开始能形成的最大堆，返回其尾迭代器/子区间。时间复杂度为 $O(N)$
@@ -372,7 +432,7 @@ xxx 依次指代 `all`、`any` 或 `none`。
 下列函数可以按字典序比较两个范围内的元素，时间复杂度均为 $O(N)$。
 
 ### lexicographical_compare
-`lexicographical_compare(begin1, end1, begin2, end2)`：返回第一个范围是否小于第二个范围。会优先比较前面的元素，仅当其中一个范围是另一个的前缀时认为短的范围字典序更小。可以传入比较函数。
+`lexicographical_compare(begin1, end1, begin2, end2)` / `ranges::lexicographical_compare(range1, range2)`：返回布尔值，表示第一个范围是否小于第二个范围。会优先比较前面的元素，仅当其中一个范围是另一个的前缀时认为短的范围字典序更小。可以传入比较函数。
 
 ### lexicographical_compare_three_way
 `lexicographical_compare_three_way(begin1, end1, begin2, end2)`：按照二者的三路比较运算符进行比较，返回值类型和它们的三路比较运算符相同，只会是 `strong_ordering`，`weak_ordering` 和 `partial_ordering` 中的一种。可以传入三路比较函数。
@@ -453,10 +513,6 @@ $$ init\leftarrow op1\left(init, op2\left(x, y\right)\right) $$
 
 以上应该就是 C++ 算法库的大致内容了。
 
-此外，上文在讲 ranges 算法的时候省略了不少内容，事实上 ranges 算法也可以像常规的算法函数一样传入头尾指针，在上文中我们忽略了这一点。
-
-但是注意，ranges 中如果要传入多个范围，每一个都需要包含尾指针，类似 `ranges::transform(begin1, end1, begin2, end2, op)`。
-
 此外，还有一些函数可以实现先拷贝再执行，上文并没有提到。包括：
 `replace_copy`，`replace_copy_if`，`remove_copy`，`remove_copy_if`，`unique_copy`，`reverse_copy`，`rotate_copy`，`partition_copy`，`partial_sort_copy`。
 
@@ -466,3 +522,7 @@ $$ init\leftarrow op1\left(init, op2\left(x, y\right)\right) $$
 文章较长，难免有笔误等疏忽，烦请告知和指正。也希望这篇文章能帮助您了解 C++ 的算法库。
 
 感谢您的阅读。
+
+### 更新日志
+
+2024/12/19 更正一些内容，扩充一些关于 `ranges` 的内容。
