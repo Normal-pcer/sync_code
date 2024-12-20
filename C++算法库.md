@@ -83,7 +83,7 @@ std::max(Node{1, 2}, Node{2, 1}, [](Node a, Node b) {return a.x < b.x});  // 返
 后两个函数的时间复杂度均为 $O(N)$，具体地，应用不超过 $\frac{3}{2}N$ 次比较。
 
 ### clamp （C++17）
-`clamp(min, max, x)`：将 $x$ 钳制在 $[min, max]$ 的范围中。具体地，如果 $x$ 位于该范围，返回 $x$；否则返回最接近的边界。
+`clamp(x, min, max)`：将 $x$ 钳制在 $[min, max]$ 的范围中。具体地，如果 $x$ 位于该范围，返回 $x$；否则返回最接近的边界。
 
 ## 排序操作
 
@@ -469,7 +469,7 @@ $$ init\leftarrow op1\left(init, op2\left(x, y\right)\right) $$
 ### partial_sum
 `partial_sum(begin, end, begin2, op)`：计算前缀和，输出的第 $i$ 项等于原序列前 $i$ 项通过 `op` 累加的结果。不传入 `op` 默认为加法。
 
-### reduce
+### reduce（C++17）
 行为类似于 `accumulate`，但是不保证按顺序累加。在并行运算下可能有更高的效率。
 
 如果操作不满足交换律和结合律将会产生未定义行为。
@@ -478,14 +478,14 @@ $$ init\leftarrow op1\left(init, op2\left(x, y\right)\right) $$
 
 其余用法同 `accumulate`。
 
-### inclusive_scan
+### inclusive_scan（C++17）
 行为类似于 `partial_sum`，但是不保证按顺序累加。在并行运算下可能有更高的效率。
 
 如果操作不满足结合律将会产生未定义行为。
 
 用法同 `partial_sum`。
 
-### exclusive_scan
+### exclusive_scan（C++17）
 行为类似于 `inclusive_scan`，但是输出的第 $i$ 项不会对原序列的第 $i$ 项进行累加。
 
 例如，对 `[3, 4, 5, 6]` 求前缀和，`partial_sum`、`inclusive_scan`、`exclusive_scan` 的结果分别为 `[3, 7, 12, 18]`、`[3, 7, 12, 18]` 和 `[0, 3, 7, 12]`。
@@ -526,3 +526,5 @@ $$ init\leftarrow op1\left(init, op2\left(x, y\right)\right) $$
 ### 更新日志
 
 2024/12/19 更正一些内容，扩充一些关于 `ranges` 的内容。
+
+2024/12/20 补充了几处 C++17 的标注。

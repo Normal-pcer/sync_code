@@ -11,7 +11,10 @@ constexpr const char *OutputFileName = "1" ".out";
 constexpr const char *CompileCommand = "g++ {} -o {} -std=c++23 -O2 -Wall -Wextra -Wl,-stack=2147483647";
 constexpr const int MaxTimes = inf;
 
-#include "check_gen.cpp"
+namespace _Generator {
+    #include "check_gen.cpp"
+}
+namespace Generator = _Generator::Generator;
 
 namespace Checker {
     void generate(std::fstream &out) {
