@@ -18,7 +18,8 @@ namespace Generator {
         int T = 1;
         out << 1 << ' ' << T << endl;
         while (T --> 0) {
-            const int _N = 3, _M = 5, _V = 5, _D = 3;
+            const int _N = 100, _M = 5, _V = 3, _D = 1;
+            // const int _N = 100, _M = 100, _V = 1'000'000'000, _D = 100'000'000;
             int N = _N, M = _M;
             int D = randint(1, _D), K = randint(1, N);
             

@@ -112,7 +112,7 @@ namespace Solution_9512731660030115 {
         for (auto &[x, y, val]: tasks)  std::cin >> x >> y >> val, x++;
 
 #if true  // 暴力 DP
-        std::vector<ll> F(N+2, -inf);  // 只考虑 [1, i) 天
+        std::vector<ll> F(N+2, -infLL);  // 只考虑 [1, i) 天
         F[0] = F[1] = 0;
         auto w = [&](int begin, int end) -> ll {
             auto res = 0LL;
