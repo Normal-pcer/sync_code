@@ -4,12 +4,9 @@
 
 #include "./libs/debug_macros.hpp"
 
-
 #include "./lib"
 
-
 #include "./libs/range.hpp"
-
 
 using namespace lib;
 
