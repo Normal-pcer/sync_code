@@ -1,91 +1,29 @@
-/**
- * @link https://www.luogu.com.cn/problem/P7113
- */
-
 #include <bits/stdc++.h>
-using i128 = __int128;
-const char endl = '\n';
-template <typename T> auto range(T begin, T end) { return std::views::iota(begin, end); }
 
 namespace Solution {
-    // 输出 __int128
-    auto &operator<< (std::ostream &stream, i128 x) {
-        static char sta[40]; int top=0;
-        if (x<0) {
-            stream.put('-'), sta[top++] = (-(x%10))^48, x = -(x/10);
-            if (x==0) return stream.put(sta[--top]);
+    class BIT {
+        std::vector<int> c;
+        static int lowbit(int x) { return x & -x; }
+    public:
+        BIT(int N): c(N+1) {}
+        int sum(int x) {
+            x++;  auto res = 0;
+            while (x) {
+                res += c.at(x);
+                x -= lowbit(x);
+            }
+            return res;
         }
-        do {  sta[top++] = x%10^48, x /= 10;  } while (x);
-        while (top) stream.put(sta[--top]);
-        return stream;
-    }
-    struct Frac {  // 分数
-        i128 numerator;  // 分子
-        i128 denominator = 1;  // 分母，初始值应当为 1
-
-        static constexpr Frac simplified(const Frac& origin) {  // 化简
-            auto gcd = std::__gcd(origin.numerator, origin.denominator);
-            if (gcd == 1)  return origin;
-            return {origin.numerator / gcd, origin.denominator / gcd};
-        }
-        Frac operator+ (const Frac& other) const {
-            return simplified({
-                numerator * other.denominator + other.numerator * denominator, 
-                denominator * other.denominator
-            });
-        }
-        void operator+= (const Frac& other) { *this = *this + other; }
-        Frac operator/ (const int other) const {
-            return simplified({numerator, other * denominator});
-        }
-        friend auto &operator<< (std::ostream &stream, Frac x)  {
-            return stream << x.numerator << ' ' << x.denominator;
+        void add(int x, int val) {
+            x++;
+            while (x < (int)c.size()) {
+                c.at(x) += val;
+                x += lowbit(x);
+            }
         }
     };
-    void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
-        int N, M;
-        std::cin >> N >> M;
-
-        std::vector<std::vector<int>> graph(N+1);  // vector 存图
-        std::vector<int> in(N+1);  // 还没遍历过的入点
-        std::vector<int> out(N+1);  // 出度
-        std::vector<Frac> F(N+1);  // 水量
-        for (auto i: range(1, N+1)) {
-            int cnt;  std::cin >> cnt;
-            for (auto _: range(0, cnt)) {
-                int target;  std::cin >> target;
-                graph.at(i).push_back(target);
-                in.at(target)++, out.at(i)++;
-            }
-        }
-
-        // 拓扑排序
-        std::deque<int> q;
-        for (auto i: range(1, N+1)) {
-            if (in.at(i) == 0)  q.push_back(i), F.at(i) = {1, 1};
-        }
-        while (not q.empty()) {
-            auto x = q.front();  q.pop_front();
-            auto unit = F.at(x) / out.at(x);
-
-            for (auto dest: graph.at(x)) {
-                F.at(dest) += unit;
-                if (--in.at(dest) == 0)  q.push_back(dest);
-            }
-        }
-
-        for (auto i: range(1, N+1)) {
-            if (out.at(i) == 0) {  // 最终答案
-                auto res = F.at(i);
-                std::cout << res << endl;
-            }
-        }
-    }
 }
 
 int main() {
-    Solution::solve();
-    return 0;
+
 }
