@@ -12,8 +12,11 @@ https://www.luogu.com.cn/discuss/795990
 『无懈可击 /J』
 『诸葛连弩 /Z』
 */
+#include "./libs/debug_macros.hpp"
+
 #include<bits/stdc++.h>
 #include "./lib"
+
 
 using namespace lib;
 
@@ -23,9 +26,9 @@ using std::cin;
 using std::cout;
 
 enum character {
-    MP = 'M',
-    ZP = 'Z',
-    FP = 'F'
+    MP = 0,
+    ZP = 1,
+    FP = 2,
 };
 
 const int MaxHealth = 4;
@@ -83,6 +86,7 @@ public:
 class Card {
 public:
     char label;
+    bool used = false;
 
     operator std::string () const {
         return std::format("{}", label);
@@ -115,14 +119,15 @@ public:
     void arrows();                                          // 万箭齐发
     void invade();                                          // 南猪入侵
     bool peach();                                           // 桃
+    int team() const;
 
     std::string identity() const {
-        return std::format("#{}", ans_index);
+        return std::format("P{}", ans_index);
     }
 
     operator std::string () const {
         auto base = std::format("Account(ch={}, HP={}, index={}, origin={}, jumped={}, similar={}, inf_kill={}, can_use_kill={}) with cards:\n",
-            (char)ch, health, (int)index, ans_index, jumped, similarJumped, InfiniteKill, canUseKill
+            (int)ch, health, (int)index, ans_index, jumped, similarJumped, InfiniteKill, canUseKill
         );
         std::stringstream stream;
         for (auto c: cards)  stream << (std::string)c << ' ';
@@ -309,6 +314,7 @@ void Player::kill(Player& enemy) {
     checkDead(players[index], enemy);
 }
 
+#if false
 // ? 写得毫无道理。
 bool isSkillValid(Player& pos, Player& target, bool check) {
     auto idx = pos.index;
@@ -379,6 +385,96 @@ bool isSkillValid(Player& pos, Player& target, bool check) {
     }
     return true;
 }
+#endif
+
+int Player::team() const {
+    switch (ch) {
+    case MP:  return 1;
+    case ZP:  return 1;
+    case FP:  return 2;
+    default:
+        assert(false), __builtin_unreachable();
+        return 0;
+    }
+}
+
+/**
+ * 尝试使用一张“无懈可击”。如果不存在，则不会做任何事情。
+ * 在使用一张锦囊牌之前调用目标玩家的此方法。
+ * 
+ * @param before 希望被抵消的卡牌
+ * @param original 最开始的受害者
+ * @param pos 最开始可以使用无懈可击的位置
+ * @param tag 标识奇偶性。具体地，tag 表示 before.owner 是否在对 original 献殷勤
+ * @param depth 递归层数。
+ * 
+ * @returns 这次攻击是否被无效化
+ */
+bool tryExecutingUnbreakable(const Card before, const Player& original, 
+            decltype(Player::index) pos, bool tag=false, int depth=0) {
+    debug  std::cout << std::format("[{}] tryExecutingUnbreakable, before={}, original={}, pos={}, tag={}", depth, before.label, original.identity(), (int)pos, tag) << std::endl;
+    if (not original.jumped and original.ch != MP) { // 没有亮身份，帮不了
+        return false; 
+    }
+    // 使用无懈可击抵消献殷勤：表敌意
+    // 使用无懈可击抵消表敌意：献殷勤
+    // 使用无懈可击抵消决斗、南猪入侵、万箭齐发：献殷勤
+    bool friendly = false;  // 这次无懈可击为是否为对 original 献殷勤
+    if (before.label == 'F' or before.label == 'N' or before.label == 'W') {
+        friendly = true;
+    } else {  // 对于上一次无懈可击
+        friendly = !tag; // 如果上一次是在献殷勤，这次就是在表敌意；反之亦然。
+    }
+    debug  std::cout << std::format("friendly = {}", friendly) << std::endl;
+
+    // 接下来，给定所有人使用无懈可击的机会
+    auto p = pos;
+    do {
+        debug  std::cout << std::format("checking p={};", (int)p);
+        auto& pl = players.at(p);
+        auto cardIt = std::find(pl.cards.begin(), pl.cards.end(), 'J');
+        if (cardIt == pl.cards.end())  goto egg;  // 没有无懈可击，不可使用
+        if (cardIt->used)  goto egg;
+
+        // 删除
+        cardIt->used = true;
+        
+        if (friendly) {
+            auto character = original.team();
+            if (character == pl.team()) {  // 相同阵营，向对方献殷勤
+                auto card_copy = *cardIt;
+                debug  std::cout << std::format("Abandon J of {}", pl.identity()) << std::endl;
+                pl.cards.erase(cardIt);  // 使用卡牌
+                pl.jumped = pl.ch;
+                // 如果这次无懈可击没有被无效化，返回 true
+                bool res = not tryExecutingUnbreakable(card_copy, original, p, friendly, depth+1);  
+                // if (res == true)  log("This is unbreakable. \n")
+                return res;
+            }
+        } else {  // 通过无懈表敌意
+            auto character = 3 - original.team();  // 阵营取反
+            if (character == pl.team()) {  // 阵营正确
+                debug  std::cout << std::format("Abandon J of {}", pl.identity()) << std::endl;
+                auto card_copy = *cardIt;
+                pl.cards.erase(cardIt);
+                pl.jumped = pl.ch;
+                // 如果这次无懈可击没有被无效化，返回 true
+                bool res = not tryExecutingUnbreakable(card_copy, original, p, friendly, depth+1);  
+                // if (res == true)  { log("This is unbreakable. -> 1\n") }
+                // else  { log("Done. This is NOT unbreakable. -> 0 \n") }
+                return res;
+            }
+        }
+
+        // 重新加入这张牌
+        cardIt->used = false;
+
+    egg:    // while 循环直接 continue 会炸，故致敬传奇 goto egg
+        ++p;
+    } while (p != pos);
+    // 没有人选择使用无懈可击
+    return false;  
+}
 
 void Player::fight(Player& enemy) {
     debug  std::cout << std::format("{} Use Fight to {}", identity(), enemy.identity()) << std::endl;
@@ -390,10 +486,10 @@ void Player::fight(Player& enemy) {
     // 表敌意
     // ? 忠猪是否无需判断
     if (enemy.ch == MP)  jumped = 2;  // 跳反
-    if (enemy.ch == FP and not jumped)jumped = 1;
+    if (enemy.ch == FP and not jumped)  jumped = 1;
 
     // 对方尝试使用无懈可击挡下
-    if (isSkillValid(players[index], enemy, 0)) {
+    if (not tryExecutingUnbreakable({'F'}, enemy, index)) {
         // 忠猪始终不打主猪
         if (enemy.ch == ZP and ch == MP) {
             enemy.health--;
@@ -439,7 +535,7 @@ void Player::arrows() {
         // 无懈可击
         // * 这里不应该因为一次无懈可击跳出整个流程
         //// if (!isSkillValid(players[index], players[i], 0))break;
-        if (!isSkillValid(players[index], players[i], 0))  continue;
+        if (tryExecutingUnbreakable({'W'}, players[i], index, 0))  continue;
         else {
             auto it = std::find(players[i].cards.begin(), players[i].cards.end(), 'D');
             if (it == players[i].cards.end()) {
@@ -466,7 +562,7 @@ void Player::invade() {
 
     for (auto i = right; i != index; i++) {
         // * 和 arrows 的错误相同，此处需要用 continue
-        if (!isSkillValid(players[index], players[i], 0))  continue;
+        if (tryExecutingUnbreakable({'N'}, players[i], index))  continue;
         else {
             auto it = std::find(players[i].cards.begin(), players[i].cards.end(), 'K');
 
@@ -495,6 +591,7 @@ bool Player::peach() {
 // 玩家行动轮
 void play(Player& ac) {
     ac.drawCard(2);  // 摸牌
+    debug  std::cout << ac;
     // * 此处维护下标而非迭代器避免失效
     // * 此外，从头开始循环需要回到 begin - 1 而不是 begin
     for (auto i = 0; i < (int)ac.cards.size(); i++) {
@@ -578,7 +675,7 @@ int main(int argc, char const *argv[]) {
     }
     for (int i = 0; i < m; i++) {
         char c;
-        std::cin>>c;
+        std::cin >> c;
         heap.push_back(c);
     }
     
@@ -595,6 +692,19 @@ int main(int argc, char const *argv[]) {
                 play(pl);
                 pl.canUseKill = true;
                 debug  std::cout << pl;
+                debug  for (auto &pl: players) {
+                    if (pl.isDead()) {
+                        std::cout << "DEAD" << std::endl;
+                        continue;
+                    } else {
+                        std::cout << pl.health << ' ';
+                        for (auto c: pl.cards) {
+                            assert(not c.used);
+                            std::cout << c.label << ' ';
+                        }
+                        std::cout << std::endl;
+                    }
+                }
             }
         }
     } catch (int err) {
