@@ -17,7 +17,6 @@ https://www.luogu.com.cn/discuss/795990
 #include<bits/stdc++.h>
 #include "./lib"
 
-
 using namespace lib;
 
 using std::string;
