@@ -16,7 +16,7 @@ const char endl = '\n';
 #define lam lambda
 namespace lib{
 #if __cplusplus > 201703LL
-namespace ranges { using namespace std::ranges; }
-namespace views { using namespace std::ranges::views; }
+namespace ranges = std::ranges;
+namespace views = std::views;
 #endif
 }
