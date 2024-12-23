@@ -15,24 +15,24 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        int T = 1;
-        out << 1 << ' ' << T << endl;
-        while (T --> 0) {
-            const int _N = 100, _M = 5, _V = 3, _D = 1;
-            // const int _N = 100, _M = 100, _V = 1'000'000'000, _D = 100'000'000;
-            int N = _N, M = _M;
-            int D = randint(1, _D), K = randint(1, N);
-            
-            using Task = std::tuple<int, int, int>;
-            std::vector<Task> tasks;
-            while ((int)tasks.size() < M) {
-                int end = randint(1, N);
-                int cnt = randint(1, end);
-                int val = randint(1, _V);
-                tasks.emplace_back(end, cnt, val);
+        const int _N = 4, _M = 3, _V = 5;
+        while (true) {
+            struct Edge {
+                int x, y, val;
+            };
+            int N = _N;
+            int M = randint(1, _M);
+            int K = randint(1, N);
+            std::vector<Edge> edges;
+            for (auto i: range(2, N+1)) {
+                auto to = randint(1, std::max(1, i - 2));
+                edges.push_back({i, to, randint(1, _V)});
             }
-            out << N << ' ' << M << ' ' << K << ' ' << D << endl;
-            for (auto [x, y, val]: tasks)  out << x << ' ' << y << ' ' << val << endl;
+            out << N << ' ' << M << ' ' << K << endl;
+            for (auto [x, y, val]: edges) {
+                out << x << ' ' << y << ' ' << val << endl;
+            }
+            break;
         }
     }
 }
