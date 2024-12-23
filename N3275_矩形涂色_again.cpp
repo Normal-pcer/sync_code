@@ -5,7 +5,7 @@
 #pragma GCC optimize(3)
 #pragma GCC optimize("Ofast")
 #pragma GCC optimize("inline")
-#include "./lib"
+#include "./lib_v3.hpp"
 
 #include "./libs/io.hpp"
 

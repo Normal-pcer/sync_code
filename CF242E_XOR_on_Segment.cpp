@@ -3,7 +3,7 @@
  * @link http://codeforces.com/problemset/problem/242/E
  */
 
-#include "./lib"
+#include "./lib_v3.hpp"
 
 #include "./libs/range.hpp"
 

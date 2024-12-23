@@ -15,7 +15,7 @@ https://www.luogu.com.cn/discuss/795990
 #include "./libs/debug_macros.hpp"
 
 #include<bits/stdc++.h>
-#include "./lib"
+#include "./lib_v3.hpp"
 
 using namespace lib;
 

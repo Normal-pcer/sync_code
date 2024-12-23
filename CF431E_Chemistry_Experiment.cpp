@@ -3,7 +3,7 @@
  * @link https://codeforces.com/problemset/problem/431/E
  */
 
-#include "./lib"
+#include "./lib_v3.hpp"
 
 using namespace lib;
 

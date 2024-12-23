@@ -3,7 +3,7 @@
  * @link https://www.luogu.com.cn/problem/SP2916
  */
 
-#include "./lib"
+#include "./lib_v3.hpp"
 
 #include "./libs/range.hpp"
 
