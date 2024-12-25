@@ -28,6 +28,7 @@ namespace views { using namespace std::ranges::views; }
 
 #include "./libs/io.hpp"
 
+
 #define rg std::ranges
 
 using namespace lib;
@@ -181,6 +182,7 @@ namespace Solution {
         }
 
         auto getCard(const Card& templ) {
+            std::cout << (int)position << " gets " << templ.label << endl;
             auto copy = templ.copy(this);
             cards.push_back(copy);
         }
@@ -208,6 +210,7 @@ namespace Solution {
          */ 
         void damaged(const Damage& obj) {
             assert(not dead);
+            std::cout << std::format("{} {} <- {}", strength, (int)position, (int)obj.source.position) << std::endl;
             log("Damaged P%d<-%d. Strength %d -= %d.\n", index(), obj.source.index(), strength, obj.amount)
             // 尝试减免伤害，否则正常造成伤害
             if (obj.type == Killing) {
@@ -381,7 +384,7 @@ namespace Solution {
      */
     bool tryExecutingUnbreakable(const Card& before, const Player& original, 
                 decltype(Player::position) pos, bool tag=false, int depth=0) {
-
+        std::cout << std::format("try {} {}", (char)before.label, original.position.index) << std::endl;
         log("[%d]tryUnbreakable, before=%c#%d, original=P%d, pos=%d, tag=%d\n", depth, before.label, before.id, 
             original.index(), pos.index, tag);
         if (original.impression < F_Thief and original.character != M_Master) { // 没有亮身份，帮不了
@@ -466,6 +469,8 @@ namespace Solution {
         log("Apply label: %c #%d?\n", label, id)
 
         bool success = cardActions[label](*this);
+        std::cout << (int)owner->position << " apply " << label << ' ';
+        std::cout << (int)success << endl;
         if (not success)  return false;
         log("Apply label: %c #%d - Success\n", label, id)
         abandon();
@@ -484,6 +489,7 @@ namespace Solution {
 
     // 弃置一张卡牌
     void Card::abandon() {
+        std::cout << (int)owner->position << " abandon " << label << endl;
         log("Abandon Card %c #%d\n", label, id);
         auto ptr = std::find(owner->cards.begin(), owner->cards.end(), this);  // 玩家手牌
         if (ptr != owner->cards.end()) {  // 如果存在指向这张牌的指针
@@ -494,7 +500,7 @@ namespace Solution {
 
     // 测试
     bool T_Test(const Card card) {
-        io << "test " << card.id << endl;
+        std::cout << "test " << card.id << endl;
         return true;
     }
 
@@ -641,7 +647,18 @@ namespace Solution {
      */
     bool round() {
         for (auto &player: players) {
+            std::cout << "-----" << endl;
+            for (auto &pl: players) {
+                std::cout << (char)pl->impression << ' ' << pl->strength << ' ';
+                if (pl->dead) {
+                    io.writeln("DEAD");
+                } else {
+                    for (auto &cd: pl->cards)  std::cout << cd->label << ' ';
+                    std::cout << endl;
+                }
+            }
             if (player->dead)  continue;
+            
             if (player->round() == false) {
                 return false;
             }
@@ -654,13 +671,13 @@ namespace Solution {
         while (round());
 
         // 输出结果
-        io << (char)winner << 'P' << endl;
+        std::cout << (char)winner << 'P' << endl;
         for (auto &pl: players) {
             if (pl->dead) {
                 io.writeln("DEAD");
             } else {
-                for (auto &cd: pl->cards)  io << cd->label << ' ';
-                io << endl;
+                for (auto &cd: pl->cards)  std::cout << cd->label << ' ';
+                std::cout << endl;
             }
         }
     }
