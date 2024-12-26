@@ -15,25 +15,8 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 4, _M = 3, _V = 5;
-        while (true) {
-            struct Edge {
-                int x, y, val;
-            };
-            int N = _N;
-            int M = randint(1, _M);
-            int K = randint(1, N);
-            std::vector<Edge> edges;
-            for (auto i: range(2, N+1)) {
-                auto to = randint(1, std::max(1, i - 2));
-                edges.push_back({i, to, randint(1, _V)});
-            }
-            out << N << ' ' << M << ' ' << K << endl;
-            for (auto [x, y, val]: edges) {
-                out << x << ' ' << y << ' ' << val << endl;
-            }
-            break;
-        }
+        const int _N = 5, _H = 10, _V = 10;
+        // int j = 
     }
 }
 

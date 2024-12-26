@@ -81,7 +81,7 @@ class Card:
         elif isinstance(other, str):
             return self.label == Label(other)
         else:
-            throw(TypeError("Invalid type for operator==(Card, {})".format(type(other))))
+            raise TypeError("Invalid type for operator==(Card, {})".format(type(other)))
 
     def copy(self, new_owner: Union["Player", None] = None):
         return Card(self.label, new_owner)
@@ -312,11 +312,10 @@ class Player:
                     break
                 i += 1
 
-            global winner
             if winner != Character._Undefined:
                 return False
             if self.isDead():
-                return False
+                return True
         return True
 
 
