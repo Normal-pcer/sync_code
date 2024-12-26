@@ -28,7 +28,6 @@ namespace views { using namespace std::ranges::views; }
 
 #include "./libs/io.hpp"
 
-
 #define rg std::ranges
 
 using namespace lib;
