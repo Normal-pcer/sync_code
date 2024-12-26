@@ -10,6 +10,9 @@ template <>  struct is_integral_or_int128<__int128> { constexpr static bool valu
 template <>  struct is_integral_or_int128<unsigned __int128> { constexpr static bool value = true; };
 template <typename T>  struct is_floating_point_or_float128 { constexpr static bool value = std::is_floating_point<T>::value; };
 template <>  struct is_floating_point_or_float128<__float128> { constexpr static bool value = true; };
+template <typename T> struct is_number {
+    constexpr static bool value = is_integral_or_int128<T>::value || is_floating_point_or_float128<T>::value;
+};
 
 struct Scanner: public std::istream {
     virtual char gc() = 0;
@@ -18,7 +21,7 @@ struct Scanner: public std::istream {
     Scanner &get(char &x) {
         return read(x);
     }
-    template <typename T, typename std::enable_if<is_integral_or_int128<T>::value || is_floating_point_or_float128<T>::value>::type* = nullptr>
+    template <typename T, typename std::enable_if<is_number<T>::value>::type* = nullptr>
     Scanner &read(T &x) {
         bool sign = false;  x = 0;  char ch = gc();
         for (; not isDigit(ch); ch = gc()) {
@@ -149,13 +152,8 @@ struct Printer: std::ostream {
         for (auto ch: s)  put(ch);
         return *this;
     }
-    template <typename T, typename ...Types>
-    Printer &write(const T &x, const Types &...args) {
-        write(x), write(args...);
-        return *this;
-    }
     template <typename T>
-    Printer &operator<< (const T &x) {
+    Printer &operator<< (const T &x) requires (write(x)) {
         return write(x);
     }
 };
@@ -193,7 +191,7 @@ int main() {
     std::vector<std::string> lines;
     std::string line;
     try {
-        (std::ostream &)printer << std::bitset<8>(24);
+        printer << "dick";
     } catch (EOFError &) {}
     for (auto &line: lines)  std::cout << line << std::endl;
     return 0;
