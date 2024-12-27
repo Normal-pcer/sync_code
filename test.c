@@ -1,14 +1,6 @@
-#define DeclareBoxOf(T) typedef struct Box_##T { \
-    ##T item; \
-} Box_##T; \
-##T BoxGet_##T(Box_##T *this) { \
-    return this->item; \
-}
-
-DeclareBoxOf(int)
-DeclareBoxOf(double)
-
+#include <stdio.h>
 int main() {
-    Box_int x = {5};
-    printf("%d\n", BoxGet_int(&x));
+    int x;  scanf("%d", &x);
+    int arr[x];
+    return 0;
 }
