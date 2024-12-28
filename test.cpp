@@ -1,142 +1,65 @@
-/**
- * @link https://www.luogu.com.cn/problem/P7075
- */
+#include "./libs/debug_macros.hpp"
 
 #include <bits/stdc++.h>
-using ll = long long;
-
-namespace Solution {
-    int Q;
-
-    const int AverageYearsMonth[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
-    const int LeapYearsMonth[] = {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366};
-    
-    bool isLeap(int year, bool usingGregorian=true) {
-        if (year<0)  year++;
-        if (not usingGregorian)
-            return (year%4 == 0);
-        else
-            return (year%400 == 0) or (year%100!=0 and year%4==0);
+#define rep(i, a, b) for(int i=(a);i<=(b);i++)
+#define pre(i, a, b) for(int i=(a);i>=(b);i--)
+#define INF 0x3f3f3f3f
+#define llINF 0x3f3f3f3f3f3f3f3f
+#define bigpq(type) priority_queue<type>
+#define smpq(type) priority_queue<type,vector<type>,greater<type>>
+#define mem(a, x) memset((a), (x), sizeof(a))
+using namespace std;
+typedef long long ll;
+typedef pair<int, int> pii;
+/**********************************************************************
+    lgP10490.cpp created by Dennis2013 on 27-12-2024 周五 at 22:51:32
+**********************************************************************/
+int n, a[55]; vector<int> p, q; //p:up q:down
+bool dfs(int u, int cnt, int dep)
+{
+    if (cnt > dep) return 0;
+    if (u > n) return 1;
+    for (auto &x : p)
+    {
+        if (x >= a[u]) continue;
+        int t = x;
+        x = a[u];
+        if (dfs(u + 1, cnt, dep)) return 1;
+        x = t;
+        break;
     }
-    // 计算年内的某个日期
-    // 传入：从某年的 1/1 到目标日期的天数，左闭右开。
-    // 返回：月，日（可直接输出）
-    std::pair<int, int> calculateDateInYear(ll days, bool leap=false) {
-        const int *YearMonth = leap? LeapYearsMonth: AverageYearsMonth;
-        // 一个月中包含的天数恰好大于 days
-        auto monthPointer = std::upper_bound(YearMonth, YearMonth + 13, days);
-        auto month = std::distance(YearMonth, monthPointer);
-        auto currentDay = days - YearMonth[month - 1] + 1;
-        return {month, currentDay};
+    for (auto &x : q)
+    {
+        if (x <= a[u]) continue;
+        int t = x;
+        x = a[u];
+        if (dfs(u + 1, cnt, dep)) return 1;
+        x = t;
+        break;
     }
-    void BC(ll julian) {
-        auto daysNegativeCount = 1721424 - julian;  // 到 1/1/1 的天数
-        auto termsCount = daysNegativeCount / 1461;  // 周期（4 年）数量
-        auto yearAbs = termsCount * 4;  // 年份的绝对值
-        daysNegativeCount %= 1461;  // 向前拨回若干周期后剩余的天数；到某年的 1 月 1 日，该年份绝对值是 4 的倍数
-        auto newDays = daysNegativeCount;  // 再拨回一年，这一年一定是一个闰年
-        while (newDays > 0) {
-            newDays = newDays - 365 - isLeap(-yearAbs-1, false);
-            yearAbs++;
-        }
-
-        int dayIndex = 0 - newDays;  // 目标日期到那年 1 月 1 日的天数，左闭右开
-
-        auto [month, day] = calculateDateInYear(dayIndex, isLeap(-yearAbs, false));
-        printf("%d %d %lld BC\n", day, month, yearAbs);
+    if (p.empty() || p.back() > a[u])
+    {
+        p.push_back(a[u]);
+        if (dfs(u + 1, cnt + 1, dep)) return 1;
+        p.pop_back();
     }
-    void DC_WithJulianCalender(ll julian) {
-        auto daysCount = julian - 1721424;  // 到 1/1/1 的天数
-        auto termsCount = daysCount / 1461;  // 四年周期
-        auto years = termsCount * 4 + 1;  // 此时是这一年的 1/1
-        daysCount %= 1461;
-        auto newDays = daysCount;
-        // 向后拨若干年，直到这个数大于等于 0 时的最小值
-        while (newDays - 365 - isLeap(years, false) >= 0) {
-            newDays = newDays - 365 - isLeap(years, false);
-            years++;
-        }
-        auto [month, day] = calculateDateInYear(newDays, isLeap(years, false));
-        printf("%d %d %lld\n", day, month, years);
+    if (q.empty() || q.back() < a[u])
+    {
+        q.push_back(a[u]);
+        if (dfs(u + 1, cnt + 1, dep)) return 1;
+        q.pop_back();
     }
-    void DC_WithGregorianCalender(ll julian) {
-        const auto newYearJulianDay = 2299249-10;  // 1583/1/1 的儒略日
-        if (julian < newYearJulianDay) {
-            DC_WithJulianCalender(julian+10);
-            return;
-        }
-        auto daysAfterNewYear = julian - newYearJulianDay;  // 从 1583/1/1 开始，左闭右开
-        // 先暴力推 17 年
-        auto year = 1583LL;  // 当前处于 year/1/1
-        while (daysAfterNewYear - 365 - isLeap(year) >= 0) {
-            daysAfterNewYear = daysAfterNewYear - 365 - isLeap(year);
-            year++;
-            if (year == 1601)  break;
-        }
-        if (year > 1600) {
-            // 对于一个 400 年的大周期
-            const auto bigTermLength = 146097;
-            auto bigTermCount = daysAfterNewYear / bigTermLength;
-            daysAfterNewYear %= bigTermLength;
-            year += bigTermCount * 400; assert(year%400==1);
-
-            // 直接特判 400 年的倍数
-            if (daysAfterNewYear >= bigTermLength - 366) {
-                year += 399;
-                auto [month, day] = calculateDateInYear(daysAfterNewYear - bigTermLength + 366, 1);
-                printf("%d %d %lld\n", day, month, year);
-                return;
-            }
-
-            // 100 年的中等周期
-            const auto midTermLength = 36524;
-            auto midTermCount = daysAfterNewYear / midTermLength;
-            daysAfterNewYear %= midTermLength;
-            year += midTermCount * 100;
-
-            // 特判 100 的倍数
-            if (daysAfterNewYear >= midTermLength - 365) {
-                year += 99;
-                auto [month, day] = calculateDateInYear(daysAfterNewYear - midTermLength + 365, 0);
-                printf("%d %d %lld\n", day, month, year);
-                return;
-            }
-
-            // 4 年
-            const auto littleTermLength = 1461;
-            auto littleTermCount = daysAfterNewYear / littleTermLength;
-            daysAfterNewYear %= littleTermLength;
-            year += littleTermCount * 4;
-            while (daysAfterNewYear - 365 - isLeap(year) >= 0) {
-                daysAfterNewYear = daysAfterNewYear - 365 - isLeap(year);
-                year++;
-            }
-            auto [month, day] = calculateDateInYear(daysAfterNewYear, isLeap(year));
-            printf("%d %d %lld\n", day, month, year);
-        } else {
-            auto [month, day] = calculateDateInYear(daysAfterNewYear, isLeap(year));
-            printf("%d %d %lld\n", day, month, year);
-        }
-    }
-
-    void solve() {
-        std::cin >> Q;
-        ll x;
-
-        for (auto i = 0; i < Q; i++) {
-            std::cin >> x;
-            if (x < 1721424) {
-                BC(x);// 1/1/1 BC 及以前
-            } else if (x <= 2299160) {
-                DC_WithJulianCalender(x);  // 适用儒略历
-            } else {
-                DC_WithGregorianCalender(x);  // 适用格里高利历
-            }
-        }
-    }
+    return 0;
 }
-
-int main() {
-    Solution::solve();
+int main()
+{
+    while (~scanf("%d", &n) && n)
+    {
+        p.clear(); q.clear();
+        rep(i, 1, n) scanf("%d", &a[i]);
+        int dep = 0;
+        for (; dep < 25 && !dfs(1, 0, dep); dep ++);
+        printf("%d\n", dep);
+    }
     return 0;
 }

@@ -2,9 +2,12 @@
  * @link https://www.luogu.com.cn/problem/P5662
  */
 
-#include "libs/debug_macros.hpp"
-#include "lib"
-#include "libs/range.hpp"
+#include "./libs/debug_macros.hpp"
+
+#include "./lib_v3.hpp"
+
+#include "./libs/range.hpp"
+
 using namespace lib;
 
 namespace Solution_2415534212037238 {
@@ -13,7 +16,7 @@ namespace Solution_2415534212037238 {
         std::cin.tie(nullptr), std::cout.tie(nullptr);
 
         int T, N, M;  std::cin >> T >> N >> M;
-        const int _M = 10008;
+        // const int _M = 10008;
         std::vector price(T+1, std::vector<int>(N+1));  // price[i][j]：第 i 天 j 物品的价格
         for (auto &line: price | views::drop(1)) {
             for (auto &item: line | views::drop(1)) {
@@ -27,19 +30,29 @@ namespace Solution_2415534212037238 {
         // F[i][k]：对于当前遍历到的 j，G[i][j][k]
         std::vector<std::vector<int>> F(T+1);
         F[0].resize(M+1, -inf), F[0][M] = M;
-        for (auto i: range(1, T+1)) {
+        for (auto i: range(1, T)) {
             auto max_k = 0;
             for (auto x: F[i-1])  chkMax(max_k, x);
             assert((int)F[i].size() <= max_k), F[i].resize(max_k+1, -inf);
-            for (auto x: F[i-1])  chkMax(F[i][F[i-1][x]], F[i-1][x]);
+            for (auto x: F[i-1]) {
+                if (x > 0)  chkMax(F[i][x], x);
+            }
             for (auto j: range(1, N+1)) {
-                for (auto k: range(1, (int)F[i].size() - price[i][j])) {
-                    chkMax(F[i][k], F[i][k + price[i][j]] + price[i+1][j]);
+                for (auto k: range(0, std::max(0, (int)F[i].size() - price[i][j])) | views::reverse) {
+                    chkMax(F[i][k], F[i][k + price[i][j]] - price[i][j] + price[i+1][j]);
                 }
             }
         }
-
-        // auto ans = F[T][N]
+        debug {
+            for (auto i: range(F.size())) {
+                auto &line = F[i];
+                for (auto j: range(line.size())) {
+                    if (F[i][j] > 0)  std::cout << std::format("F[{}][{}] = {}\n", i, j, F[i][j]);
+                }
+            }
+        }
+        auto ans = ranges::max(F[T-1]);
+        std::cout << ans << endl;
     }
 }
 
