@@ -21,7 +21,7 @@ template <typename T> struct is_number {
     constexpr static bool value = is_integral_or_int128<T>::value || is_floating_point_or_float128<T>::value;
 };
 
-struct Scanner: public std::istream {
+struct Scanner {
     virtual char gc() = 0;
     static bool isDigit(char ch) { return '0' <= ch and ch <= '9'; }
     static bool isBlank(char ch) { return ch <= 32 or ch == 127; }
@@ -132,10 +132,10 @@ struct Printer {
             y = (y - cur) / 10;
             *top++ = (int)(cur) ^ 48;
         }
-        if (top == st)  return put('0'), *this;
+        if (top == st)  put('0');
         while (top != st)  put(*--top);
         x -= std::floor(x);
-        if (x)  put('.');
+        put('.');
         for (auto i = 0; i < 6; i++) {
             x = x * 10;
             auto cur = std::floor(x);

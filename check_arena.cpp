@@ -1,11 +1,10 @@
 // Do not expand include
-#include "./lib_v2.hpp"
-#include "./libs/range.hpp"
-
+#include "lib"
+#include "libs/range.hpp"
 using namespace lib;
 
 constexpr const int MaxTimes = inf;
-constexpr const int FileCount = 3;
+constexpr const int FileCount = 2;
 constexpr const char *FileNames[] = {
     "check_arena0.cpp",
     "check_arena1.cpp",
@@ -146,8 +145,7 @@ namespace Checker {
     }
 }
 
-int main(int argc, char const *argv[]) {
-    initDebug;
+int main() {
     try {
         Checker::main();
     } catch (std::string str) {
