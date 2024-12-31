@@ -4,7 +4,6 @@
 
 #include "./lib_v3.hpp"
 
-
 using namespace lib;
 
 namespace IO {
@@ -657,7 +656,7 @@ namespace CYaRonLang {
                     for (ch = io.get(); isDigit(ch); ch = io.get())  tmp *= 0.1, value += tmp * (ch ^ 48);
                 }
                 Identifier id;
-                if  (isIdentifierStart(ch) and ch != 'E' and ch != 'e') {
+                if (isIdentifierStart(ch) and ch != 'E' and ch != 'e') {
                     io.unget();
                     io >> id;
                     suffixOperators.push_back(id.name);
@@ -749,6 +748,7 @@ namespace CYaRonLang {
             } catch (IO::EOFError &) {}
             return tokens;
         }
+        
     }
     void test() {
     }
