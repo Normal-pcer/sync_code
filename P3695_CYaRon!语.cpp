@@ -4,6 +4,7 @@
 
 #include "./lib_v3.hpp"
 
+
 using namespace lib;
 
 namespace IO {
@@ -46,7 +47,8 @@ namespace IO {
     template <typename T, typename U>
     bool leftShiftOverflow(T &x, U y) {
         if (x == 0)  return false;
-        return x <<= y, std::__lg(x) + y >= std::numeric_limits<T>::digits;
+        bool flag = std::__lg(x) + y >= std::numeric_limits<T>::digits;
+        return x <<= y, flag;
     }
 
     struct Scanner {
@@ -332,6 +334,46 @@ namespace CYaRonLang {
             return index == s.size()? '\0': s[index++];
         }
     };
+    namespace Trie {
+        class Trie {
+        public:
+            struct Node {
+                std::array<Node *, 96> next;
+                int match;
+            };
+            std::deque<Node> nodes;
+            Node *root;
+            Trie(): nodes(), root(nullptr) {
+                nodes.push_back({});
+                root = &nodes.back();
+            }
+            Trie(std::initializer_list<std::string> &&init): nodes(), root(nullptr) {
+                nodes.push_back({});
+                root = &nodes.back();
+                for (const auto &s: init)  insert(s);
+            }
+            
+            int match(const std::string &s) const {
+                Node *cur = root;
+                for (auto ch: s) {
+                    assert(ch > 32), ch -= 32;
+                    if (cur->next[ch])  cur = cur->next[ch];
+                    else  return 0;
+                }
+                return cur->match;
+            }
+            void insert(const std::string &s) {
+                Node *cur = root;
+                for (auto ch: s) {
+                    assert(ch > 32), ch -= 32;
+                    cur->match++;
+                    if (cur->next[ch])  cur = cur->next[ch];
+                    else  nodes.push_back({}), cur = cur->next[ch] = &nodes.back();
+                }
+                cur->match++;
+            }
+        };
+    }
     namespace Compiler {
         void compileError(std::string const &s) {
             ioError << s << endl;
@@ -505,20 +547,23 @@ namespace CYaRonLang {
                             }
                             value.push_back(x);
                         } break;
-                        case 0:  [[fallthrough]];
-                        case 1:  [[fallthrough]];
-                        case 2:  [[fallthrough]];
-                        case 3:  [[fallthrough]];
-                        case 4:  [[fallthrough]];
-                        case 5:  [[fallthrough]];
-                        case 6:  [[fallthrough]];
-                        case 7: {
+                        case '0':  [[fallthrough]];
+                        case '1':  [[fallthrough]];
+                        case '2':  [[fallthrough]];
+                        case '3':  [[fallthrough]];
+                        case '4':  [[fallthrough]];
+                        case '5':  [[fallthrough]];
+                        case '6':  [[fallthrough]];
+                        case '7': {
                             // 八进制
                             int x = ch ^ 48;
                             for (int i = 0; i < 2; i++) {
                                 ch = io.get();
                                 if ('0' <= ch and ch <= '7')  x = x * 8 + (ch ^ 48);
-                                else  compileError("Invalid oct digit");
+                                else {
+                                    io.unget();
+                                    break;
+                                }
                             }
                             value.push_back(x);
                         } break;
@@ -571,17 +616,33 @@ namespace CYaRonLang {
             }
         };
         struct Symbol: public ParseAble, public DumpAble {
-            char value;
-            Symbol(): value(0) {}
-            Symbol(char value): value(value) {}
-            void parse(IO::Scanner &io) {
-                io >> value;
-            }
+            std::string value;
+            Symbol(): value({}) {}
+            Symbol(std::string value): value(value) {}
+            void parse(IO::Scanner &);
             void dump(IO::Printer &io) {
                 io << value;
             }
         };
-        
+        Trie::Trie symbols {
+            "<=", ">=", "!=", "==", "<<", ">>", "<=>", "&&", "||", "+=", "-=", "*=", "/=", "%=", "|=", "&=", "^=", "->",
+            "++", "--"
+        };
+        void Symbol::parse(IO::Scanner &io) {
+            value.clear();
+            char ch = io.get();
+            value.push_back(ch);
+            auto *cur = symbols.root->next[ch - 32];
+            bool flag = false;
+            while (cur) {
+                ch = io.get(), flag = true;
+                if (isBlank(ch) or isDigit(ch) or isIdentifierStart(ch))  break;
+                if (cur->next[ch - 32])  cur = cur->next[ch - 32];
+                else  break;
+                value.push_back(ch);
+            }
+            if (flag)  io.unget();
+        }
         struct FloatingPointNumber: public ParseAble, public DumpAble {
             double value;
             std::vector<std::string> suffixOperators;
@@ -593,10 +654,10 @@ namespace CYaRonLang {
                 value = 0;
                 for (; isDigit(ch); ch = io.get())  value = value * 10 + (ch ^ 48);
                 if (ch == '.') {
-                    for (ch = io.get(); not isDigit(ch); ch = io.get())  tmp *= 0.1, value += tmp * (ch ^ 48);
+                    for (ch = io.get(); isDigit(ch); ch = io.get())  tmp *= 0.1, value += tmp * (ch ^ 48);
                 }
                 Identifier id;
-                if  (ch = io.get(); isIdentifierStart(ch)) {
+                if  (isIdentifierStart(ch) and ch != 'E' and ch != 'e') {
                     io.unget();
                     io >> id;
                     suffixOperators.push_back(id.name);
@@ -611,6 +672,7 @@ namespace CYaRonLang {
             }
             void dump(IO::Printer &io) {
                 io << value;
+                for (auto i: suffixOperators)  io << '\'' << i;
             }
         };
         struct Token {
@@ -689,6 +751,9 @@ namespace CYaRonLang {
         }
     }
     void test() {
+    }
+    void solve() {
+        test();
         using namespace Compiler;
 //         std::string s = R"aaa(
 // "test"
@@ -723,9 +788,6 @@ namespace CYaRonLang {
                 break;
             }
         }
-    }
-    void solve() {
-        test();
     }
 }
 

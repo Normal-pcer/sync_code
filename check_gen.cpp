@@ -15,14 +15,26 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 5, _V = 8;
-        int N = _N;
-        std::vector<int> vec(N, _V);
-        ranges::transform(vec, vec.begin(), rand_max);
-        ranges::sort(vec);
-        int W = randint(ranges::max(vec), ranges::max(vec) << 1);
-        out << W << ' ' << N << endl;
-        for (auto i: vec)  out << i << endl;
+        const int _N = 5, _M = 7, _V = 10;
+        auto N = _N, M = _M;
+        std::vector<int> price(N+1);
+        for (auto &i: price)  i = randint(1, _V);
+        out << N << ' ' << M << endl;
+        for (auto i: price | views::drop(1))  out << i << ' ';
+        out << endl;
+        std::set<std::pair<int, int>> set;
+        std::vector<std::tuple<int, int, int>> edges;
+        for (; edges.size() != (size_t)M; ) {
+            auto x = randint(1, N), y = randint(1, N);
+            if (x == y)  continue;
+            if (x > y)  std::swap(x, y);
+            if (set.contains({x, y}))  continue;
+            auto flag = randint(1, 2);
+            edges.push_back({x, y, flag});
+            set.insert({x, y});
+        }
+        ranges::shuffle(edges, random);
+        for (auto [x, y, flag]: edges)  out << x << ' ' << y << ' ' << flag << endl;
     }
 }
 
