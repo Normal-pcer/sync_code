@@ -4,6 +4,7 @@
 
 #include "./lib_v3.hpp"
 
+
 using namespace lib;
 
 namespace IO {
@@ -288,9 +289,8 @@ namespace IO {
     struct DefaultIO: public MemoryMapScanner, FileWritePrinter<MaxSize> {};
     DefaultIO<1<<20> io;
 #else  // not def IO_ENABLE_MMAP
-    template <size_t MaxSize>
-    struct DefaultIO: public FileReadScanner<MaxSize>, FileWritePrinter<MaxSize> {};
-    DefaultIO<1<<20> io;
+    struct DefaultIO: public GetCharScanner, PutCharPrinter {};
+    DefaultIO io;
 #endif  // def IO_ENABLE_MMAP
 }
 using IO::io;
@@ -597,7 +597,7 @@ namespace CYaRonLang {
                     case '\0':  io << "\\0"; break;
                     case '\\':  io << "\\\\"; break;
                     case '\"':  io << "\\\""; break;
-                    case ' ':  io << ' '; break;
+                    case '\x20':  io << '\x20'; break;
                     [[likely]] default: 
                         if (isBlank(x))  io << std::format("\\x{:02X}", x);
                         else  io << x;
@@ -679,6 +679,24 @@ namespace CYaRonLang {
                 NoneTag, IdentifierTag, SymbolTag, KeywordTag, IntegerTag, StringTag, EndOfLineTag, FloatingPointTag
             } tag = NoneTag;
             std::variant<int, Identifier, Integer, String, Symbol, FloatingPointNumber> value = 0;
+            friend IO::Printer &operator<<(IO::Printer &io, Token &token) {
+                switch (token.tag) {
+                case Token::IdentifierTag:
+                    return io << "Identifier_" << std::get<Identifier>(token.value);
+                case Token::IntegerTag:
+                    return io << "Integer" << std::get<Integer>(token.value);
+                case Token::StringTag:
+                    return io << "String" << std::get<String>(token.value);
+                case Token::SymbolTag:
+                    return io << "Symbol" << std::get<Symbol>(token.value);
+                case Token::EndOfLineTag:
+                    return io << "EOL";
+                case Token::FloatingPointTag:
+                    return io << "FloatingPoint" << std::get<FloatingPointNumber>(token.value);
+                default:
+                    return io << "Unknown";
+                }
+            }
         };
         
         std::vector<Token> tokenize(IO::Scanner &io) {
@@ -748,9 +766,454 @@ namespace CYaRonLang {
             } catch (IO::EOFError &) {}
             return tokens;
         }
-        
+        // AST
+        // 抽象语法树
+        namespace AST {
+            using TokensType = const std::vector<Token>;
+            using TokenIterator = TokensType::const_iterator;
+            using TokensSubrange = std::ranges::subrange<TokenIterator>;
+            struct Node {};
+            template <typename T>
+            struct ParseResult {
+                T *node;
+                TokenIterator it;
+            };
+            struct StatementNode: public Node {
+                enum Type {
+                    NoneStatement,
+                    ExpressionEvaluateStatement
+                } type = NoneStatement;
+                StatementNode(Type type = NoneStatement): type(type) {}
+                virtual ~StatementNode() = default;
+            };
+            struct BlockNode: public Node {
+                std::vector<StatementNode *> statements;
+                static ParseResult<BlockNode> parse(std::vector<Token> const &src);
+
+                ~BlockNode() {
+                    for (auto &statement: statements)  delete statement;
+                }
+            };
+            struct ValueNode;
+            struct ExpressionNode: public StatementNode {
+                enum Operator {
+                    // 特殊运算符
+                    NoneOp,
+                    Bracket,    // 括号（仅解析时使用）
+                    Call,       // 函数调用
+                    FunctionArgsBracket,  // 函数参数括号（仅解析时使用）
+                    Subscript,  // 下标访问
+                    SubscriptBracket,  // 方括号（仅解析时使用）
+                    SplitComma,  // 作为分隔符的逗号
+                    // 算术运算符
+                    UnaryAdd,  // 正
+                    UnarySub,  // 负
+                    Add,  // 加
+                    Sub,  // 减
+                    Mul,  // 乘
+                    Div,  // 除
+                    Mod,  // 模
+                    // 比较运算符
+                    Less,  // 小于
+                    LessEqual,  // 小于等于
+                    Greater,  // 大于
+                    GreaterEqual,  // 大于等于
+                    Equal,  // 等于
+                    NotEqual,  // 不等于
+                    // 逻辑运算符
+                    And,  // 与
+                    Or,  // 或
+                    Not,  // 非
+                    // 位运算符
+                    BitAnd,  // 与
+                    BitOr,  // 或
+                    BitXor,  // 异或
+                    BitNot,  // 非
+                    BitShiftLeft,  // 左移
+                    BitShiftRight,  // 右移
+                    // 赋值运算符
+                    Assign,  // 赋值
+                } op = NoneOp;
+                static constexpr const char *opNames[] = {"NoneOp", "Bracket", "Call", "FunctionArgsBracket", "Subscript", "SubscriptBracket", "SplitComma", "UnaryAdd", "UnarySub", "Add", "Sub", "Mul", "Div", "Mod", "Less", "LessEqual", "Greater", "GreaterEqual", "Equal", "NotEqual", "And", "Or", "Not", "BitAnd", "BitOr", "BitXor", "BitNot", "BitShiftLeft", "BitShiftRight", "Assign"};
+                // 操作数；特别地，单目运算符只有 left
+                ExpressionNode *left = nullptr, *right = nullptr;
+                ExpressionNode(Operator op = NoneOp): 
+                    StatementNode({StatementNode::ExpressionEvaluateStatement}), op(op) {}
+                virtual ~ExpressionNode();
+
+                struct OperatorInfo {
+                    static constexpr const int priority_max = 0x3f3f3f3f;
+                    int priority = 0;  // 优先级；越小越先算
+                    bool leftAssociative = false;  // 从右到左结合
+                };
+                static constexpr OperatorInfo infoOf(Operator op) {
+                    switch (op) {
+                    case Call:  return {2, false};
+                    case Subscript:  return {2, false};
+                    case SplitComma:  return {17, false};
+                    case UnaryAdd:  return {3, true};
+                    case UnarySub:  return {3, true};
+                    case Add:  return {6, false};
+                    case Sub:  return {6, false};
+                    case Mul:  return {5, false};
+                    case Div:  return {5, false};
+                    case Mod:  return {5, false};
+                    case Less:  return {9, false};
+                    case LessEqual:  return {9, false};
+                    case Greater:  return {9, false};
+                    case GreaterEqual:  return {9, false};
+                    case Equal:  return {10, false};
+                    case NotEqual:  return {10, false};
+                    case And:  return {14, false};
+                    case Or:  return {15, false};
+                    case Not:  return {3, true};
+                    case BitAnd:  return {11, false};
+                    case BitOr:  return {13, false};
+                    case BitXor:  return {12, false};
+                    case BitNot:  return {3, true};
+                    case BitShiftLeft:  return {7, false};
+                    case BitShiftRight:  return {7, false};
+                    case Assign:  return {16, true};
+                    default:  return {OperatorInfo::priority_max, false};
+                    }
+                }
+                template <typename T>
+                static ParseResult<ExpressionNode> parse(const T &);
+                void walk(IO::Printer &io);
+            };
+
+            struct ValueNode: public ExpressionNode {
+                enum Type {
+                    NoneValue,
+                    Integer,
+                    FloatingPoint,
+                    String,
+                    Identifier
+                } type = NoneValue;
+                Token token;
+
+                ValueNode(Type type, Token token): 
+                    ExpressionNode({ExpressionNode::NoneOp}), type(type), token(token) {}
+                ValueNode(Token token): ExpressionNode({ExpressionNode::NoneOp}), type(NoneValue), token(token) {
+                    type = [&]() {
+                        switch (token.tag) {
+                        case Token::IntegerTag:  return Integer;
+                        case Token::FloatingPointTag:  return FloatingPoint;
+                        case Token::StringTag:  return String;
+                        case Token::IdentifierTag:  return Identifier;
+                        default:  return assert(false), NoneValue;
+                        }
+                    }();
+                }
+            };
+
+            ParseResult<BlockNode> BlockNode::parse(std::vector<Token> const &src) {
+                // 解析一个语句块
+                // 语句块用花括号包裹，包含若干条语句
+                auto res = new BlockNode;
+                auto it = src.begin();
+                assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{"), it++;
+                for (; it != src.end();) {
+                    if (it->tag == Token::EndOfLineTag) {
+                        it++;
+                        continue;
+                    }
+                    if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "}")  return {res, ++it};
+                    // todo: 尝试匹配关键字
+                    // 特殊语法：
+                    // 冒号开头的 :f x, y 等价于函数调用 f(x, y)
+                    if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ":") {
+                        it++;
+                        // 匹配一个函数名
+                        assert(it->tag == Token::IdentifierTag);
+                        auto funcToken = *it++;
+                        std::vector<Token> tmp;
+                        // 匹配直到一个 EOL
+                        while (it != src.end() and it->tag != Token::EndOfLineTag)  tmp.push_back(*it++);
+                        // 补全成正常函数调用
+                        tmp.insert(tmp.begin(), {Token::SymbolTag, Symbol("(")});
+                        tmp.insert(tmp.begin(), funcToken);
+                        tmp.push_back({Token::SymbolTag, Symbol(")")});
+                        assert(it != src.end()), it++, tmp.push_back({Token::EndOfLineTag});
+                        // 解析 tmp
+                        auto [expr, next] = ExpressionNode::parse(tmp);
+                        assert(expr->op == ExpressionNode::Call and next == tmp.end());
+                        res->statements.push_back({expr});
+                        continue;
+                    }
+                    // 表达式求值
+                    auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()});
+                    res->statements.push_back({expr});
+                    it = next;
+                }
+                assert(false);  // 匹配失败，没有用于结束的右花括号
+                return {res, src.end()};
+            }
+            ExpressionNode::~ExpressionNode() {
+                if (left)  delete left;
+                if (right)  delete right;
+            }
+            template <typename T>
+            ParseResult<ExpressionNode> ExpressionNode::parse(const T &src) {
+                auto [postfix, it] = [&]() {                
+                    const auto inf = OperatorInfo::priority_max;
+                    struct StackValueType {
+                        Operator op;
+                        int args_remains;  // 剩余操作数
+                    };
+                    std::vector<StackValueType> ops {{NoneOp, 1}};  // 运算符栈
+                    auto it = src.begin();
+                    // 转成后缀表达式
+                    struct PostfixValueType {
+                        bool symbol = false;
+                        std::variant<Operator, ValueNode> item;
+                    };
+                    std::vector<PostfixValueType> postfix;
+                    auto add = [&](Operator type, int args_remains) {
+                        if (infoOf(type).leftAssociative) {
+                            while (not ops.empty() and infoOf(ops.back().op).priority < infoOf(type).priority)  postfix.push_back({true, {ops.back().op}}), ops.pop_back();
+                        } else {
+                            while (not ops.empty() and infoOf(ops.back().op).priority <= infoOf(type).priority)  postfix.push_back({true, {ops.back().op}}), ops.pop_back();
+                        }
+                        ops.push_back({type, args_remains});
+                    };
+                    for (; it != src.end(); it++) {
+                        auto &token = *it;
+                        if (token.tag == Token::SymbolTag or token.tag == Token::EndOfLineTag) {
+                            auto op = token.tag == Token::EndOfLineTag? "\n": std::get<Symbol>(token.value).value;
+                            if (op == "(") {
+                                // 函数调用
+                                // 如果左侧是一个完整结果，视为函数调用
+                                if (not ops.empty() and ops.back().args_remains == 0) {
+                                    add(Call, 0);
+                                    ops.push_back({FunctionArgsBracket, 1});
+                                } else {
+                                    ops.back().args_remains--;
+                                    ops.push_back({Bracket, 1});
+                                }
+                            } else if (op == ")") {
+                                while (infoOf(ops.back().op).priority != inf) {
+                                    postfix.push_back({true, ops.back().op}), ops.pop_back();
+                                }
+                                // 结束函数调用括号
+                                if (ops.back().op == FunctionArgsBracket) {
+                                    bool flag = ops.back().args_remains == 1;
+                                    ops.pop_back();
+                                    // 如果没有参数，填充一个空值
+                                    if (flag)  postfix.push_back({false, ValueNode{ValueNode::NoneValue, Token{Token::NoneTag}}});
+                                } else {
+                                    // 结束常规括号
+                                    assert(ops.back().op == Bracket and ops.back().args_remains == 0);
+                                    ops.pop_back();
+                                }
+                            } else if (op == ",") {
+                                add(SplitComma, 1);
+                            } else if (op == "[") {
+                                add(Subscript, 0);
+                                ops.push_back({SubscriptBracket, 1});
+                            } else if (op == "]") {
+                                // 中括号匹配
+                                while (infoOf(ops.back().op).priority != inf) {
+                                    postfix.push_back({true, ops.back().op}), ops.pop_back();
+                                }
+                                assert(ops.back().op == SubscriptBracket);
+                                bool flag = ops.back().args_remains == 1;
+                                // postfix.push_back({true, ops.back().op}), ops.pop_back();
+                                ops.pop_back();
+                                if (flag)  postfix.push_back({false, ValueNode{ValueNode::NoneValue, Token{Token::NoneTag}}});
+                            } else if (op == "+") {
+                                // 判断为一元或者二元
+                                // 如果左侧为一个期待其他操作数的符号，视为一元运算符
+                                if (not ops.empty() and ops.back().args_remains != 0) {
+                                    ops.back().args_remains--;
+                                    add(UnaryAdd, 1);
+                                } else {
+                                    add(Add, 1);
+                                }
+                            } else if (op == "-") {
+                                if (not ops.empty() and ops.back().args_remains != 0) {
+                                    ops.back().args_remains--;
+                                    add(UnarySub, 1);
+                                } else {
+                                    add(Sub, 1);
+                                }
+                            } else if (op == ";" or op == "\n") {
+                                // 结束表达式
+                                it++;
+                                break;
+                            }
+    #define JOIN_BINARY_OP(op_type, op_str) else if (op == op_str)  add(op_type, 1);
+                            JOIN_BINARY_OP(Mul, "*")
+                            JOIN_BINARY_OP(Div, "/")
+                            JOIN_BINARY_OP(Mod, "%")
+                            JOIN_BINARY_OP(Less, "<")
+                            JOIN_BINARY_OP(Greater, ">")
+                            JOIN_BINARY_OP(LessEqual, "<=")
+                            JOIN_BINARY_OP(GreaterEqual, ">=")
+                            JOIN_BINARY_OP(Equal, "==")
+                            JOIN_BINARY_OP(NotEqual, "!=")
+                            JOIN_BINARY_OP(And, "&&")
+                            JOIN_BINARY_OP(Or, "||")
+                            JOIN_BINARY_OP(BitAnd, "&")
+                            JOIN_BINARY_OP(BitOr, "|")
+                            JOIN_BINARY_OP(BitXor, "^")
+                            JOIN_BINARY_OP(BitShiftLeft, "<<")
+                            JOIN_BINARY_OP(BitShiftRight, ">>")
+                            JOIN_BINARY_OP(Assign, "=")
+    #undef JOIN_BINARY_OP
+                            else if (op == "!") {
+                                ops.back().args_remains--;
+                                add(Not, 1);
+                            } else if (op == "~") {
+                                ops.back().args_remains--;
+                                add(BitNot, 1);
+                            } else {
+                                ioError << "Unknown symbol: " << op << endl;
+                                throw -1;
+                            }
+                        } else {
+                            // 直接压入答案
+                            if (token.tag == Token::IdentifierTag) {
+                                postfix.push_back({false, ValueNode{ValueNode::Identifier, token}});
+                            } else if (token.tag == Token::IntegerTag) {
+                                postfix.push_back({false, ValueNode{ValueNode::Integer, token}});
+                            } else if (token.tag == Token::FloatingPointTag) {
+                                postfix.push_back({false, ValueNode{ValueNode::FloatingPoint, token}});
+                            } else if (token.tag == Token::StringTag) {
+                            postfix.push_back({false, ValueNode{ValueNode::String, token}});
+                            }
+                            ops.back().args_remains--;
+                            assert(ops.back().args_remains == 0);
+                        }
+                    }
+                    // 清空剩余操作符
+                    while (not ops.empty() and ops.size() != (size_t)1) {
+                        postfix.push_back({true, ops.back().op});
+                        ops.pop_back();
+                    }
+                    return std::pair{postfix, it};
+                }();
+                // 测试，输出后缀表达式
+                debug for (auto &x: postfix) {
+                    if (x.symbol) {
+                        io << "Operator: " << (int)std::get<Operator>(x.item) << '\x20' << opNames[(int)std::get<Operator>(x.item)] << endl;
+                    } else {
+                        io << "Value: ";
+                        auto token = std::get<ValueNode>(x.item).token;
+                        io << token << endl;
+                    }
+                }
+
+                // 建立表达式树
+                // 对于所有非运算符，节点压入栈中
+                // 对于所有运算符，弹出对应数量的节点作为儿子，建立运算符节点，然后压入栈中
+                std::vector<AST::ExpressionNode *> nodes_stack;
+                auto countOf = [&](Operator op) {
+                    switch (op) {
+                    case UnaryAdd:  return 1;
+                    case UnarySub:  return 1;
+                    case Not:  return 1;
+                    case BitNot:  return 1;
+                    default:  return 2;
+                    }
+                };  // 运算数的数量
+                for (auto &x: postfix) {
+                    if (x.symbol) {
+                        auto count = countOf(std::get<Operator>(x.item));
+                        ExpressionNode *l_son = nullptr, *r_son = nullptr;
+                        if (count == 2) {
+                            r_son = nodes_stack.back();
+                            nodes_stack.pop_back();
+                            l_son = nodes_stack.back();
+                            nodes_stack.pop_back();
+                        } else {
+                            l_son = nodes_stack.back();
+                            nodes_stack.pop_back();
+                        }
+                        auto *node = new ExpressionNode{std::get<Operator>(x.item)};
+                        node->left = l_son, node->right = r_son;
+                        nodes_stack.push_back(node);
+                    } else {
+                        auto *node = new ValueNode{std::get<ValueNode>(x.item)};
+                        nodes_stack.push_back(node);
+                    }
+                }
+                // 当前元素即为栈中唯一的元素
+                assert(nodes_stack.size() == (size_t)1);
+                return {nodes_stack.back(), it};
+            }
+            void ExpressionNode::walk(IO::Printer &io) {
+                auto printNode = [&](ExpressionNode *node) {
+                    if (node->op == NoneOp) {
+                        auto v_node = dynamic_cast<ValueNode *>(node);
+                        io << v_node->token;
+                    } else {
+                        io << opNames[(int)node->op];
+                    }
+                };
+                if (left) {
+                    printNode(this);
+                    io << '\x20';
+                    printNode(left);
+                    io << endl;
+                }
+                if (right) {
+                    printNode(this);
+                    io << '\x20';
+                    printNode(right);
+                    io << endl;
+                }
+                if (left)  left->walk(io);
+                if (right)  right->walk(io);
+            }
+        }
     }
+    u64 qpow(u64 a, u64 b) {
+        u64 res = 1;
+        for (; b; b >>= 1, a = a * a)  if (b & 1)  res = res * a;
+        return res;
+    }
+    i64 calc(Compiler::AST::ExpressionNode *p) {
+        if (p == nullptr)  return 0;
+        auto &root = *p;
+        if (root.op == Compiler::AST::ExpressionNode::NoneOp) {
+            auto v_root = dynamic_cast<Compiler::AST::ValueNode &>(root);
+            if (not(v_root.token.tag == Compiler::Token::IntegerTag))  return 114514;
+            return std::get<Compiler::Integer>(v_root.token.value).value;
+        } else {
+            i64 x = calc(root.left), y = calc(root.right);
+            if (root.op == Compiler::AST::ExpressionNode::Add)  return x + y;
+            if (root.op == Compiler::AST::ExpressionNode::Sub)  return x - y;
+            if (root.op == Compiler::AST::ExpressionNode::Mul)  return x * y;
+            if (root.op == Compiler::AST::ExpressionNode::Div)  return x / y;
+            if (root.op == Compiler::AST::ExpressionNode::Mod)  return x % y;
+            if (root.op == Compiler::AST::ExpressionNode::BitXor)  return qpow(x, y);
+            if (root.op == Compiler::AST::ExpressionNode::UnaryAdd)  return +x;
+            if (root.op == Compiler::AST::ExpressionNode::UnarySub)  return -x;
+            if (root.op == Compiler::AST::ExpressionNode::Call) {
+                if (x == 114514) {
+                    return 114514 + y;
+                }
+            }
+            return assert(false), 0;  // Invalid operator
+        }
+    }
+    
+    void execute(Compiler::AST::BlockNode *p) {
+        for (auto *k: p->statements) {
+            if (k->type == k->ExpressionEvaluateStatement) {
+                auto *expr = dynamic_cast<Compiler::AST::ExpressionNode *>(k);
+                io << calc(expr) << endl;
+            }
+        }
+    }
+    
     void test() {
+        using namespace Compiler;
+        auto res = tokenize(io);
+        auto *root = Compiler::AST::BlockNode::parse(res).node;
+        execute(root);
+        // io << calc(root) << endl;
     }
     void solve() {
         test();
@@ -762,32 +1225,13 @@ namespace CYaRonLang {
 // return 0;
 // )aaa";
 //         StringScanner scan(s);
-        auto res = tokenize(io);
-        for (auto token: res) {
-            switch (token.tag) {
-            case Token::IdentifierTag:
-                io << "Identifier: " << std::get<Identifier>(token.value) << endl;
-                break;
-            case Token::IntegerTag:
-                io << "Integer: " << std::get<Integer>(token.value) << endl;
-                break;
-            case Token::StringTag:
-                io << "String: " << std::get<String>(token.value) << endl;
-                break;
-            case Token::SymbolTag:
-                io << "Symbol: " << std::get<Symbol>(token.value) << endl;
-                break;
-            case Token::EndOfLineTag:
-                io << "End of line" << endl;
-                break;
-            case Token::FloatingPointTag:
-                io << "Floating point: " << std::get<FloatingPointNumber>(token.value) << endl;
-                break;
-            default:
-                io << "Unknown token" << endl;
-                break;
-            }
-        }
+        // auto res = tokenize(io);
+        // for (auto token: res) {
+        //     io << token << endl;
+        // }
+        // Compiler::AST::ExpressionNode root;
+        // root.parse(res);
+        // root.walk(io);
     }
 }
 
