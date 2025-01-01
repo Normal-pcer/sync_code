@@ -4,7 +4,6 @@
 
 #include "./lib_v3.hpp"
 
-
 using namespace lib;
 
 namespace IO {
@@ -794,7 +793,6 @@ namespace CYaRonLang {
                     for (auto &statement: statements)  delete statement;
                 }
             };
-            struct ValueNode;
             struct ExpressionNode: public StatementNode {
                 enum Operator {
                     // 特殊运算符
