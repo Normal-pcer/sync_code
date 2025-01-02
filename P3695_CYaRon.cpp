@@ -4,7 +4,6 @@
 
 #include "./lib_v3.hpp"
 
-
 using namespace lib;
 
 namespace IO {
@@ -1280,19 +1279,35 @@ namespace CYaRonLang {
     namespace Interpreter {
         using Compiler::Identifier;
         namespace AST = Compiler::AST;
-        class ObjectType {
+        struct ObjectType {
             // 对象类型
+            Identifier name;
+            ObjectType(const Identifier &name): name(name) {}
+            ObjectType(const ObjectType &) = delete;
+            virtual ~ObjectType() = default;
+        };
+        struct StructObjectType: public ObjectType {
+            struct Member {
+                ObjectType *type;
+                Identifier name;
+            };
+            std::vector<Member> members;
+        };
+        struct IntObjectType: public ObjectType {
+            IntObjectType(): ObjectType({"int"}) {}
         };
         class Program {
         public:
             AST::BlockNode *root;
 
             Program(AST::BlockNode *root) : root(root) {}
-            void run();
+            ~Program() {
+                delete root;
+            }
+            void runBlock(AST::BlockNode *block) {
+
+            }
         };
-        void Program::run() {
-            
-        }
     }
     void test() {
     }
