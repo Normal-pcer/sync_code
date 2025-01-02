@@ -1,11 +1,14 @@
+#include <bits/stdc++.h>
+
 struct A {
-    virtual ~A() = default;
+    A() = default;
+    A(const A &) = delete;
 };
+
 struct B: public A {
-    int x[1048576];
+    int x;
+    B(int x): x(x) {}
 };
 
 int main() {
-    auto pt = dynamic_cast<A *>(new B);
-    delete pt;
 }

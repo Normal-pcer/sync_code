@@ -168,7 +168,6 @@ namespace Solution {
     struct Element {
         Identifier *id;
         size_t address;
-
     };
 
     std::map<size_t, Element> memory;  // 地址到元素的映射

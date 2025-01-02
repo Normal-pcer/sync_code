@@ -4,6 +4,7 @@
 
 #include "./lib_v3.hpp"
 
+
 using namespace lib;
 
 namespace IO {
@@ -771,7 +772,12 @@ namespace CYaRonLang {
             using TokensType = const std::vector<Token>;
             using TokenIterator = TokensType::const_iterator;
             using TokensSubrange = std::ranges::subrange<TokenIterator>;
-            struct Node {};
+            struct Node {
+                Node() = default;
+                Node(const Node &) = delete;
+                virtual ~Node() = default;
+                Node &operator= (const Node &) = delete;
+            };
             template <typename T>
             struct ParseResult {
                 T *node;
@@ -780,20 +786,30 @@ namespace CYaRonLang {
             struct StatementNode: public Node {
                 enum Type {
                     NoneStatement,
-                    ExpressionEvaluateStatement
+                    ExpressionEvaluateStatement,
+                    VariableDeclareStatement,
+                    RunBlockStatement,
                 } type = NoneStatement;
                 StatementNode(Type type = NoneStatement): type(type) {}
                 virtual ~StatementNode() = default;
             };
             struct BlockNode: public Node {
+                enum Type {
+                    NoneBlock,  // 常规代码块
+                    IfBlock,  // 条件代码块
+                    WhileBlock,  // 条件循环代码块
+                    VarsBlock,  // 变量声明代码块
+                } type = NoneBlock;
                 std::vector<StatementNode *> statements;
-                static ParseResult<BlockNode> parse(std::vector<Token> const &src);
-
-                ~BlockNode() {
+                BlockNode() = default;
+                BlockNode(Type type): type(type), statements() {}
+                virtual ~BlockNode() {
                     for (auto &statement: statements)  delete statement;
                 }
+                template <typename T>
+                static ParseResult<BlockNode> parse(const T &src);
             };
-            struct ExpressionNode: public StatementNode {
+            struct ExpressionNode: public Node {
                 enum Operator {
                     // 特殊运算符
                     NoneOp,
@@ -835,8 +851,7 @@ namespace CYaRonLang {
                 static constexpr const char *opNames[] = {"NoneOp", "Bracket", "Call", "FunctionArgsBracket", "Subscript", "SubscriptBracket", "SplitComma", "UnaryAdd", "UnarySub", "Add", "Sub", "Mul", "Div", "Mod", "Less", "LessEqual", "Greater", "GreaterEqual", "Equal", "NotEqual", "And", "Or", "Not", "BitAnd", "BitOr", "BitXor", "BitNot", "BitShiftLeft", "BitShiftRight", "Assign"};
                 // 操作数；特别地，单目运算符只有 left
                 ExpressionNode *left = nullptr, *right = nullptr;
-                ExpressionNode(Operator op = NoneOp): 
-                    StatementNode({StatementNode::ExpressionEvaluateStatement}), op(op) {}
+                ExpressionNode(Operator op = NoneOp): op(op) {}
                 virtual ~ExpressionNode();
 
                 struct OperatorInfo {
@@ -879,7 +894,6 @@ namespace CYaRonLang {
                 static ParseResult<ExpressionNode> parse(const T &);
                 void walk(IO::Printer &io);
             };
-
             struct ValueNode: public ExpressionNode {
                 enum Type {
                     NoneValue,
@@ -892,6 +906,8 @@ namespace CYaRonLang {
 
                 ValueNode(Type type, Token token): 
                     ExpressionNode({ExpressionNode::NoneOp}), type(type), token(token) {}
+                ValueNode(const ValueNode &other): 
+                    ExpressionNode({ExpressionNode::NoneOp}), type(other.type), token(other.token) {}
                 ValueNode(Token token): ExpressionNode({ExpressionNode::NoneOp}), type(NoneValue), token(token) {
                     type = [&]() {
                         switch (token.tag) {
@@ -904,20 +920,128 @@ namespace CYaRonLang {
                     }();
                 }
             };
-
-            ParseResult<BlockNode> BlockNode::parse(std::vector<Token> const &src) {
+            struct ExpressionEvaluateStatementNode: public StatementNode {
+                ExpressionNode *expr;
+                ExpressionEvaluateStatementNode(ExpressionNode *expr):
+                    StatementNode(StatementNode::ExpressionEvaluateStatement), expr(expr){}
+                ~ExpressionEvaluateStatementNode() {
+                    delete expr;
+                }
+            };
+            struct VariableDeclareStatementNode: public StatementNode {
+                Identifier name;
+                ExpressionNode *type;
+                VariableDeclareStatementNode(): StatementNode(StatementNode::VariableDeclareStatement) {}
+                template <typename T>
+                static ParseResult<VariableDeclareStatementNode> parse(const T &src);
+            };
+            struct RunBlockStatementNode: public StatementNode {
+                // 执行一个代码块
+                BlockNode *block;
+                RunBlockStatementNode(BlockNode *block): StatementNode(StatementNode::RunBlockStatement), block(block) {}
+                ~RunBlockStatementNode() {
+                    delete block;
+                }
+            };
+            struct ConditionalBlockNode: public BlockNode {
+                // 带条件语句块（if, while）
+                enum Condition {
+                    None, Less, LessEqual, Greater, GreaterEqual, Equal, NotEqual
+                } condition = None;
+                ExpressionNode *left, *right;  // 满足 *left (condition) *right 时才执行 statements
+                ConditionalBlockNode(BlockNode::Type type): BlockNode(type) {}
+                ~ConditionalBlockNode() {
+                    delete left;
+                    delete right;
+                }
+                template <typename T>
+                auto parseCondition(const T &src) {
+                    // 类似 op, a, b
+                    auto it = src.begin();
+                    assert(it->tag == Token::IdentifierTag);
+                    auto opName = std::get<Identifier>(it->value).name;
+                    condition = [&]() {
+                        if (opName == "lt")  return Less;
+                        if (opName == "le")  return LessEqual;
+                        if (opName == "gt")  return Greater;
+                        if (opName == "ge")  return GreaterEqual;
+                        if (opName == "eq")  return Equal;
+                        if (opName == "ne")  return NotEqual;
+                        return assert(false), None;
+                    }();
+                    it++;
+                    // 期待一个逗号
+                    assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ","), it++;
+                    // 读取两个表达式
+                    auto [left_expr, right_begin] = ExpressionNode::parse(TokensSubrange{it, src.end()});
+                    auto [right_expr, end] = ExpressionNode::parse(TokensSubrange{right_begin, src.end()});
+                    it = end;
+                    left = left_expr;
+                    right = right_expr;
+                    return it;
+                }
+            };
+            struct IfBlockNode: public ConditionalBlockNode {
+                IfBlockNode(): ConditionalBlockNode(BlockNode::IfBlock) {}
+            };
+            struct WhileBlockNode: public ConditionalBlockNode {
+                WhileBlockNode(): ConditionalBlockNode(BlockNode::WhileBlock) {}
+            };
+            template <typename T>
+            ParseResult<VariableDeclareStatementNode> VariableDeclareStatementNode::parse(const T &src) {
+                // 解析一行变量定义语句
+                auto res = new VariableDeclareStatementNode;
+                auto it = src.begin();
+                // 类似 name: type[EOL] 的形式
+                // 读取标识符
+                assert(it->tag == Token::IdentifierTag), res->name = std::get<Identifier>(it->value), it++;
+                assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ":"), it++;
+                // 读取类型
+                // 类型为表达式
+                auto [type, end] = ExpressionNode::parse(TokensSubrange{it, src.end()});
+                res->type = type;
+                it = end;
+                return {res, it};
+            }
+            template <typename T>
+            ParseResult<BlockNode> BlockNode::parse(T const &src) {
                 // 解析一个语句块
                 // 语句块用花括号包裹，包含若干条语句
                 auto res = new BlockNode;
                 auto it = src.begin();
-                assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{"), it++;
                 for (; it != src.end();) {
                     if (it->tag == Token::EndOfLineTag) {
                         it++;
                         continue;
                     }
                     if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "}")  return {res, ++it};
-                    // todo: 尝试匹配关键字
+                    // 读取一个子块
+                    if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{") {
+                        auto [sub_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
+                        res->children.push_back(new RunBlockStatementNode{sub_block}), it = next;
+                        continue;
+                    }
+                    // vars 关键字
+                    // 把当前块变成声明块
+                    if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value).name == "vars") {
+                        res->type = VarsBlock;
+                        it++;
+                        continue;
+                    }
+                    // ihu 关键字（if）
+                    if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value).name == "ihu") {
+                        delete res, res = new IfBlockNode;
+                        it = dynamic_cast<IfBlockNode *>(res)->parseCondition(TokensSubrange{it, src.end()});
+                        continue;
+                    }
+                    // while 关键字
+                    if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value).name == "while") {
+                        delete res, res = new WhileBlockNode;
+                        it = dynamic_cast<WhileBlockNode *>(res)->parseCondition(TokensSubrange{it, src.end()});
+                        continue;
+                    }
+                    // todo: for 循环
+
                     // 特殊语法：
                     // 冒号开头的 :f x, y 等价于函数调用 f(x, y)
                     if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ":") {
@@ -936,15 +1060,21 @@ namespace CYaRonLang {
                         // 解析 tmp
                         auto [expr, next] = ExpressionNode::parse(tmp);
                         assert(expr->op == ExpressionNode::Call and next == tmp.end());
-                        res->statements.push_back({expr});
+                        res->statements.push_back(new ExpressionEvaluateStatementNode{expr});
+                        continue;
+                    }
+                    if (res->type == VarsBlock) {
+                        // 解析一个变量声明
+                        auto [decl, next] = VariableDeclareStatementNode::parse(TokensSubrange{it, src.end()});
+                        res->statements.push_back(decl);
+                        it = next;
                         continue;
                     }
                     // 表达式求值
                     auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()});
-                    res->statements.push_back({expr});
+                    res->statements.push_back(new ExpressionEvaluateStatementNode{expr});
                     it = next;
                 }
-                assert(false);  // 匹配失败，没有用于结束的右花括号
                 return {res, src.end()};
             }
             ExpressionNode::~ExpressionNode() {
@@ -1005,6 +1135,11 @@ namespace CYaRonLang {
                                     ops.pop_back();
                                 }
                             } else if (op == ",") {
+                                if (ops.empty() or ops.back().op == NoneOp) {
+                                    // 结束表达式
+                                    it++;
+                                    break;
+                                }
                                 add(SplitComma, 1);
                             } else if (op == "[") {
                                 add(Subscript, 0);
@@ -1140,78 +1275,26 @@ namespace CYaRonLang {
                 assert(nodes_stack.size() == (size_t)1);
                 return {nodes_stack.back(), it};
             }
-            void ExpressionNode::walk(IO::Printer &io) {
-                auto printNode = [&](ExpressionNode *node) {
-                    if (node->op == NoneOp) {
-                        auto v_node = dynamic_cast<ValueNode *>(node);
-                        io << v_node->token;
-                    } else {
-                        io << opNames[(int)node->op];
-                    }
-                };
-                if (left) {
-                    printNode(this);
-                    io << '\x20';
-                    printNode(left);
-                    io << endl;
-                }
-                if (right) {
-                    printNode(this);
-                    io << '\x20';
-                    printNode(right);
-                    io << endl;
-                }
-                if (left)  left->walk(io);
-                if (right)  right->walk(io);
-            }
         }
     }
-    u64 qpow(u64 a, u64 b) {
-        u64 res = 1;
-        for (; b; b >>= 1, a = a * a)  if (b & 1)  res = res * a;
-        return res;
-    }
-    i64 calc(Compiler::AST::ExpressionNode *p) {
-        if (p == nullptr)  return 0;
-        auto &root = *p;
-        if (root.op == Compiler::AST::ExpressionNode::NoneOp) {
-            auto v_root = dynamic_cast<Compiler::AST::ValueNode &>(root);
-            if (not(v_root.token.tag == Compiler::Token::IntegerTag))  return 114514;
-            return std::get<Compiler::Integer>(v_root.token.value).value;
-        } else {
-            i64 x = calc(root.left), y = calc(root.right);
-            if (root.op == Compiler::AST::ExpressionNode::Add)  return x + y;
-            if (root.op == Compiler::AST::ExpressionNode::Sub)  return x - y;
-            if (root.op == Compiler::AST::ExpressionNode::Mul)  return x * y;
-            if (root.op == Compiler::AST::ExpressionNode::Div)  return x / y;
-            if (root.op == Compiler::AST::ExpressionNode::Mod)  return x % y;
-            if (root.op == Compiler::AST::ExpressionNode::BitXor)  return qpow(x, y);
-            if (root.op == Compiler::AST::ExpressionNode::UnaryAdd)  return +x;
-            if (root.op == Compiler::AST::ExpressionNode::UnarySub)  return -x;
-            if (root.op == Compiler::AST::ExpressionNode::Call) {
-                if (x == 114514) {
-                    return 114514 + y;
-                }
-            }
-            return assert(false), 0;  // Invalid operator
+    namespace Interpreter {
+        using Compiler::Identifier;
+        namespace AST = Compiler::AST;
+        class ObjectType {
+            // 对象类型
+        };
+        class Program {
+        public:
+            AST::BlockNode *root;
+
+            Program(AST::BlockNode *root) : root(root) {}
+            void run();
+        };
+        void Program::run() {
+            
         }
     }
-    
-    void execute(Compiler::AST::BlockNode *p) {
-        for (auto *k: p->statements) {
-            if (k->type == k->ExpressionEvaluateStatement) {
-                auto *expr = dynamic_cast<Compiler::AST::ExpressionNode *>(k);
-                io << calc(expr) << endl;
-            }
-        }
-    }
-    
     void test() {
-        using namespace Compiler;
-        auto res = tokenize(io);
-        auto *root = Compiler::AST::BlockNode::parse(res).node;
-        execute(root);
-        // io << calc(root) << endl;
     }
     void solve() {
         test();
