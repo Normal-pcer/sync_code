@@ -1,29 +1,9 @@
 /**
  * @link https://www.luogu.com.cn/problem/P3695
  */
+#include "libs/debug_macros.hpp"
+#include "./lib_v3.hpp"
 
-#include <bits/stdc++.h>
-bool DEBUG_MODE=false;
-#define debug if(DEBUG_MODE)
-template <typename T> inline auto chkMax(T& base, const T& cmp) { return (base = std::max(base, cmp)); }
-template <typename T> inline auto chkMin(T& base, const T& cmp) { return (base = std::min(base, cmp)); }
-#define never if constexpr(0)
-const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
-const char endl = '\n';
-
-#define __lambda_1(expr) [&](){return expr;}
-#define __lambda_2(a, expr) [&](auto a){return expr;}
-#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
-#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
-#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
-#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
-#define lam lambda
-namespace lib{
-#if __cplusplus > 201703LL
-namespace ranges = std::ranges;
-namespace views = std::views;
-#endif
-}
 
 using namespace lib;
 
@@ -956,6 +936,9 @@ namespace CYaRonLang {
                 Identifier name;
                 ExpressionNode *type;
                 VariableDeclareStatementNode(): StatementNode(StatementNode::VariableDeclareStatement) {}
+                ~VariableDeclareStatementNode() {
+                    delete type;
+                }
                 template <typename T>
                 static ParseResult<VariableDeclareStatementNode> parse(const T &src);
             };
@@ -1312,7 +1295,7 @@ namespace CYaRonLang {
                 Struct, Int, Function, String, None
             } type;
             std::variant<std::map<Identifier, Object>, std::shared_ptr<int>, std::shared_ptr<std::string>, Identifier, std::nullptr_t> value;
-            Object(Type type): type(type), value(nullptr) {}
+            Object(Type type = None): type(type), value(nullptr) {}
             template <typename T>
             Object(Type type, const T &value): type(type), value(value) {}
         };
@@ -1326,12 +1309,41 @@ namespace CYaRonLang {
             }
             void run();
             Object EvaluateExpression(AST::ExpressionNode *node);
+            template <typename OutIterater>
+            OutIterater getFunctionArguments(AST::ExpressionNode *, OutIterater); 
+            // 运行语句块
             void runBlock(AST::BlockNode *block);
         };
         Program::Program(AST::BlockNode *root): root(root) {
             // 注册内置函数
             variables.insert({{"print"}, Object{Object::Function, Identifier{"print"}}});
             variables.insert({{"println"}, Object{Object::Function, Identifier{"println"}}});
+            variables.insert({{"scan"}, Object{Object::Function, Identifier{"scan"}}});
+            variables.insert({{"set"}, Object{Object::Function, Identifier{"set"}}});
+            variables.insert({{"test_sort"}, Object{Object::Function, Identifier{"test_sort"}}});
+        }
+        // 展开逗号分隔符表达式，获取函数参数列表，写入到输出迭代器
+        // 例如，后缀表达式 a, b, (comma), c, (comma)
+        // 提取出参数列表 a, b, c
+        // node 为一个逗号运算符，或唯一的参数
+        template <typename OutIterater>
+        OutIterater Program::getFunctionArguments(AST::ExpressionNode *node, OutIterater out) {
+            if (node->op == AST::ExpressionNode::SplitComma) {
+                // 当前为逗号，向左右子树获取参数
+                out = getFunctionArguments(node->left, out);
+                out = getFunctionArguments(node->right, out);
+            } else {
+                if (node->op == AST::ExpressionNode::NoneOp) {
+                    // 到达叶子节点（值节点）
+                    auto value_node = dynamic_cast<AST::ValueNode *>(node);
+                    // 判断是否为空
+                    // 如果是 NoneTag，说明为空参数
+                    if (value_node->token.tag == Compiler::Token::NoneTag)  return out;
+                }
+                // 从下方的表达式获取
+                *out++ = EvaluateExpression(node);
+            }
+            return out;
         }
         void Program::run() {
             runBlock(root);
@@ -1359,27 +1371,20 @@ namespace CYaRonLang {
                 // 运算符节点
                 auto l_son = EvaluateExpression(node->left);
                 auto r_son = EvaluateExpression(node->right);
-                if (node->op == AST::ExpressionNode::Add) {
-                    assert(l_son.type == Object::Int and r_son.type == Object::Int);
-                    Object res(Object::Int);
-                    res.value = std::shared_ptr<int>{new int(*std::get<std::shared_ptr<int>>(l_son.value) + *std::get<std::shared_ptr<int>>(r_son.value))};
-                    return res;
-                } else if (node->op == AST::ExpressionNode::Sub) {
-                    assert(l_son.type == Object::Int and r_son.type == Object::Int);
-                    Object res(Object::Int);
-                    res.value = std::shared_ptr<int>{new int(*std::get<std::shared_ptr<int>>(l_son.value) - *std::get<std::shared_ptr<int>>(r_son.value))};
-                    return res;
-                } else if (node->op == AST::ExpressionNode::Mul) {
-                    assert(l_son.type == Object::Int and r_son.type == Object::Int);
-                    Object res(Object::Int);
-                    res.value = std::shared_ptr<int>{new int(*std::get<std::shared_ptr<int>>(l_son.value) * *std::get<std::shared_ptr<int>>(r_son.value))};
-                    return res;
-                } else if (node->op == AST::ExpressionNode::Div) {
-                    assert(l_son.type == Object::Int and r_son.type == Object::Int);
-                    Object res(Object::Int);
-                    res.value = std::shared_ptr<int>{new int(*std::get<std::shared_ptr<int>>(l_son.value) / *std::get<std::shared_ptr<int>>(r_son.value))};
-                    return res;
-                } else if (node->op == AST::ExpressionNode::Call) {
+#define JOIN_INT_OP(op_name, symbol) else if (node->op == AST::ExpressionNode::op_name) {  \
+                    assert(l_son.type == Object::Int and r_son.type == Object::Int);  \
+                    Object res(Object::Int);  \
+                    res.value = std::shared_ptr<int>{new int(*std::get<std::shared_ptr<int>>(l_son.value) symbol *std::get<std::shared_ptr<int>>(r_son.value))};  \
+                    return res;  \
+                }
+                if (0) {}
+                JOIN_INT_OP(Add, +)
+                JOIN_INT_OP(Sub, -)
+                JOIN_INT_OP(Mul, *)
+                JOIN_INT_OP(Div, /)
+                JOIN_INT_OP(Mod, %)
+#undef JOIN_INT_OP
+                else if (node->op == AST::ExpressionNode::Call) {
                     assert(l_son.type == Object::Function);
                     auto name = std::get<Identifier>(l_son.value).name;  // 函数名
                     if (name == "print") {
@@ -1397,6 +1402,31 @@ namespace CYaRonLang {
                         auto num = *std::get<std::shared_ptr<int>>(r_son.value);
                         io << num << endl;
                         return Object(Object::None);
+                    } else if (name == "scan") {
+                        assert(r_son.type == Object::Int);
+                        io >> *std::get<std::shared_ptr<int>>(r_son.value);
+                        return Object(Object::None);
+                    } else if (name == "set") {
+                        // 需要两个参数
+                        std::vector<Object> args(2);
+                        auto it = getFunctionArguments(node->right, args.begin());  // 获取参数
+                        assert(it == args.end());
+                        assert(args[0].type == Object::Int and args[1].type == Object::Int);
+                        *std::get<std::shared_ptr<int>>(args[0].value) = *std::get<std::shared_ptr<int>>(args[1].value);
+                        return Object(Object::None);
+                    } else if (name == "test_sort") {
+                        std::vector<Object> args;
+                        getFunctionArguments(node->right, std::back_inserter(args));
+
+                        std::vector<int> nums(args.size());
+                        ranges::transform(args, nums.begin(), [](auto &obj) {
+                            assert(obj.type == Object::Int);
+                            return *std::get<std::shared_ptr<int>>(obj.value);
+                        });
+                        ranges::sort(nums, ranges::less{});
+                        for (auto x: nums)  io << x << ' ';
+                        io << endl;
+                        return Object(Object::None);
                     } else {
                         assert(false);
                         return Object(Object::Struct);
@@ -1405,6 +1435,8 @@ namespace CYaRonLang {
                     assert(l_son.type == Object::Int and r_son.type == Object::Int);
                     *std::get<std::shared_ptr<int>>(l_son.value) = *std::get<std::shared_ptr<int>>(r_son.value);
                     return l_son;
+                } else if (node->op == AST::ExpressionNode::SplitComma) {
+                    return Object(Object::None);
                 } else {
                     assert(false);
                     return Object(Object::Struct);
