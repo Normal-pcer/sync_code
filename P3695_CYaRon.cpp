@@ -1289,11 +1289,15 @@ namespace CYaRonLang {
     namespace Interpreter {
         using Compiler::Identifier;
         namespace AST = Compiler::AST;
+        struct ArrayMeta {
+            Object *valueType;
+            int minIndex, maxIndex;
+        };
         struct Object {
             enum Type {
-                Struct, Int, Function, String, None
+                Struct, Int, Function, String, None, Array, ArrayMeta
             } type;
-            std::variant<std::map<Identifier, Object>, std::shared_ptr<int>, std::shared_ptr<std::string>, Identifier, std::nullptr_t> value;
+            std::variant<std::map<Identifier, Object>, std::shared_ptr<int>, std::shared_ptr<std::string>, Identifier, std::nullptr_t, std::shared_ptr<Object>, > value;
             Object(Type type = None): type(type), value(nullptr) {}
             template <typename T>
             Object(Type type, const T &value): type(type), value(value) {}
@@ -1443,7 +1447,6 @@ namespace CYaRonLang {
             }
         }
         void Program::runBlock(AST::BlockNode *block) {
-            // todo 检查当前块类型
             if (block->type == AST::BlockNode::IfBlock or block->type == AST::BlockNode::WhileBlock) {
                 auto if_block = dynamic_cast<AST::ConditionalBlockNode *>(block);
                 auto condition = if_block->condition;
