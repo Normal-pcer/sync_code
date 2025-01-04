@@ -1,8 +1,10 @@
 /**
  * @link https://www.luogu.com.cn/problem/P3695
  */
-#include "libs/debug_macros.hpp"
+#include "./libs/debug_macros.hpp"
+
 #include "./lib_v3.hpp"
+
 
 using namespace lib;
 
