@@ -1,31 +1,89 @@
 { vars
-    i: int
-    j: int
-
+    i:int
+    j:int
+    n:int
+    m:int
+    s:int
+    t:int
+    dis:array[int, 1..1000]
+    inq:array[int, 1..1000]
+    last:array[int, 1..1000]
+    next:array[int, 1..1000]
+    u:array[int, 1..1000]
+    v:array[int, 1..1000]
+    w:array[int, 1..1000]
+    q:array[int, 1..1000]
+    head:int
+    tail:int
+    curr:int
+    edgev:int
 }
 
-i = 1
+:set n, 4
+:set m, 6
+:set s, 1
+:set t, 4
 
-{ while lt, i, 10
-    j = 1
-    print(i)
-    print(" ")
-    { while lt, j, i + 1
-        { ihu lt, i * j, 10
-            print(" ")
+:set u[1], 1
+:set v[1], 2
+:set w[1], 1
+
+:set u[2], 1
+:set v[2], 3
+:set w[2], 4
+
+:set u[3], 1
+:set v[3], 4
+:set w[3], 5
+
+:set u[4], 2
+:set v[4], 3
+:set w[4], 1
+
+:set u[5], 2
+:set v[5], 4
+:set w[5], 4
+
+:set u[6], 3
+:set v[6], 4
+:set w[6], 2
+
+:set last[1], 1
+:set last[2], 4
+:set last[3], 6
+
+:set next[1], 2
+:set next[2], 3
+:set next[4], 5
+
+{ hor i, 1, 6
+    :set dis[i], 100
+}
+:set dis[s], 0
+
+:set head, 1
+:set tail, 2
+:set q[head], s
+:set inq[s], 1
+
+{ while neq, head, tail
+    :set curr, q[head]
+    :set head, head + 1
+    :set inq[curr], 0
+
+    :set j, last[curr]
+    { while neq, j, 0
+        :set edgev, v[j]
+        { ihu lt, dis[curr]+w[j], dis[edgev]
+            :set dis[edgev], dis[curr]+w[j]
+            { ihu eq, inq[edgev], 0
+                :set q[tail], edgev
+                :set tail, tail+1
+                :set inq[edgev], 1
+            }
         }
-        print(i * j)
-        print(" ")
-        j = j + 1
+        :set j, next[j]
     }
-    print("\n")
-    i = i + 1
 }
 
-i = 1
-print("*")
-{ while lt, i, 10
-    print("  ")
-    print(i)
-    i = i + 1
-}
+:yosoro dis[t]
