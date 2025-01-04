@@ -1,7 +1,8 @@
 /**
  * @link https://www.luogu.com.cn/problem/P3695
  */
-#include "libs/debug_macros.hpp"
+#include "./libs/debug_macros.hpp"
+
 #include "./lib_v3.hpp"
 
 using namespace lib;
@@ -52,22 +53,21 @@ namespace IO {
 
     struct Scanner {
     private:
-        char prev = '\0';
-        bool ungetFlag = false;
+        char prev[2] = {'\0', '\0'};
+        int ungetFlag = 0;
         virtual char gc() = 0;
         static bool isDigit(char ch) { return '0' <= ch and ch <= '9'; }
         static bool isBlank(char ch) { return ch <= 32 or ch == 127; }
     public:
         char get() {
             if (ungetFlag) {
-                ungetFlag = false;
-                return prev;
+                return prev[--ungetFlag];
             }
-            return (prev = gc());
+            return (prev[1] = prev[0], prev[0] = gc());
         }
         Scanner &unget() {
-            if (ungetFlag)  throw std::logic_error("Cannot unget twice");
-            ungetFlag = true;
+            if (ungetFlag == 2)  throw std::logic_error("Cannot unget twice");
+            ungetFlag++;
             return *this;
         }
         template <typename T, typename std::enable_if<is_number<T>::value>::type* = nullptr, int base = 10>
@@ -393,8 +393,8 @@ namespace CYaRonLang {
             }
         };
         struct DumpAble {
-            virtual void dump(IO::Printer &io) = 0;
-            friend IO::Printer &operator<<(IO::Printer &io, DumpAble &da) {
+            virtual void dump(IO::Printer &io) const = 0;
+            friend IO::Printer &operator<<(IO::Printer &io, const DumpAble &da) {
                 return da.dump(io), io;
             }
         };
@@ -416,7 +416,7 @@ namespace CYaRonLang {
                 }
                 io.unget();
             }
-            void dump(IO::Printer &io) {
+            void dump(IO::Printer &io) const override {
                 io << name;
             }
 
@@ -431,7 +431,7 @@ namespace CYaRonLang {
             Integer(): value(0) {}
             Integer(u64 value): value(value) {}
             
-            void parse(IO::Scanner &io) {
+            void parse(IO::Scanner &io) override {
                 value = 0;
                 suffixOperators.clear();
                 // 读取一个整数字面量
@@ -499,7 +499,7 @@ namespace CYaRonLang {
                 }
                 io.unget();
             }
-            void dump(IO::Printer &io) {
+            void dump(IO::Printer &io) const override {
                 io << value;
                 for (auto &op: suffixOperators) {
                     io << "'" << op;
@@ -590,7 +590,7 @@ namespace CYaRonLang {
                 }
                 io.unget();
             }
-            void dump(IO::Printer &io) {
+            void dump(IO::Printer &io) const override {
                 io << '"';
                 for (auto x: value) {
                     switch (x) {
@@ -622,13 +622,13 @@ namespace CYaRonLang {
             Symbol(): value({}) {}
             Symbol(std::string value): value(value) {}
             void parse(IO::Scanner &);
-            void dump(IO::Printer &io) {
+            void dump(IO::Printer &io) const override {
                 io << value;
             }
         };
         Trie::Trie symbols {
             "<=", ">=", "!=", "==", "<<", ">>", "<=>", "&&", "||", "+=", "-=", "*=", "/=", "%=", "|=", "&=", "^=", "->",
-            "++", "--"
+            "++", "--", ".."
         };
         void Symbol::parse(IO::Scanner &io) {
             value.clear();
@@ -672,7 +672,7 @@ namespace CYaRonLang {
                 }
                 io.unget();
             }
-            void dump(IO::Printer &io) {
+            void dump(IO::Printer &io) const override {
                 io << value;
                 for (auto i: suffixOperators)  io << '\'' << i;
             }
@@ -682,7 +682,7 @@ namespace CYaRonLang {
                 NoneTag, IdentifierTag, SymbolTag, KeywordTag, IntegerTag, StringTag, EndOfLineTag, FloatingPointTag
             } tag = NoneTag;
             std::variant<int, Identifier, Integer, String, Symbol, FloatingPointNumber> value = 0;
-            friend IO::Printer &operator<<(IO::Printer &io, Token &token) {
+            friend IO::Printer &operator<<(IO::Printer &io, const Token &token) {
                 switch (token.tag) {
                 case Token::IdentifierTag:
                     return io << "Identifier_" << std::get<Identifier>(token.value);
@@ -727,6 +727,11 @@ namespace CYaRonLang {
                         // 已经有了后缀运算符，不应视为浮点数
                         if (integer.suffixOperators.empty()) {
                             if (io.get() == '.') {
+                                if (not isDigit(io.get())) {
+                                    // 如果后面不是紧接数字，放弃匹配小数
+                                    io.unget(), io.unget();  // 下一次读取还是获得 '.'
+                                    goto egg;  // 跳到结尾，直接加入先前读入的数字
+                                }
                                 io.unget();  // 读到小数点，即 0.123 的形式
                                 isInteger = false;
                                 io >> fp;
@@ -754,6 +759,7 @@ namespace CYaRonLang {
                                 io.unget();
                             }
                         }
+                    egg:
                         if (isInteger)  tokens.push_back({Token::IntegerTag, integer});
                         else  tokens.push_back({Token::FloatingPointTag, fp});
                     } else if (isIdentifierStart(ch)) {
@@ -763,6 +769,11 @@ namespace CYaRonLang {
                     } else {
                         Symbol symbol;
                         io >> symbol;
+                        if (symbol.value == "#") {
+                            // 单行注释
+                            while (io.get() != '\n');
+                            continue;  // 忽略井号
+                        }
                         tokens.push_back({Token::SymbolTag, symbol});
                     }
                 }
@@ -802,6 +813,7 @@ namespace CYaRonLang {
                     IfBlock,  // 条件代码块
                     WhileBlock,  // 条件循环代码块
                     VarsBlock,  // 变量声明代码块
+                    ForBlock,  // For 循环代码块
                 } type = NoneBlock;
                 std::vector<StatementNode *> statements;
                 BlockNode() = default;
@@ -850,8 +862,10 @@ namespace CYaRonLang {
                     BitShiftRight,  // 右移
                     // 赋值运算符
                     Assign,  // 赋值
+                    // 其他
+                    Range,  // 范围（..）运算符
                 } op = NoneOp;
-                static constexpr const char *opNames[] = {"NoneOp", "Bracket", "Call", "FunctionArgsBracket", "Subscript", "SubscriptBracket", "SplitComma", "UnaryAdd", "UnarySub", "Add", "Sub", "Mul", "Div", "Mod", "Less", "LessEqual", "Greater", "GreaterEqual", "Equal", "NotEqual", "And", "Or", "Not", "BitAnd", "BitOr", "BitXor", "BitNot", "BitShiftLeft", "BitShiftRight", "Assign"};
+                static constexpr const char *opNames[] = {"NoneOp", "Bracket", "Call", "FunctionArgsBracket", "Subscript", "SubscriptBracket", "SplitComma", "UnaryAdd", "UnarySub", "Add", "Sub", "Mul", "Div", "Mod", "Less", "LessEqual", "Greater", "GreaterEqual", "Equal", "NotEqual", "And", "Or", "Not", "BitAnd", "BitOr", "BitXor", "BitNot", "BitShiftLeft", "BitShiftRight", "Assign", "Range"};
                 // 操作数；特别地，单目运算符只有 left
                 ExpressionNode *left = nullptr, *right = nullptr;
                 ExpressionNode(Operator op = NoneOp): op(op) {}
@@ -890,12 +904,12 @@ namespace CYaRonLang {
                     case BitShiftLeft:  return {7, false};
                     case BitShiftRight:  return {7, false};
                     case Assign:  return {16, true};
+                    case Range:  return {14, false};
                     default:  return {OperatorInfo::priority_max, false};
                     }
                 }
                 template <typename T>
                 static ParseResult<ExpressionNode> parse(const T &);
-                void walk(IO::Printer &io);
             };
             struct ValueNode: public ExpressionNode {
                 enum Type {
@@ -972,7 +986,7 @@ namespace CYaRonLang {
                         if (opName == "gt")  return Greater;
                         if (opName == "ge")  return GreaterEqual;
                         if (opName == "eq")  return Equal;
-                        if (opName == "ne")  return NotEqual;
+                        if (opName == "neq")  return NotEqual;
                         return assert(false), None;
                     }();
                     it++;
@@ -992,6 +1006,31 @@ namespace CYaRonLang {
             };
             struct WhileBlockNode: public ConditionalBlockNode {
                 WhileBlockNode(): ConditionalBlockNode(BlockNode::WhileBlock) {}
+            };
+            struct ForBlockNode: public BlockNode {
+                // for index, min, max
+                Identifier index;
+                ExpressionNode *min, *max;
+
+                ForBlockNode(): BlockNode(BlockNode::ForBlock) {}
+                ~ForBlockNode() {
+                    delete min;
+                    delete max;
+                }
+                template <typename T>
+                auto parseArgs(const T &src) {
+                    auto it = src.begin();
+                    // 读取一个标识符，作为循环变量
+                    assert(it->tag == Token::IdentifierTag), index = std::get<Identifier>(it->value), it++;
+                    // 读取两个表达式
+                    assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ","), it++;
+                    auto [min_expr, right_begin] = ExpressionNode::parse(TokensSubrange{it, src.end()});
+                    auto [max_expr, end] = ExpressionNode::parse(TokensSubrange{right_begin, src.end()});
+                    it = end;
+                    min = min_expr;
+                    max = max_expr;
+                    return it;
+                }
             };
             template <typename T>
             ParseResult<VariableDeclareStatementNode> VariableDeclareStatementNode::parse(const T &src) {
@@ -1046,7 +1085,12 @@ namespace CYaRonLang {
                         it = dynamic_cast<WhileBlockNode *>(res)->parseCondition(TokensSubrange{it+1, src.end()});
                         continue;
                     }
-                    // todo: for 循环
+                    // for
+                    if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value).name == "hor") {
+                        delete res, res = new ForBlockNode;
+                        it = dynamic_cast<ForBlockNode *>(res)->parseArgs(TokensSubrange{it+1, src.end()});
+                        continue;
+                    }
 
                     // 特殊语法：
                     // 冒号开头的 :f x, y 等价于函数调用 f(x, y)
@@ -1113,6 +1157,7 @@ namespace CYaRonLang {
                     };
                     for (; it != src.end(); it++) {
                         auto &token = *it;
+                        never io << __LINE__ << token << endl;
                         if (token.tag == Token::SymbolTag or token.tag == Token::EndOfLineTag) {
                             auto op = token.tag == Token::EndOfLineTag? "\n": std::get<Symbol>(token.value).value;
                             if (op == "(") {
@@ -1202,6 +1247,7 @@ namespace CYaRonLang {
                             JOIN_BINARY_OP(BitShiftLeft, "<<")
                             JOIN_BINARY_OP(BitShiftRight, ">>")
                             JOIN_BINARY_OP(Assign, "=")
+                            JOIN_BINARY_OP(Range, "..")
     #undef JOIN_BINARY_OP
                             else if (op == "!") {
                                 ops.back().args_remains--;
@@ -1236,11 +1282,11 @@ namespace CYaRonLang {
                     return std::pair{postfix, it};
                 }();
                 // 测试，输出后缀表达式
-                debug for (auto &x: postfix) {
+                never for (auto &x: postfix) {
                     if (x.symbol) {
-                        io << "Operator: " << (int)std::get<Operator>(x.item) << '\x20' << opNames[(int)std::get<Operator>(x.item)] << endl;
+                        io << __LINE__ << "Operator: " << (int)std::get<Operator>(x.item) << '\x20' << opNames[(int)std::get<Operator>(x.item)] << endl;
                     } else {
-                        io << "Value: ";
+                        io << __LINE__ << "Value: ";
                         auto token = std::get<ValueNode>(x.item).token;
                         io << token << endl;
                     }
@@ -1289,18 +1335,62 @@ namespace CYaRonLang {
     namespace Interpreter {
         using Compiler::Identifier;
         namespace AST = Compiler::AST;
-        struct ArrayMeta {
-            Object *valueType;
-            int minIndex, maxIndex;
-        };
+        struct ArrayObjectValue;
         struct Object {
             enum Type {
-                Struct, Int, Function, String, None, Array, ArrayMeta
+                Struct, Int, Function, String, None, Array
             } type;
-            std::variant<std::map<Identifier, Object>, std::shared_ptr<int>, std::shared_ptr<std::string>, Identifier, std::nullptr_t, std::shared_ptr<Object>, > value;
+            std::variant<
+                std::nullptr_t, 
+                std::shared_ptr<std::map<Identifier, Object>>, 
+                std::shared_ptr<int>, 
+                std::shared_ptr<std::string>, 
+                std::shared_ptr<Identifier>,
+                std::shared_ptr<ArrayObjectValue>
+            > value;
             Object(Type type = None): type(type), value(nullptr) {}
             template <typename T>
             Object(Type type, const T &value): type(type), value(value) {}
+        };
+        struct ArrayMeta;
+        struct TypeName {
+            enum Type {
+                Undefined, Int, Array
+            } type;
+            std::variant<std::nullptr_t, std::shared_ptr<ArrayMeta>> meta;
+            TypeName(Type type = Undefined): type(type), meta(nullptr) {}
+            TypeName(Type type, const auto &meta): type(type), meta(meta) {}
+            TypeName(TypeName const &other): type(other.type), meta(other.meta) {}
+        };
+        struct ArrayMeta {
+            std::shared_ptr<TypeName> valueType;
+            int minIndex, maxIndex;
+        };
+        struct ArrayObjectValue {
+            std::shared_ptr<TypeName> type;
+            std::vector<Object> values;
+            ArrayObjectValue(std::shared_ptr<TypeName> type, std::vector<Object> values): type(type), values(values) {}
+            ArrayObjectValue(ArrayObjectValue const &other): type(other.type), values(other.values) {}
+            ArrayObjectValue(std::shared_ptr<TypeName> type): type(type), values() {
+                auto meta = std::get<std::shared_ptr<ArrayMeta>>(type->meta);
+                auto value_type = meta->valueType;
+                auto min = meta->minIndex, max = meta->maxIndex;
+                assert(min <= max);
+                values.resize(max - min + 1);
+                if (value_type->type == TypeName::Int) {
+                    for (auto &x: values)  x = Object{Object::Int, std::shared_ptr<int>{new int{0}}};
+                } else {
+                    for (auto &x: values) {
+                        x = Object{Object::Array, std::shared_ptr<ArrayObjectValue>{new ArrayObjectValue{value_type}}};
+                    }
+                }
+            }
+            Object &operator[](int index) {
+                auto meta = std::get<std::shared_ptr<ArrayMeta>>(type->meta);
+                auto min = meta->minIndex, max = meta->maxIndex;
+                assert(index >= min and index <= max);
+                return values[index - min];
+            }
         };
         class Program {
         public:
@@ -1312,25 +1402,32 @@ namespace CYaRonLang {
             }
             void run();
             Object EvaluateExpression(AST::ExpressionNode *node);
-            template <typename OutIterater>
-            OutIterater getFunctionArguments(AST::ExpressionNode *, OutIterater); 
+            TypeName EvaluateType(AST::ExpressionNode *node);
+            template <typename OutIterator>
+            OutIterator getFunctionArguments(AST::ExpressionNode *, OutIterator);
             // 运行语句块
             void runBlock(AST::BlockNode *block);
+            template <typename StatementPointer>
+            void runDeclarationStatement(StatementPointer);
+            template <typename StatementPointer>
+            void runStatement(StatementPointer);
         };
         Program::Program(AST::BlockNode *root): root(root) {
             // 注册内置函数
-            variables.insert({{"print"}, Object{Object::Function, Identifier{"print"}}});
-            variables.insert({{"println"}, Object{Object::Function, Identifier{"println"}}});
-            variables.insert({{"scan"}, Object{Object::Function, Identifier{"scan"}}});
-            variables.insert({{"set"}, Object{Object::Function, Identifier{"set"}}});
-            variables.insert({{"test_sort"}, Object{Object::Function, Identifier{"test_sort"}}});
+            variables.insert({{"print"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"print"}}}});
+            variables.insert({{"println"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"println"}}}});
+            variables.insert({{"scan"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"scan"}}}});
+            variables.insert({{"set"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"set"}}}});
+            variables.insert({{"test_sort"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"test_sort"}}}});
+            // yosoro 输出数字和空格
+            variables.insert({{"yosoro"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"yosoro"}}}});
         }
         // 展开逗号分隔符表达式，获取函数参数列表，写入到输出迭代器
         // 例如，后缀表达式 a, b, (comma), c, (comma)
         // 提取出参数列表 a, b, c
         // node 为一个逗号运算符，或唯一的参数
-        template <typename OutIterater>
-        OutIterater Program::getFunctionArguments(AST::ExpressionNode *node, OutIterater out) {
+        template <typename OutIterator>
+        OutIterator Program::getFunctionArguments(AST::ExpressionNode *node, OutIterator out) {
             if (node->op == AST::ExpressionNode::SplitComma) {
                 // 当前为逗号，向左右子树获取参数
                 out = getFunctionArguments(node->left, out);
@@ -1352,6 +1449,7 @@ namespace CYaRonLang {
             runBlock(root);
         }
         Object Program::EvaluateExpression(AST::ExpressionNode *node) {
+            if (node == nullptr)  return Object{Object::None};
             if (node->op == node->NoneOp) {
                 // 叶子节点
                 auto value_node = dynamic_cast<AST::ValueNode *>(node);
@@ -1387,9 +1485,15 @@ namespace CYaRonLang {
                 JOIN_INT_OP(Div, /)
                 JOIN_INT_OP(Mod, %)
 #undef JOIN_INT_OP
-                else if (node->op == AST::ExpressionNode::Call) {
+                else if (node->op == AST::ExpressionNode::UnaryAdd) {
+                    assert(l_son.type == Object::Int);
+                    return l_son;
+                } else if (node->op == AST::ExpressionNode::UnarySub) {
+                    assert(l_son.type == Object::Int);
+                    return Object{Object::Int, std::shared_ptr<int>{new int(-*std::get<std::shared_ptr<int>>(l_son.value))}};
+                } else if (node->op == AST::ExpressionNode::Call) {
                     assert(l_son.type == Object::Function);
-                    auto name = std::get<Identifier>(l_son.value).name;  // 函数名
+                    auto name = std::get<std::shared_ptr<Identifier>>(l_son.value)->name;  // 函数名
                     if (name == "print") {
                         if (r_son.type == Object::Int) {
                             auto num = *std::get<std::shared_ptr<int>>(r_son.value);
@@ -1430,6 +1534,11 @@ namespace CYaRonLang {
                         for (auto x: nums)  io << x << ' ';
                         io << endl;
                         return Object(Object::None);
+                    } else if (name == "yosoro") {
+                        assert(r_son.type == Object::Int);
+                        auto num = *std::get<std::shared_ptr<int>>(r_son.value);
+                        io << num << ' ';
+                        return Object(Object::None);
                     } else {
                         assert(false);
                         return Object(Object::Struct);
@@ -1440,56 +1549,127 @@ namespace CYaRonLang {
                     return l_son;
                 } else if (node->op == AST::ExpressionNode::SplitComma) {
                     return Object(Object::None);
+                } else if (node->op == AST::ExpressionNode::Subscript) {
+                    assert(l_son.type == Object::Array and r_son.type == Object::Int);
+                    auto &array = *std::get<std::shared_ptr<ArrayObjectValue>>(l_son.value);
+                    return array[*std::get<std::shared_ptr<int>>(r_son.value)];
                 } else {
                     assert(false);
                     return Object(Object::Struct);
                 }
             }
         }
+        TypeName Program::EvaluateType(AST::ExpressionNode *node) {
+            if (node->op == AST::ExpressionNode::NoneOp) {
+                auto value_node = dynamic_cast<AST::ValueNode *>(node);
+                if (value_node->token.tag == Compiler::Token::IdentifierTag) {
+                    const auto &name = std::get<Compiler::Identifier>(value_node->token.value).name;
+                    if (name == "int") {
+                        return {TypeName::Int};
+                    } else if (name == "array") {
+                        return {TypeName::Array};
+                    }
+                }
+            }
+            else {
+                if (node->op == AST::ExpressionNode::Subscript) {
+                    // 解析列表定义
+                    assert(node->right->op == AST::ExpressionNode::SplitComma);
+                    auto value_type = EvaluateType(node->right->left);
+                    auto range_node = node->right->right;
+                    auto min_node = EvaluateExpression(range_node->left), max_node = EvaluateExpression(range_node->right);
+                    assert(min_node.type == Object::Int and max_node.type == Object::Int);
+                    auto min = *std::get<std::shared_ptr<int>>(min_node.value);
+                    auto max = *std::get<std::shared_ptr<int>>(max_node.value);
+                    return TypeName{TypeName::Array, std::shared_ptr<ArrayMeta>{
+                            new ArrayMeta{std::shared_ptr<TypeName>{new TypeName{value_type}}, min, max
+                        }}};
+                }
+            }
+            assert(false);
+            return {};
+        }
+        template <typename StatementPointer>
+        void Program::runDeclarationStatement(StatementPointer node) {
+            auto variable_declare_statement = node;
+            auto type_node = variable_declare_statement->type;
+
+            auto type = EvaluateType(type_node);
+            auto variable_name = variable_declare_statement->name;
+            assert(not variables.contains(variable_name));  // 重复声明
+            if (type.type == type.Int) {
+                variables.insert({variable_name, Object(Object::Int, std::shared_ptr<int>{new int(0)})});
+            } else if (type.type == type.Array) {
+                auto value = std::shared_ptr<ArrayObjectValue>{new ArrayObjectValue{std::shared_ptr<TypeName>{new TypeName{type}}}};
+                variables.insert({variable_name, Object(Object::Array, value)});
+            } else {
+                assert(false);
+            }
+        }
         void Program::runBlock(AST::BlockNode *block) {
             if (block->type == AST::BlockNode::IfBlock or block->type == AST::BlockNode::WhileBlock) {
                 auto if_block = dynamic_cast<AST::ConditionalBlockNode *>(block);
                 auto condition = if_block->condition;
-                assert(condition == AST::IfBlockNode::Less);  // 只支持小于号
                 auto l_son = EvaluateExpression(if_block->left);
                 assert(l_son.type == Object::Int);
                 auto r_son = EvaluateExpression(if_block->right);
                 assert(r_son.type == Object::Int);
-                if (*std::get<std::shared_ptr<int>>(l_son.value) >= *std::get<std::shared_ptr<int>>(r_son.value))  return;
-            }
-            for (auto &x: block->statements) {
-                if (x->type == AST::StatementNode::ExpressionEvaluateStatement) {
-                    auto expression_evaluate_statement = dynamic_cast<AST::ExpressionEvaluateStatementNode *>(x);
-                    EvaluateExpression(expression_evaluate_statement->expr);
-                } else if (x->type == AST::StatementNode::VariableDeclareStatement) {
-                    auto variable_declare_statement = dynamic_cast<AST::VariableDeclareStatementNode *>(x);
-                    auto type = variable_declare_statement->type;
-                    assert(type->op == type->NoneOp);
-                    auto type_identifier = std::get<Identifier>(dynamic_cast<AST::ValueNode *>(type)->token.value);
-                    assert(type_identifier.name == "int");
-                    auto variable_name = variable_declare_statement->name;
-                    assert(not variables.contains(variable_name));  // 重复声明
-                    variables.insert({variable_name, Object(Object::Int, std::shared_ptr<int>{new int(0)})});
-                } else if (x->type == AST::StatementNode::RunBlockStatement) {
-                    auto run_block_statement = dynamic_cast<AST::RunBlockStatementNode *>(x);
-                    runBlock(run_block_statement->block);
-                } else {
-                    assert(false);
+#define CONDITION(name, symbol) else if (condition == AST::IfBlockNode::name) { \
+                    if (not (*std::get<std::shared_ptr<int>>(l_son.value) symbol *std::get<std::shared_ptr<int>>(r_son.value)))  return; \
                 }
+                if (0) {}
+                CONDITION(Less, <)
+                CONDITION(LessEqual, <=)
+                CONDITION(Greater, >)
+                CONDITION(GreaterEqual, >=)
+                CONDITION(Equal, ==)
+                CONDITION(NotEqual, !=)
             }
+            if (block->type == AST::BlockNode::ForBlock) {
+                auto for_block = dynamic_cast<AST::ForBlockNode *>(block);
+                auto index = for_block->index;
+                const auto index_type = TypeName{TypeName::Int};
+                auto min_index = EvaluateExpression(for_block->min), max_index = EvaluateExpression(for_block->max);
+                assert(min_index.type == Object::Int and max_index.type == Object::Int);
+                auto min = *std::get<std::shared_ptr<int>>(min_index.value);
+                auto max = *std::get<std::shared_ptr<int>>(max_index.value);
+                if (not variables.contains(index)) {
+                    variables.insert({index, Object(Object::Int, std::shared_ptr<int>{new int(min)})});
+                }
+                for (int i = min; i <= max; i++) {
+                    variables[index] = Object(Object::Int, std::shared_ptr<int>{new int(i)});
+                    for (auto x: for_block->statements)  runStatement(x);
+                }
+                return;
+            }
+            for (auto &x: block->statements)  runStatement(x);
             if (block->type == AST::BlockNode::WhileBlock) {
                 runBlock(block);
             }
         }
+        template <typename StatementPointer>
+        void Program::runStatement(StatementPointer x) {
+            if (x->type == AST::StatementNode::ExpressionEvaluateStatement) {
+                auto expression_evaluate_statement = dynamic_cast<AST::ExpressionEvaluateStatementNode *>(x);
+                EvaluateExpression(expression_evaluate_statement->expr);
+            } else if (x->type == AST::StatementNode::VariableDeclareStatement) {
+                runDeclarationStatement(dynamic_cast<AST::VariableDeclareStatementNode *>(x));
+            } else if (x->type == AST::StatementNode::RunBlockStatement) {
+                auto run_block_statement = dynamic_cast<AST::RunBlockStatementNode *>(x);
+                runBlock(run_block_statement->block);
+            } else {
+                assert(false);
+            }
+        }
     }
     void test() {
+    }
+    void solve() {
+        test();
         auto tokens = Compiler::tokenize(io);
         auto ast = Compiler::AST::BlockNode::parse(tokens).node;
         auto program = Interpreter::Program(ast);
         program.run();
-    }
-    void solve() {
-        test();
     }
 }
 
