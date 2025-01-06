@@ -896,6 +896,8 @@ namespace CYaRonLang {
                 ExpressionEvaluateStatement,
                 VariableDeclareStatement,
                 RunBlockStatement,
+                IfStatement,
+                WhileStatement,
             } type = NoneStatement;
             StatementNode(Type type = NoneStatement): type(type) {}
             virtual ~StatementNode() = default;
@@ -1058,49 +1060,35 @@ namespace CYaRonLang {
                 delete block;
             }
         };
-        struct ConditionalBlockNode: public BlockNode {
+        struct ConditionalStatementNode: public StatementNode {
             // 带条件语句块（if, while）
-            enum Condition {
-                None, Less, LessEqual, Greater, GreaterEqual, Equal, NotEqual
-            } condition = None;
-            ExpressionNode *left, *right;  // 满足 *left (condition) *right 时才执行 statements
-            ConditionalBlockNode(BlockNode::Type type): BlockNode(type) {}
-            ~ConditionalBlockNode() {
-                delete left;
-                delete right;
+            ExpressionNode *condition;  // 条件
+            BlockNode *body;  // 执行
+            ConditionalStatementNode(StatementNode::Type type): StatementNode(type) {}
+            virtual ~ConditionalStatementNode() {
+                delete condition;
+                delete body;
             }
+            template <typename T, typename Out>
+            static ParseResult<Out> parse(const T &);
+        };
+        struct IfStatementNode: public ConditionalStatementNode {
+            // static constexpr const StatementNode::Type defaultType = StatementNode::IfStatement;
+            IfStatementNode(): ConditionalStatementNode(StatementNode::IfStatement) {}
+
             template <typename T>
-            auto parseCondition(const T &src) {
-                // 类似 op, a, b
-                auto it = src.begin();
-                assert(it->tag == Token::IdentifierTag);
-                auto opName = std::get<Identifier>(it->value);
-                condition = [&]() {
-                    if (opName == "lt")  return Less;
-                    if (opName == "le")  return LessEqual;
-                    if (opName == "gt")  return Greater;
-                    if (opName == "ge")  return GreaterEqual;
-                    if (opName == "eq")  return Equal;
-                    if (opName == "neq")  return NotEqual;
-                    return assert(false), None;
-                }();
-                it++;
-                // 期待一个逗号
-                assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ","), it++;
-                // 读取两个表达式
-                auto [left_expr, right_begin] = ExpressionNode::parse(TokensSubrange{it, src.end()});
-                auto [right_expr, end] = ExpressionNode::parse(TokensSubrange{right_begin, src.end()});
-                it = end;
-                left = left_expr;
-                right = right_expr;
-                return it;
+            static ParseResult<IfStatementNode> parse(const T &src) {
+                return ConditionalStatementNode::parse<decltype(src), IfStatementNode>(src);
             }
         };
-        struct IfBlockNode: public ConditionalBlockNode {
-            IfBlockNode(): ConditionalBlockNode(BlockNode::IfBlock) {}
-        };
-        struct WhileBlockNode: public ConditionalBlockNode {
-            WhileBlockNode(): ConditionalBlockNode(BlockNode::WhileBlock) {}
+        struct WhileStatementNode: public ConditionalStatementNode {
+            // static constexpr const StatementNode::Type defaultType = StatementNode::WhileStatement;
+            WhileStatementNode(): ConditionalStatementNode(StatementNode::WhileStatement) {}
+
+            template <typename T>
+            static ParseResult<WhileStatementNode> parse(const T &src) {
+                return ConditionalStatementNode::parse<decltype(src), WhileStatementNode>(src);
+            }
         };
         struct ForBlockNode: public BlockNode {
             // for index, min, max
@@ -1143,10 +1131,15 @@ namespace CYaRonLang {
             it = end;
             return {res, it};
         }
+        /**
+         * 解析一个语句块
+         * src 的头指针应指向起始花括号的下一个位置
+         * { statement1; statement2; }
+         *  ^
+         * @returns [block, end] 解析后的块，结束花括号的下一个位置
+         */
         template <typename T>
         ParseResult<BlockNode> BlockNode::parse(T const &src) {
-            // 解析一个语句块
-            // 语句块用花括号包裹，包含若干条语句
             auto res = new BlockNode;
             auto it = src.begin();
             for (; it != src.end();) {
@@ -1161,23 +1154,25 @@ namespace CYaRonLang {
                     res->statements.push_back(new RunBlockStatementNode{sub_block}), it = next;
                     continue;
                 }
+                // if 子块
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "if") {
+                    // 接下来，读取一个 if 块，作为当前类的一个语句
+                    auto [if_block, next] = IfStatementNode::parse(TokensSubrange{++it, src.end()});
+                    res->statements.push_back(if_block), it = next;
+                    continue;
+                }
+                // while 子块
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "while") {
+                    auto [while_block, next] = WhileStatementNode::parse(TokensSubrange{++it, src.end()});
+                    res->statements.push_back(while_block), it = next;
+                    continue;
+                }
+
                 // vars 关键字
                 // 把当前块变成声明块
                 if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "vars") {
                     res->type = VarsBlock;
                     it++;
-                    continue;
-                }
-                // ihu 关键字（if）
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "ihu") {
-                    delete res, res = new IfBlockNode;
-                    it = dynamic_cast<IfBlockNode *>(res)->parseCondition(TokensSubrange{it+1, src.end()});
-                    continue;
-                }
-                // while 关键字
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "while") {
-                    delete res, res = new WhileBlockNode;
-                    it = dynamic_cast<WhileBlockNode *>(res)->parseCondition(TokensSubrange{it+1, src.end()});
                     continue;
                 }
                 // for
@@ -1221,6 +1216,48 @@ namespace CYaRonLang {
                 it = next;
             }
             return {res, src.end()};
+        }
+        /**
+         * 解析一个条件块
+         * 类似：
+         * if (a > b) { print(1); }
+         *   ^ 
+         * src 的头指针在关键字之后
+         * @return [block, next] 解析后的块，以及花括号结束的下一个指针
+         */
+        template <typename T, typename Out>
+        ParseResult<Out> ConditionalStatementNode::parse(const T &src) {
+            auto res = new Out;
+            auto it = src.begin();
+            /** 读取条件
+             * 条件结束于一个没有被其他括号包裹的花括号 {
+             * 例如：if ({a}) {
+             *               ^ 在此结束
+             * if b < {a}
+             *       ^ 在此结束
+             */ {
+                auto [condition, next] = ExpressionNode::parse(
+                    TokensSubrange{it, src.end()},
+                    [](auto const &op, auto const &ops_stack) -> bool {
+                        // 花括号结束
+                        if (op == "{" and (ops_stack.empty() or ops_stack.back().op == ExpressionNode::NoneOp)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                );
+                res->condition = condition;
+                it = next;
+            }
+            /**
+             * 读取主体
+             */ {
+                assert(it != src.end());
+                auto [body, next] = BlockNode::parse(TokensSubrange{it, src.end()});
+                res->body = body;
+                it = next;
+            }
+            return {res, it};
         }
         ExpressionNode::~ExpressionNode() {
             if (left)  delete left;
@@ -1722,24 +1759,6 @@ namespace CYaRonLang {
             }
         }
         void Interpreter::runBlock(AST::BlockNode *block) {
-            if (block->type == AST::BlockNode::IfBlock or block->type == AST::BlockNode::WhileBlock) {
-                auto if_block = dynamic_cast<AST::ConditionalBlockNode *>(block);
-                auto condition = if_block->condition;
-                auto l_son = EvaluateExpression(if_block->left);
-                assert(l_son.type == Object::Int);
-                auto r_son = EvaluateExpression(if_block->right);
-                assert(r_son.type == Object::Int);
-#define CONDITION(name, symbol) else if (condition == AST::IfBlockNode::name) { \
-                    if (not (*std::get<std::shared_ptr<int>>(l_son.value) symbol *std::get<std::shared_ptr<int>>(r_son.value)))  return; \
-                }
-                if (0) {}
-                CONDITION(Less, <)
-                CONDITION(LessEqual, <=)
-                CONDITION(Greater, >)
-                CONDITION(GreaterEqual, >=)
-                CONDITION(Equal, ==)
-                CONDITION(NotEqual, !=)
-            }
             if (block->type == AST::BlockNode::ForBlock) {
                 auto for_block = dynamic_cast<AST::ForBlockNode *>(block);
                 auto index = for_block->index;
@@ -1758,9 +1777,6 @@ namespace CYaRonLang {
                 return;
             }
             for (auto &x: block->statements)  runStatement(x);
-            if (block->type == AST::BlockNode::WhileBlock) {
-                runBlock(block);
-            }
         }
         template <typename StatementPointer>
         void Interpreter::runStatement(StatementPointer x) {
@@ -1772,6 +1788,13 @@ namespace CYaRonLang {
             } else if (x->type == AST::StatementNode::RunBlockStatement) {
                 auto run_block_statement = dynamic_cast<AST::RunBlockStatementNode *>(x);
                 runBlock(run_block_statement->block);
+            } else if (x->type == AST::StatementNode::IfStatement) {
+                auto if_statement = dynamic_cast<AST::IfStatementNode *>(x);
+                auto condition = EvaluateExpression(if_statement->condition);
+                assert(condition.type == Object::Int);
+                if (*std::get<std::shared_ptr<int>>(condition.value) != 0) {
+                    runBlock(if_statement->body);
+                }
             } else {
                 assert(false);
             }
