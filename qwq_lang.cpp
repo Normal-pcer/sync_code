@@ -3,7 +3,9 @@
  */
 #include "./libs/debug_macros.hpp"
 
+
 #include "./lib_v3.hpp"
+
 
 using namespace lib;
 
@@ -385,11 +387,11 @@ namespace CYaRonLang {
         };
         // 为 vector 中的下标 +1，0 留作缺省值
         std::unordered_map<std::string, IdentifierIndexType> mappingStringToIndex;
-        // int 到 map 的迭代器
-        std::vector<std::string> mappingIndexToString;
+        // int 到 string
+        std::unordered_map<int, std::string> mappingIndexToString;
 
     public:
-        IdentifierMap(): mappingStringToIndex(), mappingIndexToString() {}
+        IdentifierMap();
         IdentifierIndexType getIndex(std::string const &s, IdentifierIndexType default_val) {
             auto it = mappingStringToIndex.find(s);
             if (it != mappingStringToIndex.end())  return it->second;
@@ -401,23 +403,45 @@ namespace CYaRonLang {
             else  throw IndexError("IdentifierMap::getIndex: name not found");
         }
         const std::string &getString(IdentifierIndexType index) {
-            if (index <= (IdentifierIndexType)mappingIndexToString.size() and index > 0)  return mappingIndexToString[index - 1];
+            auto it = mappingIndexToString.find(index);
+            if (it != mappingIndexToString.end())  return it->second;
             else  throw IndexError("IdentifierMap::getString: index out of range");
         }
         IdentifierIndexType insert(std::string const &s) {
-            auto [new_it, success] = mappingStringToIndex.insert({s, mappingIndexToString.size() + 1});
-            if (success)  mappingIndexToString.push_back(s);
+            auto index = mappingIndexToString.size() + 1;
+            while (containsIndex(index))  index++;
+            auto [new_it, success] = mappingStringToIndex.insert({s, index});
+            if (success)  mappingIndexToString.insert({index, s});
             return new_it->second;
         }
         bool containsString(std::string const &s) {
             return mappingStringToIndex.find(s) != mappingStringToIndex.end();
         }
         bool containsIndex(IdentifierIndexType index) {
-            return index > 0 and index <= (IdentifierIndexType)mappingIndexToString.size();
+            return mappingIndexToString.find(index) != mappingIndexToString.end();
+        }
+        // 指定索引插入字符串
+        void join(IdentifierIndexType index, const std::string &s) {
+            assert(not containsIndex(index) and not containsString(s));
+            mappingStringToIndex.insert({s, index});
+            mappingIndexToString.insert({index, s});
         }
     };
+    namespace Keywords {
+        enum KeywordType: int {
+            None, If, While, For
+        };
+        void joinKeywords(IdentifierMap &idMap) {
+            idMap.join(If, "if");
+            idMap.join(While, "while");
+            idMap.join(For, "for");
+        }
+    }
+    IdentifierMap::IdentifierMap(): mappingStringToIndex(), mappingIndexToString() {
+        Keywords::joinKeywords(*this);
+    }
     IdentifierMap identifierMap;
-    
+
     struct Program;
 
     void compileError(std::string const &s) {
@@ -977,6 +1001,8 @@ namespace CYaRonLang {
                 default:  return {OperatorInfo::priority_max, false};
                 }
             }
+            template <typename T, typename PredType>
+            static ParseResult<ExpressionNode> parse(const T &, PredType const &&);
             template <typename T>
             static ParseResult<ExpressionNode> parse(const T &);
         };
@@ -1202,12 +1228,27 @@ namespace CYaRonLang {
         }
         template <typename T>
         ParseResult<ExpressionNode> ExpressionNode::parse(const T &src) {
+            return parse(src, 0);
+        }
+        template <typename T, typename PredType>
+        ParseResult<ExpressionNode> ExpressionNode::parse(const T &src, PredType const &&pred) {
+            struct StackValueType {
+                Operator op;
+                int args_remains;  // 剩余操作数
+            };
+            const auto &&end_condition = [&]() {
+                if constexpr(std::is_same_v<PredType, int>) {
+                    return [&](std::string const op, std::vector<StackValueType> const &ops) {
+                        if (op == "," and (ops.empty() or ops.back().op == NoneOp))  return true;
+                        if (op == ";" or op == "\n")  return true;
+                        return false;
+                    };
+                } else {
+                    return pred;
+                }
+            }();
             auto [postfix, it] = [&]() {                
                 const auto inf = OperatorInfo::priority_max;
-                struct StackValueType {
-                    Operator op;
-                    int args_remains;  // 剩余操作数
-                };
                 std::vector<StackValueType> ops {{NoneOp, 1}};  // 运算符栈
                 auto it = src.begin();
                 // 转成后缀表达式
@@ -1229,6 +1270,10 @@ namespace CYaRonLang {
                     never io << __LINE__ << token << endl;
                     if (token.tag == Token::SymbolTag or token.tag == Token::EndOfLineTag) {
                         auto op = token.tag == Token::EndOfLineTag? "\n": std::get<Symbol>(token.value).value;
+                        if (end_condition(op, ops)) {
+                            it++;
+                            break;
+                        }
                         if (op == "(") {
                             // 函数调用
                             // 如果左侧是一个完整结果，视为函数调用
@@ -1257,11 +1302,6 @@ namespace CYaRonLang {
                         } else if (op == ",") {
                             while (not ops.empty() and infoOf(ops.back().op).priority < infoOf(SplitComma).priority) {
                                 postfix.push_back({true, {ops.back().op}}), ops.pop_back();
-                            }
-                            if (ops.empty() or ops.back().op == NoneOp) {
-                                // 结束表达式
-                                it++;
-                                break;
                             }
                             ops.push_back({SplitComma, 1});
                         } else if (op == "[") {
@@ -1293,10 +1333,6 @@ namespace CYaRonLang {
                             } else {
                                 add(Sub, 1);
                             }
-                        } else if (op == ";" or op == "\n") {
-                            // 结束表达式
-                            it++;
-                            break;
                         }
 #define JOIN_BINARY_OP(op_type, op_str) else if (op == op_str)  add(op_type, 1);
                         JOIN_BINARY_OP(Mul, "*")
