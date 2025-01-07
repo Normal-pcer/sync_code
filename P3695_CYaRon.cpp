@@ -299,7 +299,7 @@ using i128 = __int128;  using u128 = unsigned __int128;
 using f32 = float;  using f64 = double;
 
 // CYaRon Programming Language
-namespace CYaRonLang {
+namespace GenshinLang {
     template <size_t MaxSize>
     struct FileWritePrinterStdandardError: public IO::Printer {
         char pbuf[MaxSize], *pp;
@@ -1675,6 +1675,6 @@ namespace CYaRonLang {
 
 int main(int argc, char const *argv[]) {
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    CYaRonLang::solve();
+    GenshinLang::solve();
     return 0;
 }

@@ -1,7 +1,12 @@
 /**
  * @link https://www.luogu.com.cn/problem/P3695
  */
+
 #include "./libs/debug_macros.hpp"
+
+// #pragma GCC optimize("Ofast")
+// #pragma GCC optimize("inline")
+// #pragma GCC optimize(3)
 
 #include "./lib_v3.hpp"
 
@@ -298,8 +303,7 @@ using i32 = int32_t;  using i64 = int64_t;  using u32 = uint32_t;  using u64 = u
 using i128 = __int128;  using u128 = unsigned __int128;
 using f32 = float;  using f64 = double;
 
-// CYaRon Programming Language
-namespace CYaRonLang {
+namespace GenshinLang {
     template <size_t MaxSize>
     struct FileWritePrinterStdandardError: public IO::Printer {
         char pbuf[MaxSize], *pp;
@@ -427,12 +431,14 @@ namespace CYaRonLang {
     };
     namespace Keywords {
         enum KeywordType: int {
-            None, If, While, For
+            None, If, While, For, Var, Def
         };
         void joinKeywords(IdentifierMap &idMap) {
             idMap.join(If, "if");
             idMap.join(While, "while");
             idMap.join(For, "for");
+            idMap.join(Var, "var");
+            idMap.join(Def, "def");
         }
     }
     IdentifierMap::IdentifierMap(): mappingStringToIndex(), mappingIndexToString() {
@@ -511,6 +517,9 @@ namespace CYaRonLang {
             }
             bool operator== (std::string const &other) const {
                 return identifierMap.getString(name) == other;
+            }
+            bool operator== (IdentifierIndexType const &x) const {
+                return name == x;
             }
         };
         // 整数字面量，允许带有后缀运算符
@@ -896,6 +905,8 @@ namespace CYaRonLang {
                 RunBlockStatement,
                 IfStatement,
                 WhileStatement,
+                ForStatement,
+                FunctionDefinitionStatement
             } type = NoneStatement;
             StatementNode(Type type = NoneStatement): type(type) {}
             virtual ~StatementNode() = default;
@@ -903,10 +914,6 @@ namespace CYaRonLang {
         struct BlockNode: public Node {
             enum Type {
                 NoneBlock,  // 常规代码块
-                IfBlock,  // 条件代码块
-                WhileBlock,  // 条件循环代码块
-                VarsBlock,  // 变量声明代码块
-                ForBlock,  // For 循环代码块
             } type = NoneBlock;
             std::vector<StatementNode *> statements;
             BlockNode() = default;
@@ -1002,7 +1009,7 @@ namespace CYaRonLang {
                 }
             }
             template <typename T, typename PredType>
-            static ParseResult<ExpressionNode> parse(const T &, PredType const &&);
+            static ParseResult<ExpressionNode> parse(const T &, PredType &&);
             template <typename T>
             static ParseResult<ExpressionNode> parse(const T &);
         };
@@ -1071,7 +1078,6 @@ namespace CYaRonLang {
             static ParseResult<Out> parse(const T &);
         };
         struct IfStatementNode: public ConditionalStatementNode {
-            // static constexpr const StatementNode::Type defaultType = StatementNode::IfStatement;
             IfStatementNode(): ConditionalStatementNode(StatementNode::IfStatement) {}
 
             template <typename T>
@@ -1080,7 +1086,6 @@ namespace CYaRonLang {
             }
         };
         struct WhileStatementNode: public ConditionalStatementNode {
-            // static constexpr const StatementNode::Type defaultType = StatementNode::WhileStatement;
             WhileStatementNode(): ConditionalStatementNode(StatementNode::WhileStatement) {}
 
             template <typename T>
@@ -1088,30 +1093,36 @@ namespace CYaRonLang {
                 return ConditionalStatementNode::parse<decltype(src), WhileStatementNode>(src);
             }
         };
-        struct ForBlockNode: public BlockNode {
-            // for index, min, max
-            Identifier index;
-            ExpressionNode *min, *max;
+        struct ForStatementNode: public StatementNode {
+            // C 风格 For 循环
+            // for (stat; expr; expr) { block }
+            StatementNode *init;
+            ExpressionNode *condition, *step;
+            BlockNode *body;
 
-            ForBlockNode(): BlockNode(BlockNode::ForBlock) {}
-            ~ForBlockNode() {
-                delete min;
-                delete max;
+            ForStatementNode(): StatementNode(StatementNode::ForStatement) {}
+            ~ForStatementNode() {
+                delete init;
+                delete condition;
+                delete step;
+                delete body;
             }
             template <typename T>
-            auto parseArgs(const T &src) {
-                auto it = src.begin();
-                // 读取一个标识符，作为循环变量
-                assert(it->tag == Token::IdentifierTag), index = std::get<Identifier>(it->value), it++;
-                // 读取两个表达式
-                assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ","), it++;
-                auto [min_expr, right_begin] = ExpressionNode::parse(TokensSubrange{it, src.end()});
-                auto [max_expr, end] = ExpressionNode::parse(TokensSubrange{right_begin, src.end()});
-                it = end;
-                min = min_expr;
-                max = max_expr;
-                return it;
+            static ParseResult<ForStatementNode> parse(const T &);
+        };
+        struct FunctionDefinitionStatementNode: public StatementNode {
+            // 函数定义
+            // def name(arg1: type1, arg2: type2) { block }
+            Identifier name;
+            std::vector<VariableDeclareStatementNode *> args;
+            BlockNode *body;
+            FunctionDefinitionStatementNode(): StatementNode(StatementNode::FunctionDefinitionStatement) {}
+            ~FunctionDefinitionStatementNode() {
+                delete body;
+                for (auto ptr: args)  delete ptr;
             }
+            template <typename T>
+            static ParseResult<FunctionDefinitionStatementNode> parse(const T &);
         };
         template <typename T>
         ParseResult<VariableDeclareStatementNode> VariableDeclareStatementNode::parse(const T &src) {
@@ -1152,31 +1163,23 @@ namespace CYaRonLang {
                     res->statements.push_back(new RunBlockStatementNode{sub_block}), it = next;
                     continue;
                 }
-                // if 子块
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "if") {
-                    // 接下来，读取一个 if 块，作为当前类的一个语句
-                    auto [if_block, next] = IfStatementNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(if_block), it = next;
+                // if 语句
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::If) {
+                    // 接下来，读取一个 if，作为当前类的一个语句
+                    auto [if_statement, next] = IfStatementNode::parse(TokensSubrange{++it, src.end()});
+                    res->statements.push_back(if_statement), it = next;
                     continue;
                 }
-                // while 子块
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "while") {
-                    auto [while_block, next] = WhileStatementNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(while_block), it = next;
+                // while 语句
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::While) {
+                    auto [while_statement, next] = WhileStatementNode::parse(TokensSubrange{++it, src.end()});
+                    res->statements.push_back(while_statement), it = next;
                     continue;
                 }
-
-                // vars 关键字
-                // 把当前块变成声明块
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "vars") {
-                    res->type = VarsBlock;
-                    it++;
-                    continue;
-                }
-                // for
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == "hor") {
-                    delete res, res = new ForBlockNode;
-                    it = dynamic_cast<ForBlockNode *>(res)->parseArgs(TokensSubrange{it+1, src.end()});
+                // for 语句
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::For) {
+                    auto [for_statement, next] = ForStatementNode::parse(TokensSubrange{++it, src.end()});
+                    res->statements.push_back(for_statement), it = next;
                     continue;
                 }
 
@@ -1201,11 +1204,17 @@ namespace CYaRonLang {
                     res->statements.push_back(new ExpressionEvaluateStatementNode{expr});
                     continue;
                 }
-                if (res->type == VarsBlock) {
+                // var 语句
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Var) {
                     // 解析一个变量声明
-                    auto [decl, next] = VariableDeclareStatementNode::parse(TokensSubrange{it, src.end()});
-                    res->statements.push_back(decl);
-                    it = next;
+                    auto [decl, next] = VariableDeclareStatementNode::parse(TokensSubrange{++it, src.end()});
+                    res->statements.push_back(decl), it = next;
+                    continue;
+                }
+                // def 语句
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Def) {
+                    auto [def, next] = FunctionDefinitionStatementNode::parse(TokensSubrange{++it, src.end()});
+                    res->statements.push_back(def), it = next;
                     continue;
                 }
                 // 表达式求值
@@ -1216,7 +1225,7 @@ namespace CYaRonLang {
             return {res, src.end()};
         }
         /**
-         * 解析一个条件块
+         * 解析一个条件块（Out 类型）
          * 类似：
          * if (a > b) { print(1); }
          *   ^ 
@@ -1257,6 +1266,61 @@ namespace CYaRonLang {
             }
             return {res, it};
         }
+        /**
+         * 解析一个 for 循环
+         * 类似：
+         * for (int i = 0; i < 10; i++) {}
+         *    ^
+         * src 的头指针在 for 关键字之后
+         * @return [for, next] 解析后的块，以及花括号结束的下一个指针
+         */
+        template <typename T>
+        ParseResult<ForStatementNode> ForStatementNode::parse(const T &src) {
+            auto res = new ForStatementNode;
+            auto it = src.begin();
+            // 匹配一个左括号
+            assert(it != src.end() and it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "(");
+            it++;
+            // 匹配 init 语句
+            {
+                // 暂时只考虑执行表达式
+                auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()});
+                res->init = new ExpressionEvaluateStatementNode{expr};
+                it = next;
+            }
+            // 匹配条件
+            {
+                auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()});
+                res->condition = expr, it = next;
+            }
+            // 匹配 step 表达式
+            {
+                // 读到未匹配的括号结束表达式
+                auto end_condition = [](auto const &op, auto const &ops_stack) -> bool {
+                    if (op == ")") {
+                        bool flag = true;
+                        for (auto it = ops_stack.rbegin(); it != ops_stack.rend(); it++) {
+                            if (it->op == ExpressionNode::Bracket) {
+                                flag = false;
+                            }
+                        }
+                        if (flag) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+                auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()}, end_condition);
+                res->step = expr, it = next;
+            }
+            // 匹配主体
+            assert(it != src.end() and it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{");
+            {
+                auto [body, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
+                res->body = body, it = next;
+            }
+            return {res, it};
+        }
         ExpressionNode::~ExpressionNode() {
             if (left)  delete left;
             if (right)  delete right;
@@ -1266,14 +1330,14 @@ namespace CYaRonLang {
             return parse(src, 0);
         }
         template <typename T, typename PredType>
-        ParseResult<ExpressionNode> ExpressionNode::parse(const T &src, PredType const &&pred) {
+        ParseResult<ExpressionNode> ExpressionNode::parse(const T &src, PredType &&pred) {
             struct StackValueType {
                 Operator op;
                 int args_remains;  // 剩余操作数
             };
             const auto &&end_condition = [&]() {
                 if constexpr(std::is_same_v<PredType, int>) {
-                    return [&](std::string const op, std::vector<StackValueType> const &ops) {
+                    return [&](std::string const &op, std::vector<StackValueType> const &ops) {
                         if (op == "," and (ops.empty() or ops.back().op == NoneOp))  return true;
                         if (op == ";" or op == "\n")  return true;
                         return false;
@@ -1470,8 +1534,76 @@ namespace CYaRonLang {
             assert(nodes_stack.size() == (size_t)1);
             return {nodes_stack.back(), it};
         }
+        /**
+         * 解析一个函数定义
+         * def name(arg1, arg2: type) { block }
+         *    ^ src.begin()
+         * @return [func, next] 解析后的函数，和花括号结束的下一个指针
+         */
+        template <typename T>
+        ParseResult<FunctionDefinitionStatementNode> FunctionDefinitionStatementNode::parse(const T &src) {
+            auto res = new FunctionDefinitionStatementNode;
+            auto it = src.begin();
+            // 解析函数名
+            {
+                auto name = std::get<Identifier>(it->value);
+                res->name = name, it++;
+            }
+            assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "("), it++;
+            // 解析参数列表
+            while (true) {
+                if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ")") {
+                    it++;
+                    break;
+                }
+                auto arg = new VariableDeclareStatementNode;
+                // 读取标识符
+                assert(it->tag == Token::IdentifierTag);
+                arg->name = std::get<Identifier>(it->value), it++;
+                bool stop = false;  // 结束参数列表
+                // 接下来，如果读到一个冒号，则为类型标注
+                // 如果读到逗号，则继续读取下一个参数
+                if (it->tag == Token::SymbolTag) {
+                    if (std::get<Symbol>(it->value).value == ":") {
+                        // 读取一个表达式作为类型
+                        auto end_condition = [&](auto const &op, auto const &op_stack) -> bool {
+                            if (op == "," or op == ")") {
+                                // 如果前面没有匹配的圆括号
+                                bool flag = false;
+                                for (auto x: op_stack) {
+                                    if (x.op == ExpressionNode::Bracket) {
+                                        flag = true;
+                                        break;
+                                    }
+                                }
+                                if (not flag) {
+                                    if (op == ")")  stop = true;
+                                    return true;
+                                }
+                            }
+                            return false;
+                        };
+                        auto [expr, next] = ExpressionNode::parse(TokensSubrange{++it, src.end()}, end_condition);
+                        arg->type = expr, it = next;
+                    } else if (std::get<Symbol>(it->value).value == ",") {
+                        it++;
+                    } else if (std::get<Symbol>(it->value).value == ")") {
+                        it++;
+                        stop = true;
+                    }
+                }
+                res->args.push_back(arg);
+                if (stop)  break;
+            }
+            assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{");
+            // 解析函数体
+            {
+                auto [body, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
+                res->body = body, it = next;
+            }
+            return {res, it};
+        }
     }
-
     
     struct Program {
         AST::BlockNode *root;
@@ -1490,7 +1622,7 @@ namespace CYaRonLang {
         struct ArrayObjectValue;
         struct Object {
             enum Type {
-                Struct, Int, Function, String, None, Array
+                Struct, Int, Function, String, None, Array, BuiltinFunction
             } type;
             std::variant<
                 std::nullptr_t, 
@@ -1498,7 +1630,8 @@ namespace CYaRonLang {
                 std::shared_ptr<int>, 
                 std::shared_ptr<std::string>, 
                 std::shared_ptr<Identifier>,
-                std::shared_ptr<ArrayObjectValue>
+                std::shared_ptr<ArrayObjectValue>,
+                AST::FunctionDefinitionStatementNode *
             > value;
             Object(Type type = None): type(type), value(nullptr) {}
             template <typename T>
@@ -1507,7 +1640,7 @@ namespace CYaRonLang {
         struct ArrayMeta;
         struct TypeName {
             enum Type {
-                Undefined, Int, Array
+                Undefined, Int, Array, Function
             } type;
             std::variant<std::nullptr_t, std::shared_ptr<ArrayMeta>> meta;
             TypeName(Type type = Undefined): type(type), meta(nullptr) {}
@@ -1551,8 +1684,8 @@ namespace CYaRonLang {
             Interpreter(Program &&);
 
             void run();
-            Object EvaluateExpression(AST::ExpressionNode *);
-            TypeName EvaluateType(AST::ExpressionNode *);
+            Object evaluateExpression(AST::ExpressionNode *);
+            TypeName evaluateType(AST::ExpressionNode *);
             template <typename OutIterator>
             OutIterator getFunctionArguments(AST::ExpressionNode *, OutIterator);
             // 运行语句块
@@ -1561,16 +1694,17 @@ namespace CYaRonLang {
             void runDeclarationStatement(StatementPointer);
             template <typename StatementPointer>
             void runStatement(StatementPointer);
+            void declare(Identifier, TypeName);
         };
         Interpreter::Interpreter(Program &&program): program(std::move(program)) {
             // 注册内置函数
-            variables.insert({{"print"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"print"}}}});
-            variables.insert({{"println"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"println"}}}});
-            variables.insert({{"scan"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"scan"}}}});
-            variables.insert({{"set"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"set"}}}});
-            variables.insert({{"test_sort"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"test_sort"}}}});
+            variables.insert({{"print"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"print"}}}});
+            variables.insert({{"println"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"println"}}}});
+            variables.insert({{"scan"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"scan"}}}});
+            variables.insert({{"set"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"set"}}}});
+            variables.insert({{"test_sort"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"test_sort"}}}});
             // yosoro 输出数字和空格
-            variables.insert({{"yosoro"}, Object{Object::Function, std::shared_ptr<Identifier>{new Identifier{"yosoro"}}}});
+            variables.insert({{"yosoro"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"yosoro"}}}});
         }
         // 展开逗号分隔符表达式，获取函数参数列表，写入到输出迭代器
         // 例如，后缀表达式 a, b, (comma), c, (comma)
@@ -1591,14 +1725,14 @@ namespace CYaRonLang {
                     if (value_node->token.tag == Token::NoneTag)  return out;
                 }
                 // 从下方的表达式获取
-                *out++ = EvaluateExpression(node);
+                *out++ = evaluateExpression(node);
             }
             return out;
         }
         void Interpreter::run() {
             runBlock(program.root);
         }
-        Object Interpreter::EvaluateExpression(AST::ExpressionNode *node) {
+        Object Interpreter::evaluateExpression(AST::ExpressionNode *node) {
             if (node == nullptr)  return Object{Object::None};
             if (node->op == node->NoneOp) {
                 // 叶子节点
@@ -1614,14 +1748,16 @@ namespace CYaRonLang {
                     return variables.at(identifier);
                 } else if (value_node->token.tag == Token::StringTag) {
                     return Object{Object::String, std::shared_ptr<std::string>{new std::string(std::get<Tokenizer::String>(value_node->token.value).value)}};
+                } else if (value_node->token.tag == Token::NoneTag) {
+                    return Object{};
                 } else {
                     assert(false);
                     return Object(Object::Struct);
                 }
             } else {
                 // 运算符节点
-                auto l_son = EvaluateExpression(node->left);
-                auto r_son = EvaluateExpression(node->right);
+                auto l_son = evaluateExpression(node->left);
+                auto r_son = evaluateExpression(node->right);
 #define JOIN_INT_OP(op_name, symbol) else if (node->op == AST::ExpressionNode::op_name) {  \
                     assert(l_son.type == Object::Int and r_son.type == Object::Int);  \
                     Object res(Object::Int);  \
@@ -1634,6 +1770,12 @@ namespace CYaRonLang {
                 JOIN_INT_OP(Mul, *)
                 JOIN_INT_OP(Div, /)
                 JOIN_INT_OP(Mod, %)
+                JOIN_INT_OP(Less, <)
+                JOIN_INT_OP(Greater, >)
+                JOIN_INT_OP(LessEqual, <=)
+                JOIN_INT_OP(GreaterEqual, >=)
+                JOIN_INT_OP(Equal, ==)
+                JOIN_INT_OP(NotEqual, !=)
 #undef JOIN_INT_OP
                 else if (node->op == AST::ExpressionNode::UnaryAdd) {
                     assert(l_son.type == Object::Int);
@@ -1642,63 +1784,79 @@ namespace CYaRonLang {
                     assert(l_son.type == Object::Int);
                     return Object{Object::Int, std::shared_ptr<int>{new int(-*std::get<std::shared_ptr<int>>(l_son.value))}};
                 } else if (node->op == AST::ExpressionNode::Call) {
-                    assert(l_son.type == Object::Function);
-                    auto name = *std::get<std::shared_ptr<Identifier>>(l_son.value);  // 函数名
-                    if (name == "print") {
-                        if (r_son.type == Object::Int) {
+                    if (l_son.type == Object::BuiltinFunction) {
+                        auto name = *std::get<std::shared_ptr<Identifier>>(l_son.value);  // 函数名
+                        if (name == "print") {
+                            if (r_son.type == Object::Int) {
+                                auto num = *std::get<std::shared_ptr<int>>(r_son.value);
+                                io << num;
+                            } else if (r_son.type == Object::String) {
+                                io << *std::get<std::shared_ptr<std::string>>(r_son.value);
+                            } else {
+                                assert(false);
+                            }
+                            return Object{};
+                        } else if (name == "println") {
+                            assert(r_son.type == Object::Int);
                             auto num = *std::get<std::shared_ptr<int>>(r_son.value);
-                            io << num;
-                        } else if (r_son.type == Object::String) {
-                            io << *std::get<std::shared_ptr<std::string>>(r_son.value);
+                            io << num << endl;
+                            return Object{};
+                        } else if (name == "scan") {
+                            assert(r_son.type == Object::Int);
+                            io >> *std::get<std::shared_ptr<int>>(r_son.value);
+                            return Object{};
+                        } else if (name == "set") {
+                            // 需要两个参数
+                            std::vector<Object> args(2);
+                            auto it = getFunctionArguments(node->right, args.begin());  // 获取参数
+                            assert(it == args.end());
+                            assert(args[0].type == Object::Int and args[1].type == Object::Int);
+                            *std::get<std::shared_ptr<int>>(args[0].value) = *std::get<std::shared_ptr<int>>(args[1].value);
+                            return Object{};
+                        } else if (name == "test_sort") {
+                            std::vector<Object> args;
+                            getFunctionArguments(node->right, std::back_inserter(args));
+
+                            std::vector<int> nums(args.size());
+                            ranges::transform(args, nums.begin(), [](auto &obj) {
+                                assert(obj.type == Object::Int);
+                                return *std::get<std::shared_ptr<int>>(obj.value);
+                            });
+                            ranges::sort(nums, ranges::less{});
+                            for (auto x: nums)  io << x << ' ';
+                            io << endl;
+                            return Object{};
+                        } else if (name == "yosoro") {
+                            assert(r_son.type == Object::Int);
+                            auto num = *std::get<std::shared_ptr<int>>(r_son.value);
+                            io << num << ' ';
+                            return Object{};
                         } else {
                             assert(false);
+                            return Object(Object::Struct);
                         }
-                        return Object(Object::None);
-                    } else if (name == "println") {
-                        assert(r_son.type == Object::Int);
-                        auto num = *std::get<std::shared_ptr<int>>(r_son.value);
-                        io << num << endl;
-                        return Object(Object::None);
-                    } else if (name == "scan") {
-                        assert(r_son.type == Object::Int);
-                        io >> *std::get<std::shared_ptr<int>>(r_son.value);
-                        return Object(Object::None);
-                    } else if (name == "set") {
-                        // 需要两个参数
-                        std::vector<Object> args(2);
-                        auto it = getFunctionArguments(node->right, args.begin());  // 获取参数
-                        assert(it == args.end());
-                        assert(args[0].type == Object::Int and args[1].type == Object::Int);
-                        *std::get<std::shared_ptr<int>>(args[0].value) = *std::get<std::shared_ptr<int>>(args[1].value);
-                        return Object(Object::None);
-                    } else if (name == "test_sort") {
+                    } else {
+                        assert(l_son.type == Object::Function);
+                        auto func = std::get<AST::FunctionDefinitionStatementNode *>(l_son.value);
                         std::vector<Object> args;
                         getFunctionArguments(node->right, std::back_inserter(args));
-
-                        std::vector<int> nums(args.size());
-                        ranges::transform(args, nums.begin(), [](auto &obj) {
-                            assert(obj.type == Object::Int);
-                            return *std::get<std::shared_ptr<int>>(obj.value);
-                        });
-                        ranges::sort(nums, ranges::less{});
-                        for (auto x: nums)  io << x << ' ';
-                        io << endl;
-                        return Object(Object::None);
-                    } else if (name == "yosoro") {
-                        assert(r_son.type == Object::Int);
-                        auto num = *std::get<std::shared_ptr<int>>(r_son.value);
-                        io << num << ' ';
-                        return Object(Object::None);
-                    } else {
-                        assert(false);
-                        return Object(Object::Struct);
+                        assert(args.size() == func->args.size());
+                        auto size = static_cast<int>(args.size());
+                        for (auto i = 0; i < size; i++) {
+                            // 声明没有的参数
+                            if (not variables.contains(func->args[i]->name))  declare(func->args[i]->name, evaluateType(func->args[i]->type));
+                            variables[func->args[i]->name] = args[i];
+                        }
+                        runBlock(func->body);
+                        return Object{};
                     }
+                    
                 } else if (node->op == AST::ExpressionNode::Assign) {
                     assert(l_son.type == Object::Int and r_son.type == Object::Int);
                     *std::get<std::shared_ptr<int>>(l_son.value) = *std::get<std::shared_ptr<int>>(r_son.value);
                     return l_son;
                 } else if (node->op == AST::ExpressionNode::SplitComma) {
-                    return Object(Object::None);
+                    return Object{};
                 } else if (node->op == AST::ExpressionNode::Subscript) {
                     assert(l_son.type == Object::Array and r_son.type == Object::Int);
                     auto &array = *std::get<std::shared_ptr<ArrayObjectValue>>(l_son.value);
@@ -1709,7 +1867,7 @@ namespace CYaRonLang {
                 }
             }
         }
-        TypeName Interpreter::EvaluateType(AST::ExpressionNode *node) {
+        TypeName Interpreter::evaluateType(AST::ExpressionNode *node) {
             if (node->op == AST::ExpressionNode::NoneOp) {
                 auto value_node = dynamic_cast<AST::ValueNode *>(node);
                 if (value_node->token.tag == Token::IdentifierTag) {
@@ -1725,9 +1883,9 @@ namespace CYaRonLang {
                 if (node->op == AST::ExpressionNode::Subscript) {
                     // 解析列表定义
                     assert(node->right->op == AST::ExpressionNode::SplitComma);
-                    auto value_type = EvaluateType(node->right->left);
+                    auto value_type = evaluateType(node->right->left);
                     auto range_node = node->right->right;
-                    auto min_node = EvaluateExpression(range_node->left), max_node = EvaluateExpression(range_node->right);
+                    auto min_node = evaluateExpression(range_node->left), max_node = evaluateExpression(range_node->right);
                     assert(min_node.type == Object::Int and max_node.type == Object::Int);
                     auto min = *std::get<std::shared_ptr<int>>(min_node.value);
                     auto max = *std::get<std::shared_ptr<int>>(max_node.value);
@@ -1739,48 +1897,36 @@ namespace CYaRonLang {
             assert(false);
             return {};
         }
+        void Interpreter::declare(Identifier name, TypeName type) {
+            assert(not variables.contains(name));  // 重复声明
+            if (type.type == type.Int) {
+                variables.insert({name, Object(Object::Int, std::shared_ptr<int>{new int(0)})});
+            } else if (type.type == type.Array) {
+                auto value = std::shared_ptr<ArrayObjectValue>{new ArrayObjectValue{std::shared_ptr<TypeName>{new TypeName{type}}}};
+                variables.insert({name, Object(Object::Array, value)});
+            } else if (type.type == type.Function) {
+                variables.insert({name, Object{Object::Function}});
+            } else {
+                assert(false);
+            }
+        }
         template <typename StatementPointer>
         void Interpreter::runDeclarationStatement(StatementPointer node) {
             auto variable_declare_statement = node;
             auto type_node = variable_declare_statement->type;
 
-            auto type = EvaluateType(type_node);
+            auto type = evaluateType(type_node);
             auto variable_name = variable_declare_statement->name;
-            assert(not variables.contains(variable_name));  // 重复声明
-            if (type.type == type.Int) {
-                variables.insert({variable_name, Object(Object::Int, std::shared_ptr<int>{new int(0)})});
-            } else if (type.type == type.Array) {
-                auto value = std::shared_ptr<ArrayObjectValue>{new ArrayObjectValue{std::shared_ptr<TypeName>{new TypeName{type}}}};
-                variables.insert({variable_name, Object(Object::Array, value)});
-            } else {
-                assert(false);
-            }
+            declare(variable_name, type);
         }
         void Interpreter::runBlock(AST::BlockNode *block) {
-            if (block->type == AST::BlockNode::ForBlock) {
-                auto for_block = dynamic_cast<AST::ForBlockNode *>(block);
-                auto index = for_block->index;
-                const auto index_type = TypeName{TypeName::Int};
-                auto min_index = EvaluateExpression(for_block->min), max_index = EvaluateExpression(for_block->max);
-                assert(min_index.type == Object::Int and max_index.type == Object::Int);
-                auto min = *std::get<std::shared_ptr<int>>(min_index.value);
-                auto max = *std::get<std::shared_ptr<int>>(max_index.value);
-                if (not variables.contains(index)) {
-                    variables.insert({index, Object(Object::Int, std::shared_ptr<int>{new int(min)})});
-                }
-                for (int i = min; i <= max; i++) {
-                    variables[index] = Object(Object::Int, std::shared_ptr<int>{new int(i)});
-                    for (auto x: for_block->statements)  runStatement(x);
-                }
-                return;
-            }
             for (auto &x: block->statements)  runStatement(x);
         }
         template <typename StatementPointer>
         void Interpreter::runStatement(StatementPointer x) {
             if (x->type == AST::StatementNode::ExpressionEvaluateStatement) {
                 auto expression_evaluate_statement = dynamic_cast<AST::ExpressionEvaluateStatementNode *>(x);
-                EvaluateExpression(expression_evaluate_statement->expr);
+                evaluateExpression(expression_evaluate_statement->expr);
             } else if (x->type == AST::StatementNode::VariableDeclareStatement) {
                 runDeclarationStatement(dynamic_cast<AST::VariableDeclareStatementNode *>(x));
             } else if (x->type == AST::StatementNode::RunBlockStatement) {
@@ -1788,11 +1934,26 @@ namespace CYaRonLang {
                 runBlock(run_block_statement->block);
             } else if (x->type == AST::StatementNode::IfStatement) {
                 auto if_statement = dynamic_cast<AST::IfStatementNode *>(x);
-                auto condition = EvaluateExpression(if_statement->condition);
+                auto condition = evaluateExpression(if_statement->condition);
                 assert(condition.type == Object::Int);
                 if (*std::get<std::shared_ptr<int>>(condition.value) != 0) {
                     runBlock(if_statement->body);
                 }
+            } else if (x->type == AST::StatementNode::ForStatement) {
+                auto for_statement = dynamic_cast<AST::ForStatementNode *>(x);
+                runStatement(for_statement->init);
+                while (true) {
+                    auto condition = evaluateExpression(for_statement->condition);
+                    assert(condition.type == Object::Int);
+                    if (*std::get<std::shared_ptr<int>>(condition.value) == 0)  break;
+                    runBlock(for_statement->body);
+                    evaluateExpression(for_statement->step);
+                }
+            } else if (x->type == AST::StatementNode::FunctionDefinitionStatement) {
+                auto function_definition_statement = dynamic_cast<AST::FunctionDefinitionStatementNode *>(x);
+                // 声明一个函数
+                declare(function_definition_statement->name, TypeName{TypeName::Function});
+                variables.at(function_definition_statement->name).value = function_definition_statement;
             } else {
                 assert(false);
             }
@@ -1811,6 +1972,6 @@ namespace CYaRonLang {
 
 int main(int argc, char const *argv[]) {
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    CYaRonLang::solve();
+    GenshinLang::solve();
     return 0;
 }
