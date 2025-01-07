@@ -1677,34 +1677,98 @@ namespace GenshinLang {
                 return values[index - min];
             }
         };
+        
+        struct NameError: std::exception {
+            std::string message;
+            NameError(std::string name): message(
+                std::format("NameError: name '{}' is not defined", name)
+            ) {}
+            
+            const char *what() const noexcept override {
+                return message.c_str();
+            }
+        };
+        
         class Interpreter {
         public:
+            /**
+             * 变量作用域
+             */
+            struct Scope {
+                std::map<Identifier, Object> variables;
+                Scope *parent = nullptr;  // 父级作用域
+                Scope(Scope *parent = nullptr): parent(parent) {}
+
+                // 获取一个变量的引用；找不到时抛出异常
+                Object &get(Identifier name) {
+                    auto it = variables.find(name);
+                    if (it != variables.end())  return it->second;
+                    else {
+                        if (parent != nullptr)  return parent->get(name);
+                        else  throw NameError(identifierMap.getString(name.name));
+                    }
+                }
+                // 获取一个变量的指针；找不到时返回 nullptr
+                Object *getPtr(Identifier name) {
+                    auto it = variables.find(name);
+                    if (it != variables.end())  return &it->second;
+                    else {
+                        if (parent != nullptr)  return parent->getPtr(name);
+                        else  return nullptr;
+                    }
+                }
+                // 声明一个变量，并默认初始化
+                void declare(Identifier name, TypeName type) {
+                    assert(not variables.contains(name));  // 重复声明
+                    if (type.type == type.Int) {
+                        variables.insert({name, Object(Object::Int, std::shared_ptr<int>{new int(0)})});
+                    } else if (type.type == type.Array) {
+                        auto value = std::shared_ptr<ArrayObjectValue>{new ArrayObjectValue{std::shared_ptr<TypeName>{new TypeName{type}}}};
+                        variables.insert({name, Object(Object::Array, value)});
+                    } else if (type.type == type.Function) {
+                        variables.insert({name, Object{Object::Function}});
+                    } else {
+                        assert(false);
+                    }
+                }
+            };
             Program program;
-            std::map<Identifier, Object> variables;
+            std::vector<std::unique_ptr<Scope>> scopeStack;  // 作用域栈
             Interpreter(Program &&);
 
             void run();
-            Object evaluateExpression(AST::ExpressionNode *);
-            TypeName evaluateType(AST::ExpressionNode *);
+            Object evaluateExpression(AST::ExpressionNode *);  // 计算表达式
+            TypeName evaluateType(AST::ExpressionNode *);  // 推导类型
             template <typename OutIterator>
-            OutIterator getFunctionArguments(AST::ExpressionNode *, OutIterator);
-            // 运行语句块
-            void runBlock(AST::BlockNode *);
+            OutIterator getFunctionArguments(AST::ExpressionNode *, OutIterator);  // 提取函数参数
+            void runBlock(AST::BlockNode *);  // 执行语句块
             template <typename StatementPointer>
-            void runDeclarationStatement(StatementPointer);
+            void runDeclarationStatement(StatementPointer);  // 执行声明语句
             template <typename StatementPointer>
-            void runStatement(StatementPointer);
-            void declare(Identifier, TypeName);
+            void runStatement(StatementPointer);  // 执行语句
+            void enterScope();  // 创建新的作用域
+            void leaveScope();  // 离开当前作用域
         };
         Interpreter::Interpreter(Program &&program): program(std::move(program)) {
+            // 创建全局作用域
+            scopeStack.push_back(std::make_unique<Scope>());
+
             // 注册内置函数
-            variables.insert({{"print"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"print"}}}});
-            variables.insert({{"println"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"println"}}}});
-            variables.insert({{"scan"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"scan"}}}});
-            variables.insert({{"set"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"set"}}}});
-            variables.insert({{"test_sort"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"test_sort"}}}});
-            // yosoro 输出数字和空格
-            variables.insert({{"yosoro"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"yosoro"}}}});
+            scopeStack.back()->variables.insert({{"print"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"print"}}}});
+            scopeStack.back()->variables.insert({{"println"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"println"}}}});
+            scopeStack.back()->variables.insert({{"scan"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"scan"}}}});
+            scopeStack.back()->variables.insert({{"set"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"set"}}}});
+            scopeStack.back()->variables.insert({{"test_sort"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"test_sort"}}}});
+            scopeStack.back()->variables.insert({{"yosoro"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"yosoro"}}}});
+        }
+        // 进入新的作用域
+        void Interpreter::enterScope() {
+            scopeStack.push_back(std::make_unique<Scope>(scopeStack.back().get()));
+        }
+        // 离开当前作用域
+        void Interpreter::leaveScope() {
+            assert(not scopeStack.empty());
+            scopeStack.pop_back();
         }
         // 展开逗号分隔符表达式，获取函数参数列表，写入到输出迭代器
         // 例如，后缀表达式 a, b, (comma), c, (comma)
@@ -1744,8 +1808,7 @@ namespace GenshinLang {
                     return res;
                 } else if (value_node->token.tag == Token::IdentifierTag) {
                     auto identifier = std::get<Identifier>(value_node->token.value);
-                    assert(variables.contains(identifier));
-                    return variables.at(identifier);
+                    return scopeStack.back()->get(identifier);
                 } else if (value_node->token.tag == Token::StringTag) {
                     return Object{Object::String, std::shared_ptr<std::string>{new std::string(std::get<Tokenizer::String>(value_node->token.value).value)}};
                 } else if (value_node->token.tag == Token::NoneTag) {
@@ -1842,12 +1905,13 @@ namespace GenshinLang {
                         getFunctionArguments(node->right, std::back_inserter(args));
                         assert(args.size() == func->args.size());
                         auto size = static_cast<int>(args.size());
+                        enterScope();
                         for (auto i = 0; i < size; i++) {
-                            // 声明没有的参数
-                            if (not variables.contains(func->args[i]->name))  declare(func->args[i]->name, evaluateType(func->args[i]->type));
-                            variables[func->args[i]->name] = args[i];
+                            scopeStack.back()->declare(func->args[i]->name, evaluateType(func->args[i]->type));
+                            scopeStack.back()->get(func->args[i]->name) = args[i];
                         }
                         runBlock(func->body);
+                        leaveScope();
                         return Object{};
                     }
                     
@@ -1897,19 +1961,6 @@ namespace GenshinLang {
             assert(false);
             return {};
         }
-        void Interpreter::declare(Identifier name, TypeName type) {
-            assert(not variables.contains(name));  // 重复声明
-            if (type.type == type.Int) {
-                variables.insert({name, Object(Object::Int, std::shared_ptr<int>{new int(0)})});
-            } else if (type.type == type.Array) {
-                auto value = std::shared_ptr<ArrayObjectValue>{new ArrayObjectValue{std::shared_ptr<TypeName>{new TypeName{type}}}};
-                variables.insert({name, Object(Object::Array, value)});
-            } else if (type.type == type.Function) {
-                variables.insert({name, Object{Object::Function}});
-            } else {
-                assert(false);
-            }
-        }
         template <typename StatementPointer>
         void Interpreter::runDeclarationStatement(StatementPointer node) {
             auto variable_declare_statement = node;
@@ -1917,10 +1968,13 @@ namespace GenshinLang {
 
             auto type = evaluateType(type_node);
             auto variable_name = variable_declare_statement->name;
-            declare(variable_name, type);
+            scopeStack.back()->declare(variable_name, type);
         }
+        // 创建新的作用域，并运行语句块
         void Interpreter::runBlock(AST::BlockNode *block) {
+            enterScope();
             for (auto &x: block->statements)  runStatement(x);
+            leaveScope();
         }
         template <typename StatementPointer>
         void Interpreter::runStatement(StatementPointer x) {
@@ -1952,8 +2006,8 @@ namespace GenshinLang {
             } else if (x->type == AST::StatementNode::FunctionDefinitionStatement) {
                 auto function_definition_statement = dynamic_cast<AST::FunctionDefinitionStatementNode *>(x);
                 // 声明一个函数
-                declare(function_definition_statement->name, TypeName{TypeName::Function});
-                variables.at(function_definition_statement->name).value = function_definition_statement;
+                scopeStack.back()->declare(function_definition_statement->name, TypeName{TypeName::Function});
+                scopeStack.back()->get(function_definition_statement->name).value = function_definition_statement;
             } else {
                 assert(false);
             }
