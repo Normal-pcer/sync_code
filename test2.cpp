@@ -1,1508 +1,2243 @@
-#include <algorithm>
-#include <cctype>
-#include <cmath>
-#include <cstdio>
-#include <cstring>
-#include <functional>
-#include <map>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
-using namespace std;
+#include "./libs/debug_macros.hpp"
 
-using u8 = unsigned char;
-using i16 = short;
-using u16 = unsigned short;
-using i32 = int;
-using u32 = unsigned int;
-using u64 = unsigned long long;
+#define A return
+#define B ExpressionNode
+#define E std
+#define F value
+#define O auto
+#define R Object
+#define T shared_ptr
+#define U Identifier
+#define X type
+#define Z StatementNode
+#define a push_back
+#define b const
+#define c if
+#define e else
+#define f typename
+#define i template
+#define n FunctionDefinitionStatementNode
+#define o struct
+#define r get
+#define s VariableDeclareStatementNode
+#define t assert
+#define x Token
+#define y it
+#define z false
 
-struct Reader
-{
-    char ch, unget;
-    Reader(bool)
-    {
-    }
-    Reader()
-    {
-        unget = '\0';
-        ch = getchar();
-    }
-    char seek()
-    {
-        return unget ? unget : ch;
-    }
-    void skip()
-    {
-        if (unget)
-            unget = '\0';
-        else
-            ch = getchar();
-    }
-    bool eof()
-    {
-        return ch == EOF && unget == '\0';
-    }
-    void read(char &c)
-    {
-        c = seek();
-        skip();
-    }
-    char read()
-    {
-        char res;
-        return read(res), res;
-    }
-    void ungetc(char c)
-    {
-        unget = c;
-    }
-} reader(false);
+#include <bits/stdc++.h>
+bool DEBUG_MODE=z;
+#define debug c(DEBUG_MODE)
+i <f T> inline O chkMax(T& base, b T& cmp) { A (base = E::max(base, cmp)); }
+i <f T> inline O chkMin(T& base, b T& cmp) { A (base = E::min(base, cmp)); }
+#define never c constexpr(0)
+b int inf = 0x3f3f3f3f;  b long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
+b char endl = '\n';
 
-const u32 MAX_DATA_SIZE = 16 * 1024;
-const u32 ID_HASH_LENGTH = 16 * 1024;
-const u32 MAX_FUNCTION = 1024;
-char str_data[MAX_DATA_SIZE];
-char *data_ptr = str_data;
-char *id_hash[ID_HASH_LENGTH];
-u32 easy_hash(const char *str)
-{
-    u32 res = 0;
-    while (*str != '\0')
-        res = res * 331 + *(str++);
-    return res;
-}
-vector<u32> used_hash_index;
-u32 insert_id(const char *str)
-{
-    u32 hsh = easy_hash(str) & (ID_HASH_LENGTH - 1);
-    while (id_hash[hsh] != nullptr && strcmp(id_hash[hsh], str))
-        hsh = (hsh + 1) & (ID_HASH_LENGTH - 1);
-    if (id_hash[hsh] == nullptr)
-    {
-        char *strr = new char[strlen(str) + 1];
-        strcpy(strr, str);
-        id_hash[hsh] = strr;
-        used_hash_index.push_back(hsh);
-    }
-    return hsh;
-}
-template <typename T> unique_ptr<T> create_unique()
-{
-    return unique_ptr<T>(new T);
-}
-template <typename T> shared_ptr<T> create_shared()
-{
-    return shared_ptr<T>(new T);
+#define __lambda_1(expr) [&](){A expr;}
+#define __lambda_2(a, expr) [&](O a){A expr;}
+#define __lambda_3(a, b, expr) [&](O a, O b){A expr;}
+#define __lambda_4(a, b, c, expr) [&](O a, O b, O c){A expr;}
+#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
+#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+#define lam lambda
+namespace lib{
+#if __cplusplus > 201703LL
+namespace ranges = E::ranges;
+namespace views = E::views;
+#endif
 }
 
-enum TokenType
-{
-    Reserved = 1,
-    Number,
-    String,
-    Symbol,
-    Name,
-    Eol,
-    Eof
-};
-enum ReservedType
-{
-    Error = 0,
-    And = 64,
-    Break,
-    Do,
-    Else,
-    Elseif,
-    End,
-    False,
-    For,
-    Function,
-    If,
-    In,
-    Local,
-    Nil,
-    Not,
-    Or,
-    Repeat,
-    Return,
-    Then,
-    True,
-    Until,
-    While
-};
-enum SymbolType
-{
-    ERROR = 0,
-    PLUS = 128,
-    MINUS,
-    MUL,
-    DIV,
-    MOD,
-    POWER,
-    HASHTAG,
-    NEGATIVE,
-    EQ,
-    GT,
-    LT,
-    GE,
-    LE,
-    NE,
-    LPAREN,
-    RPAREN,
-    LBRACKET,
-    RBRACKET,
-    LCURLY,
-    RCURLY,
-    SEMICOLON,
-    COLON,
-    COMMA,
-    DOT,
-    DOT2,
-    DOT3,
-    ASSIGN,
-    COMMENT
-};
-enum ValueType
-{
-    _Nil = 0,
-    _Boolean,
-    _Number,
-    _String,
-    _Function,
-    _Table,
-    _Name
-};
-enum ReturnType
-{
-    RNormal = 0,
-    RBreak,
-    RReturn
-};
-enum InstrOp
-{
-    NO_OP = 0,
-    BINARY_OP,
-    UNARY_OP,
-    PUSH_NUM,
-    PUSH_NIL,
-    PUSH_TRUE,
-    PUSH_FALSE,
-    PUSH_STR,
-    PUSH_NAME,
-    PUSH_TABLE,
-    FUNC_CALL,
-    DEREF_VAR,
-    ASSIGN_VAR,
-    JMP_IF,
-    JMP_IFN
-};
+using namespace lib;
 
-struct Token
-{
-    TokenType type;
-    union {
-        ReservedType rtype;
-        double num;
-        char *str;
-        SymbolType stype;
-        u32 id;
+namespace IO {
+#ifdef __linux__
+#include <sys/stat.h>
+#include <sys/mman.h>
+#define IO_ENABLE_MMAP
+#endif  
+#if __cplusplus < 202002L
+#define requires(...)
+#endif
+    o EOFError: public E::exception {
+        b char *what() b throw() {
+            A "EOF when reading a char";
+        }
     };
-    Token(TokenType type) : type(type)
-    {
-    }
-    Token(ReservedType rtype) : type(Reserved), rtype(rtype)
-    {
-    }
-    Token(double num) : type(Number), num(num)
-    {
-    }
-    Token(char *str) : type(String), str(str)
-    {
-    }
-    Token(SymbolType stype) : type(Symbol), stype(stype)
-    {
-    }
-    Token(u32 id) : type(Name), id(id)
-    {
-    }
-    bool operator==(const Token &tk) const
-    {
-        if (type != tk.type)
-            return false;
-        if (type == Reserved)
-            return rtype == tk.rtype;
-        if (type == Symbol)
-            return stype == tk.stype;
-        return true;
-    }
-    bool operator!=(const Token &tk) const
-    {
-        return !operator==(tk);
-    }
-};
+    o IntegerOverflowError: public E::exception {
+        b char *what() b throw() override {
+            A "Integer Overflow";
+        }
+    };
+    i <f T>  o is_integral_or_int128 { constexpr static bool F = E::is_integral<T>::F; };
+    i <>  o is_integral_or_int128<__int128> { constexpr static bool F = true; };
+    i <>  o is_integral_or_int128<unsigned __int128> { constexpr static bool F = true; };
+    i <f T>  o is_floating_point_or_float128 { constexpr static bool F = E::is_floating_point<T>::F; };
+    i <>  o is_floating_point_or_float128<__float128> { constexpr static bool F = true; };
+    i <f T> o is_number {
+        constexpr static bool F = is_integral_or_int128<T>::F || is_floating_point_or_float128<T>::F;
+    };
 
-namespace Tokenize
-{
-template <typename T> struct Match
-{
-    const static int MAX_NODE = 128;
-    u8 transition[MAX_NODE][256];
-    T info[MAX_NODE];
-    u8 cnt;
-    Match(const vector<pair<const char *, T>> &vec)
-    {
-        cnt = 0;
-        for (auto &ele : vec)
-        {
-            const char *ptr = ele.first;
-            u8 cur = 0;
-            while (*ptr != '\0')
-            {
-                u8 &nxt = transition[cur][(u8)(*(ptr++))];
-                if (nxt == 0)
-                    nxt = ++cnt;
-                cur = nxt;
+    bool addOverflow(O &x, O y) {
+        A __builtin_add_overflow(x, y, &x);
+    }
+    bool subOverflow(O &x, O y) {
+        A __builtin_sub_overflow(x, y, &x);
+    }
+    bool mulOverflow(O &x, O y) {
+        A __builtin_mul_overflow(x, y, &x);
+    }
+    i <f T, f U>
+    bool leftShiftOverflow(T &x, U y) {
+        c (x == 0)  A z;
+        bool flag = E::__lg(x) + y >= E::numeric_limits<T>::digits;
+        A x <<= y, flag;
+    }
+
+    o Scanner {
+    private:
+        char prev[2] = {'\0', '\0'};
+        int ungetFlag = 0;
+        virtual char gc() = 0;
+        static bool isDigit(char ch) { A '0' <= ch and ch <= '9'; }
+        static bool isBlank(char ch) { A ch <= 32 or ch == 127; }
+    public:
+        char r() {
+            c (ungetFlag) {
+                A prev[--ungetFlag];
             }
-            info[cur] = ele.second;
+            A (prev[1] = prev[0], prev[0] = gc());
         }
-    }
-    T readFromReader(Reader &r) const
-    {
-        u8 cur = 0, temp = 0;
-        while ((temp = transition[cur][(u8)r.seek()]))
-            cur = temp, r.skip();
-        return info[cur];
-    }
-    template <typename T2> T readFromStr(T2 str) const
-    {
-        u8 cur = 0, temp = 0;
-        while (*str != '\0')
-        {
-            temp = transition[cur][(u8)(*(str++))];
-            if (temp == 0)
-                return info[0];
-            cur = temp;
+        Scanner &unget() {
+            c (ungetFlag == 2)  throw E::logic_error("Cannot unget twice");
+            ungetFlag++;
+            A *this;
         }
-        return info[cur];
-    }
-};
-
-const Match<ReservedType> resMatch(vector<pair<const char *, ReservedType>>{
-    {"and", And},       {"break", Break},   {"do", Do},     {"else", Else},         {"elseif", Elseif},
-    {"end", End},       {"false", False},   {"for", For},   {"function", Function}, {"if", If},
-    {"in", In},         {"local", Local},   {"nil", Nil},   {"not", Not},           {"or", Or},
-    {"repeat", Repeat}, {"return", Return}, {"then", Then}, {"true", True},         {"until", Until},
-    {"while", While}});
-const Match<SymbolType> symMatch(vector<pair<const char *, SymbolType>>{
-    {"+", PLUS},   {"-", MINUS},    {"*", MUL},      {"/", DIV},    {"%", MOD},    {"^", POWER},     {"#", HASHTAG},
-    {"==", EQ},    {">", GT},       {"<", LT},       {">=", GE},    {"<=", LE},    {"~=", NE},       {"(", LPAREN},
-    {")", RPAREN}, {"[", LBRACKET}, {"]", RBRACKET}, {"{", LCURLY}, {"}", RCURLY}, {";", SEMICOLON}, {":", COLON},
-    {",", COMMA},  {".", DOT},      {"..", DOT2},    {"...", DOT3}, {"=", ASSIGN}, {"--", COMMENT}});
-
-double parse_number()
-{
-    double res = 0;
-    while (isdigit(reader.seek()))
-        res = res * 10 + (reader.read() - '0');
-    if (reader.seek() == '.')
-    {
-        reader.skip();
-        double power = 0.1;
-        while (isdigit(reader.seek()))
-        {
-            res += power * (reader.read() - '0');
-            power *= 0.1;
-        }
-    }
-    if (reader.seek() == 'E' || reader.seek() == 'e')
-    {
-        reader.skip();
-        double flg = 1, exp = 0;
-        if (reader.seek() == '+' || reader.seek() == '-')
-            flg = reader.read() == '-' ? -1 : 1;
-        while (isdigit(reader.seek()))
-            exp = exp * 10 + (reader.read() - '0');
-        res *= pow(10, exp * flg);
-    }
-    return res;
-}
-
-Token __current(Eof);
-void read_next_token()
-{
-    while (isspace(reader.seek()) && reader.seek() != '\n')
-        reader.skip();
-    if (reader.eof())
-        __current = Eof;
-    else if (reader.seek() == '\n')
-        __current = Eol, reader.skip();
-    else if (reader.seek() == '\'' || reader.seek() == '"')
-    {
-        __current = data_ptr;
-        char open = reader.read();
-        while (!reader.eof() && reader.seek() != open)
-        {
-            *data_ptr = reader.read();
-            if (*data_ptr == '\\')
-            {
-                char nxt = reader.seek();
-                if (nxt == 'n')
-                    *data_ptr = '\n';
-                else if (nxt == '\\')
-                    ;
-                else if (nxt == '\'')
-                    *data_ptr = '\'';
-                else if (nxt == '"')
-                    *data_ptr = '"';
-                reader.skip();
-            }
-            ++data_ptr;
-        }
-        *data_ptr = '\0';
-        ++data_ptr;
-        reader.skip();
-    }
-    else if (isdigit(reader.seek()))
-    {
-        char first = reader.read();
-        if (first == '0' && tolower(reader.seek()) == 'x')
-        {
-            double num = 0;
-            reader.skip();
-            while (1)
-            {
-                char cur = reader.seek();
-                if (isdigit(cur))
-                {
-                    num = num * 16 + (cur - '0');
-                    reader.skip();
-                    continue;
+        i <f T, f E::enable_if<is_number<T>::F>::X * =  nullptr, int base = 10>
+        Scanner &read(T &x) {
+            bool sign = z;  x = 0;  char ch = r();
+            for (; not isDigit(ch); ch = r()) {
+                c (ch == '-')  sign = true;
+                c constexpr (is_floating_point_or_float128<T>::F) {
+                    c (ch == '.')  break;
                 }
-                else if (isalpha(cur))
-                {
-                    cur = tolower(cur);
-                    if (cur <= 'f')
-                    {
-                        num = num * 16 + (cur - 'a' + 10);
-                        reader.skip();
-                        continue;
+            }
+            c (sign) {
+                for (; isDigit(ch); ch = r()) {
+                    
+                    c constexpr (is_integral_or_int128<T>::F) {
+                        c (mulOverflow(x, 10))  throw IntegerOverflowError{};
+                        c (subOverflow(x, ch ^ 48))  throw IntegerOverflowError{};
+                    } e {
+                        x = x * 10 - (ch ^ 48);
                     }
                 }
-                break;
+                c constexpr (is_integral_or_int128<T>::F)  A unget(), *this;
+                T tmp = 1;
+                c (ch == '.') {
+                    for (ch = r(); isDigit(ch); ch = r()) {
+                        tmp *= 0.1, x -= tmp * (ch ^ 48);
+                    }
+                }
+            } e {
+                for (; isDigit(ch); ch = r()) {
+                    
+                    c constexpr (is_integral_or_int128<T>::F) {
+                        c (mulOverflow(x, 10))  throw IntegerOverflowError{};
+                        c (addOverflow(x, ch ^ 48))  throw IntegerOverflowError{};
+                    } e {
+                        x = x * 10 + (ch ^ 48);
+                    }
+                }
+                c constexpr (is_integral_or_int128<T>::F)  A unget(), *this;
+                T tmp = 1;
+                c (ch == '.') {
+                    for (ch = r(); isDigit(ch); ch = r()) {
+                        tmp *= 0.1, x += tmp * (ch ^ 48);
+                    }
+                }
             }
-            __current = num;
-        }
-        else
-        {
-            reader.ungetc(first);
-            __current = parse_number();
-        }
-    }
-    else if (isalpha(reader.seek()))
-    {
-        string id = "";
-        while (isalnum(reader.seek()) || reader.seek() == '_')
-            id += reader.read();
-        id += '\0';
-        ReservedType t = resMatch.readFromStr(id.begin());
-        if (t == Error)
-            __current = insert_id(id.c_str());
-        else
-            __current = t;
-    }
-    else
-    {
-        bool checked = false;
-        if (reader.seek() == '.')
-        {
-            reader.skip();
-            if (isdigit(reader.seek()))
-            {
-                reader.ungetc('.');
-                __current = parse_number();
-                checked = true;
+            c (ch == 'e' or ch == 'E') {
+                int y;  read(y);
+                x *= pow(10, y);
             }
-            else
-                reader.ungetc('.');
+            A unget(), *this;
         }
-        if (!checked)
-        {
-            SymbolType t = symMatch.readFromReader(reader);
-            if (t == COMMENT)
-            {
-                string spec = "";
-                while (!reader.eof() && reader.seek() != '\n')
-                    spec += reader.read();
-                if (spec.substr(0, 8) == " PROGRAM")
-                    __current = Eof;
-                else
-                    read_next_token();
-                return;
-            }
-            __current = t;
+        Scanner &read(char &x) {
+            for (x = r(); isBlank(x); x = r());
+            A *this;
         }
-    }
-}
-} // namespace Tokenize
-
-namespace Process
-{
-const Token &curToken()
-{
-    return Tokenize::__current;
-}
-void skipToken()
-{
-    Tokenize::read_next_token();
-}
-struct Value
-{
-    ValueType type;
-    union {
-        bool boolean;
-        double num;
-        u32 func_id;
-        u32 id;
+        Scanner &read(char *s) {
+            char ch = r();
+            for (; isBlank(ch); ch = r());
+            for (; not isBlank(ch); ch = r())  *s++ = ch;
+            *s = '\0';
+            A unget(), *this;
+        }
+        Scanner &read(E::string &s, int reserve = 0) {
+            char ch = r();
+            s.clear(), s.reserve(reserve);
+            for (; isBlank(ch); ch = r());
+            for (; not isBlank(ch); ch = r())  s.a(ch); 
+            A unget(), *this;
+        }
+        i <f T, f E::enable_if<
+                is_number<T>::F || E::is_convertible<T, b char *>::F || E::is_convertible<T, E::string b &>::F
+            >::X * =  nullptr
+        >
+        Scanner &operator>> (T &x) {
+            A read(x);
+        }
+        
     };
-    string str;
-    shared_ptr<map<Value, Value>> table;
-    Value(ValueType type = _Nil) : type(type)
-    {
-    }
-    Value(double num) : type(_Number), num(num)
-    {
-    }
-    Value(bool boolean) : type(_Boolean), boolean(boolean)
-    {
-    }
-    Value(string str) : type(_String), str(str)
-    {
-    }
-    Value(char *str) : type(_String), str(str)
-    {
-    }
-    Value(const char *str) : type(_String), str(str)
-    {
-    }
-    Value(u32 id) : type(_Name), id(id)
-    {
-    }
-    Value(shared_ptr<map<Value, Value>> table) : type(_Table), table(table)
-    {
-    }
-    bool is_nil() const
-    {
-        return type == _Nil;
-    }
-    bool is_bool() const
-    {
-        return type == _Boolean;
-    }
-    bool is_num() const
-    {
-        return type == _Number;
-    }
-    bool is_str() const
-    {
-        return type == _String;
-    }
-    bool is_func() const
-    {
-        return type == _Function;
-    }
-    bool is_table() const
-    {
-        return type == _Table;
-    }
-    bool is_name() const
-    {
-        return type == _Name;
-    }
-    bool operator==(const Value &v) const
-    {
-        if (type != v.type)
-            return false;
-        if (is_bool())
-            return boolean == v.boolean;
-        if (is_num())
-            return num == v.num;
-        if (is_str())
-            return str == v.str;
-        if (is_func())
-            return func_id == v.func_id;
-        return true;
-    }
-    bool operator<(const Value &v) const
-    {
-        if (type != v.type)
-            return type < v.type;
-        if (is_bool())
-            return boolean < v.boolean;
-        if (is_num())
-            return num < v.num;
-        if (is_str())
-            return str < v.str;
-        if (is_func())
-            return func_id < v.func_id;
-        return true;
-    }
-    bool is_true_value() const
-    {
-        if (is_bool())
-            return boolean;
-        return type != _Nil;
-    }
-    string to_str() const
-    {
-        if (is_bool())
-            return boolean ? "true" : "false";
-        if (is_num())
-        {
-            static char buf[24];
-            sprintf(buf, "%.14g", num);
-            return buf;
+    i <size_t MaxSize>
+    o FileReadScanner: public Scanner {
+    private:
+        char buf[MaxSize], *p1, *p2;
+        bool eofFlag = z;
+
+        char gc_fread() {
+            c (p1 == p2) {
+                c (eofFlag)  throw EOFError{};
+                p1 = buf;
+                p2 = buf + E::fread(buf, sizeof(char), sizeof(buf), stdin);
+                c (E::feof(stdin)) eofFlag = true;
+            }
+            A p1 == p2? '\0': *p1++;
         }
-        if (is_str())
-            return str;
-        if (is_nil())
-            return "nil";
-        if (is_func())
-            return "function";
-        if (is_table())
-            return "table";
-        return string("[") + id_hash[id] + "]";
-    }
-    double table_len() const
-    {
-        double res = 0;
-        auto &tb = *table;
-        while (tb.find(res + 1) != tb.end() && !tb[res + 1].is_nil())
-            res++;
-        return res;
-    }
-    Value to_num()
-    {
-        if (is_num())
-            return *this;
-        if (is_str())
-            try
-            {
-                return stod(str);
-            }
-            catch (...)
-            {
-            }
-        return _Nil;
-    }
-};
-
-namespace Memory
-{
-using Scope = unordered_map<u32, Value>;
-vector<Scope> localScopes;
-Scope globalScope;
-Value &getMem(u32 identi)
-{
-    int ptr = (int)localScopes.size() - 1;
-    while (ptr != -1)
-    {
-        Scope &s = localScopes[ptr];
-        if (s.find(identi) != s.end())
-            return s[identi];
-        --ptr;
-    }
-    return globalScope[identi];
-}
-void init()
-{
-    localScopes.clear();
-    globalScope.clear();
-}
-} // namespace Memory
-
-struct Instruction
-{
-    InstrOp type;
-    union {
-        double num;
-        char *str;
-        u64 info;
+    protected:
+        char gc() { A gc_fread(); }
+    public:
+        FileReadScanner(): p1(buf), p2(buf) {}
     };
-    Instruction(InstrOp type = NO_OP, u64 info = 0) : type(type), info(info)
-    {
-    }
-    Instruction(double num) : type(PUSH_NUM), num(num)
-    {
-    }
-    Instruction(char *str) : type(PUSH_STR), str(str)
-    {
-    }
-};
-
-u8 precedence(const Token &tk, bool first)
-{
-    if (tk == Or)
-        return 2 + first;
-    if (tk == And)
-        return 4 + first;
-    if (tk == LE || tk == GE || tk == LT || tk == GT || tk == EQ || tk == NE)
-        return 6 + first;
-    if (tk == DOT2)
-        return 8 + first;
-    if (tk == PLUS || tk == MINUS)
-        return 10 + first;
-    if (tk == MUL || tk == DIV || tk == MOD)
-        return 12 + first;
-    if (tk == Not || tk == HASHTAG || tk == NEGATIVE)
-        return 14 + !first;
-    if (tk == POWER)
-        return 16 + !first;
-    return 0;
-}
-bool isUnary(const Token &tk)
-{
-    return (tk == Not || tk == HASHTAG || tk == NEGATIVE);
-}
-bool isBinary(const Token &tk)
-{
-    return precedence(tk, 0) != 0 && !isUnary(tk);
-}
-
-struct ReturnState
-{
-    ReturnType type;
-    Value carry;
-};
-
-struct AST
-{
-};
-
-struct ControlAST : AST
-{
-    ControlAST() : AST()
-    {
-    }
-    virtual ReturnState process() = 0;
-    virtual ReturnState run()
-    {
-        Memory::localScopes.push_back({});
-        ReturnState rs = process();
-        Memory::localScopes.pop_back();
-        return rs;
-    }
-};
-
-struct FuncAST : AST
-{
-    vector<u32> names;
-    unique_ptr<ControlAST> inner;
-    Value run(vector<Value> argv)
-    {
-        for (u64 i = 0; i < names.size(); i++)
-            Memory::localScopes.back()[names[i]] = argv[i];
-        return inner->run().carry;
-    }
-};
-
-struct FuncInfo
-{
-    bool isAST;
-    function<Value(vector<Value>)> sys;
-    shared_ptr<FuncAST> ast;
-    FuncInfo() : isAST(true), ast(nullptr)
-    {
-    }
-    FuncInfo(function<Value(vector<Value>)> sys) : isAST(false), sys(sys)
-    {
-    }
-    FuncInfo(shared_ptr<FuncAST> ast) : isAST(true), ast(ast)
-    {
-    }
-    FuncInfo(const FuncInfo &f) : isAST(f.isAST), sys(f.sys), ast(f.ast)
-    {
-    }
-    Value call(vector<Value> v)
-    {
-        if (!isAST)
-            return sys(v);
-        vector<Memory::Scope> prevScope(1);
-        prevScope.swap(Memory::localScopes);
-        Value res = ast == nullptr ? _Nil : ast->run(v);
-        prevScope.swap(Memory::localScopes);
-        return res;
-    }
-} regFuncs[MAX_FUNCTION];
-u32 function_cnt;
-Value register_function(FuncInfo f)
-{
-    regFuncs[++function_cnt] = f;
-    Value res(_Function);
-    res.func_id = function_cnt;
-    return res;
-}
-Value register_syscall(function<Value(vector<Value>)> sys)
-{
-    return register_function(FuncInfo(sys));
-}
-
-struct ExprAST : AST
-{
-    vector<Instruction> instr;
-    vector<Value> v;
-
-    u32 getVarSuffix()
-    {
-        u32 res = 0;
-        while (curToken().type == Symbol)
-        {
-            if (curToken() == LBRACKET)
-            {
-                skipToken();
-                getExpr();
-                skipToken(), ++res;
-            }
-            else if (curToken().stype == DOT)
-            {
-                skipToken();
-                instr.emplace_back(id_hash[curToken().id]);
-                skipToken();
-                ++res;
-            }
-            else
-                break;
-        }
-        return res;
-    }
-
-    void getVarRef()
-    {
-        instr.emplace_back(PUSH_NAME, curToken().id);
-        skipToken();
-        u32 u = getVarSuffix();
-        instr.emplace_back(DEREF_VAR, u);
-    }
-
-    void getSimpleVar()
-    {
-        if (curToken() == LPAREN)
-        {
-            skipToken();
-            getExpr();
-            skipToken();
-        }
-        else if (curToken().type == Number)
-            instr.emplace_back(curToken().num), skipToken();
-        else if (curToken().type == String)
-            instr.emplace_back(curToken().str), skipToken();
-        else if (curToken() == True)
-            instr.emplace_back(PUSH_TRUE), skipToken();
-        else if (curToken() == False)
-            instr.emplace_back(PUSH_FALSE), skipToken();
-        else if (curToken() == Nil)
-            instr.emplace_back(PUSH_NIL), skipToken();
-        else if (curToken() == LCURLY)
-        {
-            skipToken();
-            instr.emplace_back(PUSH_TABLE), skipToken();
-        }
-        else
-        {
-            getVarRef();
-            if (curToken() == LPAREN)
-            {
-                skipToken(); // (
-                u32 args = 0;
-                while (!(curToken() == RPAREN))
-                {
-                    if (args)
-                        skipToken(); // ,
-                    getExpr();
-                    ++args;
-                }
-                instr.emplace_back(FUNC_CALL, args);
-                skipToken(); // )
+    o GetCharScanner: public Scanner {
+    private:
+        char gc_getchar() {
+            char ch = getchar();
+            c (ch != EOF)  A ch;
+            e {
+                throw EOFError{};
+                A '\0';
             }
         }
-    }
-
-    void getExpr()
-    {
-        vector<Token> ops;
-        vector<u64> marks;
-
-#define pop_stk()                                                                                                      \
-    {                                                                                                                  \
-        if (isUnary(ops.back()))                                                                                       \
-            marks.pop_back(), instr.emplace_back(UNARY_OP, ops.back().stype);                                          \
-        else                                                                                                           \
-        {                                                                                                              \
-            if (ops.back() == And || ops.back() == Or)                                                                 \
-            {                                                                                                          \
-                u64 a = marks[marks.size() - 2], b = marks[marks.size() - 1];                                          \
-                instr[a] = {ops.back() == And ? JMP_IFN : JMP_IF, b - 1};                                              \
-            }                                                                                                          \
-            else                                                                                                       \
-                instr.emplace_back(BINARY_OP, ops.back().stype);                                                       \
-            marks.pop_back();                                                                                          \
-            marks.pop_back();                                                                                          \
-        }                                                                                                              \
-        ops.pop_back();                                                                                                \
-        marks.emplace_back(instr.size());                                                                              \
-        instr.emplace_back();                                                                                          \
-    }
-
-        if (curToken() == MINUS)
-            ops.emplace_back(NEGATIVE), skipToken();
-        int state = 0;
-        while (1)
-        {
-            if (state == 0)
-            {
-                if (isUnary(curToken()))
-                    ops.push_back(curToken()), skipToken();
-                else
-                {
-                    getSimpleVar();
-                    state = 1;
-                    marks.emplace_back(instr.size());
-                    instr.emplace_back();
+    protected:
+        char gc() { A gc_getchar(); }
+    };
+#ifdef IO_ENABLE_MMAP
+    o MemoryMapScanner: public Scanner {
+        o stat s;
+        char *c;
+        MemoryMapScanner() {
+            fstat(0, &s);
+            c = (char *)mmap(nullptr, s.st_size, 1, 2, 0, 0);
+        }
+        char gc() { A *c++; }
+    };
+#endif  
+    o Printer {
+        virtual void put(char) = 0;
+        virtual void flush() {}
+        i <f T, f E::enable_if<is_floating_point_or_float128<T>::F>::X * =  nullptr>
+        Printer &write(T x) {
+            c (E::isnan(x))  A write("nan");
+            static char st[E::numeric_limits<T>::max_exponent10+1];
+            char *top = st;
+            c (x < 0)  x = -x, put('-');
+            c (E::isinf(x))  A write("Infinity");
+            x += 5e-7;
+            O y = E::floor(x);
+            while (y >= 1) {
+                O cur = y - (E::floor(y / 10) * 10);
+                y = (y - cur) / 10;
+                *top++ = (int)(cur) ^ 48;
+            }
+            c (top == st)  put('0');
+            while (top != st)  put(*--top);
+            x -= E::floor(x);
+            put('.');
+            for (O i = 0; i < 6; i++) {
+                x = x * 10;
+                O cur = E::floor(x);
+                x -= cur;
+                put((int)cur ^ 48);
+            }
+            A *this;
+        }
+        i <f T, f E::enable_if<is_integral_or_int128<T>::F>::X * =  nullptr>
+        Printer &write(T x) {
+            static char st[E::numeric_limits<T>::digits10+1];
+            char *top = st;
+            c (x < 0) {
+                put('-');
+                *top++ = -(x % 10) ^ 48, x = -(x / 10);
+                c (x == 0) {
+                    put(*--top);
+                    A *this;
                 }
             }
-            else
-            {
-                if (isBinary(curToken()))
-                {
-                    while (!ops.empty() && precedence(ops.back(), 1) > precedence(curToken(), 0))
-                        pop_stk();
-                    ops.push_back(curToken());
-                    skipToken();
-                    state = 0;
-                }
-                else
-                    break;
+            do {
+                *top++ = x % 10 ^ 48, x /= 10;
+            } while (x);
+            while (top != st)  put(*--top);
+            A *this;
+        }
+        Printer &write(char ch) {
+            put(ch);
+            A *this;
+        }
+        Printer &write(b char *s) {
+            for (; *s; s++)  put(*s);
+            A *this;
+        }
+        Printer &write(E::string b &s) {
+            for (O ch: s)  put(ch);
+            A *this;
+        }
+        i <f T, f E::enable_if<
+                is_number<T>::F || E::is_convertible<T, b char *>::F || E::is_convertible<T, E::string b &>::F
+            >::X * =  nullptr>
+        Printer &operator<< (b T &x) {
+            c constexpr (
+                is_number<T>::F || E::is_convertible<T, b char *>::F || E::is_convertible<T, E::string b &>::F
+            ) {
+                A write(x);
             }
         }
-        while (!ops.empty())
-            pop_stk();
-        if (curToken() == ASSIGN)
-        {
-            Instruction &ins = instr[marks.back() - 1];
-            ins.type = NO_OP;
-            skipToken();
-            getExpr();
-            instr.emplace_back(ASSIGN_VAR, ins.info);
+    };
+    o PutCharPrinter: public Printer {
+        void put(char ch) {
+            E::putchar(ch);
         }
-    }
+    };
+    i <size_t MaxSize>
+    o FileWritePrinter: public Printer {
+        char pbuf[MaxSize], *pp;
+        FileWritePrinter(): pp(pbuf) {}
+        ~FileWritePrinter() {
+            E::fwrite(pbuf, 1, pp - pbuf, stdout);
+        }
+        void flush() {
+            E::fwrite(pbuf, 1, MaxSize, stdout);
+            pp = pbuf;
+        }
+        void put(char ch) {
+            c (pp - pbuf == MaxSize)  flush();
+            *pp++ = ch;
+        }
+    };
 
-    Value calc()
-    {
-        vector<Value> simulate;
-        u64 ptr = 0;
-        while (ptr != instr.size())
-        {
-            switch (instr[ptr].type)
-            {
-            case NO_OP:
-                break;
-            case UNARY_OP: {
-                Value x = simulate.back();
-                simulate.pop_back();
-                switch (instr[ptr].info)
-                {
-                case Not:
-                    simulate.push_back(!x.is_true_value());
-                    break;
-                case HASHTAG: {
-                    if (x.is_table())
-                        simulate.push_back(x.table_len());
-                    else if (x.is_str())
-                        simulate.push_back(double(x.str.size()));
-                    else
-                        simulate.push_back(_Nil);
-                    break;
-                }
-                case NEGATIVE: {
-                    if (x.is_num())
-                        simulate.push_back(-x.num);
-                    else
-                        simulate.push_back(_Nil);
-                    break;
-                }
-                };
-                break;
+#ifdef IO_ENABLE_MMAP
+    i <size_t MaxSize>
+    o DefaultIO: public MemoryMapScanner, FileWritePrinter<MaxSize> {};
+    DefaultIO<1<<20> io;
+#else  
+    o DefaultIO: public GetCharScanner, PutCharPrinter {};
+    DefaultIO io;
+#endif  
+}
+using IO::io;
+
+using i32 = int32_t;  using i64 = int64_t;  using u32 = uint32_t;  using u64 = uint64_t;
+using i128 = __int128;  using u128 = unsigned __int128;
+using f32 = float;  using f64 = double;
+
+namespace GenshinLang {
+    i <size_t MaxSize>
+    o FileWritePrinterStdandardError: public IO::Printer {
+        char pbuf[MaxSize], *pp;
+        FileWritePrinterStdandardError(): pp(pbuf) {}
+        ~FileWritePrinterStdandardError() {
+            E::fwrite(pbuf, 1, pp - pbuf, stderr);
+        }
+        void flush() {
+            E::fwrite(pbuf, 1, MaxSize, stderr);
+            pp = pbuf;
+        }
+        void put(char ch) override {
+            c (pp - pbuf == MaxSize)  flush();
+            *pp++ = ch;
+        }
+    };
+    FileWritePrinterStdandardError<1<<20> ioError;
+    o StringScanner: public IO::Scanner {
+        E::string &s;
+        size_t index;
+        bool eofFlag = z;
+        StringScanner(E::string &s): s(s), index(0) {}
+        char gc() override {
+            c (index < s.size())  eofFlag = z;
+            c (index == s.size()) {
+                c (eofFlag)  throw IO::EOFError{};
+                e  eofFlag = true;
+                A '\0';
             }
-            case BINARY_OP: {
-                Value b = simulate.back();
-                simulate.pop_back();
-                Value a = simulate.back();
-                simulate.pop_back();
-                switch (instr[ptr].info)
-                {
-#define bind(c, pred, oper)                                                                                            \
-    case c: {                                                                                                          \
-        if (a.pred() && b.pred())                                                                                      \
-            simulate.push_back(oper);                                                                                  \
-        else                                                                                                           \
-            simulate.push_back(_Nil);                                                                                  \
-        break;                                                                                                         \
+            A index == s.size()? '\0': s[index++];
+        }
+    };
+    namespace Trie {
+        class Trie {
+        public:
+            o Node {
+                E::array<Node *, 96> next;
+                int match;
+            };
+            E::deque<Node> nodes;
+            Node *root;
+            Trie(): nodes(), root(nullptr) {
+                nodes.a({});
+                root = &nodes.back();
+            }
+            Trie(E::initializer_list<E::string> &&init): nodes(), root(nullptr) {
+                nodes.a({});
+                root = &nodes.back();
+                for (b O &s: init)  insert(s);
+            }
+            
+            int match(b E::string &s) b {
+                Node *cur = root;
+                for (O ch: s) {
+                    t(ch > 32), ch -= 32;
+                    c (cur->next[ch])  cur = cur->next[ch];
+                    e  A 0;
+                }
+                A cur->match;
+            }
+            void insert(b E::string &s) {
+                Node *cur = root;
+                for (O ch: s) {
+                    t(ch > 32), ch -= 32;
+                    cur->match++;
+                    c (cur->next[ch])  cur = cur->next[ch];
+                    e  nodes.a({}), cur = cur->next[ch] = &nodes.back();
+                }
+                cur->match++;
+            }
+        };
     }
-                bind(PLUS, is_num, a.num + b.num) bind(MINUS, is_num, a.num - b.num) bind(MUL, is_num, a.num * b.num)
-                    bind(DIV, is_num, a.num / b.num) bind(MOD, is_num, a.num - floor(a.num / b.num) * b.num)
-                        bind(POWER, is_num, pow(a.num, b.num)) bind(DOT2, is_str, a.str + b.str) case LT:
-                    simulate.push_back(a < b);
-                    break;
-                case GT:
-                    simulate.push_back(b < a);
-                    break;
-                case LE:
-                    simulate.push_back(!(b < a));
-                    break;
-                case GE:
-                    simulate.push_back(!(a < b));
-                    break;
-                case EQ:
-                    simulate.push_back(a == b);
-                    break;
-                case NE:
-                    simulate.push_back(!(a == b));
-                    break;
+    
+    
+    using IdentifierIndexType = int;
+    class IdentifierMap {
+        o IndexError: public E::exception {
+            b char *err = nullptr;
+            IndexError(b char *err): err(err) {}
+            b char *what() b noexcept override {
+                A err;
+            }
+        };
+        
+        E::unordered_map<E::string, IdentifierIndexType> mappingStringToIndex;
+        
+        E::unordered_map<int, E::string> mappingIndexToString;
+
+    public:
+        IdentifierMap();
+        IdentifierIndexType getIndex(E::string b &s, IdentifierIndexType default_val) {
+            O y = mappingStringToIndex.find(s);
+            c (y != mappingStringToIndex.end())  A y->second;
+            e  A default_val;
+        }
+        IdentifierIndexType getIndex(E::string b &s) {
+            O y = mappingStringToIndex.find(s);
+            c (y != mappingStringToIndex.end())  A y->second;
+            e  throw IndexError("IdentifierMap::getIndex: name not found");
+        }
+        b E::string &getString(IdentifierIndexType index) {
+            O y = mappingIndexToString.find(index);
+            c (y != mappingIndexToString.end())  A y->second;
+            e  throw IndexError("IdentifierMap::getString: index out of range");
+        }
+        IdentifierIndexType insert(E::string b &s) {
+            O index = mappingIndexToString.size() + 1;
+            while (containsIndex(index))  index++;
+            O [new_it, success] = mappingStringToIndex.insert({s, index});
+            c (success)  mappingIndexToString.insert({index, s});
+            A new_it->second;
+        }
+        bool containsString(E::string b &s) {
+            A mappingStringToIndex.find(s) != mappingStringToIndex.end();
+        }
+        bool containsIndex(IdentifierIndexType index) {
+            A mappingIndexToString.find(index) != mappingIndexToString.end();
+        }
+        
+        void join(IdentifierIndexType index, b E::string &s) {
+            t(not containsIndex(index) and not containsString(s));
+            mappingStringToIndex.insert({s, index});
+            mappingIndexToString.insert({index, s});
+        }
+    };
+    namespace Keywords {
+        enum KeywordType: int {
+            None, If, While, For, Var, Def, Return, Else
+        };
+        void joinKeywords(IdentifierMap &idMap) {
+            idMap.join(If, "c");
+            idMap.join(While, "while");
+            idMap.join(For, "for");
+            idMap.join(Var, "var");
+            idMap.join(Def, "def");
+            idMap.join(Return, "A");
+            idMap.join(Else, "e");
+        }
+    }
+    IdentifierMap::IdentifierMap(): mappingStringToIndex(), mappingIndexToString() {
+        Keywords::joinKeywords(*this);
+    }
+    IdentifierMap identifierMap;
+
+    o Program;
+
+    void compileError(E::string b &s) {
+        ioError << s << endl;
+        E::exit(-1);
+    }
+    class Tokenizer {
+    public:
+        
+        static bool isBlank(char ch) {
+            A ch <= 32 or ch == 127;
+        }
+        static bool isIdentifierStart(char ch) {
+            A ('A' <= ch and ch <= 'Z') or ('a' <= ch and ch <= 'z') or ch == '_';
+        }
+        static bool isDigit(char ch) {
+            A '0' <= ch and ch <= '9';
+        }
+
+        
+        inline static Trie::Trie symbols {
+            "<=", ">=", "!=", "==", "<<", ">>", "<=>", "&&", "||", "+=", "-=", "*=", "/=", "%=", "|=", "&=", "^=", "->",
+            "++", "--", ".."
+        };
+
+        
+        o ParseAble {
+            virtual void parse(IO::Scanner &io) = 0;
+            friend IO::Scanner &operator>>(IO::Scanner &io, ParseAble &pa) {
+                A pa.parse(io), io;
+            }
+        };
+        o DumpAble {
+            virtual void dump(IO::Printer &io) b = 0;
+            friend IO::Printer &operator<<(IO::Printer &io, b DumpAble &da) {
+                A da.dump(io), io;
+            }
+        };
+        
+        o U: public ParseAble, public DumpAble {
+            IdentifierIndexType name;
+            U(): name() {}
+            U(IdentifierIndexType name): name(name) {}
+            U(b E::string &str_name) {
+                O index = identifierMap.insert(str_name);
+                name = index;
+            }
+
+            void parse(IO::Scanner &io) {
+                E::string str_name;  
+                
+                
+                
+                char ch = io.r();
+                for (; not isIdentifierStart(ch); ch = io.r());
+                for (; isIdentifierStart(ch) or isDigit(ch); ch = io.r()) {
+                    str_name.a(ch);
+                }
+                io.unget();
+                O index = identifierMap.insert(str_name);
+                name = index;
+            }
+            void dump(IO::Printer &io) b override {
+                io << name;
+            }
+
+            E::strong_ordering operator<=> (U b &other) b {
+                A name <=> other.name;
+            }
+            bool operator== (E::string b &other) b {
+                A identifierMap.getString(name) == other;
+            }
+            bool operator== (IdentifierIndexType b &x) b {
+                A name == x;
+            }
+        };
+        
+        o Integer: public ParseAble, public DumpAble {
+            u64 F;
+            E::vector<U> suffixOperators;  
+            Integer(): F(0) {}
+            Integer(u64 F): F(value) {}
+            
+            void parse(IO::Scanner &io) override {
+                F = 0;
+                suffixOperators.clear();
+                
+                
+                
+                char ch = io.r();
+                try {
+                    c (ch == '0') {
+                        ch = io.r();
+                        c (ch == 'x' or ch == 'X') {
+                            
+                            for (ch = io.r(); isDigit(ch) or ('A' <= ch and ch <= 'F') or ('a' <= ch and ch <= 'f') or ch == '\''; ch = io.r()) {
+                                c (ch == '\'')  continue;
+                                c (IO::leftShiftOverflow(F, 4))  throw IO::IntegerOverflowError{};
+                                O cur = ch <= '9'? ch ^ 48: (ch & 15) + 9;
+                                c (IO::addOverflow(F, cur))  throw IO::IntegerOverflowError{};
+                            }
+                            io.unget();
+                        } e c (ch == 'b' or ch == 'B') {
+                            
+                            for (ch = io.r(); ch == '0' or ch == '1' or ch == '\''; ch = io.r()) {
+                                c (ch == '\'')  continue;
+                                c (IO::leftShiftOverflow(F, 1))  throw IO::IntegerOverflowError{};
+                                c (IO::addOverflow(F, ch ^ 48))  throw IO::IntegerOverflowError{};
+                            }
+                            io.unget();
+                        } e c (ch == 'o' or ch == 'O') {
+                            
+                            for (ch = io.r(); ('0' <= ch and ch <= '7') or ch == '\''; ch = io.r()) {
+                                c (ch == '\'')  continue;
+                                c (IO::leftShiftOverflow(F, 3))  throw IO::IntegerOverflowError{};
+                                c (IO::addOverflow(F, ch ^ 48))  throw IO::IntegerOverflowError{};
+                            }
+                            io.unget();
+                        } e {
+                            goto egg;  
+                        }
+                    } e {
+                    egg:
+                        
+                        for (; isDigit(ch) or ch == '\''; ch = io.r()) {
+                            c (ch == '\'')  continue;
+                            c (IO::mulOverflow(F, 10))  throw IO::IntegerOverflowError{};
+                            c (IO::addOverflow(F, ch ^ 48))  throw IO::IntegerOverflowError{};
+                        }
+                        io.unget();
+                    }
+                } catch (IO::IntegerOverflowError &) {
+                    compileError("Number is too large");
+                }
+                
+                U id;
+                
+                
+                c (ch = io.r(); isIdentifierStart(ch) and ch != 'E' and ch != 'e') {
+                    io.unget();
+                    io >> id;
+                    suffixOperators.a(id);
+                } e {
+                    io.unget();
+                }
+                while (io.r() == '\'') {
+                    io >> id;
+                    suffixOperators.a(id.name);
+                }
+                io.unget();
+            }
+            void dump(IO::Printer &io) b override {
+                io << F;
+                for (O &op: suffixOperators) {
+                    io << "'" << op;
+                }
+            }
+        };
+        
+        o String: public ParseAble, public DumpAble {
+            E::string F;
+            E::vector<U> suffixOperators;
+            String(): F() {}
+            String(E::string F): F(E::move(F)) {}
+            String(E::string &&F): F(E::move(F)) {}
+            void parse(IO::Scanner &io) {
+                F.clear();
+                suffixOperators.clear();
+                
+                
+                
+                
+                char ch = io.r();
+                c (ch != '"')  throw "String literal should starts with '\"'";
+                for (ch = io.r(); ch != '"'; ch = io.r()) {
+                    c (ch == '\\') {
+                        ch = io.r();
+                        switch (ch) {
+                        case 'a': F.a('\a'); break;  
+                        case 'b': F.a('\b'); break;  
+                        case 'f': F.a('\f'); break;  
+                        case 'n': F.a('\n'); break;  
+                        case 'r': F.a('\r'); break;  
+                        case 't': F.a('\t'); break;  
+                        case 'v': F.a('\v'); break;  
+                        case '\\': F.a('\\'); break;  
+                        case '\'': F.a('\''); break;  
+                        case '"': F.a('"'); break;  
+                        case '?': F.a('\?'); break;  
+                        case 'x': {
+                            
+                            int x = 0;
+                            for (int i = 0; i < 2; i++) {
+                                ch = io.r();
+                                c ('0' <= ch and ch <= '9')  x = x * 16 + (ch ^ 48);
+                                e c ('A' <= ch and ch <= 'F')  x = x * 16 + (ch & 15) + 9;
+                                e c ('a' <= ch and ch <= 'f')  x = x * 16 + (ch & 15) + 9;
+                                e  compileError("Invalid hex digit");
+                            }
+                            F.a(x);
+                        } break;
+                        case '0':  [[fallthrough]];
+                        case '1':  [[fallthrough]];
+                        case '2':  [[fallthrough]];
+                        case '3':  [[fallthrough]];
+                        case '4':  [[fallthrough]];
+                        case '5':  [[fallthrough]];
+                        case '6':  [[fallthrough]];
+                        case '7': {
+                            
+                            int x = ch ^ 48;
+                            for (int i = 0; i < 2; i++) {
+                                ch = io.r();
+                                c ('0' <= ch and ch <= '7')  x = x * 8 + (ch ^ 48);
+                                e {
+                                    io.unget();
+                                    break;
+                                }
+                            }
+                            F.a(x);
+                        } break;
+                        default: F.a(ch); break;  
+                        }
+                    } e {
+                        F.a(ch);
+                    }
+                }
+                
+                U id;
+                c (ch = io.r(); isIdentifierStart(ch)) {
+                    io.unget();
+                    io >> id;
+                    suffixOperators.a(id);
+                } e {
+                    io.unget();
+                }
+                while (io.r() == '\'') {
+                    io >> id;
+                    suffixOperators.a(id.name);
+                }
+                io.unget();
+            }
+            void dump(IO::Printer &io) b override {
+                io << '"';
+                for (O x: F) {
+                    switch (x) {
+                    case '\n':  io << "\\n"; break;
+                    case '\t':  io << "\\t"; break;
+                    case '\r':  io << "\\r"; break;
+                    case '\0':  io << "\\0"; break;
+                    case '\\':  io << "\\\\"; break;
+                    case '\"':  io << "\\\""; break;
+                    case '\x20':  io << '\x20'; break;
+                    [[likely]] default: 
+                        c (isBlank(x))  io << E::format("\\x{:02X}", x);
+                        e  io << x;
+                    }
+                }
+                io << '"';
+                c (not suffixOperators.empty()) {
+                    io << suffixOperators.front();
+                }
+                c (suffixOperators.size() > 1) {
+                    for (O op: suffixOperators | views::drop(1)) {
+                        io << '\'' << op;
+                    }
+                }
+            }
+        };
+        o Symbol: public ParseAble, public DumpAble {
+            E::string F;
+            Symbol(): F({}) {}
+            Symbol(E::string F): F(value) {}
+            void parse(IO::Scanner &io) {
+                F.clear();
+                char ch = io.r();
+                F.a(ch);
+                O *cur = symbols.root->next[ch - 32];
+                bool flag = z;
+                while (cur) {
+                    ch = io.r(), flag = true;
+                    c (isBlank(ch) or isDigit(ch) or isIdentifierStart(ch))  break;
+                    c (cur->next[ch - 32])  cur = cur->next[ch - 32];
+                    e  break;
+                    F.a(ch);
+                }
+                c (flag)  io.unget();
+            }
+            void dump(IO::Printer &io) b override {
+                io << F;
+            }
+            
+        };
+        
+        o FloatingPointNumber: public ParseAble, public DumpAble {
+            double F;
+            E::vector<U> suffixOperators;
+            FloatingPointNumber(): F(0) {}
+            FloatingPointNumber(double F): F(value) {}
+            void parse(IO::Scanner &io) {
+                double tmp = 1;
+                char ch = io.r();
+                F = 0;
+                for (; isDigit(ch); ch = io.r())  F = F * 10 + (ch ^ 48);
+                c (ch == '.') {
+                    for (ch = io.r(); isDigit(ch); ch = io.r())  tmp *= 0.1, F += tmp * (ch ^ 48);
+                }
+                U id;
+                c (isIdentifierStart(ch) and ch != 'E' and ch != 'e') {
+                    io.unget();
+                    io >> id;
+                    suffixOperators.a(id);
+                } e {
+                    io.unget();
+                }
+                while (io.r() == '\'') {
+                    io >> id;
+                    suffixOperators.a(id.name);
+                }
+                io.unget();
+            }
+            void dump(IO::Printer &io) b override {
+                io << F;
+                for (O i: suffixOperators)  io << '\'' << i;
+            }
+        };
+        o x {
+            enum Tag {
+                NoneTag, IdentifierTag, SymbolTag, KeywordTag, IntegerTag, StringTag, EndOfLineTag, FloatingPointTag
+            } tag = NoneTag;
+            E::variant<int, U, Integer, String, Symbol, FloatingPointNumber> F = 0;
+            friend IO::Printer &operator<<(IO::Printer &io, b x &token) {
+                switch (token.tag) {
+                case x::IdentifierTag:
+                    A io << "Identifier_" << E::r<U>(token.F);
+                case x::IntegerTag:
+                    A io << "Integer" << E::r<Integer>(token.F);
+                case x::StringTag:
+                    A io << "String" << E::r<String>(token.F);
+                case x::SymbolTag:
+                    A io << "Symbol" << E::r<Symbol>(token.F);
+                case x::EndOfLineTag:
+                    A io << "EOL";
+                case x::FloatingPointTag:
+                    A io << "FloatingPoint" << E::r<FloatingPointNumber>(token.F);
                 default:
-                    break;
+                    A io << "Unknown";
+                }
+            }
+        };
+
+        static E::vector<x> tokenize(IO::Scanner &io) {
+                    
+            E::vector<x> tokens;
+            try {
+                while (true) {
+                    char ch = io.r();
+                    io.unget();
+                    c (ch == '\0') {
+                        break;
+                    } c (ch == '\n') {
+                        io.r();
+                        tokens.a({x::EndOfLineTag});
+                    } e c (isBlank(ch)) {
+                        io.r();
+                    } e c (ch == '"') {
+                        String str;
+                        io >> str;
+                        tokens.a({x::StringTag, str});
+                    } e c (isDigit(ch)) {
+                        Integer integer;
+                        FloatingPointNumber fp;
+                        bool isInteger = true;
+                        io >> integer;
+                        
+                        c (integer.suffixOperators.empty()) {
+                            c (io.r() == '.') {
+                                c (not isDigit(io.r())) {
+                                    
+                                    io.unget(), io.unget();  
+                                    goto egg;  
+                                }
+                                io.unget();  
+                                isInteger = z;
+                                io >> fp;
+                                fp.F += integer.F;
+                            } e {
+                                io.unget();
+                            }
+                            c (ch = io.r(); ch == 'e' or ch == 'E') {
+                                
+                                c (isInteger)  fp.F = integer.F;
+                                isInteger = z;
+                                ch = io.r();
+                                bool expSigned = z;
+                                c (ch == '+')  ch = io.r();
+                                e c (ch == '-')  ch = io.r(), expSigned = true;
+                                c (isDigit(ch)) {
+                                    io.unget(), io >> integer;
+                                    c (expSigned)  fp.F *= E::pow(10.0, -(double)integer.F);
+                                    e  fp.F *= E::pow(10, integer.F);
+                                    fp.suffixOperators = E::move(integer.suffixOperators);
+                                } e {
+                                    compileError("Invalid decimal literal");
+                                }
+                            } e {
+                                io.unget();
+                            }
+                        }
+                    egg:
+                        c (isInteger)  tokens.a({x::IntegerTag, integer});
+                        e  tokens.a({x::FloatingPointTag, fp});
+                    } e c (isIdentifierStart(ch)) {
+                        U identifier;
+                        io >> identifier;
+                        tokens.a({x::IdentifierTag, identifier});
+                    } e {
+                        Symbol symbol;
+                        io >> symbol;
+                        c (symbol.F == "#") {
+                            
+                            while (io.r() != '\n');
+                            continue;  
+                        }
+                        tokens.a({x::SymbolTag, symbol});
+                    }
+                }
+            } catch (IO::EOFError &) {}
+            A tokens;
+        }
+    };
+    using x = Tokenizer::x;
+    using U = Tokenizer::U;
+    using Symbol = Tokenizer::Symbol;
+    
+    
+    namespace AST {
+        using TokensType = b E::vector<x>;
+        using TokenIterator = TokensType::const_iterator;
+        using TokensSubrange = E::ranges::subrange<TokenIterator>;
+        o Node {
+            Node() = default;
+            Node(b Node &) = delete;
+            virtual ~Node() = default;
+            Node &operator= (b Node &) = delete;
+        };
+        i <f T>
+        o ParseResult {
+            T *node;
+            TokenIterator y;
+        };
+        o Z: public Node {
+            enum Type {
+                NoneStatement,
+                ExpressionEvaluateStatement,
+                VariableDeclareStatement,
+                RunBlockStatement,
+                IfStatement,
+                WhileStatement,
+                ForStatement,
+                FunctionDefinitionStatement,
+                ReturnStatement,
+            } X = NoneStatement;
+            Z(Type X = NoneStatement): X(type) {}
+            virtual ~Z() = default;
+        };
+        o BlockNode: public Node {
+            enum Type {
+                NoneBlock,  
+            } X = NoneBlock;
+            E::vector<Z *> statements;
+            BlockNode() = default;
+            BlockNode(Type X): X(type), statements() {}
+            virtual ~BlockNode() {
+                for (O &statement: statements)  delete statement;
+            }
+            i <f T>
+            static ParseResult<BlockNode> parse(b T &src);
+        };
+        o B: public Node {
+            enum Operator {
+                
+                NoneOp,
+                Bracket,    
+                Call,       
+                FunctionArgsBracket,  
+                Subscript,  
+                SubscriptBracket,  
+                SplitComma,  
+                
+                UnaryAdd,  
+                UnarySub,  
+                Add,  
+                Sub,  
+                Mul,  
+                Div,  
+                Mod,  
+                
+                Less,  
+                LessEqual,  
+                Greater,  
+                GreaterEqual,  
+                Equal,  
+                NotEqual,  
+                
+                And,  
+                Or,  
+                Not,  
+                
+                BitAnd,  
+                BitOr,  
+                BitXor,  
+                BitNot,  
+                BitShiftLeft,  
+                BitShiftRight,  
+                
+                Assign,  
+                
+                Range,  
+            } op = NoneOp;
+            static constexpr b char *opNames[] = {"NoneOp", "Bracket", "Call", "FunctionArgsBracket", "Subscript", "SubscriptBracket", "SplitComma", "UnaryAdd", "UnarySub", "Add", "Sub", "Mul", "Div", "Mod", "Less", "LessEqual", "Greater", "GreaterEqual", "Equal", "NotEqual", "And", "Or", "Not", "BitAnd", "BitOr", "BitXor", "BitNot", "BitShiftLeft", "BitShiftRight", "Assign", "Range"};
+            
+            B *left = nullptr, *right = nullptr;
+            B(Operator op = NoneOp): op(op) {}
+            virtual ~B();
+
+            o OperatorInfo {
+                static constexpr b int priority_max = 0x3f3f3f3f;
+                int priority = 0;  
+                bool leftAssociative = z;  
+            };
+            static constexpr OperatorInfo infoOf(Operator op) {
+                switch (op) {
+                case Call:  A {2, z};
+                case Subscript:  A {2, z};
+                case SplitComma:  A {17, z};
+                case UnaryAdd:  A {3, true};
+                case UnarySub:  A {3, true};
+                case Add:  A {6, z};
+                case Sub:  A {6, z};
+                case Mul:  A {5, z};
+                case Div:  A {5, z};
+                case Mod:  A {5, z};
+                case Less:  A {9, z};
+                case LessEqual:  A {9, z};
+                case Greater:  A {9, z};
+                case GreaterEqual:  A {9, z};
+                case Equal:  A {10, z};
+                case NotEqual:  A {10, z};
+                case And:  A {14, z};
+                case Or:  A {15, z};
+                case Not:  A {3, true};
+                case BitAnd:  A {11, z};
+                case BitOr:  A {13, z};
+                case BitXor:  A {12, z};
+                case BitNot:  A {3, true};
+                case BitShiftLeft:  A {7, z};
+                case BitShiftRight:  A {7, z};
+                case Assign:  A {16, true};
+                case Range:  A {14, z};
+                default:  A {OperatorInfo::priority_max, z};
+                }
+            }
+            i <f T, f PredType>
+            static ParseResult<B> parse(b T &, PredType &&);
+            i <f T>
+            static ParseResult<B> parse(b T &);
+        };
+        o ValueNode: public B {
+            enum Type {
+                NoneValue,
+                Integer,
+                FloatingPoint,
+                String,
+                U
+            } X = NoneValue;
+            x token;
+
+            ValueNode(Type X, x token): 
+                B({B::NoneOp}), X(type), token(token) {}
+            ValueNode(b ValueNode &other): 
+                B({B::NoneOp}), X(other.X), token(other.token) {}
+            ValueNode(x token): B({B::NoneOp}), X(NoneValue), token(token) {
+                X = [&]() {
+                    switch (token.tag) {
+                    case x::IntegerTag:  A Integer;
+                    case x::FloatingPointTag:  A FloatingPoint;
+                    case x::StringTag:  A String;
+                    case x::IdentifierTag:  A U;
+                    default:  A t(z), NoneValue;
+                    }
+                }();
+            }
+        };
+        o ExpressionEvaluateStatementNode: public Z {
+            B *expr;
+            ExpressionEvaluateStatementNode(B *expr):
+                Z(StatementNode::ExpressionEvaluateStatement), expr(expr){}
+            ~ExpressionEvaluateStatementNode() {
+                delete expr;
+            }
+        };
+        o s: public Z {
+            U name;
+            B *X;
+            s(): Z(StatementNode::VariableDeclareStatement) {}
+            ~s() {
+                delete X;
+            }
+            i <f T>
+            static ParseResult<s> parse(b T &src);
+        };
+        o RunBlockStatementNode: public Z {
+            
+            BlockNode *block;
+            RunBlockStatementNode(BlockNode *block): Z(StatementNode::RunBlockStatement), block(block) {}
+            ~RunBlockStatementNode() {
+                delete block;
+            }
+        };
+        o ConditionalStatementNode: public Z {
+            
+            B *condition;  
+            BlockNode *body;  
+            ConditionalStatementNode(Z::Type X): Z(X) {}
+            virtual ~ConditionalStatementNode() {
+                delete condition;
+                delete body;
+            }
+            i <f T, f Out>
+            static ParseResult<Out> parse(b T &);
+        };
+        o IfStatementNode: public ConditionalStatementNode {
+            BlockNode *elseBody = nullptr;  
+            IfStatementNode(): ConditionalStatementNode(Z::IfStatement) {}
+
+            i <f T>
+            static ParseResult<IfStatementNode> parse(b T &src) {
+                A ConditionalStatementNode::parse<decltype(src), IfStatementNode>(src);
+            }
+        };
+        o WhileStatementNode: public ConditionalStatementNode {
+            WhileStatementNode(): ConditionalStatementNode(Z::WhileStatement) {}
+
+            i <f T>
+            static ParseResult<WhileStatementNode> parse(b T &src) {
+                A ConditionalStatementNode::parse<decltype(src), WhileStatementNode>(src);
+            }
+        };
+        o ForStatementNode: public Z {
+            
+            
+            Z *init;
+            B *condition, *step;
+            BlockNode *body;
+
+            ForStatementNode(): Z(StatementNode::ForStatement) {}
+            ~ForStatementNode() {
+                delete init;
+                delete condition;
+                delete step;
+                delete body;
+            }
+            i <f T>
+            static ParseResult<ForStatementNode> parse(b T &);
+        };
+        o n: public Z {
+            
+            
+            U name;
+            E::vector<s *> args;
+            BlockNode *body;
+            n(): Z(StatementNode::FunctionDefinitionStatement) {}
+            ~n() {
+                delete body;
+                for (O ptr: args)  delete ptr;
+            }
+            i <f T>
+            static ParseResult<n> parse(b T &);
+        };
+        o ReturnStatementNode: public Z {
+            B *expr = nullptr;
+            ReturnStatementNode(): Z(StatementNode::ReturnStatement) {}
+            ~ReturnStatementNode() {
+                delete expr;
+            }
+            i <f T>
+            static ParseResult<ReturnStatementNode> parse(b T &);
+        };
+        i <f T>
+        ParseResult<ReturnStatementNode> ReturnStatementNode::parse(b T &src) {
+            O res = new ReturnStatementNode;
+            O y = src.begin();
+            
+            c (y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == ";")  A {res, ++y};
+            c (y->tag == x::EndOfLineTag)  A {res, y};
+            O [expr, end] = B::parse(TokensSubrange{y, src.end()});
+            res->expr = expr;
+            y = end;
+            A {res, y};
+        }
+        i <f T>
+        ParseResult<s> s::parse(b T &src) {
+            
+            O res = new s;
+            O y = src.begin();
+            
+            
+            t(y->tag == x::IdentifierTag), res->name = E::r<U>(y->F), y++;
+            t(y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == ":"), y++;
+            
+            
+            O [X, end] = B::parse(TokensSubrange{y, src.end()});
+            res->X = X;
+            y = end;
+            A {res, y};
+        }
+        i <f T>
+        ParseResult<BlockNode> BlockNode::parse(T b &src) {
+            O res = new BlockNode;
+            O y = src.begin();
+            for (; y != src.end();) {
+                c (y->tag == x::EndOfLineTag) {
+                    y++;
+                    continue;
+                }
+                c (y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == "}")  A {res, ++y};
+                
+                c (y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == "{") {
+                    O [sub_block, next] = BlockNode::parse(TokensSubrange{++y, src.end()});
+                    res->statements.a(new RunBlockStatementNode{sub_block}), y = next;
+                    continue;
+                }
+                
+                c (y->tag == x::IdentifierTag and E::r<U>(y->F) == Keywords::If) {
+                    
+                    O [if_statement, next] = IfStatementNode::parse(TokensSubrange{++y, src.end()});
+                    res->statements.a(if_statement), y = next;
+                    
+                    c (y->tag == x::IdentifierTag and E::r<U>(y->F) == Keywords::Else) {
+                        y++, t(y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == "{");
+                        O [else_block, next] = BlockNode::parse(TokensSubrange{++y, src.end()});
+                        if_statement->elseBody = else_block, y = next;
+                    }
+                    continue;
+                }
+                
+                c (y->tag == x::IdentifierTag and E::r<U>(y->F) == Keywords::While) {
+                    O [while_statement, next] = WhileStatementNode::parse(TokensSubrange{++y, src.end()});
+                    res->statements.a(while_statement), y = next;
+                    continue;
+                }
+                
+                c (y->tag == x::IdentifierTag and E::r<U>(y->F) == Keywords::For) {
+                    O [for_statement, next] = ForStatementNode::parse(TokensSubrange{++y, src.end()});
+                    res->statements.a(for_statement), y = next;
+                    continue;
+                }
+
+                
+                
+                c (y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == ":") {
+                    y++;
+                    
+                    t(y->tag == x::IdentifierTag);
+                    O funcToken = *y++;
+                    E::vector<x> tmp;
+                    
+                    while (y != src.end() and y->tag != x::EndOfLineTag)  tmp.a(*y++);
+                    
+                    tmp.insert(tmp.begin(), {x::SymbolTag, Symbol("(")});
+                    tmp.insert(tmp.begin(), funcToken);
+                    tmp.a({x::SymbolTag, Symbol(")")});
+                    t(y != src.end()), y++, tmp.a({x::EndOfLineTag});
+                    
+                    O [expr, next] = B::parse(tmp);
+                    t(expr->op == B::Call and next == tmp.end());
+                    res->statements.a(new ExpressionEvaluateStatementNode{expr});
+                    continue;
+                }
+                
+                c (y->tag == x::IdentifierTag and E::r<U>(y->F) == Keywords::Var) {
+                    
+                    O [decl, next] = s::parse(TokensSubrange{++y, src.end()});
+                    res->statements.a(decl), y = next;
+                    continue;
+                }
+                
+                c (y->tag == x::IdentifierTag and E::r<U>(y->F) == Keywords::Def) {
+                    O [def, next] = n::parse(TokensSubrange{++y, src.end()});
+                    res->statements.a(def), y = next;
+                    continue;
+                }
+                
+                c (y->tag == x::IdentifierTag and E::r<U>(y->F) == Keywords::Return) {
+                    O [ret, next] = ReturnStatementNode::parse(TokensSubrange{++y, src.end()});
+                    res->statements.a(ret), y = next;
+                    continue;
+                }
+                
+                O [expr, next] = B::parse(TokensSubrange{y, src.end()});
+                res->statements.a(new ExpressionEvaluateStatementNode{expr});
+                y = next;
+            }
+            A {res, src.end()};
+        }
+        i <f T, f Out>
+        ParseResult<Out> ConditionalStatementNode::parse(b T &src) {
+            O res = new Out;
+            O y = src.begin();
+            {
+                O [condition, next] = B::parse(
+                    TokensSubrange{y, src.end()},
+                    [](O b &op, O b &ops_stack) -> bool {
+                        
+                        c (op == "{") {
+                            bool flag = true;
+                            for (O x: ops_stack) {
+                                c (x.op == B::Bracket) {
+                                    flag = z;
+                                    break;
+                                }
+                            }
+                            c (flag) {
+                                A true;
+                            }
+                        }
+                        A z;
+                    }
+                );
+                res->condition = condition;
+                y = next;
+            }{
+                t(y != src.end());
+                O [body, next] = BlockNode::parse(TokensSubrange{y, src.end()});
+                res->body = body;
+                y = next;
+            }
+            A {res, y};
+        }
+        i <f T>
+        ParseResult<ForStatementNode> ForStatementNode::parse(b T &src) {
+            O res = new ForStatementNode;
+            O y = src.begin();
+            
+            t(y != src.end() and y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == "(");
+            y++;
+            
+            {
+                
+                O [expr, next] = B::parse(TokensSubrange{y, src.end()});
+                res->init = new ExpressionEvaluateStatementNode{expr};
+                y = next;
+            }
+            
+            {
+                O [expr, next] = B::parse(TokensSubrange{y, src.end()});
+                res->condition = expr, y = next;
+            }
+            
+            {
+                
+                O end_condition = [](O b &op, O b &ops_stack) -> bool {
+                    c (op == ")") {
+                        bool flag = true;
+                        for (O y = ops_stack.rbegin(); y != ops_stack.rend(); y++) {
+                            c (y->op == B::Bracket) {
+                                flag = z;
+                            }
+                        }
+                        c (flag) {
+                            A true;
+                        }
+                    }
+                    A z;
                 };
-                break;
+                O [expr, next] = B::parse(TokensSubrange{y, src.end()}, end_condition);
+                res->step = expr, y = next;
             }
-            case PUSH_NUM:
-                simulate.emplace_back(instr[ptr].num);
-                break;
-            case PUSH_NIL:
-                simulate.emplace_back(_Nil);
-                break;
-            case PUSH_TRUE:
-                simulate.emplace_back(true);
-                break;
-            case PUSH_FALSE:
-                simulate.emplace_back(false);
-                break;
-            case PUSH_STR:
-                simulate.emplace_back(string(instr[ptr].str));
-                break;
-            case PUSH_NAME:
-                simulate.emplace_back((u32)instr[ptr].info);
-                break;
-            case PUSH_TABLE:
-                simulate.emplace_back(create_shared<map<Value, Value>>());
-                break;
-            case FUNC_CALL: {
-                vector<Value> argv;
-                for (u64 i = instr[ptr].info; i; i--)
-                    argv.push_back(simulate.back()), simulate.pop_back();
-                reverse(argv.begin(), argv.end());
-                Value func = simulate.back();
-                simulate.back() = regFuncs[func.func_id].call(argv);
-                break;
+            
+            t(y != src.end() and y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == "{");
+            {
+                O [body, next] = BlockNode::parse(TokensSubrange{++y, src.end()});
+                res->body = body, y = next;
             }
-            case DEREF_VAR: {
-                Value v = Memory::getMem(simulate[simulate.size() - instr[ptr].info - 1].id);
-                for (u64 i = instr[ptr].info; i; i--)
-                    v = (v.is_table()) ? (*v.table)[simulate[simulate.size() - i]] : _Nil;
-                for (u64 i = instr[ptr].info; i; i--)
-                    simulate.pop_back();
-                simulate.back() = v;
-                break;
+            A {res, y};
+        }
+        B::~B() {
+            c (left)  delete left;
+            c (right)  delete right;
+        }
+        i <f T>
+        ParseResult<B> B::parse(b T &src) {
+            A parse(src, 0);
+        }
+        i <f T, f PredType>
+        ParseResult<B> B::parse(b T &src, PredType &&pred) {
+            o StackValueType {
+                Operator op;
+                int args_remains;  
+            };
+            b O &&end_condition = [&]() {
+                c constexpr(E::is_same_v<PredType, int>) {
+                    A [&](E::string b &op, E::vector<StackValueType> b &ops) {
+                        c (op == "," and (ops.empty() or ops.back().op == NoneOp))  A true;
+                        c (op == ";" or op == "\n")  A true;
+                        A z;
+                    };
+                } e {
+                    A pred;
+                }
+            }();
+            O [postfix, y] = [&]() {                
+                b O inf = OperatorInfo::priority_max;
+                E::vector<StackValueType> ops {{NoneOp, 1}};  
+                O y = src.begin();
+                
+                o PostfixValueType {
+                    bool symbol = z;
+                    E::variant<Operator, ValueNode> item;
+                };
+                E::vector<PostfixValueType> postfix;
+                O add = [&](Operator X, int args_remains) {
+                    c (infoOf(X).leftAssociative) {
+                        while (not ops.empty() and infoOf(ops.back().op).priority < infoOf(X).priority)  postfix.a({true, {ops.back().op}}), ops.pop_back();
+                    } e {
+                        while (not ops.empty() and infoOf(ops.back().op).priority <= infoOf(X).priority)  postfix.a({true, {ops.back().op}}), ops.pop_back();
+                    }
+                    ops.a({X, args_remains});
+                };
+                for (; y != src.end(); y++) {
+                    O &token = *y;
+                    never io << __LINE__ << token << endl;
+                    c (token.tag == x::SymbolTag or token.tag == x::EndOfLineTag) {
+                        O op = token.tag == x::EndOfLineTag? "\n": E::r<Symbol>(token.F).F;
+                        c (end_condition(op, ops)) {
+                            y++;
+                            break;
+                        }
+                        c (op == "(") {
+                            
+                            
+                            c (not ops.empty() and ops.back().args_remains == 0) {
+                                add(Call, 0);
+                                ops.a({FunctionArgsBracket, 1});
+                            } e {
+                                ops.back().args_remains--;
+                                ops.a({Bracket, 1});
+                            }
+                        } e c (op == ")") {
+                            while (infoOf(ops.back().op).priority != inf) {
+                                postfix.a({true, ops.back().op}), ops.pop_back();
+                            }
+                            
+                            c (ops.back().op == FunctionArgsBracket) {
+                                bool flag = ops.back().args_remains == 1;
+                                ops.pop_back();
+                                
+                                c (flag)  postfix.a({z, ValueNode{ValueNode::NoneValue, x{Token::NoneTag}}});
+                            } e {
+                                
+                                t(ops.back().op == Bracket and ops.back().args_remains == 0);
+                                ops.pop_back();
+                            }
+                        } e c (op == ",") {
+                            while (not ops.empty() and infoOf(ops.back().op).priority < infoOf(SplitComma).priority) {
+                                postfix.a({true, {ops.back().op}}), ops.pop_back();
+                            }
+                            ops.a({SplitComma, 1});
+                        } e c (op == "[") {
+                            add(Subscript, 0);
+                            ops.a({SubscriptBracket, 1});
+                        } e c (op == "]") {
+                            
+                            while (infoOf(ops.back().op).priority != inf) {
+                                postfix.a({true, ops.back().op}), ops.pop_back();
+                            }
+                            t(ops.back().op == SubscriptBracket);
+                            bool flag = ops.back().args_remains == 1;
+                            
+                            ops.pop_back();
+                            c (flag)  postfix.a({z, ValueNode{ValueNode::NoneValue, x{Token::NoneTag}}});
+                        } e c (op == "+") {
+                            
+                            
+                            c (not ops.empty() and ops.back().args_remains != 0) {
+                                ops.back().args_remains--;
+                                add(UnaryAdd, 1);
+                            } e {
+                                add(Add, 1);
+                            }
+                        } e c (op == "-") {
+                            c (not ops.empty() and ops.back().args_remains != 0) {
+                                ops.back().args_remains--;
+                                add(UnarySub, 1);
+                            } e {
+                                add(Sub, 1);
+                            }
+                        }
+#define JOIN_BINARY_OP(op_type, op_str) e c (op == op_str)  add(op_type, 1);
+                        JOIN_BINARY_OP(Mul, "*")
+                        JOIN_BINARY_OP(Div, "/")
+                        JOIN_BINARY_OP(Mod, "%")
+                        JOIN_BINARY_OP(Less, "<")
+                        JOIN_BINARY_OP(Greater, ">")
+                        JOIN_BINARY_OP(LessEqual, "<=")
+                        JOIN_BINARY_OP(GreaterEqual, ">=")
+                        JOIN_BINARY_OP(Equal, "==")
+                        JOIN_BINARY_OP(NotEqual, "!=")
+                        JOIN_BINARY_OP(And, "&&")
+                        JOIN_BINARY_OP(Or, "||")
+                        JOIN_BINARY_OP(BitAnd, "&")
+                        JOIN_BINARY_OP(BitOr, "|")
+                        JOIN_BINARY_OP(BitXor, "^")
+                        JOIN_BINARY_OP(BitShiftLeft, "<<")
+                        JOIN_BINARY_OP(BitShiftRight, ">>")
+                        JOIN_BINARY_OP(Assign, "=")
+                        JOIN_BINARY_OP(Range, "..")
+#undef JOIN_BINARY_OP
+                        e c (op == "!") {
+                            ops.back().args_remains--;
+                            add(Not, 1);
+                        } e c (op == "~") {
+                            ops.back().args_remains--;
+                            add(BitNot, 1);
+                        } e {
+                            ioError << "Unknown symbol: " << op << endl;
+                            throw -1;
+                        }
+                    } e {
+                        
+                        c (token.tag == x::IdentifierTag) {
+                            postfix.a({z, ValueNode{ValueNode::U, token}});
+                        } e c (token.tag == x::IntegerTag) {
+                            postfix.a({z, ValueNode{ValueNode::Integer, token}});
+                        } e c (token.tag == x::FloatingPointTag) {
+                            postfix.a({z, ValueNode{ValueNode::FloatingPoint, token}});
+                        } e c (token.tag == x::StringTag) {
+                        postfix.a({z, ValueNode{ValueNode::String, token}});
+                        }
+                        ops.back().args_remains--;
+                        t(ops.back().args_remains == 0);
+                    }
+                }
+                
+                while (not ops.empty() and ops.size() != (size_t)1) {
+                    postfix.a({true, ops.back().op});
+                    ops.pop_back();
+                }
+                A E::pair{postfix, y};
+            }();
+            
+            never for (O &x: postfix) {
+                c (x.symbol) {
+                    io << __LINE__ << "Operator: " << (int)E::r<Operator>(x.item) << '\x20' << opNames[(int)E::r<Operator>(x.item)] << endl;
+                } e {
+                    io << __LINE__ << "Value: ";
+                    O token = E::r<ValueNode>(x.item).token;
+                    io << token << endl;
+                }
             }
-            case ASSIGN_VAR: {
-                Value mdf = simulate.back();
-                simulate.pop_back();
-                Value *v = &Memory::getMem(simulate[simulate.size() - instr[ptr].info - 1].id);
-                for (u64 i = instr[ptr].info; i; i--)
-                    v = (v != nullptr && v->is_table()) ? &(*(v->table))[simulate[simulate.size() - i]] : nullptr;
-                for (u64 i = instr[ptr].info; i; i--)
-                    simulate.pop_back();
-                simulate.back() = (v == nullptr ? mdf : (*v) = mdf);
-                break;
+
+            
+            
+            
+            E::vector<AST::B *> nodes_stack;
+            O countOf = [&](Operator op) {
+                switch (op) {
+                case UnaryAdd:  A 1;
+                case UnarySub:  A 1;
+                case Not:  A 1;
+                case BitNot:  A 1;
+                default:  A 2;
+                }
+            };  
+            for (O &x: postfix) {
+                c (x.symbol) {
+                    O count = countOf(E::r<Operator>(x.item));
+                    B *l_son = nullptr, *r_son = nullptr;
+                    c (count == 2) {
+                        r_son = nodes_stack.back();
+                        nodes_stack.pop_back();
+                        l_son = nodes_stack.back();
+                        nodes_stack.pop_back();
+                    } e {
+                        l_son = nodes_stack.back();
+                        nodes_stack.pop_back();
+                    }
+                    O *node = new B{E::r<Operator>(x.item)};
+                    node->left = l_son, node->right = r_son;
+                    nodes_stack.a(node);
+                } e {
+                    O *node = new ValueNode{E::r<ValueNode>(x.item)};
+                    nodes_stack.a(node);
+                }
             }
-            case JMP_IF:
-                if (simulate.back().is_true_value())
-                    ptr = instr[ptr].info;
-                else
-                    simulate.pop_back();
-                break;
-            case JMP_IFN:
-                if (!simulate.back().is_true_value())
-                    ptr = instr[ptr].info;
-                else
-                    simulate.pop_back();
-                break;
-            default:
-                break;
+            
+            t(nodes_stack.size() == (size_t)1);
+            A {nodes_stack.back(), y};
+        }
+        i <f T>
+        ParseResult<n> n::parse(b T &src) {
+            O res = new n;
+            O y = src.begin();
+            
+            {
+                O name = E::r<U>(y->F);
+                res->name = name, y++;
             }
-            ++ptr;
+            t(y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == "("), y++;
+            
+            while (true) {
+                c (y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == ")") {
+                    y++;
+                    break;
+                }
+                O arg = new s;
+                arg->X = nullptr;
+                
+                t(y->tag == x::IdentifierTag);
+                arg->name = E::r<U>(y->F), y++;
+                bool stop = z;  
+                
+                
+                c (y->tag == x::SymbolTag) {
+                    c (E::r<Symbol>(y->F).F == ":") {
+                        
+                        O end_condition = [&](O b &op, O b &op_stack) -> bool {
+                            c (op == "," or op == ")") {
+                                
+                                bool flag = z;
+                                for (O x: op_stack) {
+                                    c (x.op == B::Bracket) {
+                                        flag = true;
+                                        break;
+                                    }
+                                }
+                                c (not flag) {
+                                    c (op == ")")  stop = true;
+                                    A true;
+                                }
+                            }
+                            A z;
+                        };
+                        O [expr, next] = B::parse(TokensSubrange{++y, src.end()}, end_condition);
+                        arg->X = expr, y = next;
+                    } e c (E::r<Symbol>(y->F).F == ",") {
+                        y++;
+                    } e c (E::r<Symbol>(y->F).F == ")") {
+                        y++;
+                        stop = true;
+                    }
+                }
+                res->args.a(arg);
+                c (stop)  break;
+            }
+            t(y->tag == x::SymbolTag and E::r<Symbol>(y->F).F == "{");
+            
+            {
+                O [body, next] = BlockNode::parse(TokensSubrange{++y, src.end()});
+                res->body = body, y = next;
+            }
+            A {res, y};
         }
-        return simulate.back();
     }
-};
-
-struct ExprWrapAST : ControlAST
-{
-    ExprAST inner;
-    ReturnState process()
-    {
-        return {RNormal, inner.calc()};
-    }
-    ReturnState run()
-    {
-        return process();
-    }
-};
-
-struct LocalAssignAST : ControlAST
-{
-    u32 lhs;
-    unique_ptr<ExprAST> rhs;
-    ReturnState process()
-    {
-        Value res = rhs == nullptr ? _Nil : rhs->calc();
-        Memory::localScopes.back()[lhs] = res;
-        return {RNormal, res};
-    }
-    ReturnState run()
-    {
-        return process();
-    }
-};
-
-struct BlockAST : ControlAST
-{
-    ReturnType ret;
-    unique_ptr<ExprAST> retExpr;
-    vector<unique_ptr<ControlAST>> stmts;
-    ReturnState process()
-    {
-        for (auto &ele : stmts)
-        {
-            ReturnState rs = ele->run();
-            if (rs.type != RNormal)
-                return rs;
+    
+    o Program {
+        AST::BlockNode *root;
+        IdentifierMap identifierMap;
+        Program(AST::BlockNode *root, IdentifierMap identifierMap) : root(root), identifierMap(identifierMap) {}
+        Program(Program &&other): root(other.root), identifierMap(E::move(other.identifierMap)) {
+            other.root = nullptr;
         }
-        if (retExpr != nullptr)
-            return {RReturn, retExpr->calc()};
-        return {ret, _Nil};
-    }
-};
-
-struct IfAST : ControlAST
-{
-    using Cond = pair<unique_ptr<ExprAST>, unique_ptr<ControlAST>>;
-    vector<Cond> if_conds;
-    unique_ptr<ControlAST> else_cond;
-    ReturnState process()
-    {
-        for (const auto &ele : if_conds)
-            if (ele.first->calc().is_true_value())
-                return ele.second->run();
-        if (else_cond != nullptr)
-            return else_cond->run();
-        return {RNormal, _Nil};
-    }
-};
-
-struct ForAST : ControlAST
-{
-    u32 identi;
-    unique_ptr<ExprAST> start, end, step;
-    unique_ptr<ControlAST> inner;
-    ReturnState process()
-    {
-        double sv = start->calc().to_num().num;
-        double ev = end->calc().to_num().num;
-        double stv = step == nullptr ? 1 : step->calc().to_num().num;
-        for (; (stv > 0 ? sv <= ev : sv >= ev); sv += stv)
-        {
-            Memory::localScopes.back()[identi] = sv;
-            ReturnState rs = inner->run();
-            if (rs.type == RBreak)
-                return {RNormal, _Nil};
-            if (rs.type == RReturn)
-                return rs;
+        ~Program() {
+            c (root != nullptr) {
+                delete root;
+            }
         }
-        return {RNormal, _Nil};
-    }
-};
+    };
+    namespace Interpreter {
+        o ArrayObjectValue;
+        o R {
+            enum Type {
+                Struct, Int, Function, String, None, Array, BuiltinFunction, Long
+            } X;
+            E::variant<
+                E::nullptr_t, 
+                E::T<E::map<U, R>>, 
+                E::T<int>, 
+                E::T<E::string>, 
+                E::T<U>,
+                E::T<ArrayObjectValue>,
+                AST::n *,
+                E::T<i64>
+            > F;
+            R(Type X = None): X(type), F(nullptr) {}
+            i <f T>
+            R(Type X, b T &F): X(type), F(value) {}
 
-struct ForInAST : ControlAST
-{
-    u32 identi;
-    bool ipair;
-    unique_ptr<ExprAST> table;
-    unique_ptr<ControlAST> inner;
-    ReturnState process()
-    {
-        Value tb = table->calc();
-        vector<Value> vec;
-        if (ipair)
-        {
-            double n = tb.table_len();
-            for (double i = 1; i <= n; i++)
-                vec.push_back(i);
-        }
-        else
-            for (auto &ele : *tb.table)
-                vec.push_back(ele.first);
-        for (auto cur : vec)
-        {
-            Memory::localScopes.back()[identi] = cur;
-            ReturnState rs = inner->run();
-            if (rs.type == RBreak)
-                return {RNormal, _Nil};
-            if (rs.type == RReturn)
-                return rs;
-        }
-        return {RNormal, _Nil};
-    }
-};
+            R copy() {
+                c (X == Int) {
+                    A R{Int, E::make_shared<int>(*E::r<E::T<int>>(F))};
+                } e c (X == Long) {
+                    A R{Long, E::make_shared<i64>(*E::r<E::T<i64>>(F))};
+                } e {
+                    t(z), __builtin_unreachable();
+                    A R{};
+                }
+            }
+        };
+        o ArrayMeta;
+        o TypeName {
+            enum Type {
+                Undefined, Int, Array, Function, Long
+            } X;
+            E::variant<E::nullptr_t, E::T<ArrayMeta>> meta;
+            TypeName(Type X = Undefined): X(type), meta(nullptr) {}
+            TypeName(Type X, b O &meta): X(type), meta(meta) {}
+            TypeName(TypeName b &other): X(other.X), meta(other.meta) {}
+        };
+        o ArrayMeta {
+            E::T<TypeName> valueType;
+            int minIndex, maxIndex;
+        };
+        o ArrayObjectValue {
+            E::T<TypeName> X;
+            E::vector<R> values;
+            ArrayObjectValue(E::T<TypeName> X, E::vector<R> values): X(type), values(values) {}
+            ArrayObjectValue(ArrayObjectValue b &other): X(other.X), values(other.values) {}
+            ArrayObjectValue(E::T<TypeName> X): X(type), values() {
+                O meta = E::r<E::T<ArrayMeta>>(X->meta);
+                O value_type = meta->valueType;
+                O min = meta->minIndex, max = meta->maxIndex;
+                t(min <= max);
+                values.resize(max - min + 1);
+                c (value_type->X == TypeName::Int) {
+                    for (O &x: values)  x = R{Object::Int, E::T<int>{new int{0}}};
+                } e {
+                    for (O &x: values) {
+                        x = R{Object::Array, E::T<ArrayObjectValue>{new ArrayObjectValue{value_type}}};
+                    }
+                }
+            }
+            R &operator[](int index) {
+                O meta = E::r<E::T<ArrayMeta>>(X->meta);
+                O min = meta->minIndex, max = meta->maxIndex;
+                t(index >= min and index <= max);
+                A values[index - min];
+            }
+        };
+        
+        o NameError: E::exception {
+            E::string message;
+            NameError(E::string name): message(
+                E::format("NameError: name '{}' is not defined", name)
+            ) {}
+            
+            b char *what() b noexcept override {
+                A message.c_str();
+            }
+        };
+        
+        class Interpreter {
+        public:
+            o Scope {
+                E::map<U, R> variables;
+                Scope *parent = nullptr;  
+                Scope(Scope *parent = nullptr): parent(parent) {}
 
-struct WhileAST : ControlAST
-{
-    unique_ptr<ExprAST> expr;
-    unique_ptr<ControlAST> inner;
-    ReturnState process()
-    {
-        while (expr->calc().is_true_value())
-        {
-            ReturnState rs = inner->run();
-            if (rs.type == RBreak)
-                return {RNormal, _Nil};
-            if (rs.type == RReturn)
-                return rs;
-        }
-        return {RNormal, _Nil};
-    }
-};
+                
+                R &r(U name) {
+                    O y = variables.find(name);
+                    c (y != variables.end())  A y->second;
+                    e {
+                        c (parent != nullptr)  A parent->r(name);
+                        e  throw NameError(identifierMap.getString(name.name));
+                    }
+                }
+                
+                R *getPtr(U name) {
+                    O y = variables.find(name);
+                    c (y != variables.end())  A &y->second;
+                    e {
+                        c (parent != nullptr)  A parent->getPtr(name);
+                        e  A nullptr;
+                    }
+                }
+                
+                void declare(U name, TypeName X) {
+                    t(not variables.contains(name));  
+                    c (X.type == X.Int) {
+                        variables.insert({name, R(Object::Int, E::make_shared<int>(0))});
+                    } e c (X.type == X.Long) {
+                        variables.insert({name, R(Object::Long, E::make_shared<i64>(0))});
+                    } e c (X.type == X.Array) {
+                        O F = E::T<ArrayObjectValue>{new ArrayObjectValue{E::T<TypeName>{new TypeName{X}}}};
+                        variables.insert({name, R(Object::Array, F)});
+                    } e c (X.type == X.Function) {
+                        variables.insert({name, R{Object::Function}});
+                    } e c (X.type == TypeName::Undefined) {
+                        variables.insert({name, R{}});
+                    } e {
+                        t(z);
+                    }
+                }
+            };
+            Program program;
+            E::vector<E::unique_ptr<Scope>> scopeStack;  
+            R ret;  
+            bool returnFlag = z;  
+            Interpreter(Program &&);
 
-struct RepeatAST : ControlAST
-{
-    unique_ptr<ExprAST> until;
-    unique_ptr<ControlAST> inner;
-    // use inner.process() to avoid new scope
-    ReturnState process()
-    {
-        bool flg = true;
-        while (flg)
-        {
-            ReturnState rs = inner->process();
-            if (rs.type == RBreak)
-                return {RNormal, _Nil};
-            if (rs.type == RReturn)
-                return rs;
-            flg = !until->calc().is_true_value();
-        }
-        return {RNormal, _Nil};
-    }
-};
+            void run();
+            R evaluateExpression(AST::B *);  
+            TypeName evaluateType(AST::B *);  
+            i <f OutIterator>
+            OutIterator getFunctionArguments(AST::B *, OutIterator);  
+            void runBlock(AST::BlockNode *);  
+            i <f StatementPointer>
+            void runDeclarationStatement(StatementPointer);  
+            i <f StatementPointer>
+            void runStatement(StatementPointer);  
+            void enterScope();  
+            void leaveScope();  
+            Interpreter::Scope *topScope();  
+        };
+        Interpreter::Interpreter(Program &&program): program(E::move(program)) {
+            
+            scopeStack.a(E::make_unique<Scope>());
 
-unique_ptr<ExprAST> getExpr()
-{
-    unique_ptr<ExprAST> res = create_unique<ExprAST>();
-    res->getExpr();
-    while (curToken() == Eol)
-        skipToken();
-    return res;
+            
+            topScope()->variables.insert({{"print"}, R{Object::BuiltinFunction, E::T<U>{new U{"print"}}}});
+            topScope()->variables.insert({{"println"}, R{Object::BuiltinFunction, E::T<U>{new U{"println"}}}});
+            topScope()->variables.insert({{"scan"}, R{Object::BuiltinFunction, E::T<U>{new U{"scan"}}}});
+            topScope()->variables.insert({{"set"}, R{Object::BuiltinFunction, E::T<U>{new U{"set"}}}});
+            topScope()->variables.insert({{"test_sort"}, R{Object::BuiltinFunction, E::T<U>{new U{"test_sort"}}}});
+            topScope()->variables.insert({{"yosoro"}, R{Object::BuiltinFunction, E::T<U>{new U{"yosoro"}}}});
+        }
+        
+        void Interpreter::enterScope() {
+            scopeStack.a(E::make_unique<Scope>(topScope()));
+        }
+        
+        void Interpreter::leaveScope() {
+            t(not scopeStack.empty());
+            scopeStack.pop_back();
+        }
+        
+        
+        
+        
+        i <f OutIterator>
+        OutIterator Interpreter::getFunctionArguments(AST::B *node, OutIterator out) {
+            c (node->op == AST::B::SplitComma) {
+                
+                out = getFunctionArguments(node->left, out);
+                out = getFunctionArguments(node->right, out);
+            } e {
+                c (node->op == AST::B::NoneOp) {
+                    
+                    O value_node = dynamic_cast<AST::ValueNode *>(node);
+                    
+                    
+                    c (value_node->token.tag == x::NoneTag)  A out;
+                }
+                
+                *out++ = evaluateExpression(node);
+            }
+            A out;
+        }
+        void Interpreter::run() {
+            runBlock(program.root);
+        }
+        R Interpreter::evaluateExpression(AST::B *node) {
+            c (node == nullptr)  A R{Object::None};
+            c (node->op == node->NoneOp) {
+                
+                O value_node = dynamic_cast<AST::ValueNode *>(node);
+                t(value_node);
+                c (value_node->token.tag == x::IntegerTag) {
+                    R res(R::Int);
+                    res.F = E::T<int>{new int(E::r<Tokenizer::Integer>(value_node->token.F).F)};
+                    A res;
+                } e c (value_node->token.tag == x::IdentifierTag) {
+                    O identifier = E::r<U>(value_node->token.F);
+                    A topScope()->r(identifier);
+                } e c (value_node->token.tag == x::StringTag) {
+                    A R{Object::String, E::T<E::string>{new E::string(E::r<Tokenizer::String>(value_node->token.F).F)}};
+                } e c (value_node->token.tag == x::NoneTag) {
+                    A R{};
+                } e {
+                    t(z);
+                    A R(Object::Struct);
+                }
+            } e {
+                
+                O l_son = evaluateExpression(node->left);
+                O r_son = evaluateExpression(node->right);
+#define JOIN_INT_OP(op_name, symbol) e c (node->op == AST::B::op_name) {  \
+                    c (l_son.X == R::Int and r_son.X == R::Int) {  \
+                        R res(R::Int);  \
+                        t(l_son.X == l_son.Int and r_son.X == r_son.Int); \
+                        res.F = E::make_shared<int>(*E::r<E::T<int>>(l_son.F) symbol *E::r<E::T<int>>(r_son.F));  \
+                        A res;  \
+                    } e { \
+                        R res(R::Long);  \
+                        t(l_son.X == l_son.Long and r_son.X == r_son.Long); \
+                        res.F = E::make_shared<i64>(*E::r<E::T<i64>>(l_son.F) symbol *E::r<E::T<i64>>(r_son.F));  \
+                        A res;  \
+                    } \
+                }
+                c (0) {}
+                JOIN_INT_OP(Add, +)
+                JOIN_INT_OP(Sub, -)
+                JOIN_INT_OP(Mul, *)
+                JOIN_INT_OP(Div, /)
+                JOIN_INT_OP(Mod, %)
+                JOIN_INT_OP(Less, <)
+                JOIN_INT_OP(Greater, >)
+                JOIN_INT_OP(LessEqual, <=)
+                JOIN_INT_OP(GreaterEqual, >=)
+                JOIN_INT_OP(Equal, ==)
+                JOIN_INT_OP(NotEqual, !=)
+                JOIN_INT_OP(BitShiftLeft, <<)
+                JOIN_INT_OP(BitShiftRight, >>)
+                JOIN_INT_OP(BitOr, |)
+                JOIN_INT_OP(Or, ||)
+                JOIN_INT_OP(And, &&)
+#undef JOIN_INT_OP
+                e c (node->op == AST::B::UnaryAdd) {
+                    t(l_son.X == R::Int);
+                    A l_son;
+                } e c (node->op == AST::B::UnarySub) {
+                    t(l_son.X == R::Int);
+                    A R{Object::Int, E::T<int>{new int(-*E::r<E::T<int>>(l_son.F))}};
+                } e c (node->op == AST::B::Call) {
+                    c (l_son.X == R::BuiltinFunction) {
+                        O name = *E::r<E::T<U>>(l_son.F);  
+                        c (name == "print") {
+                            c (r_son.X == R::Int) {
+                                O num = *E::r<E::T<int>>(r_son.F);
+                                io << num;
+                            } e c (r_son.X == R::String) {
+                                io << *E::r<E::T<E::string>>(r_son.F);
+                            } e {
+                                t(z);
+                            }
+                            A R{};
+                        } e c (name == "println") {
+                            t(r_son.X == R::Int);
+                            O num = *E::r<E::T<int>>(r_son.F);
+                            io << num << endl;
+                            A R{};
+                        } e c (name == "scan") {
+                            t(r_son.X == R::Int);
+                            io >> *E::r<E::T<int>>(r_son.F);
+                            A R{};
+                        } e c (name == "set") {
+                            
+                            E::vector<R> args(2);
+                            O y = getFunctionArguments(node->right, args.begin());  
+                            t(y == args.end());
+                            t(args[0].X == R::Int and args[1].X == R::Int);
+                            *E::r<E::T<int>>(args[0].F) = *E::r<E::T<int>>(args[1].F);
+                            A R{};
+                        } e c (name == "test_sort") {
+                            E::vector<R> args;
+                            getFunctionArguments(node->right, E::back_inserter(args));
+
+                            E::vector<int> nums(args.size());
+                            ranges::transform(args, nums.begin(), [](O &obj) {
+                                t(obj.X == R::Int);
+                                A *E::r<E::T<int>>(obj.F);
+                            });
+                            ranges::sort(nums, ranges::less{});
+                            for (O x: nums)  io << x << '\x20';
+                            io << endl;
+                            A R{};
+                        } e c (name == "yosoro") {
+                            t(r_son.X == R::Int);
+                            O num = *E::r<E::T<int>>(r_son.F);
+                            io << num << '\x20';
+                            A R{};
+                        } e {
+                            t(z);
+                            A R(Object::Struct);
+                        }
+                    } e {
+                        t(l_son.X == R::Function);
+                        O func = E::r<AST::n *>(l_son.F);
+                        E::vector<R> args;
+                        getFunctionArguments(node->right, E::back_inserter(args));
+                        t(args.size() == func->args.size());
+                        O size = static_cast<int>(args.size());
+                        enterScope();
+                        for (O i = 0; i < size; i++) {
+                            topScope()->declare(func->args[i]->name, evaluateType(func->args[i]->X));
+                            topScope()->r(func->args[i]->name) = args[i].copy();
+                        }
+                        runBlock(func->body);
+                        leaveScope();
+                        c (returnFlag)  A returnFlag = z, ret;
+                        e  A R{};
+                    }
+                } e c (node->op == AST::B::Assign) {
+                    t(l_son.X == R::Int and r_son.X == R::Int);
+                    *E::r<E::T<int>>(l_son.F) = *E::r<E::T<int>>(r_son.F);
+                    A l_son;
+                } e c (node->op == AST::B::SplitComma) {
+                    A R{};
+                } e c (node->op == AST::B::Subscript) {
+                    t(l_son.X == R::Array and r_son.X == R::Int);
+                    O &array = *E::r<E::T<ArrayObjectValue>>(l_son.F);
+                    A array[*E::r<E::T<int>>(r_son.F)];
+                } e {
+                    t(z);
+                    A R(Object::Struct);
+                }
+            }
+        }
+        TypeName Interpreter::evaluateType(AST::B *node) {
+            c (node == nullptr)  A {TypeName::Undefined};
+            c (node->op == AST::B::NoneOp) {
+                O value_node = dynamic_cast<AST::ValueNode *>(node);
+                c (value_node->token.tag == x::IdentifierTag) {
+                    b O &name = E::r<U>(value_node->token.F);
+                    c (name == "int") {
+                        A {TypeName::Int};
+                    } e c (name == "long") {
+                        A {TypeName::Long};
+                    } e c (name == "array") {
+                        A {TypeName::Array};
+                    }
+                }
+            }
+            e {
+                c (node->op == AST::B::Subscript) {
+                    
+                    t(node->right->op == AST::B::SplitComma);
+                    O value_type = evaluateType(node->right->left);
+                    O range_node = node->right->right;
+                    O min_node = evaluateExpression(range_node->left), max_node = evaluateExpression(range_node->right);
+                    t(min_node.X == R::Int and max_node.X == R::Int);
+                    O min = *E::r<E::T<int>>(min_node.F);
+                    O max = *E::r<E::T<int>>(max_node.F);
+                    A TypeName{TypeName::Array, E::T<ArrayMeta>{
+                            new ArrayMeta{E::T<TypeName>{new TypeName{value_type}}, min, max
+                        }}};
+                }
+            }
+            t(z);
+            A {};
+        }
+        i <f StatementPointer>
+        void Interpreter::runDeclarationStatement(StatementPointer node) {
+            O variable_declare_statement = node;
+            O type_node = variable_declare_statement->X;
+
+            O X = evaluateType(type_node);
+            O variable_name = variable_declare_statement->name;
+            topScope()->declare(variable_name, X);
+        }
+        
+        void Interpreter::runBlock(AST::BlockNode *block) {
+            enterScope();
+            for (O &x: block->statements) {
+                runStatement(x);
+                c (returnFlag)  A leaveScope(), void();
+            }
+            leaveScope();
+        }
+        i <f StatementPointer>
+        void Interpreter::runStatement(StatementPointer x) {
+            c (x->X == AST::Z::ExpressionEvaluateStatement) {
+                O expression_evaluate_statement = dynamic_cast<AST::ExpressionEvaluateStatementNode *>(x);
+                evaluateExpression(expression_evaluate_statement->expr);
+            } e c (x->X == AST::Z::VariableDeclareStatement) {
+                runDeclarationStatement(dynamic_cast<AST::s *>(x));
+            } e c (x->X == AST::Z::RunBlockStatement) {
+                O run_block_statement = dynamic_cast<AST::RunBlockStatementNode *>(x);
+                runBlock(run_block_statement->block);
+                c (returnFlag)  A;
+            } e c (x->X == AST::Z::IfStatement) {
+                O if_statement = dynamic_cast<AST::IfStatementNode *>(x);
+                O condition = evaluateExpression(if_statement->condition);
+                t(condition.X == R::Int);
+                c (*E::r<E::T<int>>(condition.F) != 0) {
+                    runBlock(if_statement->body);
+                } e c (if_statement->elseBody != nullptr) {
+                    runBlock(if_statement->elseBody);
+                }
+            } e c (x->X == AST::Z::ForStatement) {
+                O for_statement = dynamic_cast<AST::ForStatementNode *>(x);
+                runStatement(for_statement->init);
+                c (returnFlag)  A;
+                while (true) {
+                    O condition = evaluateExpression(for_statement->condition);
+                    t(condition.X == R::Int);
+                    c (*E::r<E::T<int>>(condition.F) == 0)  break;
+                    runBlock(for_statement->body);
+                    c (returnFlag)  A;
+                    evaluateExpression(for_statement->step);
+                }
+            } e c (x->X == AST::Z::FunctionDefinitionStatement) {
+                O function_definition_statement = dynamic_cast<AST::n *>(x);
+                
+                topScope()->declare(function_definition_statement->name, TypeName{TypeName::Function});
+                topScope()->r(function_definition_statement->name).F = function_definition_statement;
+            } e c (x->X == AST::Z::ReturnStatement) {
+                
+                O return_statement = dynamic_cast<AST::ReturnStatementNode *>(x);
+                ret = evaluateExpression(return_statement->expr);
+                returnFlag = true;
+            } e {
+                t(z);
+            }
+        }
+        Interpreter::Scope *Interpreter::topScope() {
+            A scopeStack.back().r();
+        }
+    }
+    void test() {
+        O tokens = Tokenizer{}.tokenize(io);
+        E::map<U, int> cnt;
+        for (O x: tokens) {
+            c (x.tag == x.IdentifierTag) {
+                O id = E::r<U>(x.F);
+                cnt[id] += identifierMap.getString(id.name).size();
+            }
+        }
+        E::vector<E::pair<int, E::string>> ans;
+        for (O [key, val]: cnt) {
+            ans.a({val, identifierMap.getString(key.name)});
+        }
+        ranges::sort(ans, ranges::greater{});
+        for (O [x, y]: ans) {
+            E::cout << x << ' ' << y << E::endl;
+        }
+        O letters = ranges::to<E::vector<char>>(
+            ((ranges::to<E::string>(views::iota('A', 'Z'+1))) + (ranges::to<E::string>(views::iota('a', 'z'+1))))
+                | views::filter([](char ch) {
+                    E::string str{ch};
+                    A identifierMap.containsString(str); })
+        );
+        O lis = ans | views::take(letters.size());
+
+        for (O [x, y]: views::zip(lis, letters)) {
+            E::cout << E::format("#define {} {}", y, x.second) << E::endl;
+        }
+    }
+    void solve() {
+        test();
+        A;
+        E::string code = R"raw(var n: int;
+var m: int;
+scan(n);
+scan(m);
+
+var i: int;
+var init: array[int, 1..n];
+for (i = 1; i <= n; i = i + 1) {
+    scan(init[i]);
 }
 
-unique_ptr<ControlAST> getBlock();
+var size: int;
+size = n << 2;
+var begin: array[int, 1..size];
+var end: array[int, 1..size];
+var sum: array[int, 1..size];
+var tag: array[int, 1..size];
 
-unique_ptr<ControlAST> getStmt()
-{
-    if (curToken() == Do)
-    {
-        skipToken(); // do
-        auto res = getBlock();
-        skipToken(); // end
-        return res;
-    }
-    if (curToken() == If)
-    {
-        auto res = create_unique<IfAST>();
-        bool first = true;
-        while ((first && curToken() == If) || (!first && curToken() == Elseif))
-        {
-            skipToken();
-            auto ques = getExpr();
-            skipToken(); // then
-            auto blk = getBlock();
-            res->if_conds.emplace_back(move(ques), move(blk));
-            first = false;
-        }
-        if (curToken() == Else)
-            skipToken(), res->else_cond = getBlock();
-        skipToken(); // end
-        return res;
-    }
-    if (curToken() == For)
-    {
-        skipToken(); // for
-        u32 identi = curToken().id;
-        skipToken(); // [id]
-        if (curToken() == In)
-        {
-            auto res = create_unique<ForInAST>();
-            res->identi = identi;
-            skipToken(); // in
-            res->ipair = !strcmp(id_hash[curToken().id], "ipairs");
-            skipToken();
-            skipToken(); // (
-            res->table = getExpr();
-            skipToken(); // )
-            skipToken(); // do
-            res->inner = getBlock();
-            skipToken(); // end
-            return res;
-        }
-        else
-        {
-            auto res = create_unique<ForAST>();
-            res->identi = identi;
-            skipToken(); // =
-            res->start = getExpr();
-            skipToken(); // ,
-            res->end = getExpr();
-            if (curToken() == COMMA)
-                skipToken(), res->step = getExpr();
-            skipToken(); // do
-            res->inner = getBlock();
-            skipToken(); // end
-            return res;
-        }
-    }
-    if (curToken() == While)
-    {
-        auto res = create_unique<WhileAST>();
-        skipToken(); // while
-        res->expr = getExpr();
-        skipToken(); // do
-        res->inner = getBlock();
-        skipToken(); // end
-        return res;
-    }
-    if (curToken() == Repeat)
-    {
-        auto res = create_unique<RepeatAST>();
-        skipToken(); // repeat
-        res->inner = getBlock();
-        skipToken(); // until
-        res->until = getExpr();
-        return res;
-    }
-    if (curToken() == Function)
-    {
-        skipToken(); // function
-        auto res = create_shared<FuncAST>();
-        u32 name = curToken().id;
-        vector<u32> argv;
-        skipToken(); // name
-        skipToken(); // (
-        bool first = true;
-        while (curToken() != RPAREN)
-        {
-            if (!first)
-                skipToken(); // ,
-            first = false;
-            argv.push_back(curToken().id);
-            skipToken();
-        }
-        res->names = argv;
-        skipToken(); // )
-        res->inner = getBlock();
-        Memory::globalScope[name] = register_function(res);
-        skipToken(); // end
-        return nullptr;
-    }
-    if (curToken() == Local)
-    {
-        auto res = create_unique<LocalAssignAST>();
-        skipToken(); // local
-        res->lhs = curToken().id;
-        skipToken();
-        if (curToken() == ASSIGN)
-        {
-            skipToken(); // =
-            res->rhs = getExpr();
-        }
-        return res;
-    }
-    auto res = create_unique<ExprWrapAST>();
-    (res->inner).getExpr();
-    return res;
+def pushUp(p: int) {
+    sum[p] = sum[p << 1] + sum[p << 1 | 1];
 }
 
-bool blockEnd()
-{
-    return (curToken() == Until || curToken() == End || curToken() == Eof || curToken() == Elseif ||
-            curToken() == Else);
-}
-
-unique_ptr<ControlAST> getBlock()
-{
-    auto res = create_unique<BlockAST>();
-    res->ret = RNormal;
-    while (1)
-    {
-        if (curToken() == Eol)
-        {
-            skipToken();
-            continue;
-        }
-        if (curToken() == Break)
-        {
-            res->ret = RBreak;
-            skipToken();
-            break;
-        }
-        if (curToken() == Return)
-        {
-            res->ret = RReturn;
-            skipToken();
-            if (!blockEnd())
-                res->retExpr = getExpr();
-            break;
-        }
-        if (blockEnd())
-            break;
-        auto nxt = getStmt();
-        if (nxt != nullptr)
-            res->stmts.push_back(move(nxt));
-    }
-    return res;
-}
-
-const double PI = acos(-1.0);
-
-void init_module()
-{
-#define reg_simple(E, V) E = register_syscall([](vector<Value> args) -> Value { return V; });
-    Value &mVal = Memory::getMem(insert_id("math"));
-    mVal = create_shared<map<Value, Value>>();
-    reg_simple((*mVal.table)["abs"], args[0].is_num() ? Value(abs(args[0].num)) : _Nil)
-        reg_simple((*mVal.table)["floor"], args[0].is_num() ? Value(floor(args[0].num)) : _Nil)
-            reg_simple((*mVal.table)["ceil"], args[0].is_num() ? Value(ceil(args[0].num)) : _Nil)
-                reg_simple((*mVal.table)["sqrt"], args[0].is_num() ? Value(sqrt(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["exp"], args[0].is_num() ? Value(exp(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["log"], args[0].is_num() ? Value(log(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["log10"], args[0].is_num() ? Value(log10(args[0].num)) : _Nil);
-    (*mVal.table)["pi"] = PI;
-    reg_simple((*mVal.table)["rad"], args[0].is_num() ? Value(args[0].num / 180 * PI) : _Nil);
-    reg_simple((*mVal.table)["deg"], args[0].is_num() ? Value(args[0].num * 180 / PI) : _Nil);
-    reg_simple((*mVal.table)["acos"], args[0].is_num() ? Value(acos(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["asin"], args[0].is_num() ? Value(asin(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["atan"], args[0].is_num() ? Value(atan(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["atan2"],
-               args[0].is_num() && args[1].is_num() ? Value(atan2(args[0].num, args[1].num)) : _Nil);
-    reg_simple((*mVal.table)["cos"], args[0].is_num() ? Value(cos(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["sin"], args[0].is_num() ? Value(sin(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["tan"], args[0].is_num() ? Value(tan(args[0].num)) : _Nil);
-    reg_simple((*mVal.table)["min"], (args[0] < args[1] ? args[0] : args[1]));
-    reg_simple((*mVal.table)["max"], (args[0] < args[1] ? args[1] : args[0]));
-    reg_simple(Memory::getMem(insert_id("print")), (puts(args[0].to_str().c_str()), _Nil));
-    reg_simple(Memory::getMem(insert_id("tonumber")), args[0].to_num());
-    reg_simple(Memory::getMem(insert_id("tostring")), args[0].to_str());
-    Value &sVal = Memory::getMem(insert_id("string"));
-    sVal = create_shared<map<Value, Value>>();
-    (*sVal.table)["rep"] = register_syscall([](vector<Value> args) -> Value {
-        if (!args[0].is_str() || !args[1].is_num())
-            return _Nil;
-        string res = "";
-        for (double i = 1; i <= args[1].num; i++)
-            res += args[0].str;
-        return res;
-    });
-    (*sVal.table)["sub"] = register_syscall([](vector<Value> args) -> Value {
-        if (!args[0].is_str() || !args[1].is_num())
-            return _Nil;
-        string b = args[0].str;
-        int i = args[1].num;
-        int j = -1;
-        if (args.size() == 3)
-        {
-            if (args[2].is_num())
-                j = args[2].num;
-            else
-                return _Nil;
-        }
-        if (i <= 0)
-            i = b.size() + 1 + i;
-        if (j <= 0)
-            j = b.size() + 1 + j;
-        return b.substr(i - 1, j - i + 1);
-    });
-    Value &tVal = Memory::getMem(insert_id("table"));
-    tVal = create_shared<map<Value, Value>>();
-    (*tVal.table)["concat"] = register_syscall([](vector<Value> args) -> Value {
-        if (!args[0].is_table())
-            return _Nil;
-        string sep = "", res = "";
-        if (args.size() == 2 && args[1].is_str())
-            sep = args[1].str;
-        double n = args[0].table_len();
-        for (double i = 1; i <= n; i++)
-            res += (i == 1 ? "" : sep) + (*args[0].table)[i].to_str();
-        return res;
-    });
-    (*tVal.table)["sort"] = register_syscall([](vector<Value> args) -> Value {
-        if (!args[0].is_table())
-            return _Nil;
-        double n = args[0].table_len();
-        vector<Value> vec;
-        for (double i = 1; i <= n; i++)
-            vec.push_back((*args[0].table)[i]);
-        if (args.size() == 2 && args[1].is_func())
-            sort(vec.begin(), vec.end(), [&](const Value &a, const Value &b) {
-                return regFuncs[args[1].func_id].call({a, b}).is_true_value();
-            });
-        else
-            sort(vec.begin(), vec.end());
-        for (double i = 1; i <= n; i++)
-            ((*args[0].table))[i] = vec[i - 1];
-        return _Nil;
-    });
-}
-
-void clear()
-{
-    data_ptr = str_data;
-    for (auto ele : used_hash_index)
-        delete id_hash[ele], id_hash[ele] = nullptr;
-    used_hash_index.clear();
-    for (u32 i = 1; i <= function_cnt; i++)
-        regFuncs[i] = FuncInfo();
-    function_cnt = 0;
-    Memory::init();
-}
-
-void run()
-{
-    reader = Reader();
-    skipToken();
-    u32 program_count = 0;
-    while (!reader.eof())
-    {
-        init_module();
-        skipToken();
-        printf("Program %u:\n", ++program_count);
-        unique_ptr<ControlAST> root = getBlock();
-        root->run();
-        puts("");
+def pushDown(p: int) {
+    c (tag[p]) {
+        sum[p << 1] = sum[p << 1] + (end[p << 1] - begin[p << 1]) * tag[p];
+        sum[p << 1 | 1] = sum[p << 1 | 1] + (end[p << 1 | 1] - begin[p << 1 | 1]) * tag[p];
+        tag[p << 1] = tag[p << 1] + tag[p];
+        tag[p << 1 | 1] = tag[p << 1 | 1] + tag[p];
+        tag[p] = 0;
     }
 }
 
-} // namespace Process
+def build(bg: int, ed: int, p: int) {
+    begin[p] = bg;
+    end[p] = ed;
+    c (bg + 1 == ed) {
+        sum[p] = init[bg];
+        A;
+    } e {
+        var mid: int;
+        mid = (bg + ed) >> 1;
+        build(bg, mid, p << 1);
+        build(mid, ed, p << 1 | 1);
+    }
+}
 
-int main()
-{
-    freopen("Stage3.in", "r", stdin);
-    freopen("Stage3.out", "w", stdout);
-    Process::run();
-    return 0;
+def query(bg: int, ed: int, p: int) {
+    c (begin[p] >= bg && end[p] <= ed) {
+        A sum[p];
+    }
+    pushDown(p);
+    var res: int;
+    res = 0;
+    c (end[p << 1] > bg) { res = res + query(bg, ed, p << 1); }
+    c (begin[p << 1 | 1] < ed) { res = res + query(bg, ed, p << 1 | 1); }
+    A res;
+}
+
+def update(bg: int, ed: int, val: int, p: int) {
+    c (begin[p] >= bg && end[p] <= ed) {
+        sum[p] = sum[p] + val * (end[p] - begin[p]);
+        tag[p] = tag[p] + val;
+        A;
+    }
+    pushDown(p);
+    c (end[p << 1] > bg) { update(bg, ed, val, p << 1); }
+    c (begin[p << 1 | 1] < ed) { update(bg, ed, val, p << 1 | 1); }
+    pushUp(p);
+}
+
+build(1, n+1, 1);
+
+for (i = 0; i < m; i = i + 1) {
+    var op: int;
+    var x: int;
+    var y: int;
+    scan(op);
+    scan(x);
+    scan(y);
+    c (op == 1) {
+        var k: int;
+        scan(k);
+        update(x, y+1, k, 1);
+    } e {
+        print(query(x, y+1, 1));
+        print("\n");
+    }
+}
+)raw";
+        StringScanner scan(code);
+        O tokens = Tokenizer{}.tokenize(scan);
+        O ast = AST::BlockNode::parse(tokens).node;
+        O interpreter = Interpreter::Interpreter(Program{ast, IdentifierMap{}});
+        interpreter.run();
+    }
+}
+
+int main(int argc, char b *argv[]) {
+    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
+    GenshinLang::solve();
+    A 0;
 }

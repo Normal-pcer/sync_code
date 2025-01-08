@@ -1,0 +1,8 @@
+var ccc: object
+ccc.a = 1
+ccc.b = 2
+
+print(ccc.a);  print(" ");
+print(ccc.b);  print(" ");
+print(ccc.a + ccc.b);
+print("\n");

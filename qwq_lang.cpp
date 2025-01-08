@@ -4,11 +4,13 @@
 
 #include "./libs/debug_macros.hpp"
 
+
 // #pragma GCC optimize("Ofast")
 // #pragma GCC optimize("inline")
 // #pragma GCC optimize(3)
 
 #include "./lib_v3.hpp"
+
 
 using namespace lib;
 
@@ -16,7 +18,7 @@ namespace IO {
 #ifdef __linux__
 #include <sys/stat.h>
 #include <sys/mman.h>
-#define IO_ENABLE_MMAP
+// #define IO_ENABLE_MMAP
 #endif  // def __linux__
 #if __cplusplus < 202002L
 #define requires(...)
@@ -431,7 +433,7 @@ namespace GenshinLang {
     };
     namespace Keywords {
         enum KeywordType: int {
-            None, If, While, For, Var, Def
+            None, If, While, For, Var, Def, Return, Else
         };
         void joinKeywords(IdentifierMap &idMap) {
             idMap.join(If, "if");
@@ -439,6 +441,8 @@ namespace GenshinLang {
             idMap.join(For, "for");
             idMap.join(Var, "var");
             idMap.join(Def, "def");
+            idMap.join(Return, "return");
+            idMap.join(Else, "else");
         }
     }
     IdentifierMap::IdentifierMap(): mappingStringToIndex(), mappingIndexToString() {
@@ -906,7 +910,8 @@ namespace GenshinLang {
                 IfStatement,
                 WhileStatement,
                 ForStatement,
-                FunctionDefinitionStatement
+                FunctionDefinitionStatement,
+                ReturnStatement,
             } type = NoneStatement;
             StatementNode(Type type = NoneStatement): type(type) {}
             virtual ~StatementNode() = default;
@@ -964,8 +969,9 @@ namespace GenshinLang {
                 Assign,  // 赋值
                 // 其他
                 Range,  // 范围（..）运算符
+                MemberAccess,  // 成员访问运算符（.）
             } op = NoneOp;
-            static constexpr const char *opNames[] = {"NoneOp", "Bracket", "Call", "FunctionArgsBracket", "Subscript", "SubscriptBracket", "SplitComma", "UnaryAdd", "UnarySub", "Add", "Sub", "Mul", "Div", "Mod", "Less", "LessEqual", "Greater", "GreaterEqual", "Equal", "NotEqual", "And", "Or", "Not", "BitAnd", "BitOr", "BitXor", "BitNot", "BitShiftLeft", "BitShiftRight", "Assign", "Range"};
+            static constexpr const char *opNames[] = {"NoneOp", "Bracket", "Call", "FunctionArgsBracket", "Subscript", "SubscriptBracket", "SplitComma", "UnaryAdd", "UnarySub", "Add", "Sub", "Mul", "Div", "Mod", "Less", "LessEqual", "Greater", "GreaterEqual", "Equal", "NotEqual", "And", "Or", "Not", "BitAnd", "BitOr", "BitXor", "BitNot", "BitShiftLeft", "BitShiftRight", "Assign", "Range", "MemberAccess"};
             // 操作数；特别地，单目运算符只有 left
             ExpressionNode *left = nullptr, *right = nullptr;
             ExpressionNode(Operator op = NoneOp): op(op) {}
@@ -1004,6 +1010,7 @@ namespace GenshinLang {
                 case BitShiftLeft:  return {7, false};
                 case BitShiftRight:  return {7, false};
                 case Assign:  return {16, true};
+                case MemberAccess:  return {2, false};
                 case Range:  return {14, false};
                 default:  return {OperatorInfo::priority_max, false};
                 }
@@ -1078,7 +1085,11 @@ namespace GenshinLang {
             static ParseResult<Out> parse(const T &);
         };
         struct IfStatementNode: public ConditionalStatementNode {
+            BlockNode *elseBody = nullptr;  // 不满足时执行
             IfStatementNode(): ConditionalStatementNode(StatementNode::IfStatement) {}
+            ~IfStatementNode() {
+                delete elseBody;
+            }
 
             template <typename T>
             static ParseResult<IfStatementNode> parse(const T &src) {
@@ -1124,6 +1135,32 @@ namespace GenshinLang {
             template <typename T>
             static ParseResult<FunctionDefinitionStatementNode> parse(const T &);
         };
+        struct ReturnStatementNode: public StatementNode {
+            ExpressionNode *expr = nullptr;
+            ReturnStatementNode(): StatementNode(StatementNode::ReturnStatement) {}
+            ~ReturnStatementNode() {
+                delete expr;
+            }
+            template <typename T>
+            static ParseResult<ReturnStatementNode> parse(const T &);
+        };
+        /**
+         * 解析一个返回语句
+         * return expr;
+         *       ^ src.begin();
+         */
+        template <typename T>
+        ParseResult<ReturnStatementNode> ReturnStatementNode::parse(const T &src) {
+            auto res = new ReturnStatementNode;
+            auto it = src.begin();
+            // 读取一个表达式
+            if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ";")  return {res, ++it};
+            if (it->tag == Token::EndOfLineTag)  return {res, it};
+            auto [expr, end] = ExpressionNode::parse(TokensSubrange{it, src.end()});
+            res->expr = expr;
+            it = end;
+            return {res, it};
+        }
         template <typename T>
         ParseResult<VariableDeclareStatementNode> VariableDeclareStatementNode::parse(const T &src) {
             // 解析一行变量定义语句
@@ -1168,6 +1205,12 @@ namespace GenshinLang {
                     // 接下来，读取一个 if，作为当前类的一个语句
                     auto [if_statement, next] = IfStatementNode::parse(TokensSubrange{++it, src.end()});
                     res->statements.push_back(if_statement), it = next;
+                    // 尝试读取一个 else 块
+                    if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Else) {
+                        it++, assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{");
+                        auto [else_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
+                        if_statement->elseBody = else_block, it = next;
+                    }
                     continue;
                 }
                 // while 语句
@@ -1217,6 +1260,12 @@ namespace GenshinLang {
                     res->statements.push_back(def), it = next;
                     continue;
                 }
+                // return 语句
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Return) {
+                    auto [ret, next] = ReturnStatementNode::parse(TokensSubrange{++it, src.end()});
+                    res->statements.push_back(ret), it = next;
+                    continue;
+                }
                 // 表达式求值
                 auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()});
                 res->statements.push_back(new ExpressionEvaluateStatementNode{expr});
@@ -1247,8 +1296,17 @@ namespace GenshinLang {
                     TokensSubrange{it, src.end()},
                     [](auto const &op, auto const &ops_stack) -> bool {
                         // 花括号结束
-                        if (op == "{" and (ops_stack.empty() or ops_stack.back().op == ExpressionNode::NoneOp)) {
-                            return true;
+                        if (op == "{") {
+                            bool flag = true;
+                            for (auto x: ops_stack) {
+                                if (x.op == ExpressionNode::Bracket) {
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                            if (flag) {
+                                return true;
+                            }
                         }
                         return false;
                     }
@@ -1451,6 +1509,7 @@ namespace GenshinLang {
                         JOIN_BINARY_OP(BitShiftLeft, "<<")
                         JOIN_BINARY_OP(BitShiftRight, ">>")
                         JOIN_BINARY_OP(Assign, "=")
+                        JOIN_BINARY_OP(MemberAccess, ".")
                         JOIN_BINARY_OP(Range, "..")
 #undef JOIN_BINARY_OP
                         else if (op == "!") {
@@ -1557,6 +1616,7 @@ namespace GenshinLang {
                     break;
                 }
                 auto arg = new VariableDeclareStatementNode;
+                arg->type = nullptr;
                 // 读取标识符
                 assert(it->tag == Token::IdentifierTag);
                 arg->name = std::get<Identifier>(it->value), it++;
@@ -1622,7 +1682,7 @@ namespace GenshinLang {
         struct ArrayObjectValue;
         struct Object {
             enum Type {
-                Struct, Int, Function, String, None, Array, BuiltinFunction
+                Struct, Int, Function, String, None, Array, BuiltinFunction, Long
             } type;
             std::variant<
                 std::nullptr_t, 
@@ -1631,16 +1691,28 @@ namespace GenshinLang {
                 std::shared_ptr<std::string>, 
                 std::shared_ptr<Identifier>,
                 std::shared_ptr<ArrayObjectValue>,
-                AST::FunctionDefinitionStatementNode *
+                AST::FunctionDefinitionStatementNode *,
+                std::shared_ptr<i64>
             > value;
             Object(Type type = None): type(type), value(nullptr) {}
             template <typename T>
             Object(Type type, const T &value): type(type), value(value) {}
+
+            Object copy() {
+                if (type == Int) {
+                    return Object{Int, std::make_shared<int>(*std::get<std::shared_ptr<int>>(value))};
+                } else if (type == Long) {
+                    return Object{Long, std::make_shared<i64>(*std::get<std::shared_ptr<i64>>(value))};
+                } else {
+                    assert(false), __builtin_unreachable();
+                    return Object{};
+                }
+            }
         };
         struct ArrayMeta;
         struct TypeName {
             enum Type {
-                Undefined, Int, Array, Function
+                Undefined, Int, Array, Function, Long, Struct
             } type;
             std::variant<std::nullptr_t, std::shared_ptr<ArrayMeta>> meta;
             TypeName(Type type = Undefined): type(type), meta(nullptr) {}
@@ -1721,12 +1793,18 @@ namespace GenshinLang {
                 void declare(Identifier name, TypeName type) {
                     assert(not variables.contains(name));  // 重复声明
                     if (type.type == type.Int) {
-                        variables.insert({name, Object(Object::Int, std::shared_ptr<int>{new int(0)})});
+                        variables.insert({name, Object(Object::Int, std::make_shared<int>(0))});
+                    } else if (type.type == type.Long) {
+                        variables.insert({name, Object(Object::Long, std::make_shared<i64>(0))});
                     } else if (type.type == type.Array) {
                         auto value = std::shared_ptr<ArrayObjectValue>{new ArrayObjectValue{std::shared_ptr<TypeName>{new TypeName{type}}}};
                         variables.insert({name, Object(Object::Array, value)});
                     } else if (type.type == type.Function) {
                         variables.insert({name, Object{Object::Function}});
+                    } else if (type.type == TypeName::Undefined) {
+                        variables.insert({name, Object{}});
+                    } else if (type.type == TypeName::Struct) {
+                        variables.insert({name, Object{Object::Struct, std::make_shared<std::map<Identifier, Object>>()}});
                     } else {
                         assert(false);
                     }
@@ -1734,10 +1812,13 @@ namespace GenshinLang {
             };
             Program program;
             std::vector<std::unique_ptr<Scope>> scopeStack;  // 作用域栈
+            Object ret;  // 上一次的返回值
+            bool returnFlag = false;  // 正在执行 return
             Interpreter(Program &&);
 
             void run();
             Object evaluateExpression(AST::ExpressionNode *);  // 计算表达式
+            Object *evaluateLeftValueExpression(AST::ExpressionNode *);  // 计算左值表达式
             TypeName evaluateType(AST::ExpressionNode *);  // 推导类型
             template <typename OutIterator>
             OutIterator getFunctionArguments(AST::ExpressionNode *, OutIterator);  // 提取函数参数
@@ -1748,22 +1829,23 @@ namespace GenshinLang {
             void runStatement(StatementPointer);  // 执行语句
             void enterScope();  // 创建新的作用域
             void leaveScope();  // 离开当前作用域
+            Interpreter::Scope *topScope();  // 获取当前作用域
         };
         Interpreter::Interpreter(Program &&program): program(std::move(program)) {
             // 创建全局作用域
             scopeStack.push_back(std::make_unique<Scope>());
 
             // 注册内置函数
-            scopeStack.back()->variables.insert({{"print"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"print"}}}});
-            scopeStack.back()->variables.insert({{"println"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"println"}}}});
-            scopeStack.back()->variables.insert({{"scan"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"scan"}}}});
-            scopeStack.back()->variables.insert({{"set"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"set"}}}});
-            scopeStack.back()->variables.insert({{"test_sort"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"test_sort"}}}});
-            scopeStack.back()->variables.insert({{"yosoro"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"yosoro"}}}});
+            topScope()->variables.insert({{"print"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"print"}}}});
+            topScope()->variables.insert({{"println"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"println"}}}});
+            topScope()->variables.insert({{"scan"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"scan"}}}});
+            topScope()->variables.insert({{"set"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"set"}}}});
+            topScope()->variables.insert({{"test_sort"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"test_sort"}}}});
+            topScope()->variables.insert({{"yosoro"}, Object{Object::BuiltinFunction, std::shared_ptr<Identifier>{new Identifier{"yosoro"}}}});
         }
         // 进入新的作用域
         void Interpreter::enterScope() {
-            scopeStack.push_back(std::make_unique<Scope>(scopeStack.back().get()));
+            scopeStack.push_back(std::make_unique<Scope>(topScope()));
         }
         // 离开当前作用域
         void Interpreter::leaveScope() {
@@ -1796,6 +1878,37 @@ namespace GenshinLang {
         void Interpreter::run() {
             runBlock(program.root);
         }
+        Object *Interpreter::evaluateLeftValueExpression(AST::ExpressionNode *node) {
+            if (node == nullptr)  return nullptr;
+            if (node->op == node->NoneOp) {
+                // 叶子节点
+                auto value_node = dynamic_cast<AST::ValueNode *>(node);
+                if (value_node->token.tag == Token::IdentifierTag) {
+                    auto identifier = std::get<Identifier>(value_node->token.value);
+                    return &topScope()->get(identifier);
+                } else {
+                    return nullptr;
+                }
+            } else if (node->op == node->MemberAccess) {
+                auto base = evaluateExpression(node->left);
+                assert(node->right->op == AST::ExpressionNode::NoneOp);
+                auto *value_node_right = dynamic_cast<AST::ValueNode *>(node->right);
+                assert(value_node_right->token.tag == Token::IdentifierTag);
+                auto name = std::get<Identifier>(value_node_right->token.value);
+                assert(base.type == Object::Struct);
+                auto members = std::get<std::shared_ptr<std::map<Identifier, Object>>>(base.value);
+
+                return &(*members)[name];
+            } else if (node->op == node->Subscript) {
+                auto l_son = evaluateLeftValueExpression(node->left);
+                auto r_son = evaluateExpression(node->right);
+                assert(l_son->type == Object::Array and r_son.type == Object::Int);
+                auto &array = *std::get<std::shared_ptr<ArrayObjectValue>>(l_son->value);
+                return &array[*std::get<std::shared_ptr<int>>(r_son.value)];
+            } else {
+                return nullptr;
+            }
+        }
         Object Interpreter::evaluateExpression(AST::ExpressionNode *node) {
             if (node == nullptr)  return Object{Object::None};
             if (node->op == node->NoneOp) {
@@ -1808,7 +1921,7 @@ namespace GenshinLang {
                     return res;
                 } else if (value_node->token.tag == Token::IdentifierTag) {
                     auto identifier = std::get<Identifier>(value_node->token.value);
-                    return scopeStack.back()->get(identifier);
+                    return topScope()->get(identifier);
                 } else if (value_node->token.tag == Token::StringTag) {
                     return Object{Object::String, std::shared_ptr<std::string>{new std::string(std::get<Tokenizer::String>(value_node->token.value).value)}};
                 } else if (value_node->token.tag == Token::NoneTag) {
@@ -1817,15 +1930,33 @@ namespace GenshinLang {
                     assert(false);
                     return Object(Object::Struct);
                 }
+            } else if (node->op == node->MemberAccess) {
+                return *evaluateLeftValueExpression(node);
+            } else if (node->op == AST::ExpressionNode::Subscript) {
+                return *evaluateLeftValueExpression(node);
+            } else if (node->op == AST::ExpressionNode::Assign) {
+                auto l_son_ptr = evaluateLeftValueExpression(node->left);
+                assert(l_son_ptr != nullptr);
+                auto &l_son = *l_son_ptr;
+                auto r_son = evaluateExpression(node->right);
+                l_son = r_son.copy();
+                return l_son;
             } else {
                 // 运算符节点
                 auto l_son = evaluateExpression(node->left);
                 auto r_son = evaluateExpression(node->right);
 #define JOIN_INT_OP(op_name, symbol) else if (node->op == AST::ExpressionNode::op_name) {  \
-                    assert(l_son.type == Object::Int and r_son.type == Object::Int);  \
-                    Object res(Object::Int);  \
-                    res.value = std::shared_ptr<int>{new int(*std::get<std::shared_ptr<int>>(l_son.value) symbol *std::get<std::shared_ptr<int>>(r_son.value))};  \
-                    return res;  \
+                    if (l_son.type == Object::Int and r_son.type == Object::Int) {  \
+                        Object res(Object::Int);  \
+                        assert(l_son.type == l_son.Int and r_son.type == r_son.Int); \
+                        res.value = std::make_shared<int>(*std::get<std::shared_ptr<int>>(l_son.value) symbol *std::get<std::shared_ptr<int>>(r_son.value));  \
+                        return res;  \
+                    } else { \
+                        Object res(Object::Long);  \
+                        assert(l_son.type == l_son.Long and r_son.type == r_son.Long); \
+                        res.value = std::make_shared<i64>(*std::get<std::shared_ptr<i64>>(l_son.value) symbol *std::get<std::shared_ptr<i64>>(r_son.value));  \
+                        return res;  \
+                    } \
                 }
                 if (0) {}
                 JOIN_INT_OP(Add, +)
@@ -1839,6 +1970,11 @@ namespace GenshinLang {
                 JOIN_INT_OP(GreaterEqual, >=)
                 JOIN_INT_OP(Equal, ==)
                 JOIN_INT_OP(NotEqual, !=)
+                JOIN_INT_OP(BitShiftLeft, <<)
+                JOIN_INT_OP(BitShiftRight, >>)
+                JOIN_INT_OP(BitOr, |)
+                JOIN_INT_OP(Or, ||)
+                JOIN_INT_OP(And, &&)
 #undef JOIN_INT_OP
                 else if (node->op == AST::ExpressionNode::UnaryAdd) {
                     assert(l_son.type == Object::Int);
@@ -1907,24 +2043,16 @@ namespace GenshinLang {
                         auto size = static_cast<int>(args.size());
                         enterScope();
                         for (auto i = 0; i < size; i++) {
-                            scopeStack.back()->declare(func->args[i]->name, evaluateType(func->args[i]->type));
-                            scopeStack.back()->get(func->args[i]->name) = args[i];
+                            topScope()->declare(func->args[i]->name, evaluateType(func->args[i]->type));
+                            topScope()->get(func->args[i]->name) = args[i].copy();
                         }
                         runBlock(func->body);
                         leaveScope();
-                        return Object{};
+                        if (returnFlag)  return returnFlag = false, ret;
+                        else  return Object{};
                     }
-                    
-                } else if (node->op == AST::ExpressionNode::Assign) {
-                    assert(l_son.type == Object::Int and r_son.type == Object::Int);
-                    *std::get<std::shared_ptr<int>>(l_son.value) = *std::get<std::shared_ptr<int>>(r_son.value);
-                    return l_son;
                 } else if (node->op == AST::ExpressionNode::SplitComma) {
                     return Object{};
-                } else if (node->op == AST::ExpressionNode::Subscript) {
-                    assert(l_son.type == Object::Array and r_son.type == Object::Int);
-                    auto &array = *std::get<std::shared_ptr<ArrayObjectValue>>(l_son.value);
-                    return array[*std::get<std::shared_ptr<int>>(r_son.value)];
                 } else {
                     assert(false);
                     return Object(Object::Struct);
@@ -1932,14 +2060,19 @@ namespace GenshinLang {
             }
         }
         TypeName Interpreter::evaluateType(AST::ExpressionNode *node) {
+            if (node == nullptr)  return {TypeName::Undefined};
             if (node->op == AST::ExpressionNode::NoneOp) {
                 auto value_node = dynamic_cast<AST::ValueNode *>(node);
                 if (value_node->token.tag == Token::IdentifierTag) {
                     const auto &name = std::get<Identifier>(value_node->token.value);
                     if (name == "int") {
                         return {TypeName::Int};
+                    } else if (name == "long") {
+                        return {TypeName::Long};
                     } else if (name == "array") {
                         return {TypeName::Array};
+                    } else if (name == "object") {
+                        return {TypeName::Struct};
                     }
                 }
             }
@@ -1968,12 +2101,15 @@ namespace GenshinLang {
 
             auto type = evaluateType(type_node);
             auto variable_name = variable_declare_statement->name;
-            scopeStack.back()->declare(variable_name, type);
+            topScope()->declare(variable_name, type);
         }
         // 创建新的作用域，并运行语句块
         void Interpreter::runBlock(AST::BlockNode *block) {
             enterScope();
-            for (auto &x: block->statements)  runStatement(x);
+            for (auto &x: block->statements) {
+                runStatement(x);
+                if (returnFlag)  return leaveScope(), void();
+            }
             leaveScope();
         }
         template <typename StatementPointer>
@@ -1986,31 +2122,44 @@ namespace GenshinLang {
             } else if (x->type == AST::StatementNode::RunBlockStatement) {
                 auto run_block_statement = dynamic_cast<AST::RunBlockStatementNode *>(x);
                 runBlock(run_block_statement->block);
+                if (returnFlag)  return;
             } else if (x->type == AST::StatementNode::IfStatement) {
                 auto if_statement = dynamic_cast<AST::IfStatementNode *>(x);
                 auto condition = evaluateExpression(if_statement->condition);
                 assert(condition.type == Object::Int);
                 if (*std::get<std::shared_ptr<int>>(condition.value) != 0) {
                     runBlock(if_statement->body);
+                } else if (if_statement->elseBody != nullptr) {
+                    runBlock(if_statement->elseBody);
                 }
             } else if (x->type == AST::StatementNode::ForStatement) {
                 auto for_statement = dynamic_cast<AST::ForStatementNode *>(x);
                 runStatement(for_statement->init);
+                if (returnFlag)  return;
                 while (true) {
                     auto condition = evaluateExpression(for_statement->condition);
                     assert(condition.type == Object::Int);
                     if (*std::get<std::shared_ptr<int>>(condition.value) == 0)  break;
                     runBlock(for_statement->body);
+                    if (returnFlag)  return;
                     evaluateExpression(for_statement->step);
                 }
             } else if (x->type == AST::StatementNode::FunctionDefinitionStatement) {
                 auto function_definition_statement = dynamic_cast<AST::FunctionDefinitionStatementNode *>(x);
                 // 声明一个函数
-                scopeStack.back()->declare(function_definition_statement->name, TypeName{TypeName::Function});
-                scopeStack.back()->get(function_definition_statement->name).value = function_definition_statement;
+                topScope()->declare(function_definition_statement->name, TypeName{TypeName::Function});
+                topScope()->get(function_definition_statement->name).value = function_definition_statement;
+            } else if (x->type == AST::StatementNode::ReturnStatement) {
+                // 修改 ret 寄存器
+                auto return_statement = dynamic_cast<AST::ReturnStatementNode *>(x);
+                ret = evaluateExpression(return_statement->expr);
+                returnFlag = true;
             } else {
                 assert(false);
             }
+        }
+        Interpreter::Scope *Interpreter::topScope() {
+            return scopeStack.back().get();
         }
     }
     void test() {
@@ -2026,6 +2175,27 @@ namespace GenshinLang {
 
 int main(int argc, char const *argv[]) {
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    GenshinLang::solve();
+    if (argc > 1 and strcmp("-i", argv[1]) == 0) {
+        assert(argc > 2);
+        auto file = argv[2];
+        std::ifstream stream(file);
+        struct FileScanner: IO::Scanner {
+            std::ifstream &s;
+        public:
+            FileScanner(std::ifstream &s): s(s) {}
+            char gc() override {
+                char ch = s.get();
+                if (s.eof())  throw IO::EOFError{};
+                return ch;
+            }
+        };
+        FileScanner scan{stream};
+        auto tokens = GenshinLang::Tokenizer{}.tokenize(scan);
+        auto ast = GenshinLang::AST::BlockNode::parse(tokens).node;
+        auto interpreter = GenshinLang::Interpreter::Interpreter(GenshinLang::Program{ast, GenshinLang::IdentifierMap{}});
+        interpreter.run();
+    } else {
+        GenshinLang::solve();
+    }
     return 0;
 }
