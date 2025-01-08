@@ -3,9 +3,12 @@
  */
 #include "./libs/debug_macros.hpp"
 
+
 #include "./lib_v3.hpp"
 
+
 #include "./libs/range.hpp"
+
 
 using namespace lib;
 
@@ -35,7 +38,7 @@ namespace Solution_1245402782909691 {
         void pushDown(int p) {
             if (tr[p].assign_tag != -inf) {
                 for (auto s: {lson(p), rson(p)}) {
-                    assignNode(p, tr[p].assign_tag);
+                    assignNode(s, tr[p].assign_tag);
                 }
                 tr[p].assign_tag = -inf;
             }
@@ -45,12 +48,14 @@ namespace Solution_1245402782909691 {
             if (begin + 1 == end)  return;
             auto mid = std::midpoint(begin, end);
             build(begin, mid, lson(p)), build(mid, end, rson(p));
+            pushUp(p);
         }
     public:
         SegTree(int N): tr((N+1) << 2) {
             build(0, N, 1);
         }
         void assignAt(int pos, int val, int p = 1) {
+            debug  std::cout << std::format("assignAt {} {}", pos, val) << std::endl;
             if (tr[p].begin >= pos and tr[p].end <= pos + 1) {
                 assignNode(p, val);
                 return;
@@ -68,6 +73,7 @@ namespace Solution_1245402782909691 {
             auto res = -inf;
             if (tr[lson(p)].end > begin)  chkMax(res, maxRange(begin, end, lson(p)));
             if (tr[rson(p)].begin < end)  chkMax(res, maxRange(begin, end, rson(p)));
+            debug  std::cout << std::format("maxRange {} {} -> {}", begin, end, res) << std::endl;
             return res;
         }
         int sumRange(int begin, int end, int p = 1) {
@@ -78,6 +84,7 @@ namespace Solution_1245402782909691 {
             auto res = 0;
             if (tr[lson(p)].end > begin)  res += sumRange(begin, end, lson(p));
             if (tr[rson(p)].begin < end)  res += sumRange(begin, end, rson(p));
+            debug  std::cout << std::format("subRange {} {} -> {}", begin, end, res) << std::endl;
             return res;
         }
     };
@@ -103,7 +110,7 @@ namespace Solution_1245402782909691 {
         }
     }
     void assignAt(int p, int val) {
-        sgt->assignAt(p, val);
+        sgt->assignAt(index[p], val);
     }
     int maxPath(int x, int y) {
         auto res = -inf;
@@ -141,7 +148,7 @@ namespace Solution_1245402782909691 {
         dfs2(1, 1);
 
         sgt = std::make_unique<SegTree>(N);
-        for (auto i: range(N)) {
+        for (auto i: range(1, N+1)) {
             int x;  std::cin >> x;
             assignAt(i, x);
         }

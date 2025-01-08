@@ -4,13 +4,11 @@
 
 #include "./libs/debug_macros.hpp"
 
-
 // #pragma GCC optimize("Ofast")
 // #pragma GCC optimize("inline")
 // #pragma GCC optimize(3)
 
 #include "./lib_v3.hpp"
-
 
 using namespace lib;
 

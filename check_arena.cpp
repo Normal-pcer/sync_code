@@ -1,6 +1,9 @@
 // Do not expand include
 #include "lib"
 #include "libs/range.hpp"
+#ifdef __linux__
+#define linux
+#endif  // def __linux__
 using namespace lib;
 
 constexpr const int MaxTimes = inf;
@@ -15,10 +18,20 @@ constexpr const char *FileNames[] = {
 };
 constexpr const char *InputFileName = "1" ".in";
 constexpr const char *OutputFileName = "1" ".out";
+#ifdef linux
+constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra";
+#else  // not def linux
 constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra -Wl,-stack=2147483647";
+#endif  // def linux
 constexpr const bool InterruptOnConflict = true;       // 结果出现冲突时中断进程
 constexpr const bool InterruptOnMainConflict = true;   // 特别地，当 file[0] 结果出现冲突，中断进程
 constexpr const bool ClearEachTime = false;
+
+#ifdef linux
+constexpr const char *RunCommand = "./{}.exe < {} > {}_{}";
+#else  // not def linux
+constexpr const char *RunCommand = "{}.exe < {} > {}_{}";
+#endif  // def linux
 
 namespace _Generator {
     #include "check_gen.cpp"
@@ -93,7 +106,7 @@ namespace Checker {
             std::pair<int, size_t> max_count;
 
             for (auto i: range(FileCount)) {
-                *std::format_to(tmp, "{}.exe < {} > {}_{}", i, InputFileName, OutputFileName, i) = 0;
+                *std::format_to(tmp, RunCommand, i, InputFileName, OutputFileName, i) = 0;
                 std::cout << std::format("Waiting #{}...\r", i) << std::flush;
                 auto begin = std::chrono::system_clock::now();
                 int ret = std::system(tmp);

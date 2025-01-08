@@ -15,9 +15,38 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 100;
-        int N = randint(1, _N);
+        const int _N = 3e4, _V = 3e4, _Q = 2e5;
+        int N = _N;
         out << N << endl;
+        std::vector<std::pair<int, int>> edges;
+        for (auto i: range(2, N+1)) {
+            auto x = randint(1, i-1);
+            edges.push_back({i, x});
+        }
+        ranges::shuffle(edges, random);
+        for (auto [x, y]: edges)  out << x << ' ' << y << endl;
+        std::vector<int> val(N);
+        for (auto &x: val)  x = randint(-_V, _V);
+        for (auto x: val)  out << x << ' ';
+        out << endl;
+
+        int Q = _Q;
+        for (auto _: range(Q)) {
+            auto op = randint(1, 3);
+            if (op == 1) {
+                out << "QMAX" << " ";
+                auto x = randint(1, N), y = randint(1, N);
+                out << x << ' ' << y << endl;
+            } else if (op == 2) {
+                out << "QSUM" << " ";
+                auto x = randint(1, N), y = randint(1, N);
+                out << x << ' ' << y << endl;
+            } else {
+                out << "CHANGE" << " ";
+                auto x = randint(1, N), y = randint(-_V, _V);
+                out << x << " " << y << endl;
+            }
+        }
     }
 }
 
