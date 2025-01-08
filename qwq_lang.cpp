@@ -1,9 +1,9 @@
 /**
  * @link https://www.luogu.com.cn/problem/P3695
  */
-
+#if true
 #include "./libs/debug_macros.hpp"
-
+#endif
 // #pragma GCC optimize("Ofast")
 // #pragma GCC optimize("inline")
 // #pragma GCC optimize(3)
@@ -1685,7 +1685,7 @@ namespace GenshinLang {
             std::variant<
                 std::nullptr_t, 
                 std::shared_ptr<std::map<Identifier, Object>>, 
-                std::shared_ptr<int>, 
+                int, 
                 std::shared_ptr<std::string>, 
                 std::shared_ptr<Identifier>,
                 std::shared_ptr<ArrayObjectValue>,
@@ -1698,7 +1698,7 @@ namespace GenshinLang {
 
             Object copy() {
                 if (type == Int) {
-                    return Object{Int, std::make_shared<int>(*std::get<std::shared_ptr<int>>(value))};
+                    return Object{Int, std::get<int>(value)};
                 } else if (type == Long) {
                     return Object{Long, std::make_shared<i64>(*std::get<std::shared_ptr<i64>>(value))};
                 } else {
@@ -1733,7 +1733,7 @@ namespace GenshinLang {
                 assert(min <= max);
                 values.resize(max - min + 1);
                 if (value_type->type == TypeName::Int) {
-                    for (auto &x: values)  x = Object{Object::Int, std::shared_ptr<int>{new int{0}}};
+                    for (auto &x: values)  x = Object{Object::Int, 0};
                 } else {
                     for (auto &x: values) {
                         x = Object{Object::Array, std::shared_ptr<ArrayObjectValue>{new ArrayObjectValue{value_type}}};
@@ -1791,7 +1791,7 @@ namespace GenshinLang {
                 void declare(Identifier name, TypeName type) {
                     assert(not variables.contains(name));  // 重复声明
                     if (type.type == type.Int) {
-                        variables.insert({name, Object(Object::Int, std::make_shared<int>(0))});
+                        variables.insert({name, Object{Object::Int, 0}});
                     } else if (type.type == type.Long) {
                         variables.insert({name, Object(Object::Long, std::make_shared<i64>(0))});
                     } else if (type.type == type.Array) {
@@ -1902,7 +1902,7 @@ namespace GenshinLang {
                 auto r_son = evaluateExpression(node->right);
                 assert(l_son->type == Object::Array and r_son.type == Object::Int);
                 auto &array = *std::get<std::shared_ptr<ArrayObjectValue>>(l_son->value);
-                return &array[*std::get<std::shared_ptr<int>>(r_son.value)];
+                return &array[std::get<int>(r_son.value)];
             } else {
                 return nullptr;
             }
@@ -1915,7 +1915,7 @@ namespace GenshinLang {
                 assert(value_node);
                 if (value_node->token.tag == Token::IntegerTag) {
                     Object res(Object::Int);
-                    res.value = std::shared_ptr<int>{new int(std::get<Tokenizer::Integer>(value_node->token.value).value)};
+                    res.value = static_cast<int>(std::get<Tokenizer::Integer>(value_node->token.value).value);
                     return res;
                 } else if (value_node->token.tag == Token::IdentifierTag) {
                     auto identifier = std::get<Identifier>(value_node->token.value);
@@ -1947,7 +1947,7 @@ namespace GenshinLang {
                     if (l_son.type == Object::Int and r_son.type == Object::Int) {  \
                         Object res(Object::Int);  \
                         assert(l_son.type == l_son.Int and r_son.type == r_son.Int); \
-                        res.value = std::make_shared<int>(*std::get<std::shared_ptr<int>>(l_son.value) symbol *std::get<std::shared_ptr<int>>(r_son.value));  \
+                        res.value = static_cast<int>(std::get<int>(l_son.value) symbol std::get<int>(r_son.value));  \
                         return res;  \
                     } else { \
                         Object res(Object::Long);  \
@@ -1979,13 +1979,13 @@ namespace GenshinLang {
                     return l_son;
                 } else if (node->op == AST::ExpressionNode::UnarySub) {
                     assert(l_son.type == Object::Int);
-                    return Object{Object::Int, std::shared_ptr<int>{new int(-*std::get<std::shared_ptr<int>>(l_son.value))}};
+                    return Object{Object::Int, -std::get<int>(l_son.value)};
                 } else if (node->op == AST::ExpressionNode::Call) {
                     if (l_son.type == Object::BuiltinFunction) {
                         auto name = *std::get<std::shared_ptr<Identifier>>(l_son.value);  // 函数名
                         if (name == "print") {
                             if (r_son.type == Object::Int) {
-                                auto num = *std::get<std::shared_ptr<int>>(r_son.value);
+                                auto num = std::get<int>(r_son.value);
                                 io << num;
                             } else if (r_son.type == Object::String) {
                                 io << *std::get<std::shared_ptr<std::string>>(r_son.value);
@@ -1995,37 +1995,23 @@ namespace GenshinLang {
                             return Object{};
                         } else if (name == "println") {
                             assert(r_son.type == Object::Int);
-                            auto num = *std::get<std::shared_ptr<int>>(r_son.value);
+                            auto num = std::get<int>(r_son.value);
                             io << num << endl;
                             return Object{};
                         } else if (name == "scan") {
                             assert(r_son.type == Object::Int);
-                            io >> *std::get<std::shared_ptr<int>>(r_son.value);
+                            io >> std::get<int>(r_son.value);
                             return Object{};
                         } else if (name == "set") {
+                            assert(false), __builtin_unreachable();
                             // 需要两个参数
                             std::vector<Object> args(2);
                             auto it = getFunctionArguments(node->right, args.begin());  // 获取参数
                             assert(it == args.end());
-                            assert(args[0].type == Object::Int and args[1].type == Object::Int);
-                            *std::get<std::shared_ptr<int>>(args[0].value) = *std::get<std::shared_ptr<int>>(args[1].value);
-                            return Object{};
-                        } else if (name == "test_sort") {
-                            std::vector<Object> args;
-                            getFunctionArguments(node->right, std::back_inserter(args));
-
-                            std::vector<int> nums(args.size());
-                            ranges::transform(args, nums.begin(), [](auto &obj) {
-                                assert(obj.type == Object::Int);
-                                return *std::get<std::shared_ptr<int>>(obj.value);
-                            });
-                            ranges::sort(nums, ranges::less{});
-                            for (auto x: nums)  io << x << ' ';
-                            io << endl;
                             return Object{};
                         } else if (name == "yosoro") {
                             assert(r_son.type == Object::Int);
-                            auto num = *std::get<std::shared_ptr<int>>(r_son.value);
+                            auto num = std::get<int>(r_son.value);
                             io << num << ' ';
                             return Object{};
                         } else {
@@ -2082,8 +2068,8 @@ namespace GenshinLang {
                     auto range_node = node->right->right;
                     auto min_node = evaluateExpression(range_node->left), max_node = evaluateExpression(range_node->right);
                     assert(min_node.type == Object::Int and max_node.type == Object::Int);
-                    auto min = *std::get<std::shared_ptr<int>>(min_node.value);
-                    auto max = *std::get<std::shared_ptr<int>>(max_node.value);
+                    auto min = std::get<int>(min_node.value);
+                    auto max = std::get<int>(max_node.value);
                     return TypeName{TypeName::Array, std::shared_ptr<ArrayMeta>{
                             new ArrayMeta{std::shared_ptr<TypeName>{new TypeName{value_type}}, min, max
                         }}};
@@ -2125,7 +2111,7 @@ namespace GenshinLang {
                 auto if_statement = dynamic_cast<AST::IfStatementNode *>(x);
                 auto condition = evaluateExpression(if_statement->condition);
                 assert(condition.type == Object::Int);
-                if (*std::get<std::shared_ptr<int>>(condition.value) != 0) {
+                if (std::get<int>(condition.value) != 0) {
                     runBlock(if_statement->body);
                 } else if (if_statement->elseBody != nullptr) {
                     runBlock(if_statement->elseBody);
@@ -2137,7 +2123,7 @@ namespace GenshinLang {
                 while (true) {
                     auto condition = evaluateExpression(for_statement->condition);
                     assert(condition.type == Object::Int);
-                    if (*std::get<std::shared_ptr<int>>(condition.value) == 0)  break;
+                    if (std::get<int>(condition.value) == 0)  break;
                     runBlock(for_statement->body);
                     if (returnFlag)  return;
                     evaluateExpression(for_statement->step);
