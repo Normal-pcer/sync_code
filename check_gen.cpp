@@ -26,11 +26,12 @@ namespace Generator {
         ranges::shuffle(edges, random);
         for (auto [x, y]: edges)  out << x << ' ' << y << endl;
         std::vector<int> val(N);
-        for (auto &x: val)  x = randint(-_V, _V);
+        for (auto &x: val)  x = randint(-_V, +_V);
         for (auto x: val)  out << x << ' ';
         out << endl;
 
         int Q = _Q;
+        out << Q << endl;
         for (auto _: range(Q)) {
             auto op = randint(1, 3);
             if (op == 1) {
@@ -43,7 +44,7 @@ namespace Generator {
                 out << x << ' ' << y << endl;
             } else {
                 out << "CHANGE" << " ";
-                auto x = randint(1, N), y = randint(-_V, _V);
+                auto x = randint(1, N), y = randint(-_V, +_V);
                 out << x << " " << y << endl;
             }
         }

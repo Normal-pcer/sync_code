@@ -3,47 +3,40 @@
  */
 #include "./libs/debug_macros.hpp"
 
+
 #include "./lib_v3.hpp"
 
-#include "./libs/range.hpp"
+
+#include "./libs/io.hpp"
+
 
 using namespace lib;
-
 namespace Solution_1245402782909691 {
-    constexpr const int _N = 3e4+5;
-    std::array<std::vector<int>, _N> forward;
-    std::array<int, _N> size, fa, depth, son, top, index;
+    // constexpr const int _N = 3e4+5;
+    // std::array<std::vector<int>, _N> forward;
+    // std::array<int, _N> size, fa, depth, son, top, index;
+    // std::vector<int> order;
+    std::vector<std::vector<int>> forward;
+    std::vector<int> size, fa, depth, son, top, index;
     std::vector<int> order;
     class SegTree {
         struct Node {
             int begin, end;
-            int sum, max;
-            int assign_tag = -inf;
+            int sum = 0, max = -inf;
         };
         std::vector<Node> tr;
         static constexpr int lson(int p) { return p << 1; }
         static constexpr int rson(int p) { return p << 1 | 1; }
-        void assignNode(int p, int val) {
-            tr[p].sum = val * (tr[p].end - tr[p].begin);
-            tr[p].max = val;
-            tr[p].assign_tag = val;
-        }
+        void assignNode(int, int) {}
         void pushUp(int p) {
             tr[p].sum = tr[lson(p)].sum + tr[rson(p)].sum;
             tr[p].max = std::max(tr[lson(p)].max, tr[rson(p)].max);
         }
-        void pushDown(int p) {
-            if (tr[p].assign_tag != -inf) {
-                for (auto s: {lson(p), rson(p)}) {
-                    assignNode(s, tr[p].assign_tag);
-                }
-                tr[p].assign_tag = -inf;
-            }
-        }
+        void pushDown(int) {}
         void build(int begin, int end, int p = 1) {
             tr[p].begin = begin, tr[p].end = end;
             if (begin + 1 == end)  return;
-            auto mid = std::midpoint(begin, end);
+            auto mid = (begin + end) >> 1;
             build(begin, mid, lson(p)), build(mid, end, rson(p));
             pushUp(p);
         }
@@ -52,12 +45,11 @@ namespace Solution_1245402782909691 {
             build(0, N, 1);
         }
         void assignAt(int pos, int val, int p = 1) {
-            debug  std::cout << std::format("assignAt {} {}", pos, val) << std::endl;
-            if (tr[p].begin >= pos and tr[p].end <= pos + 1) {
-                assignNode(p, val);
+            if (tr[p].begin + 1 == tr[p].end) {
+                tr[p].sum = val;
+                tr[p].max = val;
                 return;
             }
-            pushDown(p);
             if (tr[lson(p)].end > pos)  assignAt(pos, val, lson(p));
             else  assignAt(pos, val, rson(p));
             pushUp(p);
@@ -70,7 +62,6 @@ namespace Solution_1245402782909691 {
             auto res = -inf;
             if (tr[lson(p)].end > begin)  chkMax(res, maxRange(begin, end, lson(p)));
             if (tr[rson(p)].begin < end)  chkMax(res, maxRange(begin, end, rson(p)));
-            debug  std::cout << std::format("maxRange {} {} -> {}", begin, end, res) << std::endl;
             return res;
         }
         int sumRange(int begin, int end, int p = 1) {
@@ -81,7 +72,6 @@ namespace Solution_1245402782909691 {
             auto res = 0;
             if (tr[lson(p)].end > begin)  res += sumRange(begin, end, lson(p));
             if (tr[rson(p)].begin < end)  res += sumRange(begin, end, rson(p));
-            debug  std::cout << std::format("subRange {} {} -> {}", begin, end, res) << std::endl;
             return res;
         }
     };
@@ -124,7 +114,7 @@ namespace Solution_1245402782909691 {
         auto res = 0;
         while (top[x] != top[y]) {
             if (depth[top[x]] < depth[top[y]])  std::swap(x, y);
-            res += sgt->maxRange(index[top[x]], index[x] + 1);
+            res += sgt->sumRange(index[top[x]], index[x] + 1);
             x = fa[top[x]];
         }
         if (depth[x] < depth[y])  std::swap(x, y);
@@ -132,12 +122,13 @@ namespace Solution_1245402782909691 {
         return res;
     }
     void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-        int N;  std::cin >> N;
-        for (auto _: range(N-1)) {
-            int x, y;  std::cin >> x >> y;
+#define cin 0
+        int N;  io >> N;
+        forward.resize(N+1);
+        size.resize(N+1), fa.resize(N+1), depth.resize(N+1), son.resize(N+1);
+        top.resize(N+1), index.resize(N+1);
+        for (auto _ = 0; _ < N-1; _++) {
+            int x, y;  io >> x >> y;
             forward.at(x).push_back(y);
             forward.at(y).push_back(x);
         }
@@ -145,21 +136,21 @@ namespace Solution_1245402782909691 {
         dfs2(1, 1);
 
         sgt = std::make_unique<SegTree>(N);
-        for (auto i: range(1, N+1)) {
-            int x;  std::cin >> x;
+        for (auto i = 1; i < N+1; i++) {
+            int x;  io >> x;
             assignAt(i, x);
         }
 
         std::string op;  int x, y;
-        int Q;  std::cin >> Q;
-        for (auto _: range(Q)) {
-            std::cin >> op >> x >> y;
+        int Q;  io >> Q;
+        for (auto _ = 0; _ < Q; _++) {
+            io >> op >> x >> y;
             if (op == "CHANGE") {
                 assignAt(x, y);
             } else if (op == "QMAX") {
-                std::cout << maxPath(x, y) << endl;
+                io << maxPath(x, y) << endl;
             } else {
-                std::cout << sumPath(x, y) << endl;
+                io << sumPath(x, y) << endl;
             }
         }
     }
