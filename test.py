@@ -1,8 +1,10 @@
-x1, y1 = map(int, input().split())
-x2, y2 = map(int, input().split())
-x3, y3 = map(int, input().split())
-minx, maxx = min(x1, x2, x3), max(x1, x2, x3)
-miny, maxy = min(y1, y2, y3), max(y1, y2, y3)
-pts = set([(minx, miny), (minx, maxy), (maxx, miny), (maxx, maxy)])
-cur = set([(x1, y1), (x2, y2), (x3, y3)])
-print(' '.join(map(str, (pts - cur).pop())))
+with open("test.cpp", "w", encoding="UTF-8") as f:
+    f.write("""#include <bits/stdc++.h>
+int main() {
+int x;  std::cin >> x;
+if (x == 0)  std::cout << "x = 0" << std::endl;
+""")
+    for i in range(1000000):
+        f.write('else if (x == {})  std::cout << "x = {}" << std::endl;\n'.format(i, i))
+
+    f.write("}\n")

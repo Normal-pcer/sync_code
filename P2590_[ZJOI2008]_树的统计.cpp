@@ -3,12 +3,9 @@
  */
 #include "./libs/debug_macros.hpp"
 
-
 #include "./lib_v3.hpp"
 
-
 #include "./libs/io.hpp"
-
 
 using namespace lib;
 namespace Solution_1245402782909691 {
