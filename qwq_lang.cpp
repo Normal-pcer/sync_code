@@ -3,12 +3,14 @@
  */
 #if true
 #include "./libs/debug_macros.hpp"
+
 #endif
 // #pragma GCC optimize("Ofast")
 // #pragma GCC optimize("inline")
 // #pragma GCC optimize(3)
 
 #include "./lib_v3.hpp"
+
 
 using namespace lib;
 
@@ -898,6 +900,12 @@ namespace GenshinLang {
         struct ParseResult {
             T *node;
             TokenIterator it;
+
+            // 向父类指针转换
+            template <typename U>
+            operator ParseResult<U> () const {
+                return {static_cast<U *>(node), it};
+            }
         };
         struct StatementNode: public Node {
             enum Type {
@@ -913,6 +921,9 @@ namespace GenshinLang {
             } type = NoneStatement;
             StatementNode(Type type = NoneStatement): type(type) {}
             virtual ~StatementNode() = default;
+
+            template <typename T>
+            static ParseResult<StatementNode> parse(const T &);
         };
         struct BlockNode: public Node {
             enum Type {
@@ -1055,6 +1066,7 @@ namespace GenshinLang {
         struct VariableDeclareStatementNode: public StatementNode {
             Identifier name;
             ExpressionNode *type;
+            ExpressionNode *init = nullptr;
             VariableDeclareStatementNode(): StatementNode(StatementNode::VariableDeclareStatement) {}
             ~VariableDeclareStatementNode() {
                 delete type;
@@ -1187,89 +1199,105 @@ namespace GenshinLang {
             auto res = new BlockNode;
             auto it = src.begin();
             for (; it != src.end();) {
-                if (it->tag == Token::EndOfLineTag) {
-                    it++;
-                    continue;
-                }
+                // 语句块结束
                 if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "}")  return {res, ++it};
-                // 读取一个子块
-                if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{") {
-                    auto [sub_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(new RunBlockStatementNode{sub_block}), it = next;
-                    continue;
+                // 解析一条语句
+                auto [statement, next] = StatementNode::parse(TokensSubrange{it, src.end()});
+                if (statement != nullptr) {
+                    res->statements.push_back(statement);
                 }
-                // if 语句
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::If) {
-                    // 接下来，读取一个 if，作为当前类的一个语句
-                    auto [if_statement, next] = IfStatementNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(if_statement), it = next;
-                    // 尝试读取一个 else 块
-                    if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Else) {
-                        it++, assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{");
-                        auto [else_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
-                        if_statement->elseBody = else_block, it = next;
-                    }
-                    continue;
-                }
-                // while 语句
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::While) {
-                    auto [while_statement, next] = WhileStatementNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(while_statement), it = next;
-                    continue;
-                }
-                // for 语句
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::For) {
-                    auto [for_statement, next] = ForStatementNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(for_statement), it = next;
-                    continue;
-                }
-
-                // 特殊语法：
-                // 冒号开头的 :f x, y 等价于函数调用 f(x, y)
-                if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ":") {
-                    it++;
-                    // 匹配一个函数名
-                    assert(it->tag == Token::IdentifierTag);
-                    auto funcToken = *it++;
-                    std::vector<Token> tmp;
-                    // 匹配直到一个 EOL
-                    while (it != src.end() and it->tag != Token::EndOfLineTag)  tmp.push_back(*it++);
-                    // 补全成正常函数调用
-                    tmp.insert(tmp.begin(), {Token::SymbolTag, Symbol("(")});
-                    tmp.insert(tmp.begin(), funcToken);
-                    tmp.push_back({Token::SymbolTag, Symbol(")")});
-                    assert(it != src.end()), it++, tmp.push_back({Token::EndOfLineTag});
-                    // 解析 tmp
-                    auto [expr, next] = ExpressionNode::parse(tmp);
-                    assert(expr->op == ExpressionNode::Call and next == tmp.end());
-                    res->statements.push_back(new ExpressionEvaluateStatementNode{expr});
-                    continue;
-                }
-                // var 语句
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Var) {
-                    // 解析一个变量声明
-                    auto [decl, next] = VariableDeclareStatementNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(decl), it = next;
-                    continue;
-                }
-                // def 语句
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Def) {
-                    auto [def, next] = FunctionDefinitionStatementNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(def), it = next;
-                    continue;
-                }
-                // return 语句
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Return) {
-                    auto [ret, next] = ReturnStatementNode::parse(TokensSubrange{++it, src.end()});
-                    res->statements.push_back(ret), it = next;
-                    continue;
-                }
-                // 表达式求值
-                auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()});
-                res->statements.push_back(new ExpressionEvaluateStatementNode{expr});
                 it = next;
             }
             return {res, src.end()};
+        }
+        /**
+         * 解析一条语句
+         *  statement;
+         * ^ src.begin()
+         * @return [stat, next] 解析后的语句，和分号或换行符后的下一个指针
+         * ! @note 特别地，对于空语句，返回一个空指针
+         */
+        template <typename T>
+        ParseResult<StatementNode> StatementNode::parse(const T &src) {
+            auto it = src.begin();
+            if (it->tag == Token::EndOfLineTag) {
+                it++;
+                return {nullptr, it};
+            }
+            // 读取一个子块
+            if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{") {
+                auto [sub_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
+                return {new RunBlockStatementNode{sub_block}, next};
+            }
+            // if 语句
+            if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::If) {
+                // 接下来，读取一个 if，作为当前类的一个语句
+                auto [if_statement, next] = IfStatementNode::parse(TokensSubrange{++it, src.end()});
+                it = next;
+                // 尝试读取一个 else 块 / 语句
+                // 忽略中间的换行符
+                while (it->tag == Token::EndOfLineTag)  it++;
+                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Else) {
+                    it++;
+                    while (it->tag == Token::EndOfLineTag)  it++;
+                    if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{") {
+                        // else 块
+                        auto [else_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
+                        if_statement->elseBody = else_block, it = next;
+                    } else {
+                        // else 语句
+                        auto [else_statement, next] = StatementNode::parse(TokensSubrange{it, src.end()});
+                        auto else_block = new BlockNode{};
+                        else_block->statements.push_back(else_statement);
+                        if_statement->elseBody = else_block, it = next;
+                    }
+                }
+                return {if_statement, it};
+            }
+            // while 语句
+            if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::While) {
+                return WhileStatementNode::parse(TokensSubrange{++it, src.end()});
+            }
+            // for 语句
+            if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::For) {
+                return ForStatementNode::parse(TokensSubrange{++it, src.end()});
+            }
+            // 特殊语法：
+            // 冒号开头的 :f x, y 等价于函数调用 f(x, y)
+            if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ":") {
+                it++;
+                // 匹配一个函数名
+                assert(it->tag == Token::IdentifierTag);
+                auto funcToken = *it++;
+                std::vector<Token> tmp;
+                // 匹配直到一个 EOL
+                while (it != src.end() and it->tag != Token::EndOfLineTag)  tmp.push_back(*it++);
+                // 补全成正常函数调用
+                tmp.insert(tmp.begin(), {Token::SymbolTag, Symbol("(")});
+                tmp.insert(tmp.begin(), funcToken);
+                tmp.push_back({Token::SymbolTag, Symbol(")")});
+                assert(it != src.end()), it++, tmp.push_back({Token::EndOfLineTag});
+                // 解析 tmp
+                auto [expr, next] = ExpressionNode::parse(tmp);
+                assert(expr->op == ExpressionNode::Call and next == tmp.end());
+                return {new ExpressionEvaluateStatementNode{expr}, it};
+            }
+            // var 语句
+            if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Var) {
+                // 解析一个变量声明
+                return VariableDeclareStatementNode::parse(TokensSubrange{++it, src.end()});
+            }
+            // def 语句
+            if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Def) {
+                return FunctionDefinitionStatementNode::parse(TokensSubrange{++it, src.end()});
+            }
+            // return 语句
+            if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Return) {
+                return ReturnStatementNode::parse(TokensSubrange{++it, src.end()});
+            }
+            // 表达式求值
+            auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()});
+            return {new ExpressionEvaluateStatementNode{expr}, next};
         }
         /**
          * 解析一个条件块（Out 类型）

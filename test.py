@@ -1,10 +1,15 @@
-with open("test.cpp", "w", encoding="UTF-8") as f:
-    f.write("""#include <bits/stdc++.h>
-int main() {
-int x;  std::cin >> x;
-if (x == 0)  std::cout << "x = 0" << std::endl;
-""")
-    for i in range(1000000):
-        f.write('else if (x == {})  std::cout << "x = {}" << std::endl;\n'.format(i, i))
+h, w = map(int, input().split())
 
-    f.write("}\n")
+try:
+    kkk = list[str]()
+    p = []
+    for i in range(h):
+        kkk.append(input())
+        if 'o' in kkk[-1]:
+            p.append((i, kkk[-1].index('o')))
+
+    x1, y1 = p[0]
+    x2, y2 = p[1]
+    print(abs(x1 - x2) + abs(y1 - y2))
+except Exception:
+    pass
