@@ -1,132 +1,181 @@
-#include<bits/stdc++.h>
-using namespace std;
-typedef long long ll;
+/**
+ * @link https://www.luogu.com.cn/problem/P3979
+ */
 
-#define ls (i<<1)
-#define rs (i<<1|1)
+#include "./libs/debug_macros.hpp"
 
-struct Tree{
-	int l,r,len,sum,maxn;
-	Tree(){
-		l=r=0;
-		len=1;
-		sum=0;
-		maxn=-1e9;
-	}
-};
+#include "./lib_v3.hpp"
 
-int n,q,cnt;
-int a[30001],fa[30001],siz[30001],dep[30001],son[30001],dfn[30001],rnk[30001],tp[30001];
-Tree tr[65537];
-vector<int> e[30001];
+#include "./libs/range.hpp"
 
-void meg(Tree &rt,const Tree &l,const Tree &r){
-	rt.sum=l.sum+r.sum;
-	rt.maxn=max(l.maxn,r.maxn);
+using namespace lib;
+
+namespace Solution_1542105660219375 {
+    class SegTree {
+        struct Node {
+            int begin, end;
+            int min = 2147483647, assign_tag = -1;
+        };
+        std::vector<Node> tr;
+
+        static int constexpr lson(int p) { return p << 1; }
+        static int constexpr rson(int p) { return p << 1 | 1; }
+        void assignNode(int p, int val) {
+            tr[p].min = val;
+            tr[p].assign_tag = val;
+        }
+        void pushUp(int p) {
+            tr[p].min = std::min(tr[lson(p)].min, tr[rson(p)].min);
+        }
+        void pushDown(int p) {
+            if (tr[p].assign_tag != -1) {
+                for (auto s: {lson(p), rson(p)}) {
+                    assignNode(s, tr[p].assign_tag);
+                }
+                tr[p].assign_tag = -1;
+            }
+        }
+        void build(int begin, int end, auto const &init, int p = 1) {
+            tr[p].begin = begin, tr[p].end = end;
+            if (begin + 1 == end) {
+                tr[p].min = init[begin];
+                return;
+            }
+            auto mid = std::midpoint(begin, end);
+            build(begin, mid, init, lson(p));
+            build(mid, end, init, rson(p));
+            pushUp(p);
+        }
+    public:
+        SegTree(int N, auto &init): tr(N << 2) {
+            build(0, N, init, 1);
+        }
+        void assignRange(int begin, int end, int val, int p = 1) {
+            if (tr[p].begin >= begin and tr[p].end <= end) {
+                assignNode(p, val);
+                return;
+            }
+            pushDown(p);
+            if (tr[lson(p)].end > begin)  assignRange(begin, end, val, lson(p));
+            if (tr[rson(p)].begin < end)  assignRange(begin, end, val, rson(p));
+            pushUp(p);
+        }
+        int minRange(int begin, int end, int p = 1) {
+            if (begin >= end)  return 2147483647;
+            if (tr[p].begin >= begin and tr[p].end <= end) {
+                return tr[p].min;
+            }
+            auto res = 2147483647;
+            pushDown(p);
+            if (tr[lson(p)].end > begin)  chkMin(res, minRange(begin, end, lson(p)));
+            if (tr[rson(p)].begin < end)  chkMin(res, minRange(begin, end, rson(p)));
+            return res;
+        }
+    };
+    class Tree {
+        std::vector<std::vector<int>> forward;
+        std::vector<int> size, depth, fa, son, top, order, index;
+        std::unique_ptr<SegTree> sgt;
+        int N;
+
+        void dfs1(int p, int prev = 0) {
+            size[p] = 1, fa[p] = prev;
+            depth[p] = depth[prev] + 1;
+            for (auto x: forward.at(p))  if (x != prev) {
+                dfs1(x, p);
+                size[p] += size[x];
+                if (size[son[p]] < size[x]) {
+                    son[p] = x;
+                }
+            }
+        }
+        void dfs2(int p, int tp) {
+            top[p] = tp, index[p] = order.size(), order.push_back(p);
+            if (son[p] != 0)  dfs2(son[p], tp);
+            for (auto x: forward.at(p)) {
+                if (x != son[p] and x != fa[p]) {
+                    dfs2(x, x);
+                }
+            }
+        }
+    public:
+        Tree(int N, auto const &init, auto const &edges): forward(N+1), size(N+1), depth(N+1), fa(N+1), son(N+1), top(N+1), index(N+1), N(N) {
+            for (auto [x, y]: edges) {
+                forward.at(x).push_back(y);
+                forward.at(y).push_back(x);
+            }
+            dfs1(1, 0);
+            dfs2(1, 1);
+            std::vector<int> sgt_init(N);
+            for (auto i: range(N))  sgt_init[i] = init[order[i]];
+            sgt = std::make_unique<SegTree>(N, sgt_init);
+        }
+        void assignPath(int x, int y, int val) {
+            while (top[x] != top[y]) {
+                if (depth[top[x]] < depth[top[y]])  std::swap(x, y);
+                sgt->assignRange(index[top[x]], index[x] + 1, val);
+                x = fa[top[x]];
+            }
+            if (depth[x] < depth[y])  std::swap(x, y);
+            sgt->assignRange(index[y], index[x] + 1, val);
+        }
+        int minChild(int x, int root) {
+            if (x == root)  return sgt->minRange(0, N);
+            // 如果 x 是 root 的父亲
+            if (index[x] <= index[root] and index[root] < index[x] + size[x] and root != x) {
+                // 查找 x 的儿子 s，s 是 root 的父亲
+                auto s = [&]() {
+                    auto t = root;
+                    while (top[t] != top[x]) {
+                        if (fa[top[t]] == x) {  // 链头即为所求
+                            return top[t];
+                        }
+                        t = fa[top[t]];  // 向上跳
+                    }
+                    return son[x];  // 在重链上
+                }();
+                // 整棵树，去掉 s 的子树
+                auto [begin0, end0] = std::pair{0, index[s]};
+                auto [begin1, end1] = std::pair{index[s]+size[s], N};
+                auto ans = 2147483647;
+                if (end0 > begin0)  chkMin(ans, sgt->minRange(begin0, end0));
+                if (end1 > begin1)  chkMin(ans, sgt->minRange(begin1, end1));
+                return ans;
+            } else {
+                // 正常查询
+                return sgt->minRange(index[x], index[x] + size[x]);
+            }
+        }
+    };
+    void solve() {
+        std::ios::sync_with_stdio(false);
+        std::cin.tie(nullptr), std::cout.tie(nullptr);
+        int N, M;  std::cin >> N >> M;
+
+        std::vector<std::pair<int, int>> edges(N-1);
+        for (auto &[x, y]: edges)  std::cin >> x >> y;
+        std::vector<int> w(N+1);
+        w[0] = 2147483647;
+        for (auto &x: w | views::drop(1))  std::cin >> x;
+        Tree tree{N, w, edges};
+
+        int root;  std::cin >> root;
+        for (auto _: range(M)) {
+            int op, x;  std::cin >> op >> x;
+            if (op == 1) {
+                root = x;
+            } else if (op == 2) {
+                int y, z;  std::cin >> y >> z;
+                tree.assignPath(x, y, z);
+            } else {
+                std::cout << tree.minChild(x, root) << endl;
+            }
+        }
+    }
 }
 
-void pushup(int i){
-	meg(tr[i],tr[ls],tr[rs]);
-}
-
-void build(int i,int l,int r){
-	tr[i].l=l;
-	tr[i].r=r;
-	tr[i].len=r-l+1;
-	if (l==r){
-		tr[i].sum=tr[i].maxn=a[rnk[l]];
-		return;
-	}
-	int mid=(l+r)>>1;
-	build(ls,l,mid);
-	build(rs,mid+1,r);
-	pushup(i);
-}
-
-void update(int i,int x,int k){
-	if (tr[i].l==tr[i].r){
-		tr[i].sum=tr[i].maxn=k;
-		return;
-	}
-	if (tr[ls].r>=x) update(ls,x,k);
-	else update(rs,x,k);
-	pushup(i);
-}
-
-Tree query(int i,int l,int r){
-	if (tr[i].l>=l and tr[i].r<=r) return tr[i];
-	Tree ans;
-	if (tr[ls].r>=l) ans=query(ls,l,r);
-	if (tr[rs].l<=r) meg(ans,ans,query(rs,l,r));
-	return ans;
-}
-
-Tree query(int u,int v){
-	Tree ans;
-	while (tp[u]!=tp[v]){
-		if (dep[tp[u]]<dep[tp[v]]) swap(u,v);
-		meg(ans,ans,query(1,dfn[tp[u]],dfn[u]));
-		u=fa[tp[u]];
-	}
-	if (dep[u]<dep[v]) swap(u,v);
-	meg(ans,ans,query(1,dfn[v],dfn[u]));
-	return ans;
-}
-
-void dfs1(int u,int f){
-	fa[u]=f;
-	dep[u]=dep[f]+1;
-	siz[u]=1;
-	for (auto i:e[u]){
-		if (i!=f){
-			dfs1(i,u);
-			siz[u]+=siz[i];
-			if (siz[i]>siz[son[u]]) son[u]=i;
-		}
-	}
-}
-
-void dfs2(int u,int t){
-	dfn[u]=++cnt;
-	rnk[cnt]=u;
-	tp[u]=t;
-	if (son[u]) dfs2(son[u],t);
-	for (auto i:e[u]){
-		if (i!=fa[u] and i!=son[u]){
-			dfs2(i,i);
-		}
-	}
-}
-
-int main() {
-	ios::sync_with_stdio(false);
-	cin.tie(0);
-	cout.tie(0);
-	cin>>n;
-	for (int i=1;i<n;i++){
-		int u,v;
-		cin>>u>>v;
-		e[u].push_back(v);
-		e[v].push_back(u);
-	}
-	for (int i=1;i<=n;i++){
-		cin>>a[i];
-	}
-	dfs1(1,0);
-	dfs2(1,1);
-	build(1,1,n);
-	cin>>q;
-	while (q--){
-		int u,v;
-		string op;
-		cin>>op>>u>>v;
-		if (op=="CHANGE"){
-			update(1,dfn[u],v);
-		}else{
-			Tree ans=query(u,v);
-			if (op=="QMAX") cout<<ans.maxn<<"\n";
-			else cout<<ans.sum<<"\n";
-		}
-	}
-	return 0;
+int main(int argc, char const *argv[]) {
+    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
+    Solution_1542105660219375::solve();
+    return 0;
 }

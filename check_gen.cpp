@@ -15,38 +15,34 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 3e4, _V = 3e4, _Q = 2e5;
-        int N = _N;
-        out << N << endl;
-        std::vector<std::pair<int, int>> edges;
+        const int _N = 4;
+        const int _M = 2;
+        const int _V = 5;
+        int N = _N, M = _M;
+        out << N << ' ' << M << endl;
         for (auto i: range(2, N+1)) {
-            auto x = randint(1, i-1);
-            edges.push_back({i, x});
+            auto x =  randint(1, i-1);
+            out << x << ' ' << i << endl;
         }
-        ranges::shuffle(edges, random);
-        for (auto [x, y]: edges)  out << x << ' ' << y << endl;
-        std::vector<int> val(N);
-        for (auto &x: val)  x = randint(-_V, +_V);
-        for (auto x: val)  out << x << ' ';
+        std::vector<int> w(N);
+        for (auto &x: w)  x = randint(1, _V);
+        for (auto x: w)  out << x << ' ';
         out << endl;
 
-        int Q = _Q;
-        out << Q << endl;
-        for (auto _: range(Q)) {
-            auto op = randint(1, 3);
+        out << randint(1, N) << endl;
+        for (; M != 0; ) {
+            int op = randint(1, 3);
             if (op == 1) {
-                out << "QMAX" << " ";
-                auto x = randint(1, N), y = randint(1, N);
-                out << x << ' ' << y << endl;
+                out << 1 << ' ' << randint(1, N) << endl;
             } else if (op == 2) {
-                out << "QSUM" << " ";
-                auto x = randint(1, N), y = randint(1, N);
-                out << x << ' ' << y << endl;
+                auto x = randint(1, N);
+                auto y = randint(1, N);
+                if (x == y)  continue;
+                out << 2 << ' ' << x << ' ' << y << ' ' << randint(1, _V) << endl;
             } else {
-                out << "CHANGE" << " ";
-                auto x = randint(1, N), y = randint(-_V, +_V);
-                out << x << " " << y << endl;
+                out << 3 << ' ' << randint(1, N) << endl;
             }
+            M--;
         }
     }
 }
