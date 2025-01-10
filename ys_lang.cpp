@@ -460,7 +460,7 @@ namespace GenshinLang {
     };
     namespace Keywords {
         enum KeywordType: int {
-            None, If, While, For, Var, Def, Return, Else
+            None, If, While, For, Var, Def, Return, Else, Int
         };
         void joinKeywords(IdentifierMap &idMap) {
             idMap.join(If, "if");
@@ -470,6 +470,7 @@ namespace GenshinLang {
             idMap.join(Def, "def");
             idMap.join(Return, "return");
             idMap.join(Else, "else");
+            idMap.join(Int, "int");
         }
     }
     IdentifierMap::IdentifierMap(): mappingStringToIndex(), mappingIndexToString() {
@@ -1774,16 +1775,87 @@ namespace GenshinLang {
         }
     };
     namespace Compiler {
-        
-        struct ObjectData {
-            size_t index;  // 在栈内存中的下标
+        // 维护类型信息
+        struct TypeName {
+            enum Type {
+                None,  // 无类型
+                Struct,  // 自定义结构体
+                Int,  // 其他内建类型
+            } type;
+            struct Member {  // 成员
+                TypeName *type;  // 类型
+                Identifier name;  // 成员名
+            };
+            Identifier name;  // 类型名
+            size_t size;  // 大小，相当于 sizeof
+            size_t alignment;  // 对齐
+            std::vector<Member> members;
         };
+        std::deque<TypeName> typeNames;
+        struct ObjectData {
+            TypeName *type;  // 类型信息
+            Identifier name;  // 变量名
+            size_t index;  // 相对于当前栈底
+        };
+        size_t align(size_t x, size_t to) {
+            switch (to) {
+            case 1:  return x;
+            case 2:  return (x + 1) >> 1;
+            case 4:  return (x + 3) >> 2;
+            case 8:  return (x + 7) >> 3;
+            default:  unreachable();
+            }
+        }
         class Compiler {
         public:
-            struct Scope: public ScopeBase<ObjectData> {
-
+            using VariableScope = ScopeBase<ObjectData *>;
+            using TypeScope = ScopeBase<TypeName *>;
+            struct Scope {
+                VariableScope *variableScope = nullptr;
+                TypeScope *typeScope = nullptr;
+                size_t bottom;  // 栈底位置
+                size_t top;  // 栈顶位置（空闲）
+                Scope(size_t pos, Scope *parent = nullptr): bottom(pos), top(pos) {
+                    variableScope = new VariableScope(parent? parent->variableScope: nullptr);
+                    typeScope = new TypeScope(parent? parent->typeScope: nullptr);
+                }
+                ~Scope() {
+                    delete variableScope;
+                    delete typeScope;
+                }
             };
+
+            Program *program;
+            std::vector<Scope> scopeStack;
+
+            Compiler(Program *);
+            auto compile() -> void;  // 编译并重新写入 program
+            auto enterScope() -> void;  // 进入一个作用域
+            auto enterFunctionScope() -> void;  // 进入一个函数作用域（栈底指针设为 0）
+            auto topScope() -> Scope &;  // 获取当前顶级作用域
+            auto declareVariable(Identifier, TypeName *) -> void;  // 声明一个变量
         };
+
+        Compiler::Compiler(Program *program): program(program) {
+        }
+        auto Compiler::enterScope() -> void {
+            // 进入一个定义域
+            // 栈底指针对齐至 8 字节
+            auto bottom = align(topScope().top, 8);
+            scopeStack.push_back(Scope(bottom, &topScope()));
+        }
+        auto Compiler::enterFunctionScope() -> void {
+            // 进入一个函数作用域（栈底指针设为 0）
+            scopeStack.push_back(Scope(0, &topScope()));
+        }
+        auto Compiler::topScope() -> Scope & {
+            return scopeStack.back();
+        }
+        auto Compiler::declareVariable(Identifier name, TypeName *type) -> void {
+            // 寻找合适的位置
+            auto bottom = align(topScope().top, type->alignment);
+            // scopeStack.back().variableScope->variables.insert({name, ObjectData{type, name, bottom}});
+        }
     };
 
     namespace Interpreter {
