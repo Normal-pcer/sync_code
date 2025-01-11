@@ -1,6 +1,12 @@
+/**
+ * @link https://neooj.com:8082/oldoj/problem.php?id=3356
+ */
+
+#include "./libs/debug_macros.hpp"
+
+#include "./lib_v3.hpp"
+
 #include <bits/stdc++.h>
-// 是否支持 __int128
-// #if IO_ENABLE_INT128
 #ifdef __linux__
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -16,12 +22,10 @@ namespace lib {
         }
     };
     template <typename T>  struct is_integral_or_int128 { constexpr static bool value = std::is_integral<T>::value; };
-    template <typename T>  struct is_floating_point_or_float128 { constexpr static bool value = std::is_floating_point<T>::value; };
-#ifdef IO_ENABLE_INT128
     template <>  struct is_integral_or_int128<__int128> { constexpr static bool value = true; };
     template <>  struct is_integral_or_int128<unsigned __int128> { constexpr static bool value = true; };
+    template <typename T>  struct is_floating_point_or_float128 { constexpr static bool value = std::is_floating_point<T>::value; };
     template <>  struct is_floating_point_or_float128<__float128> { constexpr static bool value = true; };
-#endif  // def IO_ENABLE_INT128
     template <typename T> struct is_number {
         constexpr static bool value = is_integral_or_int128<T>::value || is_floating_point_or_float128<T>::value;
     };
@@ -76,7 +80,8 @@ namespace lib {
             for (; not isBlank(ch); ch = gc())  s.push_back(ch); 
             return *this;
         }
-        Scanner &operator>> (auto &x) {
+        template <typename T>
+        Scanner &operator>> (T &x) {
             return read(x);
         }
         
@@ -223,4 +228,86 @@ namespace lib {
     struct DefaultIO: public FileReadScanner<MaxSize>, FileWritePrinter<MaxSize> {};
     DefaultIO<1<<20> io;
 #endif  // def __linux__
+}
+
+using namespace lib;
+
+namespace Solution_1220383573426443 {
+    class BIT {
+        std::vector<int> c;
+        static constexpr auto lowbit(int x) -> int { return x & -x; }
+    public:
+        BIT(int N): c(N+1) {}
+        auto xorAt(int x, int val) -> void {
+            debug  std::printf("xorAt %d %d \n", x, val);
+            x++;
+            while (x < static_cast<int>(c.size())) {
+                c[x] ^= val;
+                x += lowbit(x);
+            }
+        }
+        auto xorSumPrefix(int x) -> int {
+            debug  std::printf("xorSumPrefix %d\n", x);
+            if (x < 0)  return 0;
+            x++;  auto res = 0;
+            while (x) {
+                res ^= c[x];
+                x -= lowbit(x);
+            }
+            return res;
+        }
+        auto xorSumRange(int x, int y) -> int {
+            return xorSumPrefix(y - 1) ^ xorSumPrefix(x - 1);
+        }
+    };
+    void solve() {
+        int N;  io >> N;
+        std::vector<int> nums(N);
+        for (auto &x: nums)  io >> x;
+        std::vector<int> values(nums);
+        std::sort(values.begin(), values.end()), values.erase(std::unique(values.begin(), values.end()), values.end());
+        for (auto &x: nums) {
+            auto it = std::lower_bound(values.begin(), values.end(), x);
+            assert(*it == x);
+            x = std::distance(values.begin(), it);
+        }
+        int M;  io >> M;
+        struct Query {
+            int l, r;
+            int index;
+        };
+        std::vector<Query> queries(M);
+        for (size_t i = 0; i != queries.size(); i++) {
+            auto &[l, r, index] = queries[i];
+            io >> l >> r, l--, r--, index = i;
+        }
+
+        std::sort(queries.begin(), queries.end(), lam(x, y, x.r < y.r));  // 右端点升序
+        BIT unique{N}, all{N};  // 有无去重
+        std::vector<int> prev(values.size(), -1);  // i 上一次出现的位置
+        std::vector<int> answer(queries.size());
+        
+        size_t i = 0;  // 第一个没有被加入的数字
+        for (auto [l, r, index]: queries) {
+            // 加入右端点及以前的所有数
+            while (i != nums.size() and static_cast<int>(i) <= r) {
+                all.xorAt(i, values[nums[i]]);
+                unique.xorAt(i, values[nums[i]]);
+                if (prev[nums[i]] != -1)  unique.xorAt(prev[nums[i]], values[nums[i]]);  // 去重
+                prev[nums[i]] = i;
+                i += 1;
+            }
+            auto all_xor_sum = all.xorSumRange(l, r + 1);
+            auto unique_xor_sum = unique.xorSumRange(l, r + 1);
+            auto response = all_xor_sum ^ unique_xor_sum;
+            answer[index] = response;
+        }
+        for (auto x: answer)  io << x << endl;
+    }
+}
+
+int main(int argc, char const *argv[]) {
+    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
+    Solution_1220383573426443::solve();
+    return 0;
 }

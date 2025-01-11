@@ -16,33 +16,15 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         const int _N = 4;
-        const int _M = 2;
         const int _V = 5;
-        int N = _N, M = _M;
-        out << N << ' ' << M << endl;
-        for (auto i: range(2, N+1)) {
-            auto x =  randint(1, i-1);
-            out << x << ' ' << i << endl;
-        }
-        std::vector<int> w(N);
-        for (auto &x: w)  x = randint(1, _V);
-        for (auto x: w)  out << x << ' ';
-        out << endl;
-
-        out << randint(1, N) << endl;
-        for (; M != 0; ) {
-            int op = randint(1, 3);
-            if (op == 1) {
-                out << 1 << ' ' << randint(1, N) << endl;
-            } else if (op == 2) {
-                auto x = randint(1, N);
-                auto y = randint(1, N);
-                if (x == y)  continue;
-                out << 2 << ' ' << x << ' ' << y << ' ' << randint(1, _V) << endl;
-            } else {
-                out << 3 << ' ' << randint(1, N) << endl;
-            }
-            M--;
+        int N = _N;
+        out << N << endl;
+        for (auto _: range(N)) {
+            int x, y, z;
+            x = randint(1, _V);
+            y = randint(1, _V);
+            z = randint(1, _V);
+            out << x << ' ' << y << ' ' << z << endl;
         }
     }
 }
