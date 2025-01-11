@@ -2,8 +2,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-const char s[] = "做个文明中国人ccccc🤣🤣🤣🤣❤❤❤😡😡😡";
-
+const char s[] = "做个文明中国人cccc";
 
 int main() {
 #ifdef _WIN32

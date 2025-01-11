@@ -34,6 +34,7 @@ if __name__ == '__main__':
             if re.match(TARGET_MATCH, file):
                 fullName = os.path.join(root, file)
                 with open(fullName, 'rb') as f:
+                    print(fullName)
                     binary = f.read()
                     encoding = chardet.detect(binary)["encoding"] or "UTF-8"
                     string = binary.decode(encoding)
