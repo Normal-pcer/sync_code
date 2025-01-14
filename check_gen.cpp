@@ -15,26 +15,28 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 3e4, _Q = 3e4, _V = 1023;
-        int N = _N, Q = _Q;
-        out << N << " " << Q << endl;
+        const int _N = 5, _Q = 5, _V = 5;
+        int N = _N;
+        out << N << endl;
+        for (auto _: range(N))  out << randint(-_V, _V) << " ";
+        out << endl;
         std::vector<std::vector<int>> G(N + 1);
         for (auto i: range(2, N + 1)) {
             auto prev = randint(1, i - 1);
-            out << prev << " " << i << " " << randint(1, _V) << endl;
+            out << prev << " " << i << endl;
             G[i].push_back(prev), G[prev].push_back(i);
         }
+        int Q = _Q;  out << Q << endl;
         int i = 0;
         while (i != Q) {
-            int op = randint(1, 2);
+            int op = randint(1, 1);
+            int x = randint(1, N), y = randint(1, N);
             if (op == 1) {
-                int x = randint(1, N), y = randint(1, N);
                 if (x == y)  continue;
                 out << op << " " << x << " " << y << endl;
             } else {
-                int x = randint(1, N);
-                int y = G[x].at(randint(0, G[x].size() - 1));
-                int z = randint(1, _V);
+                if (x == y)  continue;
+                int z = randint(-_V, _V);
                 out << op << " " << x << " " << y << " " << z << endl;
             }
             i++;

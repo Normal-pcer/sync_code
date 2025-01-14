@@ -1,8 +1,10 @@
 /**
  * @link https://www.luogu.com.cn/problem/P4116
  */
-#include "libs/debug_macros.hpp"
-#include "lib"
+#include "./libs/debug_macros.hpp"
+
+#include "./lib_v3.hpp"
+
 using namespace lib;
 
 namespace Solution_1787195618240513 {
@@ -11,33 +13,79 @@ namespace Solution_1787195618240513 {
     std::array<int, _N> depth, size, fa, son, top, index;
     std::vector<int> order;
 
-    class SegTree {
-        struct Node {
-            int begin, end;
-            int shallow;  // 最浅的点
-        };
-        std::array<Node, (_N << 2)> tr;
-
-        static constexpr auto lson(int p) -> int { return p << 1; }
-        static constexpr auto rson(int p) -> int { return p << 1 | 1; }
-        auto pushUp(int p) -> void {
-            tr[p].shallow = ranges::min({tr[lson(p)].shallow, tr[rson(p)].shallow}, std::less{}, lam(x, depth[x]));
+    auto depth_cmp = [](int x, int y) { return depth[x] < depth[y]; };
+    std::array<std::set<int, decltype(depth_cmp)>, _N> sets;
+    
+    auto dfs1(int p, int prev) -> void {
+        size[p] = 1, fa[p] = prev;
+        depth[p] = depth[prev] + 1;
+        for (auto x: graph[p])  if (x != prev) {
+            dfs1(x, p);
+            size[p] += size[x];
+            if (size[son[p]] < size[x]) {
+                son[p] = x;
+            }
         }
-        auto build(int begin, int end, int p = 1) -> void {
-            tr[p].begin = begin, tr[p].end = end;
-            if (begin + 1 == end)  return;
-            auto mid = std::midpoint(begin, end);
-            build(begin, mid, lson(p)), build(mid, end, rson(p));
-            pushUp(p);
+    }
+    auto dfs2(int p, int tp) -> void {
+        top[p] = tp, index[p] = order.size(), order.push_back(p);
+        if (son[p] != 0)  dfs2(son[p], tp);
+        for (auto x: graph[p]) {
+            if (x != fa[p] and x != son[p]) {
+                dfs2(x, x);
+            }
         }
-    public:
-        SegTree(int N) { build(0, N, 1); }
-        // auto 
-    };
+    }
+    auto updatePoint(int p) -> void {
+        auto &set = sets[top[p]];
+        if (set.contains(p)) {
+            set.erase(p);
+        } else {
+            set.insert(p);
+        }
+    }
+    auto queryAncestor(int p) -> int {
+        auto ans = 0;
+        while (top[p] != top[1]) {
+            if (not sets[top[p]].empty()) {
+                auto it = sets[top[p]].begin();
+                if (depth[*it] <= depth[p]) {
+                    ans = *it;
+                }
+            }
+            p = fa[top[p]];
+        }
+        if (not sets[top[p]].empty()) {
+            auto it = sets[top[p]].begin();
+            if (depth[*it] <= depth[p]) {
+                ans = *it;
+            }
+        }
+        return ans;
+    }
 
     void solve() {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr), std::cout.tie(nullptr);
+
+        int N, Q;  std::cin >> N >> Q;
+        for (auto _ = 0; _ < N - 1; _++) {
+            int x, y;  std::cin >> x >> y;
+            graph[x].push_back(y);
+            graph[y].push_back(x); 
+        }
+        dfs1(1, 1), dfs2(1, 0);
+        depth[0] = inf;
+        for (auto _ = 0; _ < Q; _++) {
+            int op, x;  std::cin >> op >> x;
+            if (op == 1) {
+                auto ans = queryAncestor(x);
+                if (ans == 0)  std::cout << -1 << endl;
+                else  std::cout << ans << endl;
+            } else {
+                updatePoint(x);
+            }
+        }
     }
 }
 
