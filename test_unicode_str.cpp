@@ -5,13 +5,34 @@ namespace Test {
         return __builtin_clz(x);
     }
     struct UnicodeChar {
+        // 按照 UTF-8 编码
+        // 低字节位置在高位存储，但始终占据低 8*size 位
         uint32_t data;
+        UnicodeChar(): data(0) {}
+        UnicodeChar(uint32_t x): data(x) {}
+        UnicodeChar(char x): data(x) {}
         auto size() const -> size_t {
             unsigned int x = clz(data);
             if (x == 0U)  return 1;
             else  return 4 - (x >> 3);
         }
+        auto operator= (const UnicodeChar &) = delete;
+
+        friend auto operator<< (std::ostream &st, UnicodeChar const &ch) -> std::ostream & {
+            uint32_t data = ch.data;
+            std::array<char, 4> bytes;
+            for (int i = 0; i < 4; i++) {
+                bytes[3 - i] = data & 255U;
+                data >>= 8;
+            }
+            for (int i = 4 - ch.size(); i < 4; i++) {
+                st << bytes[i];
+            }
+            return st;
+        }
     };
+
+    struct UnicodeStringAccessor;
     struct UnicodeString {
         size_t _align = 1;              // 对齐长度
         size_t _size = 0;               // 字符数量
@@ -25,6 +46,33 @@ namespace Test {
 
         auto size() const noexcept -> size_t { return _size; }
         auto align() const noexcept -> size_t { return _align; }
+        auto assign(size_t pos, UnicodeChar ch) -> void {
+            auto char_size = ch.size();
+            if (char_size > align()) {
+                size_t new_align = char_size;  // 对齐到当前字符宽度
+                size_t new_storage_bytes = new_align * capacity();  // 存储区的字符数量不变
+                char *new_storage_ptr = new char[new_storage_bytes];  // 新的存储区指针
+                std::memset(new_storage_ptr, 0, new_storage_bytes);
+                for (size_t i = 0, src = 0, dest = 0; i < size(); i++, src += align(), dest += new_align) {
+                    std::memcpy(&new_storage_ptr[dest] + (new_align - align()), &storage_ptr[src], align());
+                }
+                _align = new_align;
+                delete[] storage_ptr, storage_ptr = new_storage_ptr;
+            }
+            // 取 ch 数字的低位
+            std::array<char, MaxAlign> bytes;  // 分字节存储
+            {
+                std::memset(bytes.begin(), 0, sizeof(bytes));
+                uint32_t val = ch.data;
+                char *pt = bytes.begin();
+                for (size_t i = 0; i < char_size; i++) {
+                    *pt++ = val & 255U;
+                    val >>= 8;
+                }
+                std::reverse(bytes.begin(), bytes.begin() + align());
+            }
+            std::memcpy(&storage_ptr[pos * align()], bytes.begin(), align());
+        }
         auto capacity() const noexcept -> size_t { return _capacity; }
         auto pushBack(UnicodeChar ch) -> void {
             auto char_size = ch.size();
@@ -81,7 +129,6 @@ namespace Test {
             while (true) {
                 char c;  st >> c;
                 unsigned char head = c;
-                // std::cout << std::fixed << std::hex << static_cast<unsigned>(head) << "*" << std::endl;
                 uint32_t val = 0;
                 if (not st)  break;
                 if (head <= 32 or head == 127)  break;
@@ -89,7 +136,6 @@ namespace Test {
                 int byte_cnt = (head >> 7? __builtin_clz(~static_cast<unsigned int>(head) << 24): 1);
                 for (int i = 0; i < byte_cnt - 1; i++) {
                     unsigned char ch = st.get();
-                    // std::cout << std::fixed << std::hex << static_cast<unsigned>(static_cast<unsigned char>(ch)) << "*" << std::endl;
                     assert(static_cast<unsigned char>(ch) >> 7);
                     val = (val << 8) + ch;
                 }
@@ -98,21 +144,47 @@ namespace Test {
             return st;
         }
     };
+    struct UnicodeStringWithAccessor: public UnicodeString {
+        auto operator[] (size_t) -> UnicodeStringAccessor;
+    };
+    struct UnicodeStringAccessor {
+        UnicodeStringWithAccessor &str;
+        size_t index;
+        UnicodeStringAccessor(UnicodeStringWithAccessor &str, size_t index): str(str), index(index) {}
+        operator UnicodeChar () const {
+            return static_cast<const UnicodeString &>(str)[index];
+        }
+        auto operator() () const {
+            return static_cast<UnicodeChar>(*this);
+        }
+        auto operator= (UnicodeChar ch) -> UnicodeStringAccessor & {
+            str.assign(index, ch);
+            return *this;
+        }
+    };
+    auto UnicodeStringWithAccessor::operator[] (size_t pos) -> UnicodeStringAccessor {
+        return UnicodeStringAccessor{*this, pos};
+    }
+    auto operator""_utf8(const char *s, size_t) -> UnicodeString {
+        UnicodeString res;
+        std::stringstream st(s);
+        st >> res;
+        return res;
+    }
+    auto operator""_utf8a(const char *s, size_t) -> UnicodeStringWithAccessor {
+        UnicodeStringWithAccessor res;
+        std::stringstream st(s);
+        st >> res;
+        return res;
+    }
 }
 
 using namespace Test;
 
 int main() {
-    std::string s = "鸡cccπ";
-    UnicodeString str;
-    std::stringstream(s) >> str;
-    size_t sz = str.size() * str.align();
-    for (size_t i = 0; i < sz; i++) {
-        char x = str.storage_ptr[i];
-        std::cout << std::bitset<8>(x) << std::endl;
-    }
+    auto str = "鸡cccccπ"_utf8;
     for (size_t i = 0; i < str.size(); i++) {
-        std::cout << str[i].data << std::endl;
+        std::cout << str[i] << std::endl;
     }
     std::cout << str.size() << std::endl;
     return 0;

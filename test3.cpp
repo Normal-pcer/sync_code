@@ -1,7 +1,12 @@
 #include <bits/stdc++.h>
 
+struct A {
+    int a, b;
+};
+
+A f() { return {}; }
+
 int main() {
-    char arr[] = "鸡\0\0\0";
-    std::cout << *(int *)arr << std::endl;
+    f() = A{1, 2};
     return 0;
 }
