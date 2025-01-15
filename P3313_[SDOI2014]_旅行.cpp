@@ -48,7 +48,7 @@ namespace Solution_4828700238829491 {
         }
         auto sumRange(int begin, int end, Node *p, int node_begin, int node_end) const -> int {
             if (p == &nodes.front())  return 0;
-            if (node_begin + 1 == node_end)  return p->sum;
+            if (node_begin >= begin and node_end <= end)  return p->sum;
             auto node_mid = std::midpoint(node_begin, node_end);
             auto res = 0;
             if (begin < node_mid)  res += sumRange(begin, end, p->left, node_begin, node_mid);
@@ -60,7 +60,7 @@ namespace Solution_4828700238829491 {
         }
         auto maxRange(int begin, int end, Node *p, int node_begin, int node_end) const -> int {
             if (p == &nodes.front())  return 0;
-            if (node_begin + 1 == node_end)  return p->max;
+            if (node_begin >= begin and node_end <= end)  return p->max;
             auto node_mid = std::midpoint(node_begin, node_end);
             auto res = -inf;
             if (begin < node_mid)  chkMax(res, maxRange(begin, end, p->left, node_begin, node_mid));

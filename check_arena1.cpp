@@ -1,144 +1,140 @@
-#include <iostream>
-#include <cstdio>
-#include <cstring>
-#include <algorithm>
-#define lson rt<<1
-#define rson rt<<1|1
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
 
-const int N=1e5+5,M=2e5+5;
-int n,q,tot,x[N],lnk[N],ter[M],nxt[M];
-int idx,dfn[N],seq[N],sz[N],dep[N],hvy[N],top[N],fa[N];
-struct Node {
-    int sum,lmx,rmx,ret,tag;
-    bool cov;
-    Node() {sum=lmx=rmx=ret=0;}
-}seg[N<<2];
+struct Tree{
+	int ls,rs,sum,maxn;
+};
 
-void add(int u,int v) {
-    ter[++tot]=v,nxt[tot]=lnk[u],lnk[u]=tot;
+int n,m,cnt,tot;
+int rt[100001],a[100001],b[100001];
+int dep[100001],siz[100001],fa[100001],son[100001],dfn[100001],rnk[100001],tp[100001];
+vector<int> e[100001];
+Tree tr[10000000];
+
+void pushup(int i){
+	tr[i].sum=tr[tr[i].ls].sum+tr[tr[i].rs].sum;
+	tr[i].maxn=max(tr[tr[i].ls].maxn,tr[tr[i].rs].maxn);
 }
-void dfs1(int u,int f) {
-    dep[u]=dep[f]+1,fa[u]=f,sz[u]=1;
-    for(int i=lnk[u];i;i=nxt[i]) {
-        int v=ter[i];
-        if(v==f) continue;
-        dfs1(v,u);
-        sz[u]+=sz[v];
-        if(sz[v]>sz[hvy[u]]) hvy[u]=v;
-    }
+
+void update(int &i,int l,int r,int x,int k){
+	if (i==0) i=++tot;
+	if (l==r){
+		tr[i].sum=tr[i].maxn=k;
+		return;
+	}
+	int mid=(l+r)>>1;
+	if (x<=mid) update(tr[i].ls,l,mid,x,k);
+	else update(tr[i].rs,mid+1,r,x,k);
+	pushup(i);
 }
-void dfs2(int u,int tp) {
-    dfn[u]=++idx,seq[idx]=u,top[u]=tp;
-    if(!hvy[u]) return;
-    dfs2(hvy[u],tp);
-    for(int i=lnk[u];i;i=nxt[i]) {
-        int v=ter[i];
-        if(v==fa[u]||v==hvy[u]) continue;
-        dfs2(v,v);
-    }
+
+int qsum(int i,int l,int r,int ql,int qr){
+	if (i==0) return 0;
+	if (l>=ql and r<=qr) return tr[i].sum;
+	int mid=(l+r)>>1;
+	int ans=0;
+	if (mid>=ql) ans+=qsum(tr[i].ls,l,mid,ql,qr);
+	if (mid<qr) ans+=qsum(tr[i].rs,mid+1,r,ql,qr);
+	return ans;
 }
-Node merge(Node x,Node y) {
-    Node ans;
-    ans.sum=x.sum+y.sum;
-    ans.lmx=std::max(x.lmx,x.sum+y.lmx);
-    ans.rmx=std::max(y.rmx,y.sum+x.rmx);
-    ans.ret=std::max(std::max(x.ret,y.ret),x.rmx+y.lmx);
-    ans.tag=ans.cov=0;
-    return ans;
+
+int qmax(int i,int l,int r,int ql,int qr){
+	if (i==0) return 0;
+	if (l>=ql and r<=qr) return tr[i].maxn;
+	int mid=(l+r)>>1;
+	int ans=0;
+	if (mid>=ql) ans=max(ans,qmax(tr[i].ls,l,mid,ql,qr));
+	if (mid<qr) ans=max(ans,qmax(tr[i].rs,mid+1,r,ql,qr));
+	return ans;
 }
-void build(int rt,int l,int r) {
-    if(l==r) {
-        seg[rt].sum=x[seq[l]];
-        seg[rt].lmx=seg[rt].rmx=seg[rt].ret=std::max(seg[rt].sum,0);
-        seg[rt].cov=0;
-        return;
-    }
-    int mid=(l+r)>>1;
-    build(lson,l,mid);
-    build(rson,mid+1,r);
-    seg[rt]=merge(seg[lson],seg[rson]);
+
+void dfs1(int u,int f){
+	siz[u]=1;
+	dep[u]=dep[f]+1;
+	fa[u]=f;
+	for (auto i:e[u]){
+		if (i!=f){
+			dfs1(i,u);
+			siz[u]+=siz[i];
+			if (siz[i]>siz[son[u]]){
+				son[u]=i;
+			}
+		}
+	}
 }
-void update(int rt,int l,int r,int k) {
-    seg[rt].sum=(r-l+1)*k;
-    seg[rt].lmx=seg[rt].rmx=seg[rt].ret=std::max(seg[rt].sum,0);
-    seg[rt].cov=1,seg[rt].tag=k;
+
+void dfs2(int u,int t){
+	tp[u]=t;
+	dfn[u]=++cnt;
+	rnk[dfn[u]]=u;
+	if (son[u]) dfs2(son[u],t);
+	for (auto i:e[u]){
+		if (i!=fa[u] and i!=son[u]){
+			dfs2(i,i);
+		}
+	}
 }
-void pushdown(int rt,int l,int r) {
-    if(!seg[rt].cov) return;
-    int mid=(l+r)>>1;
-    update(lson,l,mid,seg[rt].tag);
-    update(rson,mid+1,r,seg[rt].tag);
-    seg[rt].tag=seg[rt].cov=0;
+
+int qsum(int u,int v){
+	int ans=0,x=b[u];
+	while (tp[u]!=tp[v]){
+		if (dep[tp[u]]<dep[tp[v]]) swap(u,v);
+		ans+=qsum(rt[x],1,n,dfn[tp[u]],dfn[u]);
+		u=fa[tp[u]];
+	}
+	if (dep[u]<dep[v]) swap(u,v);
+	ans+=qsum(rt[x],1,n,dfn[v],dfn[u]);
+	return ans;
 }
-void modify(int x,int y,int rt,int l,int r,int k) {
-    if(x<=l&&r<=y) {
-        update(rt,l,r,k);
-        return;
-    }
-    pushdown(rt,l,r);
-    int mid=(l+r)>>1;
-    if(x<=mid) modify(x,y,lson,l,mid,k);
-    if(mid<y) modify(x,y,rson,mid+1,r,k);
-    seg[rt]=merge(seg[lson],seg[rson]);
+
+int qmax(int u,int v){
+	int ans=0,x=b[u];
+	while (tp[u]!=tp[v]){
+		if (dep[tp[u]]<dep[tp[v]]) swap(u,v);
+		ans=max(ans,qmax(rt[x],1,n,dfn[tp[u]],dfn[u]));
+		u=fa[tp[u]];
+	}
+	if (dep[u]<dep[v]) swap(u,v);
+	ans=max(ans,qmax(rt[x],1,n,dfn[v],dfn[u]));
+	return ans;
 }
-Node query(int x,int y,int rt,int l,int r) {
-    if(x<=l&&r<=y) return seg[rt];
-    pushdown(rt,l,r);
-    int mid=(l+r)>>1;
-    Node L,R;
-    if(x<=mid) L=query(x,y,lson,l,mid);
-    if(mid<y) R=query(x,y,rson,mid+1,r);
-    return merge(L,R);
-}
-void chainModify(int u,int v,int k) {
-    for(int fu=top[u],fv=top[v];fu^fv;u=fa[fu],fu=top[u]) {
-        if(dep[fu]<dep[fv]) std::swap(u,v),std::swap(fu,fv);
-        modify(dfn[fu],dfn[u],1,1,n,k);
-    }
-    if(dep[u]>dep[v]) std::swap(u,v);
-    modify(dfn[u],dfn[v],1,1,n,k);
-}
-Node chainQuery(int u,int v) {
-    Node L,R;
-    for(int fu=top[u],fv=top[v];fu^fv;) {
-        if(dep[fu]<dep[fv]) {
-            R=merge(query(dfn[fv],dfn[v],1,1,n),R);
-            v=fa[fv],fv=top[v];
-        } else {
-            L=merge(query(dfn[fu],dfn[u],1,1,n),L);
-            u=fa[fu],fu=top[u];
-        }
-    }
-    if(dep[u]>dep[v]) {
-        L=merge(query(dfn[v],dfn[u],1,1,n),L);
-    } else {
-        R=merge(query(dfn[u],dfn[v],1,1,n),R);
-    }
-    std::swap(L.lmx,L.rmx);
-    return merge(L,R);
-}
+
 int main() {
-    scanf("%d",&n);
-    for(int i=1;i<=n;++i) scanf("%d",&x[i]);
-    for(int i=1;i<n;++i) {
-        int u,v;
-        scanf("%d%d",&u,&v);
-        add(u,v),add(v,u);
-    }
-    dfs1(1,0),dfs2(1,1),build(1,1,n);
-    scanf("%d",&q);
-    while(q--) {
-        int opt;
-        scanf("%d",&opt);
-        if(opt==1) {
-            int l,r;
-            scanf("%d%d",&l,&r);
-            printf("%d\n",chainQuery(l,r).ret);
-        } else {
-            int l,r,k;
-            scanf("%d%d%d",&l,&r,&k);
-            chainModify(l,r,k);
-        }
-    }
-    return 0;
+	ios::sync_with_stdio(false);
+	cin.tie(0);
+	cout.tie(0);
+	cin>>n>>m;
+	for (int i=1;i<=n;i++){
+		cin>>a[i]>>b[i];
+	}
+	for (int i=1;i<n;i++){
+		int u,v;
+		cin>>u>>v;
+		e[u].push_back(v);
+		e[v].push_back(u);
+	}
+	dfs1(1,0);
+	dfs2(1,1);
+	for (int i=1;i<=n;i++){
+		update(rt[b[i]],1,n,dfn[i],a[i]);
+	}
+	for (int i=1;i<=m;i++){
+		string op;
+		int u,v;
+		cin>>op>>u>>v;
+		if (op=="CC"){
+			update(rt[b[u]],1,n,dfn[u],0);
+			b[u]=v;
+			update(rt[b[u]],1,n,dfn[u],a[u]);
+		}else if (op=="CW"){
+			a[u]=v;
+			update(rt[b[u]],1,n,dfn[u],a[u]);
+		}else if (op=="QS"){
+			cout<<qsum(u,v)<<"\n";
+		}else{
+			cout<<qmax(u,v)<<"\n";
+		}
+	}
+	return 0;
 }

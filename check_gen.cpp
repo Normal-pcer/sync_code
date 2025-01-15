@@ -15,29 +15,32 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 5, _Q = 5, _V = 5;
+        const int _N = 3, _Q = 3, _V = 5, _C = 2;
         int N = _N;
-        out << N << endl;
-        for (auto _: range(N))  out << randint(-_V, _V) << " ";
-        out << endl;
+        out << N << " ";
+        int Q = _Q;  out << Q << endl;
         std::vector<std::vector<int>> G(N + 1);
+        for (auto _: range(N)) {
+            out << randint(1, _V) << " " << randint(1, _C) << endl;
+        }
         for (auto i: range(2, N + 1)) {
             auto prev = randint(1, i - 1);
             out << prev << " " << i << endl;
             G[i].push_back(prev), G[prev].push_back(i);
         }
-        int Q = _Q;  out << Q << endl;
         int i = 0;
         while (i != Q) {
-            int op = randint(1, 1);
+            int op = randint(1, 4);
             int x = randint(1, N), y = randint(1, N);
+            if (x == y)  continue;
             if (op == 1) {
-                if (x == y)  continue;
-                out << op << " " << x << " " << y << endl;
+                out << "CC" << " " << x << " " << randint(1, _C) << endl;
+            } else if (op == 2) {
+                out << "CW" << " " << x << " " << randint(1, _V) << endl;
+            } else if (op == 3) {
+                out << "QS" << " " << x << " " << y << endl;
             } else {
-                if (x == y)  continue;
-                int z = randint(-_V, _V);
-                out << op << " " << x << " " << y << " " << z << endl;
+                out << "QM" << " " << x << " " << y << endl;
             }
             i++;
         }

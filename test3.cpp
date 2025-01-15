@@ -1,12 +1,22 @@
 #include <bits/stdc++.h>
 
+template <typename T>
 struct A {
-    int a, b;
+    T x;
+    auto print() -> void {
+        std::cout << x << std::endl;
+    }
 };
 
-A f() { return {}; }
+template <>
+struct A<int> {
+    int x;
+    auto test() -> int {
+        return x;
+    }
+};
 
 int main() {
-    f() = A{1, 2};
+    A<int>{5}.print();
     return 0;
 }
