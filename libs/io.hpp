@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 // 是否支持 __int128
-// #if IO_ENABLE_INT128
+#define IO_ENABLE_INT128
 #ifdef __linux__
 #include <sys/stat.h>
 #include <sys/mman.h>

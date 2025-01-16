@@ -211,7 +211,7 @@ namespace lib {
             }
             friend auto operator>> (std::istream &st, UnicodeString &u_str) -> std::istream & {
                 while (true) {
-                    char c;  st >> c;
+                    char c = st.get();
                     unsigned char head = c;
                     uint32_t val = 0;
                     if (not st)  break;
