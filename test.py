@@ -1,8 +1,20 @@
-T = int(input())
-for _ in range(T):
-    lis = [*map(int, input().split())][1:]
-    ans = 0
-    for i in lis:
-        ans |= i
-    
-    print(ans * pow(2, len(lis) - 1, 998244353) % 998244353)
+from abc import ABC, abstractmethod
+
+
+class A(ABC):
+    @abstractmethod
+    def getTarget(self):
+        pass
+
+    def work(self):
+        print("fuck", self.getTarget())
+
+class B(A):
+    def __init__(self):
+        pass
+    @staticmethod
+    def getTarget():
+        return "ccf"
+
+x = A()
+x.work()

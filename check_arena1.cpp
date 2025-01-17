@@ -1,140 +1,108 @@
-#include<bits/stdc++.h>
+#include<iostream>
+#include<algorithm>
+#include<cstring>
+#include<cstdio>
+#include<set>
 using namespace std;
-typedef long long ll;
-
-struct Tree{
-	int ls,rs,sum,maxn;
-};
-
-int n,m,cnt,tot;
-int rt[100001],a[100001],b[100001];
-int dep[100001],siz[100001],fa[100001],son[100001],dfn[100001],rnk[100001],tp[100001];
-vector<int> e[100001];
-Tree tr[10000000];
-
-void pushup(int i){
-	tr[i].sum=tr[tr[i].ls].sum+tr[tr[i].rs].sum;
-	tr[i].maxn=max(tr[tr[i].ls].maxn,tr[tr[i].rs].maxn);
+const int MAXN = 2e5 + 50;
+const int INF = 0x3f3f3f3f;
+multiset<int> s1, s2;
+multiset<int>::iterator it;
+int N, siz[MAXN], ans = INF;
+struct edge
+{
+    int nxt, to;
+} e[MAXN * 2];
+int head[MAXN], edgetot;
+int max(int a, int b, int c)
+{
+    return max(max(a, b), c);
 }
-
-void update(int &i,int l,int r,int x,int k){
-	if (i==0) i=++tot;
-	if (l==r){
-		tr[i].sum=tr[i].maxn=k;
-		return;
-	}
-	int mid=(l+r)>>1;
-	if (x<=mid) update(tr[i].ls,l,mid,x,k);
-	else update(tr[i].rs,mid+1,r,x,k);
-	pushup(i);
+int min(int a, int b, int c)
+{
+    return min(min(a, b), c);
 }
-
-int qsum(int i,int l,int r,int ql,int qr){
-	if (i==0) return 0;
-	if (l>=ql and r<=qr) return tr[i].sum;
-	int mid=(l+r)>>1;
-	int ans=0;
-	if (mid>=ql) ans+=qsum(tr[i].ls,l,mid,ql,qr);
-	if (mid<qr) ans+=qsum(tr[i].rs,mid+1,r,ql,qr);
-	return ans;
+void add(int x, int y)
+{
+    e[++edgetot].to = y;
+    e[edgetot].nxt = head[x];
+    head[x] = edgetot;
 }
-
-int qmax(int i,int l,int r,int ql,int qr){
-	if (i==0) return 0;
-	if (l>=ql and r<=qr) return tr[i].maxn;
-	int mid=(l+r)>>1;
-	int ans=0;
-	if (mid>=ql) ans=max(ans,qmax(tr[i].ls,l,mid,ql,qr));
-	if (mid<qr) ans=max(ans,qmax(tr[i].rs,mid+1,r,ql,qr));
-	return ans;
+void pre(int x, int f)
+{
+    siz[x] = 1;
+    for (int i = head[x]; i; i = e[i].nxt)
+    {
+        int v = e[i].to;
+        if (v == f)
+            continue;
+        pre(v, x);
+        siz[x] += siz[v];
+    }
 }
-
-void dfs1(int u,int f){
-	siz[u]=1;
-	dep[u]=dep[f]+1;
-	fa[u]=f;
-	for (auto i:e[u]){
-		if (i!=f){
-			dfs1(i,u);
-			siz[u]+=siz[i];
-			if (siz[i]>siz[son[u]]){
-				son[u]=i;
-			}
-		}
-	}
+void upd(int x, int y)
+{
+    // cout << x << " " << y << endl;
+    int c = N - x - y;
+    int maxn = max(x, y, c);
+    int minn = min(x, y, c);
+    ans = min(maxn - minn, ans);
 }
-
-void dfs2(int u,int t){
-	tp[u]=t;
-	dfn[u]=++cnt;
-	rnk[dfn[u]]=u;
-	if (son[u]) dfs2(son[u],t);
-	for (auto i:e[u]){
-		if (i!=fa[u] and i!=son[u]){
-			dfs2(i,i);
-		}
-	}
+void dfs(int x, int f)
+{
+    if (!s1.empty())
+    {
+        it = s1.lower_bound((N - siz[x]) / 2 + siz[x]);
+        //因为祖先栈中的值比实际的贡献值大siz[x]
+        //所以二分的基准值要加上siz[x]
+        if (it != s1.end())
+            upd(siz[x], *it - siz[x]);
+        if (it != s1.begin())
+        {
+            it--;
+            upd(siz[x], *it - siz[x]);
+        }
+    }
+    if (!s2.empty())
+    {
+        it = s2.lower_bound((N - siz[x]) / 2);
+        if (it != s2.end())
+            upd(siz[x], *it);
+        if (it != s2.begin())
+        {
+            it--;
+            upd(siz[x], *it);
+        }
+    }
+    if (x != 1)
+        s1.insert(siz[x]);
+    //节点入dfs栈时将权值加入祖先栈中
+    for (int i = head[x]; i; i = e[i].nxt)
+    {
+        int v = e[i].to;
+        if (v == f)
+            continue;
+        dfs(v, x);
+    }
+    if (x != 1)
+    {
+        s1.erase(s1.find(siz[x]));
+        s2.insert(siz[x]);
+    }
+    //节点出dfs栈时讲权值从祖先栈中移除加入另一个栈中
 }
-
-int qsum(int u,int v){
-	int ans=0,x=b[u];
-	while (tp[u]!=tp[v]){
-		if (dep[tp[u]]<dep[tp[v]]) swap(u,v);
-		ans+=qsum(rt[x],1,n,dfn[tp[u]],dfn[u]);
-		u=fa[tp[u]];
-	}
-	if (dep[u]<dep[v]) swap(u,v);
-	ans+=qsum(rt[x],1,n,dfn[v],dfn[u]);
-	return ans;
-}
-
-int qmax(int u,int v){
-	int ans=0,x=b[u];
-	while (tp[u]!=tp[v]){
-		if (dep[tp[u]]<dep[tp[v]]) swap(u,v);
-		ans=max(ans,qmax(rt[x],1,n,dfn[tp[u]],dfn[u]));
-		u=fa[tp[u]];
-	}
-	if (dep[u]<dep[v]) swap(u,v);
-	ans=max(ans,qmax(rt[x],1,n,dfn[v],dfn[u]));
-	return ans;
-}
-
-int main() {
-	ios::sync_with_stdio(false);
-	cin.tie(0);
-	cout.tie(0);
-	cin>>n>>m;
-	for (int i=1;i<=n;i++){
-		cin>>a[i]>>b[i];
-	}
-	for (int i=1;i<n;i++){
-		int u,v;
-		cin>>u>>v;
-		e[u].push_back(v);
-		e[v].push_back(u);
-	}
-	dfs1(1,0);
-	dfs2(1,1);
-	for (int i=1;i<=n;i++){
-		update(rt[b[i]],1,n,dfn[i],a[i]);
-	}
-	for (int i=1;i<=m;i++){
-		string op;
-		int u,v;
-		cin>>op>>u>>v;
-		if (op=="CC"){
-			update(rt[b[u]],1,n,dfn[u],0);
-			b[u]=v;
-			update(rt[b[u]],1,n,dfn[u],a[u]);
-		}else if (op=="CW"){
-			a[u]=v;
-			update(rt[b[u]],1,n,dfn[u],a[u]);
-		}else if (op=="QS"){
-			cout<<qsum(u,v)<<"\n";
-		}else{
-			cout<<qmax(u,v)<<"\n";
-		}
-	}
-	return 0;
+int main()
+{
+    scanf("%d", &N);
+    for (int i = 1; i <= N - 1; ++i)
+    {
+        int u, v;
+        scanf("%d%d", &u, &v);
+        add(u, v);
+        add(v, u);
+    }
+    pre(1, 0);
+    dfs(1, 0);
+    printf("%d\n", ans);
+    return 0;
 }

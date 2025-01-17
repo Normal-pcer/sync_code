@@ -1,4 +1,4 @@
-#include <bits/stdc++.h>
+#include <cassert>
 
 namespace Windows {
 #ifdef _WIN32
@@ -13,7 +13,7 @@ namespace lib {
             __Initializer() {
                 Windows::SetConsoleOutputCP(65001);
             }
-        };
+        } __initializer;
 #endif
     };
 }
@@ -165,7 +165,7 @@ namespace lib {
                     size_t new_align = char_size;  // 对齐到当前字符宽度
                     size_t new_storage_bytes = new_align * capacity();  // 存储区的字符数量不变
                     char *new_storage_ptr = new char[new_storage_bytes];  // 新的存储区指针
-                    // std::memset(new_storage_ptr, 0, new_storage_bytes);
+                    std::memset(new_storage_ptr, 0, new_storage_bytes);
                     for (size_t i = 0, src = 0, dest = 0; i < size(); i++, src += align(), dest += new_align) {
                         std::memcpy(&new_storage_ptr[dest] + (new_align - align()), &storage_ptr[src], align());
                     }
@@ -177,7 +177,7 @@ namespace lib {
                     size_t new_storage_bytes = new_capacity * align();
                     size_t data_bytes = size() * align();
                     char *new_storage_ptr = new char[new_storage_bytes];
-                    // std::memset(new_storage_ptr, 0, new_storage_bytes);
+                    std::memset(new_storage_ptr, 0, new_storage_bytes);
                     if (storage_ptr != nullptr) {
                         std::memcpy(new_storage_ptr, storage_ptr, data_bytes);
                     }

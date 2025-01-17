@@ -71,7 +71,7 @@ namespace Solution_1742502056898965 {
             {
                 auto f = [&](int sz_q) -> void {
                     debug  std::cout << "f_other " << sz_q << std::endl;
-                    auto a = size[p], b = sz_q, c = N - sz_q;
+                    auto a = size[p], b = sz_q, c = N - sz_q - size[p];
                     auto [cur_min, cur_max] = std::minmax({a, b, c});
                     auto cur = cur_max - cur_min;
                     chkMin(min, cur);
@@ -90,7 +90,7 @@ namespace Solution_1742502056898965 {
         auto getAnswer() -> int {
             int min = inf;
             std::vector<int> ancestor;
-            std::multiset<int> other;
+            std::multiset<int> other {N};
             _getAnswer(min, ancestor, other, 1, 0, 0);
             return min;
         }
