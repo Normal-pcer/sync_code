@@ -5,9 +5,13 @@
 #include "lib"
 using namespace lib;
 
+/**
+ * 
+ */
 namespace Solution_6710300631688193 {
     void solve() {
-        
+        std::ios::sync_with_stdio(false);
+        std::cin.tie(nullptr), std::cout.tie(nullptr);
     }
 }
 
