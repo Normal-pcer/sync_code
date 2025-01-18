@@ -1,108 +1,87 @@
-#include<iostream>
-#include<algorithm>
-#include<cstring>
-#include<cstdio>
-#include<set>
+#include<bits/stdc++.h>
 using namespace std;
-const int MAXN = 2e5 + 50;
-const int INF = 0x3f3f3f3f;
-multiset<int> s1, s2;
-multiset<int>::iterator it;
-int N, siz[MAXN], ans = INF;
-struct edge
+const int mod=1e9+7;
+const int inv2=5e8+4;
+inline int get_sum(int a,int b)
 {
-    int nxt, to;
-} e[MAXN * 2];
-int head[MAXN], edgetot;
-int max(int a, int b, int c)
-{
-    return max(max(a, b), c);
+	return a+b-(a+b>=mod?mod:0);
 }
-int min(int a, int b, int c)
+inline int get_power(int a,int n)
 {
-    return min(min(a, b), c);
+	int res=1;
+	while(n>0)
+	{
+		res=n&1?1ll*res*a%mod:res;
+		a=1ll*a*a%mod;
+		n>>=1;
+	}
+	return res;
 }
-void add(int x, int y)
+int n,m;
+inline int id(int x,int y)
 {
-    e[++edgetot].to = y;
-    e[edgetot].nxt = head[x];
-    head[x] = edgetot;
+	return (x-1)*(m<<1)+(y-1);
 }
-void pre(int x, int f)
+const int max_n=1e3+5;
+const int max_m=1e3+5;
+char str[max_m];
+int Map[max_n<<1][max_m<<1];
+const int max_tot=4e6+5;
+int pow2[max_tot],pow_inv2[max_tot],Hash[max_n<<1][max_m<<1];
+inline int get_Hash(int a,int b,int c,int d) // calculate the hash value of the matrix that the upper left corner is (a,b) and the lower right corner is (c,d)
 {
-    siz[x] = 1;
-    for (int i = head[x]; i; i = e[i].nxt)
-    {
-        int v = e[i].to;
-        if (v == f)
-            continue;
-        pre(v, x);
-        siz[x] += siz[v];
-    }
-}
-void upd(int x, int y)
-{
-    // cout << x << " " << y << endl;
-    int c = N - x - y;
-    int maxn = max(x, y, c);
-    int minn = min(x, y, c);
-    ans = min(maxn - minn, ans);
-}
-void dfs(int x, int f)
-{
-    if (!s1.empty())
-    {
-        it = s1.lower_bound((N - siz[x]) / 2 + siz[x]);
-        //因为祖先栈中的值比实际的贡献值大siz[x]
-        //所以二分的基准值要加上siz[x]
-        if (it != s1.end())
-            upd(siz[x], *it - siz[x]);
-        if (it != s1.begin())
-        {
-            it--;
-            upd(siz[x], *it - siz[x]);
-        }
-    }
-    if (!s2.empty())
-    {
-        it = s2.lower_bound((N - siz[x]) / 2);
-        if (it != s2.end())
-            upd(siz[x], *it);
-        if (it != s2.begin())
-        {
-            it--;
-            upd(siz[x], *it);
-        }
-    }
-    if (x != 1)
-        s1.insert(siz[x]);
-    //节点入dfs栈时将权值加入祖先栈中
-    for (int i = head[x]; i; i = e[i].nxt)
-    {
-        int v = e[i].to;
-        if (v == f)
-            continue;
-        dfs(v, x);
-    }
-    if (x != 1)
-    {
-        s1.erase(s1.find(siz[x]));
-        s2.insert(siz[x]);
-    }
-    //节点出dfs栈时讲权值从祖先栈中移除加入另一个栈中
+	return (1ll*Hash[c][d]-Hash[a-1][d]-Hash[c][b-1]+Hash[a-1][b-1]+2*mod)*pow_inv2[id(a,b)]%mod;
 }
 int main()
 {
-    scanf("%d", &N);
-    for (int i = 1; i <= N - 1; ++i)
-    {
-        int u, v;
-        scanf("%d%d", &u, &v);
-        add(u, v);
-        add(v, u);
-    }
-    pre(1, 0);
-    dfs(1, 0);
-    printf("%d\n", ans);
-    return 0;
+	scanf("%d%d",&n,&m);
+	for(int i=1;i<=n;++i)
+	{
+		scanf("%s",str+1);
+		for(int j=1;j<=m;++j)
+			Map[i][j]=Map[i+n][j]=Map[i][j+m]=Map[i+n][j+m]=(str[j]=='.');
+	}
+	pow2[0]=1;
+	for(int i=1;i<=(n*m<<2);++i)
+		pow2[i]=get_sum(pow2[i-1],pow2[i-1]);
+	pow_inv2[n*m<<2]=get_power(pow2[n*m<<2],mod-2);
+	for(int i=(n*m<<2)-1;i>=0;--i)
+		pow_inv2[i]=get_sum(pow_inv2[i+1],pow_inv2[i+1]); 
+	for(int i=1;i<=(n<<1);++i)	
+		for(int j=1;j<=(m<<1);++j)
+			Hash[i][j]=(1ll*Map[i][j]*pow2[id(i,j)]+Hash[i-1][j]+Hash[i][j-1]-Hash[i-1][j-1]+mod)%mod;
+	int ans_x=1,ans_y=1;
+	for(int i=1;i<=n;++i)
+		for(int j=1;j<=m;++j)
+		{
+			int L=1,R=n,res_x=n+1,res_y=m+1;
+			while(L<=R)
+			{
+				int mid=(L+R)>>1;
+				if(get_Hash(i,j,i+mid-1,j+m-1)!=get_Hash(ans_x,ans_y,ans_x+mid-1,ans_y+m-1))
+					res_x=mid,R=mid-1;
+				else
+					L=mid+1;
+			}
+			if(res_x==n+1)
+				continue;
+			L=1,R=m;
+			while(L<=R)
+			{
+				int mid=(L+R)>>1;
+				if(get_Hash(i+res_x-1,j,i+res_x-1,j+mid-1)!=get_Hash(ans_x+res_x-1,ans_y,ans_x+res_x-1,ans_y+mid-1))
+					res_y=mid,R=mid-1;
+				else
+					L=mid+1;
+			}
+			if(!Map[i+res_x-1][j+res_y-1])
+				ans_x=i,ans_y=j;
+		}
+	for(int i=1;i<=n;++i)
+	{
+		for(int j=1;j<=m;++j)
+			putchar(Map[ans_x+i-1][ans_y+j-1]?'.':'*');
+		putchar('\n');
+	}
+	return 0;
 }

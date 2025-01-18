@@ -15,14 +15,15 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 5;
-        int N = _N;
-        out << N << endl;
-        std::vector<std::vector<int>> G(N + 1);
-        for (auto i: range(2, N + 1)) {
-            auto prev = randint(1, i - 1);
-            out << prev << " " << i << endl;
-            G[i].push_back(prev), G[prev].push_back(i);
+        const int _N = 5, _M = 5;
+        int N = randint(1, _N), M = randint(1, _M);
+        out << N << " " << M << endl;
+        for (auto _: range(N)) {
+            for (auto _: range(M)) {
+                if (random() & 1)  out << "*";
+                else  out << ".";
+            }
+            out << endl;
         }
     }
 }
