@@ -127,13 +127,13 @@ namespace lib {
         template <typename T, typename std::enable_if<is_floating_point_or_float128<T>::value>::type* = nullptr>
         Printer &write(T x) {
             if (std::isnan(x))  return write("nan");
-            static char st[std::numeric_limits<T>::max_exponent10+1];
+            static char st[std::numeric_limits<T>::max_exponent10+10];
             char *top = st;
             if (x < 0)  x = -x, put('-');
             if (std::isinf(x))  return write("Infinity");
             auto y = std::floor(x);
             while (y >= 1) {
-                auto cur = y - (std::floor(y / 10) * 10);
+                auto cur = std::fmod(y, 10);
                 y = (y - cur) / 10;
                 *top++ = (int)(cur) ^ 48;
             }

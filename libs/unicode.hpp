@@ -1,4 +1,10 @@
 #include <cassert>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
+#include <iostream>
+#include <iterator>
+#include <sstream>
 
 namespace Windows {
 #ifdef _WIN32
