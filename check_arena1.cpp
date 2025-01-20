@@ -1,87 +1,50 @@
 #include<bits/stdc++.h>
 using namespace std;
-const int mod=1e9+7;
-const int inv2=5e8+4;
-inline int get_sum(int a,int b)
+string str[2] = {"Emilija" , "Nina"};
+int n , m , t , q , tree[3000010][65] , cnt = 0;
+bool sg[3000010][2] , flag[3000010][30][2];
+int getnum(char c)
 {
-	return a+b-(a+b>=mod?mod:0);
+    if(c >= 'a' && c <= 'z') return c - 'a';
+    if(c >= 'A' && c <= 'Z') return c - 'A' + 26;
+    if(c >= '0' && c <= '9') return c - '0' + 52;
+    mt19937 rnd(random_device{}());
+    int dick = rnd();
+    goto egg;
+    egg:;
+    return dick;
 }
-inline int get_power(int a,int n)
+void update(string s , int op)
 {
-	int res=1;
-	while(n>0)
-	{
-		res=n&1?1ll*res*a%mod:res;
-		a=1ll*a*a%mod;
-		n>>=1;
+    int p = 0;
+    for(int i = 0 ; i < (int)s.size() ; i ++)
+    {
+    	int c = getnum(s[i]);
+    	sg[p][op] = 1;
+		flag[p][c][op] = 1;
+    	if(!tree[p][c]) tree[p][c] = ++ cnt;
+    	p = tree[p][c];
 	}
-	return res;
+	sg[p][op] = 0;
 }
-int n,m;
-inline int id(int x,int y)
+void query(int p , int op)
 {
-	return (x-1)*(m<<1)+(y-1);
-}
-const int max_n=1e3+5;
-const int max_m=1e3+5;
-char str[max_m];
-int Map[max_n<<1][max_m<<1];
-const int max_tot=4e6+5;
-int pow2[max_tot],pow_inv2[max_tot],Hash[max_n<<1][max_m<<1];
-inline int get_Hash(int a,int b,int c,int d) // calculate the hash value of the matrix that the upper left corner is (a,b) and the lower right corner is (c,d)
-{
-	return (1ll*Hash[c][d]-Hash[a-1][d]-Hash[c][b-1]+Hash[a-1][b-1]+2*mod)*pow_inv2[id(a,b)]%mod;
-}
-int main()
-{
-	scanf("%d%d",&n,&m);
-	for(int i=1;i<=n;++i)
+	if(!sg[p][op]) return;
+	for(int i = 0 ; i < 26 ; i ++)
 	{
-		scanf("%s",str+1);
-		for(int j=1;j<=m;++j)
-			Map[i][j]=Map[i+n][j]=Map[i][j+m]=Map[i+n][j+m]=(str[j]=='.');
+		if(!flag[p][i][op]) continue;
+		query(tree[p][i] , op ^ 1);
+		if(!sg[tree[p][i]][op ^ 1]) return sg[p][op] = 1 , void();
 	}
-	pow2[0]=1;
-	for(int i=1;i<=(n*m<<2);++i)
-		pow2[i]=get_sum(pow2[i-1],pow2[i-1]);
-	pow_inv2[n*m<<2]=get_power(pow2[n*m<<2],mod-2);
-	for(int i=(n*m<<2)-1;i>=0;--i)
-		pow_inv2[i]=get_sum(pow_inv2[i+1],pow_inv2[i+1]); 
-	for(int i=1;i<=(n<<1);++i)	
-		for(int j=1;j<=(m<<1);++j)
-			Hash[i][j]=(1ll*Map[i][j]*pow2[id(i,j)]+Hash[i-1][j]+Hash[i][j-1]-Hash[i-1][j-1]+mod)%mod;
-	int ans_x=1,ans_y=1;
-	for(int i=1;i<=n;++i)
-		for(int j=1;j<=m;++j)
-		{
-			int L=1,R=n,res_x=n+1,res_y=m+1;
-			while(L<=R)
-			{
-				int mid=(L+R)>>1;
-				if(get_Hash(i,j,i+mid-1,j+m-1)!=get_Hash(ans_x,ans_y,ans_x+mid-1,ans_y+m-1))
-					res_x=mid,R=mid-1;
-				else
-					L=mid+1;
-			}
-			if(res_x==n+1)
-				continue;
-			L=1,R=m;
-			while(L<=R)
-			{
-				int mid=(L+R)>>1;
-				if(get_Hash(i+res_x-1,j,i+res_x-1,j+mid-1)!=get_Hash(ans_x+res_x-1,ans_y,ans_x+res_x-1,ans_y+mid-1))
-					res_y=mid,R=mid-1;
-				else
-					L=mid+1;
-			}
-			if(!Map[i+res_x-1][j+res_y-1])
-				ans_x=i,ans_y=j;
-		}
-	for(int i=1;i<=n;++i)
-	{
-		for(int j=1;j<=m;++j)
-			putchar(Map[ans_x+i-1][ans_y+j-1]?'.':'*');
-		putchar('\n');
-	}
+	sg[p][op] = 0;
+}
+signed main()
+{
+	scanf("%d" , &n); string s;
+	for(int i = 1 ; i <= n ; i ++) cin >> s , update(s , 0);
+	scanf("%d" , &m);
+	for(int i = 1 ; i <= m ; i ++) cin >> s , update(s , 1);
+	query(0 , 0);
+	cout << str[sg[0][0]];
 	return 0;
 }
