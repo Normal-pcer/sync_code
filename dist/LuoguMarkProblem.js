@@ -5,7 +5,8 @@
 // @version      2024-12-17
 // @description  try to take over the world!
 // @author       You
-// @match        https://www.luogu.com.cn/training/*
+// @match        https://www.luogu.com.cn/training*
+// @match        https://www.luogu.com.cn/problems*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=luogu.com.cn
 // @grant        none
 // ==/UserScript==
@@ -90,7 +91,7 @@
         }
     };
     window.onload = () => {
-        if (window.location.href.includes("training")) {
+        if (window.location.href.includes("training") || window.location.href.includes("problems")) {
             setTimeout(problemListPage, 0);
         }
     };
