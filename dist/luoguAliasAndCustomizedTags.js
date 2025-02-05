@@ -2,13 +2,14 @@
 // ==UserScript==
 // @name         Luogu Alias And Customize Tags
 // @namespace    http://tampermonkey.net/
-// @version      2025-01-21
+// @version      2025-01-23
 // @description  try to take over the world!
 // @author       normalpcer
 // @match        https://www.luogu.com.cn/*
 // @match        https://www.luogu.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=luogu.com.cn
 // @grant        none
+// @license      MIT
 // ==/UserScript==
 /**
  * 自定义类名、LocalStorage 项的前缀。
@@ -435,7 +436,12 @@ class UserTag {
                 observer.disconnect();
                 new_element.remove();
             });
-            observer.observe(link, { childList: true, characterData: true, subtree: true, attributes: true });
+            observer.observe(link, {
+                childList: true,
+                characterData: true,
+                subtree: true,
+                attributes: true,
+            });
             // 在缓存中保存颜色信息
             if (!cache.has(this.id.uid))
                 cache.set(this.id.uid, new Map());

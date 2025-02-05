@@ -15,20 +15,17 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 2, _L = 3;
-        auto gen_word = [&](int len) -> std::string {
-            std::string res;
-            for (auto i = 0; i < len; i++) {
-                res.push_back(static_cast<char>(randint('a', 'z')));
-            }
-            return res;
-        };
+        const int _N = 5, _Q = 1, _V = 10;
+        int N = _N, Q = _Q;
+        std::vector<int> vec(N);
+        out << N << " " << Q << endl;
+        for (auto &x: vec)  x = randint(1, _V), out << x << " ";
+        out << endl;
 
-        int N = _N, M = _N;
-        out << N << endl;
-        for (auto _: range(N))  out << gen_word(_L) << endl;
-        out << M << endl;
-        for (auto _: range(N))  out << gen_word(_L) << endl;
+        for (auto _: range(Q)) {
+            auto K = randint(1, _V), M = randint(1, N);
+            out << K << " " << M << endl;
+        }
     }
 }
 

@@ -1,16 +1,11 @@
-#include <bits/stdc++.h>
-struct T;
-
-void foo(T* p) {
-    delete p;       // Undefined behavior
-}
-
-struct T {
-   ~T() { std::cout << 1; }           // Non-trivial destructor
-};
+#include <iostream>
+#include <algorithm>
+#include <vector>
 
 int main() {
-    T* p = new T;
-    foo(p);
+    std::vector vec{0, 1, 2, 3, 4};
+
+    auto it = std::ranges::lower_bound(vec.begin(), vec.end(), 1, std::less{}, [](int x) { return x - 2; });
+    std::cout << std::distance(vec.begin(), it) << std::endl;
     return 0;
 }
