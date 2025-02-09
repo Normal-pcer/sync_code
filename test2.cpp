@@ -1,207 +1,226 @@
-#include<bits/stdc++.h>
-#define int int_fast64_t
-#define lson(root) (root << 1)
-#define rson(root) (root << 1 | 1)
+#include <iostream>
 using namespace std;
-struct node
-{
-	int to , nxt , w;
-}e[400010];
-struct edge
-{
-	int sum , mn , mx , lazy; // lazy = 0 --> \times 1  else --> \times -1 
-}tree[800010];
-struct dick
-{
-	int u , v;
-}ee[200010];
-int n , m , a[200010] , fa[200010] , son[200010] , sz[200010] , dep[200010] , dfn[200010] , rk[200010] , tp[200010] , cnt , tot , head[200010];
-void add(int u , int v , int w)
-{
-	++ tot;
-	e[tot].to = v;
-	e[tot].nxt = head[u];
-	e[tot].w = w;
-	head[u] = tot;
-}
-void dfs1(int u , int pa)
-{
-	sz[u] = 1 , fa[u] = pa , dep[u] = dep[pa] + 1;
-	for(int i = head[u] ; i != 0 ; i = e[i].nxt)
-	{
-		int v = e[i].to;
-		if(v == pa) continue;
-		dfs1(v , u);
-		a[v] = e[i].w;
-		sz[u] += sz[v];
-		if(sz[son[u]] < sz[v]) son[u] = v;
-	}
-}
-void dfs2(int u , int tp_fa)
-{
-	dfn[u] = ++ cnt , rk[cnt] = u , tp[u] = tp_fa;
-	if(son[u]) dfs2(son[u] , tp_fa);
-	for(int i = head[u] ; i != 0 ; i = e[i].nxt)
-	{
-		int v = e[i].to;
-		if(v == fa[u] || v == son[u]) continue;
-		dfs2(v , v);
-	}
-}
-void pushup(int root)
-{
-	tree[root].sum = tree[lson(root)].sum + tree[rson(root)].sum;
-	tree[root].mn = min(tree[lson(root)].mn , tree[rson(root)].mn);
-	tree[root].mx = max(tree[lson(root)].mx , tree[rson(root)].mx);
-}
-void pushdown(int root , int l , int r)
-{
-	int mid = (l + r) >> 1;
-	if(tree[root].lazy == 0) return;
-	tree[lson(root)].sum = -tree[lson(root)].sum , tree[rson(root)].sum = -tree[rson(root)].sum;
-	int x , y;
-	x = tree[lson(root)].mn , y = tree[lson(root)].mx , tree[lson(root)].mx = -x , tree[lson(root)].mn = -y;
-	x = tree[rson(root)].mn , y = tree[rson(root)].mx , tree[rson(root)].mx = -x , tree[rson(root)].mn = -y;
-	tree[lson(root)].lazy ^= tree[root].lazy , tree[rson(root)].lazy ^= tree[root].lazy;
-	tree[root].lazy = 0;
-}
-void update1(int root , int l , int r , int pos , int val)
-{
-	if(l == r) return tree[root].sum = tree[root].mn = tree[root].mx = val , void();
-	int mid = (l + r) >> 1;
-	pushdown(root , l , r);
-	if(pos <= mid) update1(lson(root) , l , mid , pos , val);
-	else update1(rson(root) , mid + 1 , r , pos , val);
-	pushup(root);
-}
-void update2(int root , int l , int r , int L , int R)
-{
-	if(L <= l && R >= r)
-	{
-		tree[root].sum = -tree[root].sum , tree[root].lazy ^= 1;
-		int x = tree[root].mn , y = tree[root].mx; tree[root].mx = -x , tree[root].mn = -y;
-		return;
-	}
-	int mid = (l + r) >> 1;
-	pushdown(root , l , r);
-	if(L <= mid) update2(lson(root) , l , mid , L , R);
-	if(R > mid) update2(rson(root) , mid + 1 , r , L , R);
-	pushup(root);
-}
-int query_sum(int root , int l , int r , int L , int R)
-{
-	if(L <= l && R >= r) return tree[root].sum;
-	int mid = (l + r) >> 1 , ans = 0;
-	pushdown(root , l , r);
-	if(L <= mid) ans += query_sum(lson(root) , l , mid , L , R);
-	if(R > mid) ans += query_sum(rson(root) , mid + 1 , r , L , R);
-	return ans;
-}
-int query_min(int root , int l , int r , int L , int R)
-{
-	if(L <= l && R >= r) return tree[root].mn;
-	int mid = (l + r) >> 1 , ans = 9e18;
-	pushdown(root , l , r);
-	if(L <= mid) ans = min(ans , query_min(lson(root) , l , mid , L , R));
-	if(R > mid) ans = min(ans , query_min(rson(root) , mid + 1 , r , L , R));
-	return ans;
-}
-int query_max(int root , int l , int r , int L , int R)
-{
-	if(L <= l && R >= r) return tree[root].mx;
-	int mid = (l + r) >> 1 , ans = -9e18;
-	pushdown(root , l , r);
-	if(L <= mid) ans = max(ans , query_max(lson(root) , l , mid , L , R));
-	if(R > mid) ans = max(ans , query_max(rson(root) , mid + 1 , r , L , R));
-	return ans;
-}
-void build(int root , int l , int r)
-{
-	if(l == r)
-	{
-		tree[root].sum = tree[root].mn = tree[root].mx = a[rk[l]];
-		return;
-	}
-	int mid = (l + r) >> 1;
-	build(lson(root) , l , mid);
-	build(rson(root) , mid + 1 , r);
-	pushup(root);
-}
-void uv_update(int u , int v)
-{
-	if (u==v) return;
-	while(tp[u] != tp[v])
-	{
-		if(dep[tp[u]] < dep[tp[v]]) swap(u , v);
-		update2(1 , 1 , n , dfn[tp[u]] , dfn[u]);
-		u = fa[tp[u]];
-	}
-	if(dep[u] < dep[v]) swap(u , v);
-	update2(1 , 1 , n , dfn[v] +1, dfn[u]);
-}
-int uv_query_sum(int u , int v)
-{
-	if (u==v) return 0;
-	int ans = 0;
-	while(tp[u] != tp[v])
-	{
-		if(dep[tp[u]] < dep[tp[v]]) swap(u , v);
-		ans += query_sum(1 , 1 , n , dfn[tp[u]] , dfn[u]);
-		u = fa[tp[u]];
-	}
-	if(dep[u] < dep[v]) swap(u , v);
-	ans += query_sum(1 , 1 , n , dfn[v] +1, dfn[u]);
-	return ans;
-}
-int uv_query_max(int u , int v)
-{
-	if (u==v) return 0;
-	int ans = -9e18;
-	while(tp[u] != tp[v])
-	{
-		if(dep[tp[u]] < dep[tp[v]]) swap(u , v);
-		ans = max(ans , query_max(1 , 1 , n , dfn[tp[u]] , dfn[u]));
-		u = fa[tp[u]];
-	}
-	if(dep[u] < dep[v]) swap(u , v);
-	ans = max(ans , query_max(1 , 1 , n , dfn[v] +1, dfn[u]));
-	return ans;
-}
-int uv_query_min(int u , int v)
-{
-	if (u==v) return 0;
-	int ans = 9e18;
-	while(tp[u] != tp[v])
-	{
-		if(dep[tp[u]] < dep[tp[v]]) swap(u , v);
-		ans = min(ans , query_min(1 , 1 , n , dfn[tp[u]] , dfn[u]));
-		u = fa[tp[u]];
-	}
-	if(dep[u] < dep[v]) swap(u , v);
-	ans = min(ans , query_min(1 , 1 , n , dfn[v]+1 , dfn[u]));
-	return ans;
-}
-signed main()
-{
-	scanf("%lld" , &n);
-	for(int i = 1 , u , v , w ; i < n ; i ++) scanf("%lld%lld%lld" , &u , &v , &w) , u ++ , v ++ , add(u , v , w) , add(v , u , w) , ee[i] = (dick){u , v};
-	dfs1(1 , 0) , dfs2(1 , 1);
-	build(1 , 1 , n);
-	scanf("%lld" , &m);
-	while(m --)
-	{
-		string op; int u , v; cin >> op , scanf("%lld%lld" , &u , &v);
-		if(op == "C")
-		{
-			int x = ee[u].u , y = ee[u].v;
-			if(dep[x] < dep[y]) swap(x , y);
-			update1(1 , 1 , n , dfn[x] , v);
+bool willend = 0;
+string read() {
+	string rtn;
+	char c = getchar();
+	while (c != '\n') {
+		if (c == '\r') c = getchar(); // 可能用得上。
+		if (c == EOF) {
+			willend = 1;
+			break;
 		}
-		u ++ , v ++;
-		if(op == "N") uv_update(u , v);
-		if(op == "SUM") printf("%lld\n" , uv_query_sum(u , v));
-		if(op == "MAX") printf("%lld\n" , uv_query_max(u , v));
-		if(op == "MIN") printf("%lld\n" , uv_query_min(u , v)); 
+		rtn += c;
+		c = getchar();
+
+	}
+	return rtn;
+}
+void write(string s) {
+	for (auto i : s) putchar(i);
+}
+string s;
+void findstr(int &i) {
+	string ans = "";
+	int len = s.size();
+	int j;
+	for (j = i + 1; j < len; ++j) {
+		if (s[j] == '\"' && s[j - 1] != '\\') break;
+	}
+	printf("[STRING] ");
+	for (; i <= j; ++i) {
+		putchar(s[i]);
+	}
+	putchar('\n');
+	--i;
+}
+void getname(int &i) {
+	string ans = "";
+	int len = s.size();
+	for (; i < len; ++i) {
+		if ((s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= 'a' && s[i] <= 'z') || (s[i] >= '0' && s[i] <= '9') || s[i] == '_') {
+			ans += s[i];
+		} else {
+			break;
+		}
+	}
+	--i;
+	if (ans == "and" || ans == "break" || ans == "do" || ans == "else" || ans == "elseif" || ans == "end" || ans == "false" || ans == "for"
+	        || ans == "function" || ans == "if" || ans == "in" || ans == "local" || ans == "nil" || ans == "not" || ans == "or" || ans == "repeat"
+	        || ans == "return" || ans == "then" || ans == "true" || ans == "until" || ans == "while") {
+		printf("[RESERVED] ");
+	} else {
+		printf("[NAME] ");
+	}
+	write(ans);
+	putchar('\n');
+}
+void finde(int &i) {
+	bool flag = 1;
+	int len = s.size();
+	if (i == len - 1) {
+		//puts("QAQ");
+		--i;//maybe
+		putchar('\n');
+		return ;
+	}
+	if (i != len - 2 && (s[i + 1] == '-' || s[i + 1] == '+') && (s[i + 2] < '0' || s[i + 2]  > '9')) {
+		//puts("QAQ");
+		--i;//maybe
+		putchar('\n');
+		return ;
+	}
+	if ((s[i + 1] != '+' && s[i + 1] != '-') && (s[i + 1] < '0' || s[i + 1] > '9')) {
+		//puts("QAQ");
+		--i;//maybe
+		putchar('\n');
+		return ;
+	}
+	if ((s[i + 1] == '+' || s[i + 1] == '-') && i == len - 2) {
+		//puts("QAQ");
+		--i;
+		putchar('\n');
+		return ;
+	}
+	if (s[i + 1] == '+' || s[i + 1] == '-') {
+		flag = 0;
+	}
+	putchar('e');
+	++i;
+	for (; i < len; ++i) {
+		if (s[i] >= '0' && s[i] <= '9') {
+			putchar(s[i]);
+		} else if (s[i] == '-' || s[i] == '+') {
+			if (flag == 1) break;
+			putchar(s[i]);
+			flag = 1;
+		} else {
+			break;
+		}
+	}
+	putchar('\n');
+	--i;
+}
+void findfloat(int &i) {
+	int len = s.size();
+//	if(i == len-1){
+//		putchar('\n');
+//		return ;
+//	}
+	++i;
+	if (s[i] == 'e') {
+		putchar('.');
+		finde(i);
+		return ;
+	}
+	if (s[i] > '9' || s[i] < '0') {
+		i -= 2;
+		return ;
+	}
+	putchar('.');
+	for (; i < len; ++i) {
+		if (s[i] >= '0' && s[i] <= '9') {
+			putchar(s[i]);
+		} else if (s[i] == 'e') {
+			//puts("QAQ");
+			finde(i);
+			return ;
+		} else {
+			--i;
+			return ;
+		}
+	}
+	--i;
+	putchar('\n');
+}
+void findsixteen(int &i) {
+	putchar(s[i]);
+	putchar(s[i + 1]);
+	i += 2;
+	int len = s.size();
+	for (; i < len; ++i) {
+		if ((s[i] >= 'A' && s[i] <= 'F') || (s[i] >= 'a' && s[i] <= 'f') || (s[i] >= '0' && s[i] <= '9')) {
+			putchar(s[i]);
+		} else {
+			break;
+		}
+	}
+	--i;
+	putchar('\n');
+}
+void findnum(int &i) {
+	printf("[NUMBER] ");
+	int len = s.size();
+	if (i != len - 1 && s[i] == '0' && (s[i + 1] == 'x' || s[i + 1] == 'X')) {
+		findsixteen(i);
+		return ;
+	}
+	int ans = 0;
+	for (; i < len; ++i) {
+		if (s[i] >= '0' && s[i] <= '9') {
+			ans = (ans << 1) + (ans << 3) + (s[i] - '0');
+		} else if (s[i] == '.') {
+			printf("%d", ans);
+			findfloat(i);
+			return ;
+		} else if (s[i] == 'e') {
+			printf("%d", ans);
+			//puts("QAQ");
+			finde(i);
+			return ;
+		} else {
+			break;
+		}
+	}
+	--i;
+	printf("%d\n", ans);
+}
+void check() {
+	int len = s.size();
+	for (int i = 0; i < len; ++i) {
+		if (s[i] == ' ') continue;
+		if (i != len - 1 && s[i] == '.' && s[i + 1] >= '0' && s[i + 1] <= '9') {
+			printf("[NUMBER] ");
+			findfloat(i);
+		} else if (s[i] == '"') {
+			findstr(i);
+		} else if ((s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= 'a' && s[i] <= 'z')) {
+			getname(i);
+		} else if (i != len - 1 && s[i] == '-' && s[i + 1] == '-') {
+			return ;
+		} else if (i != len - 1 && s[i] == '~' && s[i + 1] == '=') {
+			++i;
+			puts("[SYMBOL] ~=");
+		} else if (i != len - 2 && s[i] == '.' && s[i + 1] == '.' && s[i + 2] == '.') {
+			i += 2;
+			puts("[SYMBOL] ...");
+		} else if (i != len - 1 && s[i] == '.' && s[i + 1] == '.') {
+			++i;
+			puts("[SYMBOL] ..");
+		} else if (i != len - 1 && s[i] == '=' && s[i + 1] == '=') {
+			++i;
+			puts("[SYMBOL] ==");
+		} else if (i != len - 1 && s[i] == '>' && s[i + 1] == '=') {
+			++i;
+			puts("[SYMBOL] >=");
+		} else if (i != len - 1 && s[i] == '<' && s[i + 1] == '=') {
+			++i;
+			puts("[SYMBOL] <=");
+		} else if (s[i] == '+' || s[i] == '-' || s[i] == '*' || s[i] == '/' || s[i] == '%' || s[i] == '#' || s[i] == '^' || s[i] == '<'
+		           || s[i] == '>' || s[i] == '[' || s[i] == ']' || s[i] == '(' || s[i] == ')' || s[i] == '{' || s[i] == '}' || s[i] == '='
+		           || s[i] == '.' || s[i] == ',' || s[i] == ':' || s[i] == ';') {
+			printf("[SYMBOL] %c\n", s[i]);
+		} else if (s[i] >= '0' && s[i] <= '9') {
+			findnum(i);
+		}
+	}
+}
+int main() {
+	while (1) {
+		s = read();
+		if (willend == 1) break;
+		check();
+		puts("[EOL]");
 	}
 	return 0;
 }

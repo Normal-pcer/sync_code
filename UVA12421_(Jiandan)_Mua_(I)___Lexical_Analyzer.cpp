@@ -2,7 +2,12 @@
  * @link https://www.luogu.com.cn/problem/P3695
  */
 #if true
-#include "./libs/debug_macros.hpp"
+#ifndef ONLINE_JUDGE
+#define GNU_DEBUG
+#define _GLIBCXX_DEBUG 1
+#define _GLIBCXX_DEBUG_PEDANTIC 1
+#define _GLIBCXX_SANITIZE_VECTOR 1
+#endif
 
 #endif
 // #pragma GCC optimize("Ofast")
@@ -12,8 +17,8 @@
 #include <bits/stdc++.h>
 bool DEBUG_MODE=false;
 #define debug if(DEBUG_MODE)
-template <typename T> inline auto chkMax(T& base, const T& cmp) { return (base = std::max(base, cmp)); }
-template <typename T> inline auto chkMin(T& base, const T& cmp) { return (base = std::min(base, cmp)); }
+template <typename T> inline auto chkMax(T& base, const T& cmp) -> T { return (base = std::max(base, cmp)); }
+template <typename T> inline auto chkMin(T& base, const T& cmp) -> T { return (base = std::min(base, cmp)); }
 #define never if constexpr(0)
 const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
 const char endl = '\n';
@@ -35,6 +40,196 @@ namespace views = std::views;
 }
 
 using namespace lib;
+
+
+namespace MyStd {
+    template <typename T>
+    auto constexpr max(T const &x, T const &y) -> T { return x > y? x :y; }
+    template <typename ...Ts>
+    struct __MaxSizeof;
+    template <>
+    struct __MaxSizeof<> {
+        static constexpr size_t value = 0;
+    };
+    template <typename T, typename ...Ts>
+    struct __MaxSizeof<T, Ts...> {
+        static constexpr size_t value = max(sizeof(T), __MaxSizeof<Ts...>::value);
+    };
+
+    template <typename ...Ts>
+    struct __MaxAlignof;
+    template <>
+    struct __MaxAlignof<> {
+        static constexpr size_t value = 1;
+    };
+    template <typename T, typename ...Ts>
+    struct __MaxAlignof<T, Ts...> {
+        static constexpr size_t value = max(alignof(T), __MaxAlignof<Ts...>::value);
+    };
+
+    template <int index, typename ...Ts>
+    struct __IndexOfPack;
+    template <int index, typename T, typename ...Ts>
+    struct __IndexOfPack<index, T, Ts...> {
+        using type = typename __IndexOfPack<index - 1, Ts...>::type;
+    };
+    template <typename T, typename ...Ts>
+    struct __IndexOfPack<0, T, Ts...> {
+        using type = T;
+    };
+    template <typename T, typename ...Ts>
+    struct __FindInPack;
+    template <typename T, typename U, typename ...Ts>
+    struct __FindInPack<T, U, Ts...> {
+        static constexpr int value = __FindInPack<T, Ts...>::value + 1;
+    };
+    template <typename T, typename ...Ts>
+    struct __FindInPack<T, T, Ts...> {
+        static constexpr int value = 0;
+    };
+    template <typename T>
+    struct __FindInPack<T> {
+        static constexpr int value = 0;
+    };
+
+    template <typename ...Ts>
+    struct __Destroyer; 
+    template <>
+    struct __Destroyer<> {
+        static auto destroy(int, char *) -> void {
+            assert(false);
+        }
+    };
+    template <typename T, typename ...Ts>
+    struct __Destroyer<T, Ts...> {
+        static auto destroy(int index, char *data) -> void {
+            if (index == 0) {
+                reinterpret_cast<T *>(data)->~T();
+            } else {
+                __Destroyer<Ts...>::destroy(index - 1, data);
+            }
+        }
+    };
+    template <typename ...Ts>
+    struct __Copier;
+    template <>
+    struct __Copier<> {
+        static auto copy(int, const char *, char *) -> void {
+            assert(false);
+        }
+    };
+    template <typename T, typename ...Ts>
+    struct __Copier<T, Ts...> {
+        static auto copy(int index, char const *src, char *dst) -> void {
+            if (index == 0) {
+                new (dst) T(*reinterpret_cast<T const *>(src));
+            } else {
+                __Copier<Ts...>::copy(index - 1, src, dst);
+            }
+        }
+    };
+    template <typename ...Ts>
+    struct __Mover;
+    template <>
+    struct __Mover<> {
+        static auto move(int, char *, char *) -> void {
+            assert(false);
+        }
+    };
+    template <typename T, typename ...Ts>
+    struct __Mover<T, Ts...> {
+        static auto move(int index, char *src, char *dst) -> void {
+            if (index == 0) {
+                new (dst) T(std::move(*reinterpret_cast<T *>(src)));
+            } else {
+                __Mover<Ts...>::move(index - 1, src, dst);
+            }
+        }
+    };
+    template <typename ...Ts>
+    struct __CountPack;
+    template <>
+    struct __CountPack<> {
+        static constexpr int value = 0;
+    };
+    template <typename T, typename ...Ts>
+    struct __CountPack<T, Ts...> {
+        static constexpr int value = 1 + __CountPack<Ts...>::value;
+    };
+    template <typename ...Ts> 
+    struct alignas(std::max_align_t) variant {
+        char data[__MaxSizeof<Ts...>::value];
+        int index = -1;  // -1 表示无效值
+
+        static constexpr int count = __CountPack<Ts...>::value;
+
+        variant() = default;
+        variant(variant<Ts...> const &other) {
+            if (other.index != -1)  __Copier<Ts...>::copy(other.index, other.data, data);
+            index = other.index;
+        }
+        variant(variant<Ts...> &&other) {
+            if (other.index != -1)  __Mover<Ts...>::move(other.index, other.data, data);
+            index = other.index;
+            other.index = -1;
+        }
+        template <typename T, typename = typename std::enable_if<not std::is_same<typename std::remove_reference<T>::type, MyStd::variant<Ts...>>::value>::type>
+        variant(T &&x) {
+            set(std::forward<T>(x));
+        }
+        ~variant() {
+            if (index != -1)  __Destroyer<Ts...>::destroy(index, data);
+        }
+
+        template <typename T>
+        auto get() -> T & {
+            static_assert(__FindInPack<T, Ts...>::value != count, "type not found");
+            assert((index == __FindInPack<T, Ts...>::value));
+            return *reinterpret_cast<T *>(data);
+        }
+
+        template <typename T>
+        auto get() const -> T const & {
+            static_assert(__FindInPack<T, Ts...>::value != count, "type not found");
+            assert((index == __FindInPack<T, Ts...>::value));
+            return *reinterpret_cast<T const *>(data);
+        }
+
+        template <typename T>
+        auto set(T &&x) -> void {
+            using rm_ref = typename std::remove_reference<T>::type;
+            static_assert(__FindInPack<rm_ref, Ts...>::value != count, "type not found");
+            index = __FindInPack<rm_ref, Ts...>::value;
+            new (data) rm_ref(std::forward<T>(x));
+        }
+
+        template <typename T, typename = typename std::enable_if<not std::is_same<typename std::remove_reference<T>::type, MyStd::variant<Ts...>>::value>::type>
+        auto operator= (T &&x) -> variant & {
+            set(std::forward<T>(x));
+            return *this;
+        }
+        auto operator= (variant<Ts...> const &other) -> variant & {
+            if (other.index != -1)  __Copier<Ts...>::copy(other.index, other.data, data);
+            index = other.index;
+            return *this;
+        }
+        auto operator= (variant<Ts...> &&other) -> variant & {
+            if (other.index != -1)  __Mover<Ts...>::move(other.index, other.data, data);
+            index = other.index, other.index = -1;
+            return *this;
+        }
+    };
+}
+
+template <typename T, typename ...Ts>
+auto get(MyStd::variant<Ts...> &v) -> T & {
+    return v.template get<T>();
+}
+
+template <typename T, typename ...Ts>
+auto get(MyStd::variant<Ts...> const &v) -> T const & {
+    return v.template get<T>();
+}
 
 namespace IO {
 #ifdef __linux__
@@ -107,21 +302,21 @@ namespace IO {
             bool sign = false;  x = 0;  char ch = get();
             for (; not isDigit(ch); ch = get()) {
                 if (ch == '-')  sign = true;
-                if constexpr (is_floating_point_or_float128<T>::value) {
+                if (is_floating_point_or_float128<T>::value) {
                     if (ch == '.')  break;
                 }
             }
             if (sign) {
                 for (; isDigit(ch); ch = get()) {
                     // Check overflow
-                    if constexpr (is_integral_or_int128<T>::value) {
+                    if (is_integral_or_int128<T>::value) {
                         if (mulOverflow(x, 10))  throw IntegerOverflowError{};
                         if (subOverflow(x, ch ^ 48))  throw IntegerOverflowError{};
                     } else {
                         x = x * 10 - (ch ^ 48);
                     }
                 }
-                if constexpr (is_integral_or_int128<T>::value)  return unget(), *this;
+                if (is_integral_or_int128<T>::value)  return unget(), *this;
                 T tmp = 1;
                 if (ch == '.') {
                     for (ch = get(); isDigit(ch); ch = get()) {
@@ -131,14 +326,14 @@ namespace IO {
             } else {
                 for (; isDigit(ch); ch = get()) {
                     // Check overflow
-                    if constexpr (is_integral_or_int128<T>::value) {
+                    if (is_integral_or_int128<T>::value) {
                         if (mulOverflow(x, 10))  throw IntegerOverflowError{};
                         if (addOverflow(x, ch ^ 48))  throw IntegerOverflowError{};
                     } else {
                         x = x * 10 + (ch ^ 48);
                     }
                 }
-                if constexpr (is_integral_or_int128<T>::value)  return unget(), *this;
+                if (is_integral_or_int128<T>::value)  return unget(), *this;
                 T tmp = 1;
                 if (ch == '.') {
                     for (ch = get(); isDigit(ch); ch = get()) {
@@ -286,7 +481,7 @@ namespace IO {
                 is_number<T>::value || std::is_convertible<T, const char *>::value || std::is_convertible<T, std::string const &>::value
             >::type* = nullptr>
         Printer &operator<< (const T &x) {
-            if constexpr (
+            if (
                 is_number<T>::value || std::is_convertible<T, const char *>::value || std::is_convertible<T, std::string const &>::value
             ) {
                 return write(x);
@@ -446,7 +641,9 @@ namespace GenshinLang {
         IdentifierIndexType insert(std::string const &s) {
             auto index = mappingIndexToString.size() + 1;
             while (containsIndex(index))  index++;
-            auto [new_it, success] = mappingStringToIndex.insert({s, index});
+            auto pair = mappingStringToIndex.insert({s, index});
+            auto new_it = pair.first;
+            auto success = pair.second;
             if (success)  mappingIndexToString.insert({index, s});
             return new_it->second;
         }
@@ -502,10 +699,7 @@ namespace GenshinLang {
         }
 
         // 符号表
-        inline static Trie::Trie symbols {
-            "<=", ">=", "!=", "==", "<<", ">>", "<=>", "&&", "||", "+=", "-=", "*=", "/=", "%=", "|=", "&=", "^=", "->",
-            "++", "--", ".."
-        };
+        static Trie::Trie symbols;
 
         // Token 定义
         struct ParseAble {
@@ -600,6 +794,7 @@ namespace GenshinLang {
                             }
                             io.unget();
                         } else {
+                            value.pop_back();
                             goto egg;  // 解析十进制
                         }
                     } else {
@@ -614,22 +809,6 @@ namespace GenshinLang {
                 } catch (IO::IntegerOverflowError &) {
                     compileError("Number is too large");
                 }
-                // 后缀，用分隔符（"'"） 隔开的若干个标识符，表示文本运算符
-                Identifier id;
-                // 特别地，如果第一个字符是 'e' 或 'E'，则识别为科学计数法
-                // 如果存在名为 e 的文本运算符，可以写作 123'e
-                if (ch = io.get(); isIdentifierStart(ch) and ch != 'E' and ch != 'e') {
-                    io.unget();
-                    io >> id;
-                    suffixOperators.push_back(id);
-                } else {
-                    io.unget();
-                }
-                while (io.get() == '\'') {
-                    io >> id;
-                    suffixOperators.push_back(id.name);
-                }
-                io.unget();
             }
             void dump(IO::Printer &io) const override {
                 io << value;
@@ -642,6 +821,7 @@ namespace GenshinLang {
         struct String: public ParseAble, public DumpAble {
             std::string value;
             std::vector<Identifier> suffixOperators;
+            bool singleQuote = false;
             String(): value() {}
             String(std::string value): value(std::move(value)) {}
             String(std::string &&value): value(std::move(value)) {}
@@ -653,8 +833,9 @@ namespace GenshinLang {
                 // 支持转义字符
                 // 对于未知的转义，直接去掉反斜杠
                 char ch = io.get();
-                if (ch != '"')  throw "String literal should starts with '\"'";
-                for (ch = io.get(); ch != '"'; ch = io.get()) {
+                if (ch != '\"' and ch != '\'')  throw "String literal should starts with '\"'";
+                singleQuote = ch == '\'';
+                for (ch = io.get(); ch != (singleQuote? '\'': '\"'); ch = io.get()) {
                     if (ch == '\\') {
                         ch = io.get();
                         switch (ch) {
@@ -666,8 +847,8 @@ namespace GenshinLang {
                         case 't': value.push_back('\t'); break;  // 制表
                         case 'v': value.push_back('\v'); break;  // 垂直制表
                         case '\\': value.push_back('\\'); break;  // 反斜杠
-                        case '\'': value.push_back('\''); break;  // 单引号
-                        case '"': value.push_back('"'); break;  // 双引号
+                        case '\'': value.push_back('\1'); break;  // 单引号
+                        case '"': value.push_back('\2'); break;  // 双引号
                         case '?': value.push_back('\?'); break;  // 问号
                         case 'x': {
                             // 十六进制
@@ -709,7 +890,8 @@ namespace GenshinLang {
                 }
                 // 后缀，用分隔符（"'"） 隔开的若干个标识符，表示文本运算符
                 Identifier id;
-                if (ch = io.get(); isIdentifierStart(ch)) {
+                ch = io.get();
+                if (isIdentifierStart(ch)) {
                     io.unget();
                     io >> id;
                     suffixOperators.push_back(id);
@@ -723,7 +905,7 @@ namespace GenshinLang {
                 io.unget();
             }
             void dump(IO::Printer &io) const override {
-                io << '"';
+                io << (singleQuote? '\'': '\"');
                 for (auto x: value) {
                     switch (x) {
                     case '\n':  io << "\\n"; break;
@@ -731,13 +913,14 @@ namespace GenshinLang {
                     case '\r':  io << "\\r"; break;
                     case '\0':  io << "\\0"; break;
                     case '\\':  io << "\\\\"; break;
-                    case '\"':  io << "\\\""; break;
+                    case '\1':  io << "\\\'"; break;
+                    case '\2':  io << "\\\""; break;
                     case '\x20':  io << '\x20'; break;
                     [[likely]] default: 
                         io << x;
                     }
                 }
-                io << '"';
+                io << (singleQuote? '\'': '\"');
                 if (not suffixOperators.empty()) {
                     io << suffixOperators.front();
                 }
@@ -809,12 +992,15 @@ namespace GenshinLang {
             enum Tag {
                 NoneTag, IdentifierTag, SymbolTag, KeywordTag, IntegerTag, StringTag, EndOfLineTag, FloatingPointTag
             } tag = NoneTag;
-            std::variant<int, Identifier, Integer, String, Symbol, FloatingPointNumber> value = 0;
+            MyStd::variant<int, Identifier, Integer, String, Symbol, FloatingPointNumber> value = 0;
+
+            Token() = default;
+            Token(Tag tag, MyStd::variant<int, Identifier, Integer, String, Symbol, FloatingPointNumber> value = 0): tag(tag), value(value) {}
             friend IO::Printer &operator<<(IO::Printer &io, const Token &token) {
                 switch (token.tag) {
                 case Token::IdentifierTag:
                     {
-                        auto s = identifierMap.getString(std::get<Identifier>(token.value).name);
+                        auto s = identifierMap.getString(get<Identifier>(token.value).name);
                         static std::set<std::string> set{
                             "and", "break", "do", "else", "elseif", "end", "false", "for", "function", 
                             "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", 
@@ -824,15 +1010,15 @@ namespace GenshinLang {
                         return io << "[NAME] " << s;
                     }
                 case Token::IntegerTag:
-                    return io << "[NUMBER] " << std::get<Integer>(token.value);
+                    return io << "[NUMBER] " << get<Integer>(token.value);
                 case Token::StringTag:
-                    return io << "[STRING] " << std::get<String>(token.value);
+                    return io << "[STRING] " << get<String>(token.value);
                 case Token::SymbolTag:
-                    return io << "[SYMBOL] " << std::get<Symbol>(token.value);
+                    return io << "[SYMBOL] " << get<Symbol>(token.value);
                 case Token::EndOfLineTag:
-                    return io << "[EOL] ";
+                    return io << "[EOL]";
                 case Token::FloatingPointTag:
-                    return io << "[NUMBER] " << std::get<FloatingPointNumber>(token.value);
+                    return io << "[NUMBER] " << get<FloatingPointNumber>(token.value);
                 default:
                     unreachable();
                     return io << "[UNKNOWN] ";
@@ -851,10 +1037,10 @@ namespace GenshinLang {
                         break;
                     } if (ch == '\n') {
                         io.get();
-                        tokens.push_back({Token::EndOfLineTag});
+                        tokens.push_back(Token{Token::EndOfLineTag});
                     } else if (isBlank(ch)) {
                         io.get();
-                    } else if (ch == '"') {
+                    } else if (ch == '\"' or ch == '\'') {
                         String str;
                         io >> str;
                         tokens.push_back({Token::StringTag, str});
@@ -867,36 +1053,44 @@ namespace GenshinLang {
                             io.get();
                             if (io.get() == '.') {
                                 // 特判运算符
-                                tokens.push_back({Token::SymbolTag, Symbol{".."}});
+                                io.unget(), io.unget();
+                                goto readSymbol;
                                 continue;
                             }
                             io.unget(), io.unget();
                         }
                         // 已经有了后缀运算符，不应视为浮点数
-                        if (integer.suffixOperators.empty()) {
+                        if (integer.suffixOperators.empty() and integer.value.substr(0, 2) != "0x") {
                             if (io.get() == '.') {
                                 fp.value += '.';
+                                isInteger = false;
                                 if (not isDigit(io.get())) {
+                                    // 特判单个点
+                                    if (integer.value.empty()) {
+                                        io.unget(), io.unget();
+                                        goto readSymbol;
+                                    }
                                     io.unget();
+                                    fp.value = integer.value + fp.value;
                                     goto egg;
                                 }
-                                io.unget();  // 读到小数点，即 0.123 的形式
-                                isInteger = false;
-                                auto tmp = fp.value;
-                                io >> fp;
-                                fp.value = integer.value + tmp + fp.value;
+                                io.unget();
+                                // 如果后面不是数字（类似“1.”）不用继续读
+                                io.unget(), io >> fp;  // 从小数点开始读
+                                fp.value = integer.value + fp.value;
                             } else {
                                 io.unget();
                             }
                         egg:
-                            if (ch = io.get(); ch == 'e' or ch == 'E') {
+                            ch = io.get();
+                            if (ch == 'e' or ch == 'E') {
                                 fp.value.push_back(ch);
                                 // 科学计数法
                                 if (isInteger)  fp.value = integer.value + fp.value;
-                                isInteger = false;
                                 ch = io.get();
                                 if (ch == '+')  fp.value.push_back(ch), ch = io.get();
                                 else if (ch == '-')  fp.value.push_back(ch), ch = io.get();
+                                isInteger = false;
                                 if (isDigit(ch)) {
                                     io.unget(), io >> integer;
                                     StringPrinter print;  print << integer;
@@ -916,11 +1110,13 @@ namespace GenshinLang {
                         io >> identifier;
                         tokens.push_back({Token::IdentifierTag, identifier});
                     } else {
+                    readSymbol:
                         Symbol symbol;
                         io >> symbol;
-                        if (symbol.value == "#") {
+                        if (symbol.value == "--") {
                             // 单行注释
                             while (io.get() != '\n');
+                            io.unget();
                             continue;  // 忽略井号
                         }
                         tokens.push_back({Token::SymbolTag, symbol});
@@ -929,6 +1125,9 @@ namespace GenshinLang {
             } catch (IO::EOFError &) {}
             return tokens;
         }
+    };
+    Trie::Trie Tokenizer::symbols {
+        "==", ">=", "<=", "~=", "..", "...", "--"
     };
     using Token = Tokenizer::Token;
     using Identifier = Tokenizer::Identifier;
