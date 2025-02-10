@@ -1,50 +1,24 @@
 #include<bits/stdc++.h>
+#define int long long
 using namespace std;
-string str[2] = {"Emilija" , "Nina"};
-int n , m , t , q , tree[3000010][65] , cnt = 0;
-bool sg[3000010][2] , flag[3000010][30][2];
-int getnum(char c)
-{
-    if(c >= 'a' && c <= 'z') return c - 'a';
-    if(c >= 'A' && c <= 'Z') return c - 'A' + 26;
-    if(c >= '0' && c <= '9') return c - '0' + 52;
-    mt19937 rnd(random_device{}());
-    int dick = rnd();
-    goto egg;
-    egg:;
-    return dick;
-}
-void update(string s , int op)
-{
-    int p = 0;
-    for(int i = 0 ; i < (int)s.size() ; i ++)
-    {
-    	int c = getnum(s[i]);
-    	sg[p][op] = 1;
-		flag[p][c][op] = 1;
-    	if(!tree[p][c]) tree[p][c] = ++ cnt;
-    	p = tree[p][c];
-	}
-	sg[p][op] = 0;
-}
-void query(int p , int op)
-{
-	if(!sg[p][op]) return;
-	for(int i = 0 ; i < 26 ; i ++)
-	{
-		if(!flag[p][i][op]) continue;
-		query(tree[p][i] , op ^ 1);
-		if(!sg[tree[p][i]][op ^ 1]) return sg[p][op] = 1 , void();
-	}
-	sg[p][op] = 0;
-}
+int n , q , a[100010] , sum[100010];
 signed main()
 {
-	scanf("%d" , &n); string s;
-	for(int i = 1 ; i <= n ; i ++) cin >> s , update(s , 0);
-	scanf("%d" , &m);
-	for(int i = 1 ; i <= m ; i ++) cin >> s , update(s , 1);
-	query(0 , 0);
-	cout << str[sg[0][0]];
+	scanf("%lld%lld" , &n , &q);
+	for(int i = 1 ; i <= n ; i ++) scanf("%lld" , &a[i]);
+	sort(a + 1 , a + n + 1);
+	for(int i = 1 ; i <= n ; i ++) sum[i] = sum[i - 1] + a[i];
+	while(q --)
+	{
+		int k , m , ans = 0; scanf("%lld%lld" , &k , &m);
+		int l = 0 , r = min<long long>(m , lower_bound(a + 1 , a + n + 1 , k) - a - 1);
+		while(l <= r)
+		{
+			int mid = (l + r) >> 1;
+			if(n - (lower_bound(a + 1 , a + n + 1 , k * 2 - a[mid]) - a - 1) + mid <= m) l = mid + 1 , ans = mid;
+			else r = mid - 1;
+		}
+		printf("%lld\n" , sum[ans] + 2 * k * (m - ans) + sum[n - m + ans] - sum[n]);
+	}
 	return 0;
 }

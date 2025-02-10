@@ -197,30 +197,4 @@ auto get(unstd::variant<Ts...> const &v) -> T const & {
     return v.template get<T>();
 }
 
-struct A {
-    int x;
-    A(int x) : x(x) { std::cout << "A() " << x << std::endl; }
-    ~A() { std::cout << "~A() " << x << std::endl; }
-    A(A const &other) : x(other.x) { std::cout << "A(A const &) " << x << std::endl; }
-    A(A &&other) : x(std::move(other.x)) { std::cout << "A(A &&) " << x << std::endl; }
-    A &operator= (A const &) { return std::cout << "A::operator=(A const &) " << x << std::endl, *this; }
-    A &operator= (A &&) { return std::cout << "A::operator=(A &&) " << x << std::endl, *this; }
-};
-
-int main() {
-    using unstd::variant;
-    variant<int, A, double> v;
-    v = 1;
-    std::cout << __LINE__ << " " << get<int>(v) << std::endl;
-    v = A(2);
-    std::cout << __LINE__ << " " << get<A>(v).x << std::endl;
-    v = 3.14;
-    std::cout << __LINE__ << " " << get<double>(v) << std::endl;
-    v = variant<int, A, double>(4.2);
-    std::cout << __LINE__ << " " << get<double>(v) << std::endl;
-    v = variant<int, A, double>(5);
-    std::cout << __LINE__ << " " << get<int>(v) << std::endl;
-    v = v;
-    std::cout << __LINE__ << " " << get<int>(v) << std::endl;
-    return 0;
-}
+int main() {}

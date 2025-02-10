@@ -1,22 +1,22 @@
-#include <bits/stdc++.h>
+#include <iostream>
 
-template <typename T>
 struct A {
-    T x;
-    auto print() -> void {
-        std::cout << x << std::endl;
-    }
+  A() { std::cout << "A"; }
+};
+struct B {
+  B() { std::cout << "B"; }
 };
 
-template <>
-struct A<int> {
-    int x;
-    auto test() -> int {
-        return x;
-    }
+class C {
+public:
+  C() : a(), b() {}
+
+private:
+  B b;
+  A a;
 };
 
-int main() {
-    A<int>{5}.print();
-    return 0;
+int main()
+{
+    C();
 }
