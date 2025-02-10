@@ -114,7 +114,7 @@ namespace Solution_5200972368419325 {
                 debug  std::cout << "x = " << x << ", y = " << y << std::endl;
                 assert(x % y == 0);
                 auto z = x / y;
-                this_cnt += counter[y] * counter[z];
+                this_cnt += static_cast<ll>(counter[y]) * counter[z];
             });
             ans += this_cnt;
         }

@@ -2,12 +2,8 @@
  * @link https://www.luogu.com.cn/problem/P3695
  */
 #if true
-#ifndef ONLINE_JUDGE
-#define GNU_DEBUG
-#define _GLIBCXX_DEBUG 1
-#define _GLIBCXX_DEBUG_PEDANTIC 1
-#define _GLIBCXX_SANITIZE_VECTOR 1
-#endif
+#include "./libs/debug_macros.hpp"
+
 
 #endif
 // #pragma GCC optimize("Ofast")
@@ -40,7 +36,6 @@ namespace views = std::views;
 }
 
 using namespace lib;
-
 
 namespace MyStd {
     template <typename T>
