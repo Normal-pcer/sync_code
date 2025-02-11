@@ -1,119 +1,59 @@
-/**
- * @link https://www.luogu.com.cn/problem/AT_abc249_d
- */
-#include "./libs/debug_macros.hpp"
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long LL;
+const int N = 5e5 + 5;
 
-#include "./lib_v3.hpp"
+int val[N], dep[N], fa[N][20];
+LL sum[N], f[N];
+vector<int> G[N];
 
-#include "./libs/range.hpp"
-
-using namespace lib;
-
-/**
- * 求 a[i] / a[j] = a[k] 的 (i, j, k) 数量。
- * 凭直觉，2e5 以内的数，因数个数会比较有限
- * 可以对于每一个 a[i] 枚举它的所有因数
- */
-namespace Solution_5200972368419325 {
-    class PrimeManager {
-    public:
-        int N = 0;
-        std::vector<int> primes;
-        std::vector<char> notPrime;
-
-        PrimeManager(int N): N(N), primes(), notPrime(N+1) {
-            // 欧拉筛
-            notPrime[0] = notPrime[1] = true;
-            for (auto p = 2; p <= N; p++) {
-                if (not notPrime[p])  primes.push_back(p);
-                for (auto q: primes) {
-                    if (q * p > N)  break;
-                    notPrime[q * p] = true;
-                    if (p % q == 0)  break;
-                }
-            }
-        }
-    };
-    constexpr const int MaxPrime = 2e5 + 10;
-    PrimeManager pm{MaxPrime};
-
-    struct Factors {
-        struct Factor {
-            int base = 1, exp = 0;
-        };
-
-        std::vector<Factor> f;
-        static auto fromValue(int x) -> Factors {
-            auto it = pm.primes.begin();
-            std::map<int, int> map;
-            while (pm.notPrime[x] and x != 1) {
-                assert(it != pm.primes.end());
-                while (x % *it == 0)  map[*it]++, x /= *it;
-                it++;
-            }
-            if (x != 1)  map[x]++;
-
-            Factors res;
-            for (auto [x, exp]: map) {
-                if (exp != 0)  res.f.push_back({x, exp});
-            }
-            return res;
-        }
-
-        auto _dfs(std::vector<Factor>::const_iterator it, auto &&call) const -> void {
-            static std::vector<Factor> res;
-
-            if (it == f.end())  return call(res), void();
-            for (auto i = 0; i <= it->exp; i++) {
-                res.push_back({it->base, i});
-                _dfs(it + 1, call);
-                res.pop_back();
-            }
-        }
-
-        auto forEach(auto &&call) const -> void {
-            _dfs(f.begin(), call);
-        }
-
-        auto number() const -> int {
-            auto res = 1;
-            for (auto [x, y]: f) {
-                for (auto i = 0; i < y; i++)  res *= x;
-            }
-            return res;
-        }
-    };
-    void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-        int N;  std::cin >> N;
-        std::vector<int> a(N);
-        for (auto &x: a)  std::cin >> x;
-
-        constexpr const int MaxValue = 2e5 + 10;
-        std::vector<int> counter(MaxValue);
-
-        for (auto x: a) {
-            counter[x]++;
-        }
-
-        auto ans = 0LL;
-        
-        for (auto x: a) {
-            for (auto y: a) {
-                for (auto z: a) {
-                    if (x == static_cast<ll>(y) * z)  ans++;
-                }
-            }
-        }
-
-        std::cout << ans << endl;
+void dfs(int u, int father) {
+    dep[u] = dep[father] + 1;
+    fa[u][0] = father;
+    for (int i = 1; i < 20; ++i)
+        fa[u][i] = fa[fa[u][i-1]][i-1];
+    
+    sum[u] = val[u];
+    LL sum_vd = 0;
+    for (int v : G[u]) {
+        if (v == father) continue;
+        dfs(v, u);
+        sum[u] += sum[v];
+        sum_vd += f[v] + sum[v] * dep[v];
     }
+    f[u] = sum_vd - sum[u] * dep[u];
 }
 
-int main(int argc, char const *argv[]) {
-    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    Solution_5200972368419325::solve();
+int findZ(int x, int y) {
+    if (dep[x] <= dep[y] + 1) return -1;
+    for (int i = 19; i >= 0; --i) {
+        if (dep[fa[x][i]] > dep[y] + 1)
+            x = fa[x][i];
+    }
+    return fa[x][0];
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(0); cout.tie(0);
+    int n, q;
+    cin >> n >> q;
+    for (int i = 1; i <= n; ++i) cin >> val[i];
+    for (int i = 2; i <= n; ++i) {
+        int p; cin >> p;
+        G[p].push_back(i);
+    }
+    dfs(1, 0);
+    while (q--) {
+        int x, y;
+        cin >> x >> y;
+        if (fa[x][0] == y) {
+            cout << f[y] << '\n';
+            continue;
+        }
+        int z = findZ(x, y);
+        LL delta = (sum[z] - sum[x]) + val[x] * (1 - (dep[x] - dep[y]));
+        cout << f[y] + delta << '\n';
+    }
     return 0;
 }
