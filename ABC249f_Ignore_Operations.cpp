@@ -37,7 +37,7 @@ namespace Solution_1612129350107929 {
         auto ans = -infLL;  // 答案
         auto sum = 0LL;  // 加法的和
         std::priority_queue<int> pq;  // 所有被丢弃的数
-        for (auto [x, y] : ops | views::reverse) {
+        for (auto [x, y]: ops | views::reverse) {
             if (x == 1) {
                 // 当前是一次赋值
                 chkMax(ans, sum + y);

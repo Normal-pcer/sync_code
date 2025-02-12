@@ -1,13 +1,14 @@
 /**
  * @link https://www.luogu.com.cn/problem/P7282
- * @date 2025/01/20
- * rks 涨了。
  */
 #include "./libs/debug_macros.hpp"
 
+
 #include "./lib_v3.hpp"
 
+
 #include "./libs/range.hpp"
+
 
 using namespace lib;
 
@@ -16,70 +17,45 @@ using namespace lib;
  * 给边染色（最多三种颜色），希望同色的最长路径不超过 3 个节点。
  * 在染色前，最长的一条路径一定不会长于 60（1, 2, 4, 8, ..., 2**59）。
  * 
+ * 二进制位数（__lg）相同的两个数之间一定不存在倍数关系。
+ * 比较两个数的二进制位数，进行分组
+ * 0 1 2 3; 4 5 6 7; 8 9 10 11...
+ * 分为以上若干个小组
+ * 0...16; 16...32; 32...48; 48...64
+ * 分为四个大组
+ * 如果两个数在同一个小组中，用 1 连接
+ * 否则如果在同一个大组中，用 2 连接，
+ * 否则用 3 连接。
+ * 这样沿着一条链向上行走，显然至多有三段同色。
  */
 namespace Solution_1024261437645003 {
-    struct Graph {
-        struct Forward {
-            int next, val;
-        };
-        int N;
-        std::vector<std::vector<Forward>> graph;
-        std::vector<char> vis;
-
-        Graph(int N): N(N), graph(N+1), vis(N+1) {}
-        auto dfs(int p, int depth) -> void {
-            vis[p] = true;
-            for (auto &[x, c]: graph.at(p))  if (not vis[x]) {
-                dfs(x, depth + 1);
-                c = (depth % 3) + 1;
-                std::cout << x << " " << p << " " << c << std::endl;
-            }
-        }
-        // 染色
-        auto color() -> void {
-            for (auto i: range(1, N+1)) {
-                if (not vis[i]) {
-                    dfs(i, 0);
-                }
-            }
-        }
-    };
     void solve() {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr), std::cout.tie(nullptr);
-        
+
         int N;  std::cin >> N;
-        std::vector<ll> val(N+1);  // 读入开 long long
-        for (auto &x: val | views::drop(1))  std::cin >> x;
+        std::vector<ll> val(N);
+        for (auto &x: val)  std::cin >> x;
 
-        std::vector<std::pair<int, int>> edges;  // 边
-        for (auto i: range(1, N+1)) {
-            for (auto j: range(i+1, N+1)) {
-                auto x = val[i], y = val[j];
-                if (x < y)  std::swap(x, y);
-                if (x % y == 0)  edges.push_back({i, j});
-            }
-        }
-        Graph g{N};
-        for (auto [x, y]: edges) {
-            g.graph.at(x).push_back({y, 0});
-            g.graph.at(y).push_back({x, 0});
-        }
-
-        g.color();
-        std::vector c(N+1, std::vector<int>(N+1));
-        for (auto i: range(1, N+1)) {
-            for (auto [x, val]: g.graph[i]) {
-                if (val == 0)  continue;
-                std::cout << x << " " << i << " " << val << std::endl;
-                c[i][x] = c[x][i] = val;
-            }
-        }
-        for (auto i: range(1, N)) {
-            for (auto j: range(1, i+1)) {
-                // std::cout << j << i+1 << c[j][i+1] << " ";
-                if (c[j][i+1] == 0)  std::cout << 1 << " ";
-                else  std::cout << c[j][i+1] << " ";
+        auto log = [](int x) -> int {
+            if (x == 0)  return 0;
+            else  return std::__lg(x);
+        };
+        auto color_of = [&](int x, int y) -> int {
+            auto d0 = log(x), d1 = log(y);
+            if ((d0 >> 2) == (d1 >> 2))  return 1;
+            else if ((d0 >> 4) == (d1 >> 4))  return 2;
+            else  return 3;
+        };
+        for (auto i = 1; i <= N - 1; i++) {
+            for (auto j = 1; j <= i; j++) {
+                std::cout 
+                    << ([&]() -> int {
+                            auto x = val[j - 1], y = val[i];
+                            if (y % x == 0)  return color_of(x, y);
+                            else  return 1;
+                        }()) 
+                    << " ";
             }
             std::cout << std::endl;
         }

@@ -15,16 +15,18 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 5, _Q = 1, _V = 10;
-        int N = _N, Q = _Q;
-        std::vector<int> vec(N);
-        out << N << " " << Q << endl;
-        for (auto &x: vec)  x = randint(1, _V), out << x << " ";
-        out << endl;
-
-        for (auto _: range(Q)) {
-            auto K = randint(1, _V), M = randint(1, N);
-            out << K << " " << M << endl;
+        const int _N = 5, _V = 3, _M = 6;
+        
+        while (true) {
+            auto N = _N;
+            std::vector<std::pair<int, int>> c(N);
+            auto sum = 0;
+            for (auto &[x, y]: c)  x = randint(0, _V), y = randint(0, _V), sum += x + y;
+            if (sum > _M)  continue;
+            auto M = sum;
+            out << N << " " << M << endl;
+            for (auto [x, y]: c)  out << x << " " << y << endl;
+            break;
         }
     }
 }

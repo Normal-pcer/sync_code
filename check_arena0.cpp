@@ -1,130 +1,59 @@
-/**
- * @link https://www.luogu.com.cn/problem/AT_abc249_d
- */
-#include "./libs/debug_macros.hpp"
-
-#include "./lib_v3.hpp"
-
-#include "./libs/range.hpp"
-
-using namespace lib;
-
-/**
- * 求 a[i] / a[j] = a[k] 的 (i, j, k) 数量。
- * 凭直觉，2e5 以内的数，因数个数会比较有限
- * 可以对于每一个 a[i] 枚举它的所有因数
- */
-namespace Solution_5200972368419325 {
-    class PrimeManager {
-    public:
-        int N = 0;
-        std::vector<int> primes;
-        std::vector<char> notPrime;
-
-        PrimeManager(int N): N(N), primes(), notPrime(N+1) {
-            // 欧拉筛
-            notPrime[0] = notPrime[1] = true;
-            for (auto p = 2; p <= N; p++) {
-                if (not notPrime[p])  primes.push_back(p);
-                for (auto q: primes) {
-                    if (q * p > N)  break;
-                    notPrime[q * p] = true;
-                    if (p % q == 0)  break;
-                }
-            }
-        }
-    };
-    constexpr const int MaxPrime = 2e5 + 10;
-    PrimeManager pm{MaxPrime};
-
-    struct Factors {
-        struct Factor {
-            int base = 1, exp = 0;
-        };
-
-        std::vector<Factor> f;
-        static auto fromValue(int x) -> Factors {
-            auto it = pm.primes.begin();
-            std::map<int, int> map;
-            while (pm.notPrime[x] and x != 1) {
-                assert(it != pm.primes.end());
-                while (x % *it == 0)  map[*it]++, x /= *it;
-                it++;
-            }
-            if (x != 1)  map[x]++;
-
-            Factors res;
-            for (auto [x, exp]: map) {
-                if (exp != 0)  res.f.push_back({x, exp});
-            }
-            return res;
-        }
-
-        auto _dfs(std::vector<Factor>::const_iterator it, auto &&call) const -> void {
-            static std::vector<Factor> res;
-
-            if (it == f.end())  return call(res), void();
-            for (auto i = 0; i <= it->exp; i++) {
-                res.push_back({it->base, i});
-                _dfs(it + 1, call);
-                res.pop_back();
-            }
-        }
-
-        auto forEach(auto &&call) const -> void {
-            _dfs(f.begin(), call);
-        }
-
-        auto number() const -> int {
-            auto res = 1;
-            for (auto [x, y]: f) {
-                for (auto i = 0; i < y; i++)  res *= x;
-            }
-            return res;
-        }
-    };
-    void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-        debug {
-            Factors::fromValue(4).forEach([&](auto x) {
-                std::cout << Factors{x}.number() << std::endl;
-            });
-        }
-
-        int N;  std::cin >> N;
-        std::vector<int> a(N);
-        for (auto &x: a)  std::cin >> x;
-
-        constexpr const int MaxValue = 2e5 + 10;
-        std::vector<int> counter(MaxValue);
-
-        for (auto x: a) {
-            counter[x]++;
-        }
-
-        auto ans = 0LL;
-        
-        for (auto x: a) {
-            auto fac = Factors::fromValue(x);
-            auto this_cnt = 0LL;
-            fac.forEach([&](std::vector<Factors::Factor> const &f) -> void {
-                auto y = Factors{f}.number();
-                debug  std::cout << "x = " << x << ", y = " << y << std::endl;
-                assert(x % y == 0);
-                auto z = x / y;
-                this_cnt += counter[y] * counter[z];
-            });
-            ans += this_cnt;
-        }
-
-        std::cout << ans << endl;
-    }
-}
-
-int main(int argc, char const *argv[]) {
-    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    Solution_5200972368419325::solve();
-    return 0;
+#include<bits/stdc++.h>
+using namespace std;
+const int N=2e5+5;
+int c[3*N],v[3*N],l[N],cnt;
+map<int,int> bin;
+int dp[3*N];
+int main(){
+	memset(dp,0x3f,sizeof(dp));
+	int n,m,nw=0;
+	scanf("%d%d",&n,&m);
+	for(int i=1;i<=n;i++){
+		int x,y;
+		scanf("%d%d",&x,&y);
+		nw+=x;
+		int tmp=y-x;
+		if(tmp==0)continue;
+		if(bin[tmp])l[bin[tmp]]++;
+		else{
+			c[++cnt]=tmp;
+			l[cnt]=1;
+			v[cnt]=1;
+			bin[tmp]=cnt;
+		}
+	}
+	int tot=cnt;
+//	cout<<"L"<<l[1]<<endl;
+	for(int i=1;i<=cnt;i++){
+		if(l[i]!=1){
+			l[i]--;
+			for(int j=1;;j++){
+				int k=1<<j;
+				if(l[i]>k){
+					c[++tot]=k*c[i];
+					v[tot]=k;
+					l[i]-=k;
+				}
+				else{
+					c[++tot]=l[i]*c[i];
+					v[tot]=l[i];
+					break;
+				}
+			}
+		}
+	}
+	
+	dp[m]=0;
+//	for(int i=1;i<=tot;i++){
+//		cout<<"----------"<<c[i]<<endl;
+//	}
+	for(int i=1;i<=tot;i++){
+		for(int j=2*m-nw;j>=m-nw;j--){
+			dp[j]=min(dp[j],dp[j-c[i]]+v[i]);
+		}
+	}
+	for(int i=m-nw;i<=2*m-nw;i++){
+		if(dp[i]==0x3f3f3f3f)cout<<-1<<endl;
+		else cout<<dp[i]<<endl;
+	}
 }

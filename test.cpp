@@ -1,59 +1,31 @@
 #include<bits/stdc++.h>
+#define int long long
 using namespace std;
-typedef long long LL;
-const int N = 5e5 + 5;
-
-int val[N], dep[N], fa[N][20];
-LL sum[N], f[N];
-vector<int> G[N];
-
-void dfs(int u, int father) {
-    dep[u] = dep[father] + 1;
-    fa[u][0] = father;
-    for (int i = 1; i < 20; ++i)
-        fa[u][i] = fa[fa[u][i-1]][i-1];
-    
-    sum[u] = val[u];
-    LL sum_vd = 0;
-    for (int v : G[u]) {
-        if (v == father) continue;
-        dfs(v, u);
-        sum[u] += sum[v];
-        sum_vd += f[v] + sum[v] * dep[v];
+const int zero = 400000;
+map<int , int> mp;
+int n , m , sum , v[200010] , w[200010] , tot , dp[1000010];
+signed main()
+{
+    scanf("%lld%lld" , &n , &m);
+    for(int i = 1 , a , b ; i <= n ; i ++) scanf("%lld%lld", &a , &b) , mp[b - a] ++ , sum += a;
+    memset(dp , 0x3f , sizeof dp) , dp[sum + zero] = 0;
+    for(auto &[val , num] : mp)
+    {
+        int k = 1;
+        while(k <= num) v[++ tot] = k * val , w[tot] = k , num -= k , k <<= 1;
+        if(num > 0) v[++ tot] = num * val , w[tot] = num;
     }
-    f[u] = sum_vd - sum[u] * dep[u];
-}
-
-int findZ(int x, int y) {
-    if (dep[x] <= dep[y] + 1) return -1;
-    for (int i = 19; i >= 0; --i) {
-        if (dep[fa[x][i]] > dep[y] + 1)
-            x = fa[x][i];
-    }
-    return fa[x][0];
-}
-
-int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(0); cout.tie(0);
-    int n, q;
-    cin >> n >> q;
-    for (int i = 1; i <= n; ++i) cin >> val[i];
-    for (int i = 2; i <= n; ++i) {
-        int p; cin >> p;
-        G[p].push_back(i);
-    }
-    dfs(1, 0);
-    while (q--) {
-        int x, y;
-        cin >> x >> y;
-        if (fa[x][0] == y) {
-            cout << f[y] << '\n';
-            continue;
-        }
-        int z = findZ(x, y);
-        LL delta = (sum[z] - sum[x]) + val[x] * (1 - (dep[x] - dep[y]));
-        cout << f[y] + delta << '\n';
-    }
+    for(int i = 1 ; i <= tot ; i ++) {
+		auto m_half = m / 2 + 1;
+		auto j_begin = ((v[i] > 0) ? m : -m_half);
+		auto j_end = ((v[i] > 0) ? -m_half : m);
+		auto j_step = ((v[i] > 0) ? -1 : 1);
+		for(int j = j_begin; j != j_end; j += j_step) {
+			auto another = dp[j - v[i] + zero] + w[i];
+			dp[j + zero] = min(dp[j + zero] , another);
+		}
+		// 
+	}
+    for(int i = 0 ; i <= m ; i ++) printf("%lld\n" , dp[i + zero] == 0x3f3f3f3f3f3f3f3f ? -1 : dp[i + zero]);
     return 0;
 }

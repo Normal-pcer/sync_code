@@ -1,34 +1,10 @@
 /**
  * @link https://www.luogu.com.cn/problem/P10232
  */
-#ifndef ONLINE_JUDGE
-#define GNU_DEBUG
-#define _GLIBCXX_DEBUG 1
-#define _GLIBCXX_DEBUG_PEDANTIC 1
-#define _GLIBCXX_SANITIZE_VECTOR 1
-#endif
-#include <bits/stdc++.h>
-bool DEBUG_MODE=false;
-#define debug if(DEBUG_MODE)
-template <typename T> inline auto chkMax(T& base, const T& cmp) { return (base = std::max(base, cmp)); }
-template <typename T> inline auto chkMin(T& base, const T& cmp) { return (base = std::min(base, cmp)); }
-#define never if constexpr(0)
-const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
-const char endl = '\n';
+#include "./libs/debug_macros.hpp"
 
-#define __lambda_1(expr) [&](){return expr;}
-#define __lambda_2(a, expr) [&](auto a){return expr;}
-#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
-#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
-#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
-#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
-#define lam lambda
-namespace lib{
-#if __cplusplus > 201703LL
-namespace ranges = std::ranges;
-namespace views = std::views;
-#endif
-}
+#include "./lib_v3.hpp"
+
 using namespace lib;
 
 /**
@@ -183,12 +159,13 @@ namespace Solution_8670256859201745 {
                     // 如果 end_from 为 L，就是 end_dir 顺时针旋转 pi/2
                     auto dir2 = static_cast<Direction>((static_cast<int>(end_dir) + 1) % 4);
                     if (sp_points[end_from].type == SpecialPoint::Right) {
-                        dir2 = static_cast<Direction>((static_cast<int>(end_dir) ^ 2) % 4);
+                        dir2 = static_cast<Direction>((static_cast<int>(dir2) ^ 2) % 4);
                     }
 
                     auto node1 = 4 * start_to + static_cast<int>(dir1);
                     auto node2 = 4 * end_from + static_cast<int>(dir2);
                     auto dis = query_nodes(node1, node2) + 1;
+                    debug  std::cout << std::format("{} -> {}   dis = {}", node1, node2, dis) << std::endl;
                     chkMin(cur_ans, dis);
                 });
             };
@@ -199,24 +176,32 @@ namespace Solution_8670256859201745 {
                 auto y1_ = y1, y2_ = y2;
                 if (y1_ > y2_)  std::swap(y1_, y2_);
                 // 检查 y1, y2 之间是否有特殊点（不包含两点）
-                auto y_min = y1_ + 1, y_max = y2_ - 1;
-                auto range_begin = ranges::lower_bound(rows[x1], SpecialPoint{x1, y_min}, lam(x, y, x.y < y.y));
-                auto range_end = ranges::upper_bound(rows[x1], SpecialPoint{x1, y_max}, lam(x, y, x.y < y.y));
-                if (range_begin == range_end)  zero_turn = true;
+                auto check_y_range = [&](int y_min, int y_max) -> void {
+                    // assert(y_min <= y_max);
+                    auto range_begin = ranges::lower_bound(rows[x1], SpecialPoint{x1, y_min}, lam(x, y, x.y < y.y));
+                    auto range_end = ranges::upper_bound(rows[x1], SpecialPoint{x1, y_max}, lam(x, y, x.y < y.y));
+                    if (range_begin == range_end)  zero_turn = true;
+                };
+                check_y_range(y1_ + 1, y2_ - 1);
+                check_y_range(y2_ + 1, y1_ + M - 1);
             } else if (y1 == y2) {
                 auto x1_ = x1, x2_ = x2;
                 if (x1_ > x2_)  std::swap(x1_, x2_);
 
-                auto x_min = x1_ + 1, x_max = x2_ - 1;
-                auto range_begin = ranges::lower_bound(cols[y1], SpecialPoint{x_min, y1}, lam(x, y, x.x < y.x));
-                auto range_end = ranges::upper_bound(cols[y1], SpecialPoint{x_max, y1}, lam(x, y, x.x < y.x));
-                if (range_begin == range_end)  zero_turn = true;
+                auto check_x_range = [&](int x_min, int x_max) -> void {
+                    // assert(x_min <= x_max);
+                    auto range_begin = ranges::lower_bound(cols[y1], SpecialPoint{x_min, y1}, lam(x, y, x.x < y.x));
+                    auto range_end = ranges::upper_bound(cols[y1], SpecialPoint{x_max, y1}, lam(x, y, x.x < y.x));
+                    if (range_begin == range_end)  zero_turn = true;
+                };
+                check_x_range(x1_ + 1, x2_ - 1);
+                check_x_range(x2_ + 1, x1_ + N - 1);
             }
             if (zero_turn)  cur_ans = 0;
             else  four_dir(SpecialPoint{x1, y1, SpecialPoint::Left, 0}, start_callback);
 
-            if (cur_ans == inf)  std::cout << -1 << std::endl;
-            else  std::cout << cur_ans << std::endl;
+            if (cur_ans == inf)  std::cout << -1 << endl;
+            else  std::cout << cur_ans << endl;
         }
     }
 }
