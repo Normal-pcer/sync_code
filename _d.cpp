@@ -4,7 +4,6 @@
 
 #include "./lib_v3.hpp"
 
-
 using namespace lib;
 
 namespace Solution_2867195935782351 {
