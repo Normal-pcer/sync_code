@@ -15,19 +15,8 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 5, _V = 3, _M = 6;
-        
-        while (true) {
-            auto N = _N;
-            std::vector<std::pair<int, int>> c(N);
-            auto sum = 0;
-            for (auto &[x, y]: c)  x = randint(0, _V), y = randint(0, _V), sum += x + y;
-            if (sum > _M)  continue;
-            auto M = sum;
-            out << N << " " << M << endl;
-            for (auto [x, y]: c)  out << x << " " << y << endl;
-            break;
-        }
+        const int _N = 9;
+        int N = _N;
     }
 }
 

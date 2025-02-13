@@ -1,89 +1,49 @@
-/**
- * @link https://www.luogu.com.cn/problem/AT_abc269_g
- */
-#pragma GCC optimize(3)
-#include "./libs/debug_macros.hpp"
+#include <bits/stdc++.h>
 
-#include "./lib_v3.hpp"
+using namespace std;
 
-using namespace lib;
-#include "./libs/rolling_container.hpp"
+typedef long long ll;
 
-/**
- * 一张卡片翻开从 a[i] 到 b[i]，增量为 c[i] = b[i] - a[i]
- * a[i] + b[i] 之和小于等于 2e5
- * c[i] 的种类不会很多（根号级别）
- * 选择若干个 c[i] 凑出 K，由于 c[i] 的种类较少，可以看成分组背包。
- * 可以使用二进制优化。
- */
-namespace Solution_3049054151772910 {
-    void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
+const int MAXN = 2e5 + 10;
+const int MAXM = 6e5 + 10;
+const ll inf = ~0ull >> 1;
 
-        int N, M;  std::cin >> N >> M;
-        std::vector<std::pair<int, int>> cards(N);
-        auto sigma_a = 0;
-        for (auto &[x, y]: cards)  std::cin >> x >> y, sigma_a += x;
+struct node {
+	int u, v;
+	ll w;
+	bool operator < (const node &rhs) const { return w < rhs.w; }
+} e[MAXM];
 
-        std::vector<int> c(N);
-        std::map<int, int> groups;  // c[i] 的种类和个数
-        for (auto i = 0; i < N; i++) {
-            auto [x, y] = cards[i];
-            c[i] = y - x;
-            groups[c[i]]++;
-        }
+int fa[MAXN], tot;
 
-        struct Object {
-            ll value = 0, weight = 0;
-        };
-        std::vector<Object> obj;
-        for (auto [x, cnt]: groups) {
-            auto lg = std::__lg(cnt);
-#if false  // 在写什么？
-            for (auto i = 0; i < lg; i++) {
-                if (cnt & (1U << i)) {
-                    obj.push_back({static_cast<ll>(x) << i, 1LL << i});
-                }
-            }
-#endif
-            for (auto i = 0; i < lg; i++) {
-                obj.push_back({static_cast<ll>(x) << i, 1LL << i});
-            }
-            auto placed = (1 << lg) - 1;
-            auto remains = cnt - placed;
-            if (remains != 0) {
-                obj.push_back({static_cast<ll>(x) * remains, remains});
-            }
-        }
-
-        // 只有 -M + sigma_a 到 2M + sigma_a 的范围内有效
-        // F[i][j + offset] 表示前 i 个物品，价值为 j 的最小重量
-        auto offset = M / 2 + sigma_a;
-        auto min_j = -(M / 2) - sigma_a, max_j = M * 3 / 2 - sigma_a;
-
-        RollingContainer<std::vector<std::vector<ll>>, 2> F(std::vector(M * 5 / 2 + 1, infLL));  // 滚动数组优化空间
-        F[0][0 + offset] = 0;
-        for (auto i = 1; i <= static_cast<int>(obj.size()); i++) {
-            for (auto j = min_j; j <= max_j; j++) {
-                F[i][j + offset] = F[i-1][j + offset];
-                auto from = j - obj[i-1].value;
-                if (from < min_j or from > max_j)  continue;
-                chkMin(F[i][j + offset], F[i-1][from + offset] + obj[i-1].weight);
-            }
-        }
-
-        auto const &ans = F[obj.size()];
-        for (auto k = 0; k <= M; k++) {
-            auto cur_ans = ans[k - sigma_a + offset];
-            if (cur_ans >= infLL)  cur_ans = -1;
-            std::cout << cur_ans << std::endl;
-        }
-    }
+int find(int k) {
+	return k == fa[k] ? k : fa[k] = find(fa[k]);
 }
 
-int main(int argc, char const *argv[]) {
-    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    Solution_3049054151772910::solve();
-    return 0;
+inline 
+bool merge(int x, int y) {
+	return (x = find(x)) ^ (y = find(y)) ? fa[x] = y : 0;
+}
+
+int n, m, s1, s2;
+
+inline 
+ll kruskal(bool x, bool y) {
+	ll res = 0, cnt = 0;
+	for (int i = 1; i <= n + 2; i++) fa[i] = i;
+	for (int i = 1; i <= tot; i++) {
+		if (x && (e[i].u == s1 || e[i].v == s1)) continue;
+		if (y && (e[i].u == s2 || e[i].v == s2)) continue;
+		if (merge(e[i].u, e[i].v)) res += e[i].w, cnt++;
+	}
+	return cnt == n + 1 - x - y ? res : inf;
+}
+
+int main() {
+	scanf("%d%d", &n, &m), s1 = n + 1, s2 = n + 2;
+	for (int i = 1, x; i <= n; i++) scanf("%d", &x), e[++tot] = { s1, i, x };
+	for (int i = 1, x; i <= n; i++) scanf("%d", &x), e[++tot] = { s2, i, x };
+	for (int i = 1, u, v, w; i <= m; i++) scanf("%d%d%d", &u, &v, &w), e[++tot] = { u, v, w };
+	sort(e + 1, e + tot + 1);
+	printf("%lld", min({ kruskal(0, 0), kruskal(1, 0), kruskal(0, 1), kruskal(1, 1) }));
 }
