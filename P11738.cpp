@@ -2,7 +2,12 @@
  * @link https://www.luogu.com.cn/problem/P11738
  */
 #if true
-#include "./libs/debug_macros.hpp"
+#ifndef ONLINE_JUDGE
+#define GNU_DEBUG
+#define _GLIBCXX_DEBUG 1
+#define _GLIBCXX_DEBUG_PEDANTIC 1
+#define _GLIBCXX_SANITIZE_VECTOR 1
+#endif
 
 
 #endif
@@ -309,7 +314,7 @@ namespace IO {
             *pp++ = ch;
         }
     };
-
+    struct IO: public Scanner, public Printer {};
 #ifdef IO_ENABLE_MMAP
     template <size_t MaxSize>
     struct DefaultIO: public MemoryMapScanner, FileWritePrinter<MaxSize> {};
@@ -344,10 +349,12 @@ namespace FutureProgram {
     };
     FileWritePrinterStdandardError<1<<20> ioError;
     struct StringScanner: public IO::Scanner {
-        std::string &s;
+        std::string s;
         size_t index;
         bool eofFlag = false;
-        StringScanner(std::string &s): s(s), index(0) {}
+        StringScanner(): s(), index(0) {}
+        StringScanner(std::string &&s): s(s), index(0) {}
+        StringScanner(std::string const &s): s(s), index(0) {}
         char gc() override {
             if (index < s.size())  eofFlag = false;
             if (index == s.size()) {
@@ -357,7 +364,7 @@ namespace FutureProgram {
             }
             return index == s.size()? '\0': s[index++];
         }
-    };
+    } input;
     namespace Trie {
         class Trie {
         public:
@@ -453,7 +460,7 @@ namespace FutureProgram {
     };
     namespace Keywords {
         enum KeywordType: int {
-            None, If, While, For, Var, Def, Return, Else, Main
+            None, If, While, For, Var, Def, Return, Else, Main, Using
         };
         void joinKeywords(IdentifierMap &idMap) {
             idMap.join(If, "if");
@@ -464,6 +471,7 @@ namespace FutureProgram {
             idMap.join(Return, "return");
             idMap.join(Else, "else");
             idMap.join(Main, "main");
+            idMap.join(Using, "using");
         }
     }
     IdentifierMap::IdentifierMap(): mappingStringToIndex(), mappingIndexToString() {
@@ -833,7 +841,7 @@ namespace FutureProgram {
                         break;
                     } if (ch == '\n') {
                         io.get();
-                        tokens.push_back({Token::EndOfLineTag});
+                        // tokens.push_back({Token::EndOfLineTag});
                     } else if (isBlank(ch)) {
                         io.get();
                     } else if (ch == '"') {
@@ -899,6 +907,7 @@ namespace FutureProgram {
                     }
                 }
             } catch (IO::EOFError &) {}
+            tokens.push_back({Token::EndOfLineTag});
             return tokens;
         }
     };
@@ -907,6 +916,15 @@ namespace FutureProgram {
     using Symbol = Tokenizer::Symbol;
     // AST
     // 抽象语法树
+#define PARSER_DEBUG_MESSAGE do { debug { \
+    io << __PRETTY_FUNCTION__ << endl; \
+    for (auto x: src | views::take(8)) { \
+        io << x << endl; \
+    } \
+    io << "-----" << endl; \
+    io.flush(); \
+    std::fflush(stdout); \
+} } while (false)
     namespace AST {
         using TokensType = const std::vector<Token>;
         using TokenIterator = TokensType::const_iterator;
@@ -1289,7 +1307,7 @@ namespace FutureProgram {
                     auto init = try_read_initializer();
                     var_declare->declares.push_back(new VariableDeclareStatementNode::SingleDeclare{name, init, array_size});
                     if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ",") {
-                        continue;
+                        it++; continue;
                     } else {
                         break;  // 结束读取
                     }
@@ -1323,7 +1341,7 @@ namespace FutureProgram {
                 it++;
                 assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{");
                 auto [body, end] = BlockNode::parse(TokensSubrange{++it, src.end()});
-                it = end;
+                it = std::prev(end);  // 回到花括号
                 func_declare->body = body;
             } else {
                 // 第一个变量
@@ -1382,6 +1400,7 @@ namespace FutureProgram {
          */
         template <typename T>
         ParseResult<StatementNode> StatementNode::parse(const T &src) {
+            PARSER_DEBUG_MESSAGE;
             auto it = src.begin();
             if (it->tag == Token::EndOfLineTag) {
                 it++;
@@ -1392,29 +1411,40 @@ namespace FutureProgram {
                 auto [sub_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
                 return {new RunBlockStatementNode{sub_block}, next};
             }
+            // using 语句（忽略三个词和一个分号）
+            if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Using) {
+                it += 3;
+                assert(it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == ";");
+                it++;
+                return {nullptr, it};
+            }
             // if 语句
             if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::If) {
                 // 接下来，读取一个 if，作为当前类的一个语句
                 auto [if_statement, next] = IfStatementNode::parse(TokensSubrange{++it, src.end()});
                 it = next;
                 // 尝试读取一个 else 块 / 语句
-                // 忽略中间的换行符
-                while (it->tag == Token::EndOfLineTag)  it++;
-                if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Else) {
-                    it++;
-                    while (it->tag == Token::EndOfLineTag)  it++;
-                    if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{") {
-                        // else 块
-                        auto [else_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
-                        if_statement->elseBody = else_block, it = next;
-                    } else {
-                        // else 语句
-                        auto [else_statement, next] = StatementNode::parse(TokensSubrange{it, src.end()});
-                        auto else_block = new BlockNode{};
-                        else_block->statements.push_back(else_statement);
-                        if_statement->elseBody = else_block, it = next;
+                if (it != src.end()) {
+                    // 忽略中间的换行符
+                    while (it != src.end() and it->tag == Token::EndOfLineTag)  it++;
+                    if (it == src.end())  goto ignore_else;
+                    if (it->tag == Token::IdentifierTag and std::get<Identifier>(it->value) == Keywords::Else) {
+                        it++;
+                        while (it->tag == Token::EndOfLineTag)  it++;
+                        if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{") {
+                            // else 块
+                            auto [else_block, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
+                            if_statement->elseBody = else_block, it = next;
+                        } else {
+                            // else 语句
+                            auto [else_statement, next] = StatementNode::parse(TokensSubrange{it, src.end()});
+                            auto else_block = new BlockNode{};
+                            else_block->statements.push_back(else_statement);
+                            if_statement->elseBody = else_block, it = next;
+                        }
                     }
                 }
+            ignore_else:
                 return {if_statement, it};
             }
             // while 语句
@@ -1461,20 +1491,22 @@ namespace FutureProgram {
             /** 读取条件
              * 条件结束于第一个匹配的圆括号
              */ {
-                auto [condition, next] = ExpressionNode::parse(
-                    TokensSubrange{it, src.end()},
-                    [](auto const &op, auto const &ops_stack) -> bool {
-                        if (op == ")") {
-                            // 括号匹配时，栈中只有一个括号
-                            auto cnt = 0;
-                            for (auto x: ops_stack) {
-                                if (x.op == ExpressionNode::Bracket)  cnt++;
+                auto end_it = it;
+                auto cnt = 0;  // 括号层数
+                for (; end_it != src.end(); end_it++) {
+                    if (end_it->tag == Token::SymbolTag) {
+                        if (std::get<Symbol>(end_it->value).value == "(") {
+                            cnt++;
+                        } else if (std::get<Symbol>(end_it->value).value == ")") {
+                            cnt--;
+                            if (cnt == 0) {
+                                end_it++;
+                                break;
                             }
-                            return cnt == 1;
                         }
-                        return false;
                     }
-                );
+                }
+                auto [condition, next] = ExpressionNode::parse(TokensSubrange{it, end_it});
                 res->condition = condition;
                 it = next;
             }
@@ -1490,6 +1522,7 @@ namespace FutureProgram {
                     auto [body, next] = StatementNode::parse(TokensSubrange{it, src.end()});
                     res->body = new BlockNode;
                     res->body->statements.push_back(body);
+                    it = next;
                 }
             }
             return {res, it};
@@ -1511,9 +1544,8 @@ namespace FutureProgram {
             it++;
             // 匹配 init 语句
             {
-                // 暂时只考虑执行表达式
-                auto [expr, next] = ExpressionNode::parse(TokensSubrange{it, src.end()});
-                res->init = new ExpressionEvaluateStatementNode{expr};
+                auto [expr, next] = StatementNode::parse(TokensSubrange{it, src.end()});
+                res->init = expr;
                 it = next;
             }
             // 匹配条件
@@ -1542,10 +1574,16 @@ namespace FutureProgram {
                 res->step = expr, it = next;
             }
             // 匹配主体
-            assert(it != src.end() and it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{");
             {
-                auto [body, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
-                res->body = body, it = next;
+                if (it->tag == Token::SymbolTag and std::get<Symbol>(it->value).value == "{") {
+                    auto [body, next] = BlockNode::parse(TokensSubrange{++it, src.end()});
+                    res->body = body, it = next;
+                } else {
+                    auto [body, next] = StatementNode::parse(TokensSubrange{it, src.end()});
+                    res->body = new BlockNode;
+                    res->body->statements.push_back(body);
+                    it = next;
+                }
             }
             return {res, it};
         }
@@ -1715,7 +1753,7 @@ namespace FutureProgram {
                 return std::pair{postfix, it};
             }();
             // 测试，输出后缀表达式
-            never for (auto &x: postfix) {
+            debug for (auto &x: postfix) {
                 if (x.symbol) {
                     io << __LINE__ << "Operator: " << (int)std::get<Operator>(x.item) << '\x20' << opNames[(int)std::get<Operator>(x.item)] << endl;
                 } else {
@@ -1723,6 +1761,7 @@ namespace FutureProgram {
                     auto token = std::get<ValueNode>(x.item).token;
                     io << token << endl;
                 }
+                io.flush();
             }
 
             // 建立表达式树
@@ -2067,7 +2106,7 @@ namespace FutureProgram {
                 auto l_son = evaluateExpression(node->left);
                 auto r_son = evaluateLeftValueExpression(node->right);
                 if (l_son.type == Object::BuiltinIStream) {
-                    io >> std::get<int>(r_son->value);
+                    input >> std::get<int>(r_son->value);
                     return l_son;
                 }
                 unreachable();
@@ -2111,6 +2150,7 @@ namespace FutureProgram {
                         if (name == "putchar") {
                             assert(r_son.type == Object::Int);
                             io << static_cast<char>(std::get<int>(r_son.value));
+                            return Object{};
                         } else {
                             unreachable();
                         }
@@ -2129,7 +2169,7 @@ namespace FutureProgram {
                         runBlock(func->body);
                         leaveScope();
                         if (returnFlag)  return returnFlag = false, ret;
-                        else  return Object{};
+                        else  return Object{Object::Int, 0};  // 隐式返回整数 0
                     }
                 } else if (node->op == AST::ExpressionNode::SplitComma) {
                     return Object{};
@@ -2138,7 +2178,6 @@ namespace FutureProgram {
                     return Object{};
                 }
             }
-            unreachable();
         }
         TypeName Interpreter::evaluateType(Identifier const &name) {
             if (name == "int") {
@@ -2189,6 +2228,7 @@ namespace FutureProgram {
         // 创建新的作用域，并运行语句块
         void Interpreter::runBlock(AST::BlockNode *block) {
             enterScope();
+            ret = Object{Object::Int, 0};
             for (auto &x: block->statements) {
                 runStatement(x);
                 if (returnFlag)  return leaveScope(), void();
@@ -2244,9 +2284,20 @@ namespace FutureProgram {
     }
     void solve() {
         test();
+
+        int N;  io >> N;
+        std::vector<int> vec(N);
+        for (auto &x: vec)  io >> x;
+
+        std::string input_str;
+        std::stringstream ss;
+        for (auto const &x: vec)  ss << x << " ";
+        input_str = ss.str();
+
         auto tokens = Tokenizer{}.tokenize(io);
         auto ast = AST::BlockNode::parse(tokens).node;
         auto interpreter = Interpreter::Interpreter(Program{ast, IdentifierMap{}});
+        input = StringScanner{std::move(input_str)};
         interpreter.run();
     }
 }

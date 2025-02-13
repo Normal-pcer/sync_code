@@ -1,8 +1,27 @@
-#include <cstdint>
-#include <iostream>
+#include<iostream>
+#include<cstdio>
+using namespace std;
+int n, a[100];
 
-using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
-using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
 
-int main() {
+int main()
+{
+    cin >> n;
+    int i, j, this_VARIABLE_is_NOT_used;
+    for (i = 1; i <= n; i = i + 1) cin >> a[i];
+    for (i = 1; i <= n; i = i + 1)
+    for (j = i + 1; j <= n; j = j + 1)
+    if (a[i] > a[j])
+    {
+        int t;
+        t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+    }
+    for (i = 1; i <= n; i = i + 1)
+    {
+        cout << a[i];
+        if (i == n) cout << endl; else putchar(32);
+    }
+    return 0;
 }
