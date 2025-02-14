@@ -15,8 +15,15 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 9;
+        const int _N = 5;
         int N = _N;
+        std::vector<int> vec(N);
+        std::iota(vec.begin(), vec.end(), 0);
+
+        std::shuffle(vec.begin(), vec.end(), std::mt19937{std::random_device{}()});
+        out << N << endl;
+        for (auto x: vec)  out << x << " ";
+        out << endl;
     }
 }
 

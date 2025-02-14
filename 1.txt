@@ -1,44 +1,12 @@
-[NAME] print
-[SYMBOL] (
-[STRING] "Hello"
-[SYMBOL] ..
-[STRING] " "
-[SYMBOL] ..
-[STRING] "--\"World\"--"
-[SYMBOL] )
-[EOL]
-[NAME] x
-[SYMBOL] =
-[SYMBOL] -
-[NUMBER] 3
-[SYMBOL] +
-[NUMBER] 4
-[EOL]
-[NAME] this_1s_a_variable
-[SYMBOL] =
-[NUMBER] 0xabcF
-[SYMBOL] -
-[NUMBER] .012e-56
-[SYMBOL] +
-[NUMBER] 7.e8
-[SYMBOL] +
-[NUMBER] 9e+10
-[SYMBOL] -
-[SYMBOL] -
-[NUMBER] 8
-[EOL]
-[RESERVED] if
-[NUMBER] 1
-[RESERVED] then
-[EOL]
-[NAME] y
-[SYMBOL] =
-[NAME] x
-[EOL]
-[RESERVED] end
-[EOL]
-[NAME] print
-[SYMBOL] (
-[NAME] y
-[SYMBOL] )
-[EOL]
+split 4 4 0
+push1, size = 1
+split 3 4 1
+push1, size = 2
+split 2 4 2
+push1, size = 3
+split 1 4 3
+push1, size = 4
+split 0 4 4
+1 1 1 1 
+aadd_b_cb_cdd_db
+aadd_b_cb_cdd_db

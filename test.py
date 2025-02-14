@@ -1,11 +1,22 @@
-N = int(input())
+import re
+import sys
 
-mem = dict[int, int]()
-def f(x):
-    if x == 0:  return 1
-    if x in mem:  return mem[x]
-    ans = f(x // 2) + f(x // 3)
-    mem[x] = ans
-    return ans
+MATCH = r"[^A-Za-z_][A-Za-z_]+[^A-Za-z_]"
+input = sys.stdin.read
 
-print(f(N))
+find = [i[1:-1] for i in re.findall(MATCH, input())]
+cnt = {}
+for i in find:
+    if not i in cnt:
+        cnt[i] = 0
+    
+    cnt[i] += len(i)
+
+cnt_word = []
+for i in cnt:
+    cnt_word.append((cnt[i], i))
+
+cnt_word.sort()
+cnt_word.reverse()
+for i, w in cnt_word[:50]:
+    print(i, w)
