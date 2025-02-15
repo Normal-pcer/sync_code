@@ -4,7 +4,6 @@
 #if true
 #include "./libs/debug_macros.hpp"
 
-
 #endif
 
 #include <bits/stdc++.h>

@@ -1,90 +1,106 @@
 /**
- * @link https://www.luogu.com.cn/problem/AT_abc268_e
+ * @link https://www.luogu.com.cn/problem/AT_abc270_g
  */
 #include "./libs/debug_macros.hpp"
 
+
 #include "./lib_v4.hpp"
+
 
 using namespace lib;
 
+#include "./libs/fixed_int.hpp"
+
 /**
- * 用一个数表示人和菜的位置关系
- * 每次旋转一次桌子，所有位置关系都会 +1
- * 人和菜的距离是与这个数同余的绝对值最小的数
+ * x[i] = A * x[i-1] + B
+ * x[i] + m = A * (x[i-1] + m)，故 m = B / (A - 1)
+ * x[i] + m = pow(A, i) * (x[0] + m)
+ * 求 x[i] = G 时的 i
  * 
- * 如果 N 为奇数，M = floor(N/2)；否则不存在等于 M
- * 把这个距离排序，分为小于、等于、大于 N/2 的三段
- * 等于 N/2 的段在一个环形上左移
+ * 即 pow(A, i) = K（K 为常数）
+ * 令 q = ceil(sqrt(p))
+ * 预处理出 pow(A, 0), pow(A, q), pow(A, 2*q), pow(A, 3*q), ...
+ * 以及 pow(A, 0), pow(A, 1), pow(A, 2), ..., pow(A, q-1)
  * 
- * 每次旋转，小于段提供的距离 +1，大于段提供的距离 -1，等于段提供的距离不变
- * 通过双指针重新确定位置。移动的距离一定为 N，所以复杂度为 O(N)
- * 错误的。排序复杂度带个 log。
+ * A = 1 需要特判，x[i] = x[i-1] + B，希望 x[i] = G
+ * x[i] = x[0] + B * i = G
+ * B * i = G - x[0]
+ * i = (G - x[0]) / B
  */
-namespace Solution_1553766536623869 {
+namespace Solution_1355059899452297 {
+    auto constexpr qpow(i64 a, i64 b, const i32 mod) -> i32 {
+        i64 res = 1;
+        for (; b; b >>= 1, a = a * a % mod)  if (b & 1) res = res * a % mod;
+        return res;
+    }
     void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
+        i32 P, A, B, S, G;  std::cin >> P >> A >> B >> S >> G;
+        auto get_inv = lam(x, qpow(x, P-2, P));
 
-        int N;  std::cin >> N;
-        std::vector<int> p(N);
-        std::vector<int> item(N);
-        for (auto &x: item)  std::cin >> x;
-        for (auto i = 0; i < N; i++) {
-            p[item[i]] = i;
+        if (A == 1) {
+            // 特判，此时不构成等比数列
+            auto i = static_cast<i64>((G - S) % P + P) % P * get_inv(B) % P;
+            std::cout << i << std::endl;
+            return;
+        }
+        if (S == G) {  // 特判，此时答案为 x[0]
+            std::cout << 0 << std::endl;
+            return;
         }
 
-        // 先处理出每个人和自己的菜的初始距离
-        std::vector<int> init_dis(N);
-        for (auto i = 0; i < N; i++) {
-            init_dis[i] = (p[i] - i + N) % N;
-        }
+        // 求解关于 x 的方程 pow(a, x) = s（模 P 意义下）
+        auto log_mod = [&](int a, int s) -> i64 {
+            auto q = static_cast<i32>(std::sqrt(P) * 1.5);
+            std::vector<i32> pow_a_qi(q);  // pow(a, i * q) % P
+            std::vector<i32> pow_a_i(q);  // pow(a, i) % P
 
-        // 维护三个范围，需要四个指针 p[4]
-        // [p0, p1) 会在下一步 +1
-        // [p1, p2) 会在下一步不变
-        // [p2, p3) 会在下一步 -1
-        // 令 M = (N-1) / 2
-        // 需要三个范围分别小于 M，等于 M，大于 M
-        // 另外均需要保证在 [0, N)
-        // 一个比较取巧的方式可能是直接使用 equal_range 二分查找，复杂度仍为 log，不会更劣
-        std::vector<int> dis(init_dis);
-        ranges::sort(dis);
-        dis.resize(N*2);
-        for (auto i = 0; i < N; i++)  dis[i + N] = dis[i], dis[i] -= N;
+            pow_a_i[0] = pow_a_qi[0] = 1;
+            for (auto i = 1; i < q; i++) {
+                pow_a_i[i] = static_cast<i64>(pow_a_i[i-1]) * a % P;
+            }
+            auto pow_a_q = qpow(a, q, P);
+            for (auto i = 1; i < q; i++) {
+                pow_a_qi[i] = static_cast<i64>(pow_a_qi[i-1]) * pow_a_q % P;
+            }
 
-        std::vector<int> dis2(dis);  // 直接乘以 2，规避浮点数计算
-        for (auto &x: dis2)  x += x;
-        auto add_tag2 = 0;  // 所有数都需要加上 add_tag，这个数是 add_tag 的一半
+            std::map<i32, i32> map;  // map[i] = j: pow_a_i[j] = i
+            for (auto i = 0; i < q; i++)  map.insert({pow_a_i[i], i});
 
-        for (auto &x: init_dis)  x = (x + N) % N, x = std::min(x, N - x);
-        auto sum = std::accumulate(init_dis.begin(), init_dis.end(), 0LL);  // 算出初始的距离和
-        auto ans = sum;
-        auto M2 = N - 1;  // M 的二倍
-        for (auto i = 0; i < N; i++) {
-            auto p0 = std::lower_bound(dis2.begin(), dis2.end(), 0 - add_tag2);
-            auto p3 = std::lower_bound(dis2.begin(), dis2.end(), N * 2 - add_tag2);
-            auto [p1, p2] = std::equal_range(dis2.begin(), dis2.end(), M2 - add_tag2);
-            debug  std::cout << (p0 - dis2.begin()) << " "
-                    << (p1 - dis2.begin()) << " "
-                    << (p2 - dis2.begin()) << " "
-                    << (p3 - dis2.begin()) << std::endl;
+            // pow(a, x) = s
+            // pow(a, i * q + j) = s
+            // 枚举这个 i，尝试解出 j
+            for (auto i = 0; i < q; i++) {
+                // pow(a, i*q) * pow(a, j) = s
+                // pow(a, j) = s / pow(a, i*q)
+                auto expected_pow_a_j = static_cast<i64>(s) * get_inv(pow_a_qi[i]) % P;
+                auto it = map.find(expected_pow_a_j);
+                if (it != map.end()) {  // 存在
+                    auto [pow_a_j, j] = *it;
+                    return i * q + j;
+                }
+            }
+            return -1;
+        };
 
-            auto less = std::distance(p0, p1);
-            auto greater = std::distance(p2, p3);
-            
-            sum += less, sum -= greater;
-            debug  std::cout << "delta = " << less - greater << std::endl;
-            chkMin(ans, sum);
-            add_tag2 += 2;
-        }
-        assert(sum == std::accumulate(init_dis.begin(), init_dis.end(), 0LL));
-
-        std::cout << ans << std::endl;
+        auto m = static_cast<i64>(B) * get_inv(A - 1) % P;  // m 为常数
+        // x[i] = pow(A, i) * (x[0] + m) - m
+        // x[i] = G，求 i
+        // pow(A, i) * (x[0] + m) - m = G
+        // pow(A, i) = (G + m) / (x[0] + m)
+        // x[0] = s
+        auto pow_a_i = static_cast<i64>(G + m) * get_inv(S + m) % P;
+        auto i = log_mod(A, pow_a_i);
+        std::cout << i << std::endl;
     }
 }
 
 int main(int argc, char const *argv[]) {
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    Solution_1553766536623869::solve();
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr), std::cout.tie(nullptr);
+    int T;  std::cin >> T;
+    while (T --> 0) {
+        Solution_1355059899452297::solve();
+    }
     return 0;
 }

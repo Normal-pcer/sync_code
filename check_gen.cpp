@@ -15,15 +15,13 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const int _N = 5;
-        int N = _N;
-        std::vector<int> vec(N);
-        std::iota(vec.begin(), vec.end(), 0);
+        const std::vector<int> primes{7, 11, 13, 17, 19};
 
-        std::shuffle(vec.begin(), vec.end(), std::mt19937{std::random_device{}()});
-        out << N << endl;
-        for (auto x: vec)  out << x << " ";
-        out << endl;
+        out << 5 << endl;
+        for (auto _: range(5)) {
+            auto p = primes.at(randint(0, primes.size() - 1));
+            out << p << " " << randint(1, 7) << " " << randint(1, 7) << " " << randint(1, 7) << " " << randint(1, 7) << endl;
+        }
     }
 }
 

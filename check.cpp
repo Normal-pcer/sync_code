@@ -64,8 +64,6 @@ namespace Checker {
 
     std::string check(std::vector<std::string> &lines1, std::vector<std::string> &lines2) {
         return defaultCheck(lines1, lines2);
-        // if (lines1[0].starts_with("-1") and not lines2[0].starts_with("-1"))  return "err";
-        // else  return "";
     }
 
     std::string compare(std::vector<std::string> &lines1, std::vector<std::string> &lines2) {

@@ -3,12 +3,13 @@
  */
 #include "./libs/debug_macros.hpp"
 
+
 #include "./lib_v4.hpp"
+
 
 using namespace lib;
 
-using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
-using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
+#include "./libs/fixed_int.hpp"
 
 /**
  * x[i] = A * x[i-1] + B
@@ -34,58 +35,70 @@ namespace Solution_1355059899452297 {
     }
     void solve() {
         i32 P, A, B, S, G;  std::cin >> P >> A >> B >> S >> G;
-        auto get_inv = lam(x, qpow(x, P-2, P));
+        auto get_inv = lam(x, (assert(x % P != 0), qpow(x, P-2, P)));
 
+        if (S == G) {  // 特判，此时答案为 x[0]
+            std::cout << 0 << std::endl;
+            return;
+        }
         if (A == 1) {
             // 特判，此时不构成等比数列
-            auto i = static_cast<i64>(G - S) * get_inv(B) % P;
-            std::cout << i << std::endl;
+            if (B % P == 0)  std::cout << -1 << std::endl;
+            else {
+                auto i = static_cast<i64>((G - S) % P + P) % P * get_inv(B) % P;
+                std::cout << i << std::endl;
+            }
+            return;
+        }
+        if (A == 0) {
+            if (B == G)  std::cout << 1 << std::endl;
+            else  std::cout << -1 << std::endl;
             return;
         }
 
-        // 求解关于 x 的方程 pow(a, x) = s（模 P 意义下）
-        auto log_mod = [&](int a, int s) -> i64 {
-            auto q = static_cast<i32>(std::ceil(std::sqrt(P)));
-            std::vector<i32> pow_a_qi(q);  // pow(a, i * q) % P
-            std::vector<i32> pow_a_i(q);  // pow(a, i) % P
-
-            pow_a_i[0] = pow_a_qi[0] = 1;
-            for (auto i = 1; i < q; i++) {
-                pow_a_i[i] = static_cast<i64>(pow_a_i[i-1]) * a % P;
+        // 解 pow(a, x) = s (mod p)，p 为质数，无解返回 -1
+        auto log = [](i32 a, i32 s, i32 const p) -> i32 {
+            if (a == 0) {
+                if (s == 0)  return 1;
+                else  return -1;
             }
-            auto pow_a_q = qpow(a, q, P);
-            for (auto i = 1; i < q; i++) {
-                pow_a_qi[i] = static_cast<i64>(pow_a_qi[i-1]) * pow_a_q % P;
+            auto t = static_cast<i32>(std::ceil(std::sqrt(p)));
+
+            auto pow_a_t = qpow(a, t, p);
+            std::vector<i32> pow_a_i(t), pow_a_ti(t);
+            pow_a_i[0] = pow_a_ti[0] = 1;
+            for (i32 i = 1; i < t; i++) {
+                pow_a_i[i] = static_cast<i64>(pow_a_i[i-1]) * a % p;
+                pow_a_ti[i] = static_cast<i64>(pow_a_ti[i-1]) * pow_a_t % p;
             }
+            std::map<i32, i32> map;
+            for (i32 i = 0; i < t; i++)  map[pow_a_i[i]] = i;
 
-            std::map<i32, i32> map;  // map[i] = j: pow_a_i[j] = i
-            for (auto i = 0; i < q; i++)  map.insert({pow_a_i[i], i});
-
-            // pow(a, x) = s
-            // pow(a, i * q + j) = s
-            // 枚举这个 i，尝试解出 j
-            for (auto i = 0; i < q; i++) {
-                // pow(a, i*q) * pow(a, j) = s
-                // pow(a, j) = s / pow(a, i*q)
-                auto expected_pow_a_j = static_cast<i64>(s) * get_inv(pow_a_qi[i]) % P;
-                auto it = map.find(expected_pow_a_j);
-                if (it != map.end()) {  // 存在
-                    auto [pow_a_j, j] = *it;
-                    return i * q + j;
+            for (i32 m = 0; m < t; m++) {
+                auto val = pow_a_ti[m];
+                auto another = static_cast<i64>(s) * qpow(val, p - 2, p) % p;
+                auto it = map.find(another);
+                if (it != map.end()) {
+                    auto n = it->second;
+                    return m * t + n;
                 }
             }
             return -1;
         };
 
-        auto m = static_cast<i64>(B) * get_inv(A - 1) % P;  // m 为常数
-        // x[i] = pow(A, i) * (x[0] + m) - m
-        // x[i] = G，求 i
-        // pow(A, i) * (x[0] + m) - m = G
-        // pow(A, i) = (G + m) / (x[0] + m)
-        // x[0] = s
-        auto pow_a_i = static_cast<i64>(G + m) * get_inv(S + m) % P;
-        auto i = log_mod(A, pow_a_i);
-        std::cout << i << std::endl;
+        std::cout << [&]() -> i32 {
+            if ((A - 1) % P == 0)  return -1;
+            auto m = static_cast<i64>(B) * get_inv(A - 1) % P;  // m 为常数
+            // x[i] = pow(A, i) * (x[0] + m) - m
+            // x[i] = G，求 i
+            // pow(A, i) * (x[0] + m) - m = G
+            // pow(A, i) = (G + m) / (x[0] + m)
+            // x[0] = s
+            if ((S + m) % P == 0)  return -1;
+            auto pow_a_i = static_cast<i64>(G + m) * get_inv(S + m) % P;
+            auto i = log(A % P, pow_a_i % P, P);
+            return i;
+        }() << endl;
     }
 }
 

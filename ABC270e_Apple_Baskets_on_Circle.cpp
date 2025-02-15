@@ -7,8 +7,7 @@
 
 using namespace lib;
 
-using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
-using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
+#include "./libs/fixed_int.hpp"
 
 /**
  * 在清空一个篮子之前，情况都是相似的
