@@ -2,7 +2,12 @@
  * @link https://www.luogu.com.cn/problem/P11738
  */
 #if true
-#include "./libs/debug_macros.hpp"
+#ifndef ONLINE_JUDGE
+#define GNU_DEBUG
+#define _GLIBCXX_DEBUG 1
+#define _GLIBCXX_DEBUG_PEDANTIC 1
+#define _GLIBCXX_SANITIZE_VECTOR 1
+#endif
 
 #endif
 #include <bits/stdc++.h>
@@ -1443,25 +1448,16 @@ namespace FutureProgram {
                 Struct, Int, Function, String, None, Array, BuiltinFunction, BuiltinIStream, BuiltinOStream, BuiltinEndl
             } type;
             std::variant<
-                std::nullptr_t, 
-                int, 
-                std::shared_ptr<std::string>, 
-                std::shared_ptr<Identifier>,
-                std::shared_ptr<ArrayObjectValue>,
-                AST::FunctionDeclareStatementNode *
+                std::nullptr_t,  // 没有东西
+                int,  // int
+                std::shared_ptr<std::string>,  // string
+                std::shared_ptr<Identifier>,  // builtin_function
+                std::shared_ptr<ArrayObjectValue>,  // array
+                AST::FunctionDeclareStatementNode *  // function
             > value;
             Object(Type type = None): type(type), value(nullptr) {}
             template <typename T>
             Object(Type type, const T &value): type(type), value(value) {}
-
-            Object copy() {
-                if (type == Int) {
-                    return Object{Int, std::get<int>(value)};
-                } else {
-                    unreachable();
-                    return Object{};
-                }
-            }
         };
         struct ArrayMeta;
         struct TypeName {
@@ -1689,7 +1685,7 @@ namespace FutureProgram {
                 assert(l_son_ptr != nullptr);
                 auto &l_son = *l_son_ptr;
                 auto r_son = evaluateExpression(node->right);
-                l_son = r_son.copy();
+                l_son = r_son;
                 return l_son;
             } else if (node->op == AST::ExpressionNode::BitShiftLeft) {
                 auto l_son = evaluateExpression(node->left);
@@ -1771,7 +1767,7 @@ namespace FutureProgram {
                         enterScope();
                         for (auto i = 0; i < size; i++) {
                             topScope()->declare(func->args[i].name, evaluateType(func->args[i].typeName));
-                            topScope()->get(func->args[i].name) = args[i].copy();
+                            topScope()->get(func->args[i].name) = args[i];
                         }
                         runBlock(func->body);
                         leaveScope();
@@ -1826,7 +1822,7 @@ namespace FutureProgram {
                     topScope()->declare(name, real_type);
                     if (var->initializer != nullptr) {
                         assert(type.type == TypeName::Int);
-                        topScope()->get(name) = evaluateExpression(var->initializer).copy();
+                        topScope()->get(name) = evaluateExpression(var->initializer);
                     }
                 }
             }
