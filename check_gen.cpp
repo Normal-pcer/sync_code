@@ -15,12 +15,12 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        const std::vector<int> primes{7, 11, 13, 17, 19};
+        int const _N = 3, _V = 7;
+        auto N = _N;
 
-        out << 5 << endl;
-        for (auto _: range(5)) {
-            auto p = primes.at(randint(0, primes.size() - 1));
-            out << p << " " << randint(1, 7) << " " << randint(1, 7) << " " << randint(1, 7) << " " << randint(1, 7) << endl;
+        out << N << " " << randint(0, _V) << endl;
+        for (auto _: range(N)) {
+            out << randint(1, 3) << " " << randint(0, _V) << endl;
         }
     }
 }

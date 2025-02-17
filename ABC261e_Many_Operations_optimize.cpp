@@ -37,7 +37,7 @@ namespace Solution_1043123852495168 {
             if (type == 1) {
                 // value 所有为 0 的位赋 0
                 assignBits |= ~value;
-                invertBits &= ~value;
+                invertBits &= value;
             } else if (type == 2) {
                 // value 为 1 的位赋 1
                 assignBits |= value;
