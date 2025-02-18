@@ -1,12 +1,5 @@
-split 4 4 0
-push1, size = 1
-split 3 4 1
-push1, size = 2
-split 2 4 2
-push1, size = 3
-split 1 4 3
-push1, size = 4
-split 0 4 4
-1 1 1 1 
-aadd_b_cb_cdd_db
-aadd_b_cb_cdd_db
+clang: warning: argument '-Ofast' is deprecated; use '-O3 -ffast-math' for the same behavior, or '-O3' to enable only conforming optimizations [-Wdeprecated-ofast]
+test1.cpp:1:13: warning: unknown pragma ignored [-Wunknown-pragmas]
+    1 | #pragma GCC target("avx2")
+      |             ^
+1 warning generated.

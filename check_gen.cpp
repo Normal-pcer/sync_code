@@ -15,12 +15,21 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        int const _N = 3, _V = 7;
-        auto N = _N;
+        int const _N = 3;
+        int N = _N, M = _N;
 
-        out << N << " " << randint(0, _V) << endl;
-        for (auto _: range(N)) {
-            out << randint(1, 3) << " " << randint(0, _V) << endl;
+        out << N << " " << M << endl;
+
+        auto sx = randint(0, N-1), sy = randint(0, N-1);
+        for (auto i: range(N)) {
+            for (auto j: range(N)) {
+                if (i == sx and j == sy) {
+                    out << "S";
+                } else {
+                    out << (randint(0, 2)? ".": "#");
+                }
+            }
+            out << endl;
         }
     }
 }

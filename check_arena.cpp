@@ -19,7 +19,7 @@ constexpr const char *FileNames[] = {
 constexpr const char *InputFileName = "1" ".in";
 constexpr const char *OutputFileName = "1" ".out";
 #ifdef linux
-constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra";
+constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra -fsanitize=address,undefined";
 #else  // not def linux
 constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra -Wl,-stack=2147483647";
 #endif  // def linux

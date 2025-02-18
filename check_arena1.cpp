@@ -1,84 +1,113 @@
-/**
- * @link https://www.luogu.com.cn/problem/AT_abc261_e
- */
-#include "./libs/debug_macros.hpp"
-
-#include "./lib_v4.hpp"
-
-#include "./libs/fixed_int.hpp"
-
-using namespace lib;
-
-/**
- * 考虑每一位。
- * 在一个 and 或者 or 之后可能有若干位被固定
- * 整体来看是若干位上的赋值和若干位上的反转
- */
-namespace Solution_1043123852495168 {
-    enum ModifyType {
-        None, Assign0, Assign1, Invert
-    };
-    i32 const constexpr maxBits = 30;
-    void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-        i32 N, C;  std::cin >> N >> C;
-        std::vector<std::pair<int, int>> queries(N);
-        for (auto &[x, y]: queries)  std::cin >> x >> y;
-
-        // 记录每一位上的修改
-        std::array<ModifyType, maxBits> bits;
-        bits.fill(None);
-
-        i32 ans = C;
-        for (auto [type, value]: queries) {
-            if (type == 1) {
-                // and
-                // & 0 是无条件赋值为 0，& 1 不变
-                for (i32 i = 0; i < maxBits; i++) {
-                    if ((value & (1U << i)) == 0)  bits[i] = Assign0;
-                }
-            } else if (type == 2) {
-                // or
-                // | 1 为无条件赋值为 1
-                for (i32 i = 0; i < maxBits; i++) {
-                    if (value & (1U << i))  bits[i] = Assign1;
-                }
-            } else if (type == 3) {
-                // xor
-                for (i32 i = 0; i < maxBits; i++) {
-                    if (value & (1U << i)) {
-                        bits[i] = [&]() -> ModifyType {
-                            switch (bits[i]) {
-                            case Assign0:  return Assign1;
-                            case Assign1:  return Assign0;
-                            case Invert:  return None;
-                            case None:  return Invert;
-                            default:  assert(false), __builtin_unreachable();
-                            }
-                        }();
-                    }
-                }
-            }
-
-            for (i32 i = 0; i < maxBits; i++) {
-                if (bits[i] == Assign0)  ans &= ~(1U << i);
-                else if (bits[i] == Assign1)  ans |= (1U << i);
-                else if (bits[i] == Invert)  ans ^= (1U << i);
-            }
-            
-            debug {
-                for (i32 i = 0; i < maxBits; i++)  std::cout << static_cast<int>(bits[i]) << " ";
-                std::cout << endl;
-            }
-            std::cout << ans << endl;
-        }
-    }
+/*
+#include<bits/stdc++.h>
+using namespace std;
+int h , w , sx , sy , dx[5] = {0 , 1 , -1 , 0} , dy[5] = {1 , 0 , 0 , -1};
+vector<int> mp[1000010];
+vector<bool> flag[1000010];
+bool check(int x , int y)
+{
+	return x >= 1 && x <= h && y >= 1 && y <= w && ((flag[x][y] == false && mp[x][y] != '#') || x == sx && y == sy);
 }
-
-int main(int argc, char const *argv[]) {
-    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    Solution_1043123852495168::solve();
-    return 0;
+void dfs(int x , int y , int num)
+{
+	if(mp[x][y] == 'S' && num >= 4) puts("Yes") , exit(0);
+	for(int i = 0 ; i < 4 ; i ++)
+	{
+		int nx = x + dx[i] , ny = y + dy[i];
+		if(check(nx , ny)) flag[nx][ny] = true , dfs(nx , ny , num + 1) , flag[nx][ny] = false;
+	}
+}
+int main()
+{
+	scanf("%d%d" , &h , &w);
+	for(int i = 1 ; i <= h ; i ++)
+	{
+		for(int j = 1 ; j <= w ; j ++)
+		{
+			char c; cin >> c;
+			if(c == 'S') sx = i , sy = j;
+			mp[i].push_back(c);
+			flag[i].push_back(false);
+		}
+	}
+	dfs(sx , sy , 0);
+	puts("No");
+	return 0;
+}
+*/
+/*
+#include<bits/stdc++.h>
+using namespace std;
+int h , w , sx , sy , ans , dx[5] = {0 , 1 , -1 , 0} , dy[5] = {1 , 0 , 0 , -1};
+vector<int> mp[1000010];
+vector<bool> flag[1000010];
+bool check(int x , int y)
+{
+	return x >= 1 && x <= h && y >= 1 && y <= w && ((flag[x][y] == false && mp[x][y] != '#'));
+}
+void dfs(int x , int y)
+{
+	for(int i = 0 ; i < 4 ; i ++)
+	{
+		int nx = x + dx[i] , ny = y + dy[i];
+		if(check(nx , ny)) flag[nx][ny] = true , dfs(nx , ny);
+	}
+}
+int main()
+{
+	scanf("%d%d" , &h , &w);
+	for(int i = 1 ; i <= h ; i ++)
+	{
+		mp[i].push_back('_');
+		flag[i].push_back(false);
+		for(int j = 1 ; j <= w ; j ++)
+		{
+			char c; cin >> c;
+			if(c == 'S') sx = i , sy = j;
+			mp[i].push_back(c);
+			flag[i].push_back(false);
+		}
+	}
+	dfs(sx , sy);
+	for(int i = 1 ; i <= h ; i ++) for(int j = 1 ; j <= w ; j ++) ans += flag[i][j];
+	puts(ans >= 4 ? "Yes" : "No");
+	return 0;
+}
+*/
+#include<bits/stdc++.h>
+using namespace std;
+int h , w , sx , sy , dx[5] = {0 , 1 , -1 , 0} , dy[5] = {1 , 0 , 0 , -1};
+vector<int> mp[1000010];
+vector<bool> flag[1000010];
+bool check(int x , int y)
+{
+	return x >= 1 && x <= h && y >= 1 && y <= w && ((flag[x][y] == false && mp[x][y] != '#') || x == sx && y == sy);
+}
+void dfs(int x , int y , int num , int lx , int ly)
+{
+	if(mp[x][y] == 'S' && num >= 4 && (x != lx || y != ly)) puts("Yes") , exit(0);
+	for(int i = 0 ; i < 4 ; i ++)
+	{
+		int nx = x + dx[i] , ny = y + dy[i];
+		if(check(nx , ny) && (nx != lx || ny != ly)) flag[nx][ny] = true , dfs(nx , ny , num + 1 , x , y);
+	}
+}
+int main()
+{
+	scanf("%d%d" , &h , &w);
+	for(int i = 1 ; i <= h ; i ++)
+	{
+		mp[i].push_back('_');
+		flag[i].push_back(false);
+		for(int j = 1 ; j <= w ; j ++)
+		{
+			char c; cin >> c;
+			if(c == 'S') sx = i , sy = j;
+			mp[i].push_back(c);
+			flag[i].push_back(false);
+		}
+	}
+	dfs(sx , sy , 0 , sx , sy);
+	puts("No");
+	return 0;
 }
