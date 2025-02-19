@@ -10,6 +10,10 @@ using m256=__m256i;
 mt19937 rnd(random_device{}());
 constexpr bool POLY_RANGE_CHECK=false;
 
+template <class T>
+inline void copy_n(T *a, const ui n, T *b) {
+	memcpy(b, a, sizeof(T) * n);
+}
 template<class T>
 inline void zero_n(T *a,const ui n){memset(a,0,sizeof(T)*n);}
 template<class T>
@@ -326,6 +330,10 @@ private:
 	static inline void _log_impl(const ui *a,const ui n,ui *b){
 		const ui m=getlim(n+n-1);
 		alignas(32) ui c[m],d[m];
+		assert(m != 0);
+		[[assume(m != 0)]];
+		std::memset(c, 0, sizeof(c));
+		std::memset(d, 0, sizeof(d));
 		_diff_impl(a,n,c);
 		zero_n(c+n-1,m-n+1);
 		dif(c,m);
@@ -449,6 +457,9 @@ private:
 			copy_n(a,n,b);
 		}else{
 			alignas(32) ui c[n];
+			std::memset(c, 0, sizeof(c));
+			assert(n != 0);
+			[[assume(n != 0)]];
 			_log_impl(a,n,c);
 			mul_n(c,in(k),n);
 			_exp_impl(c,n,b);
@@ -474,8 +485,15 @@ private:
 		if (ull(i)*k_small>=n) zero_n(b,n);
 		else if (i){
 			const ui m=n-i*k_small;
-			alignas(32) ui c[m] = {},d[m] = {};
-			copy_n(a+i,m,c);
+
+			// alignas(32) ui c[m] = {},d[m] = {};
+			alignas(32) ui c[m], d[m];
+			assert(m != 0);
+			[[assume(m != 0)]];
+			// std::memset(c, 0, sizeof(c));
+			copy_n(a+i, m, c);
+			// std::memcpy(c, a + i, m * sizeof(ui));
+			// copy_n(a+i,m,c);
 			_pown0_impl(c,m,d,k_mod_p,k_mod_phi_p);
 			zero_n(b,i*k_small);
 			copy_n(d,m,b+i*k_small);
@@ -579,11 +597,19 @@ private:
 	}
 public:
 	ui lim,n,*a;
-	inline ui& operator [](const ui x){
+	using iterator = ui *;
+	using const_iterator = ui const *;
+	const_iterator begin() const { return a; }
+	const_iterator end() const { return a + n; }
+	iterator begin() { return a; }
+	iterator end() { return a + n; }
+	size_t size() const { return n; }
+	size_t limit() const { return lim; }
+	inline ui& operator [](const ui x) {
 		if constexpr (POLY_RANGE_CHECK) if (x>=n) throw out_of_range("qwq");
 		return a[x];
 	}
-	inline const ui& operator [](const ui x) const{
+	inline const ui& operator [](const ui x) const {
 		if constexpr (POLY_RANGE_CHECK) if (x>=n) throw out_of_range("qwq");
 		return a[x];
 	}
@@ -991,10 +1017,9 @@ int main() {
 	cin.tie(0);
 	cout.tie(0);
 	ui n;
-	string k;
+	ui k;
 	cin>>n>>k;
-	Poly f;
-	f.input(n);
-	cout<<pow(f,k);
+	
+	cout << Poly<>::stirling1_col(n, k);
 	return 0;
 }
