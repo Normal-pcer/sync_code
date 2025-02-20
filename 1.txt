@@ -1,5 +1,1 @@
-clang: warning: argument '-Ofast' is deprecated; use '-O3 -ffast-math' for the same behavior, or '-O3' to enable only conforming optimizations [-Wdeprecated-ofast]
-test1.cpp:1:13: warning: unknown pragma ignored [-Wunknown-pragmas]
-    1 | #pragma GCC target("avx2")
-      |             ^
-1 warning generated.
+4294967294 1 2 3

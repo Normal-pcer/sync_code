@@ -124,6 +124,7 @@ namespace Checker {
                 count[hashed]++, chkMax(max_count, std::pair(count[hashed], hashed));
             }
 
+            auto some_runtime_error = false;
             auto half = (FileCount + 1) >> 1;
             if (max_count.first >= half) {
                 auto [max, max_hash] = max_count;
@@ -135,7 +136,7 @@ namespace Checker {
 
                 for (auto i: range(FileCount)) {
                     auto [ans, dur, ret] = results.at(i);
-                    if (ret)                    std::cout << std::format("#{} Runtime Error {:.2f}sec", i, dur);
+                    if (ret)                    std::cout << std::format("#{} Runtime Error {:.2f}sec", i, dur), some_runtime_error = true;
                     else {
                         if (ans == max_hash)    std::cout << std::format("#{} Accepted      {:.2f}sec", i, dur);
                         else                    std::cout << std::format("#{} Wrong Answer  {:.2f}sec", i, dur);
@@ -144,11 +145,11 @@ namespace Checker {
                     std::cout << std::endl;
                 }
 
-                if (InterruptOnMainConflict and max_hash != results.at(0).ansHash)  pause();
+                if (InterruptOnMainConflict and (max_hash != results.at(0).ansHash or results.at(0).ret != 0))  pause();
             } else {
                 std::cout << std::format("Cannot infer answer on test {}", i) << std::endl;
             }
-            if (InterruptOnConflict and max_count.first != FileCount)  pause();
+            if (InterruptOnConflict and (max_count.first != FileCount or some_runtime_error))  pause();
 
             {
                 using namespace std::chrono_literals;

@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 // 是否支持 __int128
 #define IO_ENABLE_INT128
 #ifdef __linux__
@@ -10,6 +9,8 @@
 #define requires(...)
 #endif
 namespace lib {
+    using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
+    using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
     struct EOFError: public std::exception {
         const char *what() const throw() {
             return "EOF when reading a char";
@@ -123,7 +124,6 @@ namespace lib {
 #endif  // def IO_ENABLE_MMAP
     struct Printer {
         virtual void put(char) = 0;
-        virtual void flush() {}
         template <typename T, typename std::enable_if<is_floating_point_or_float128<T>::value>::type* = nullptr>
         Printer &write(T x) {
             if (std::isnan(x))  return write("nan");
@@ -149,22 +149,92 @@ namespace lib {
             }
             return *this;
         }
-        template <typename T, typename std::enable_if<is_integral_or_int128<T>::value>::type* = nullptr>
-        Printer &write(T x) {
-            static char st[std::numeric_limits<T>::digits10+1];
-            char *top = st;
-            if (x < 0) {
-                put('-');
-                *top++ = -(x % 10) ^ 48, x = -(x / 10);
-                if (x == 0) {
-                    put(*--top);
-                    return *this;
+        template <typename T, i32 x> struct pow10 { T static constexpr value = pow10<T, x - 1>::value * 10; };
+        template <typename T> struct pow10<T, 0> { T static constexpr value = 1; };
+
+        struct PrinterTable {
+            std::array<std::array<char, 4>, 10000> _numToString;
+            std::array<char, 65536> _stringToNum;
+            constexpr PrinterTable() {
+                std::memset(_stringToNum.begin(), -1, sizeof(_stringToNum));
+                for (i32 i = 0; i <= 9; i++) {
+                    for (i32 j = 0; j <= 9; j++) {
+                        _stringToNum[(i + '0') << 8 | (j + '0')] = i * 10 + j;
+                    }
+                }
+                for (i32 i = 0; i < 10000; i++) {
+                    for (i32 j = 4, k = i; j--; ) {
+                        _numToString[i][j] = k % 10 + 48, k /= 10;
+                    }
                 }
             }
-            do {
-                *top++ = x % 10 ^ 48, x /= 10;
-            } while (x);
-            while (top != st)  put(*--top);
+            auto constexpr numToString(i32 x) -> char const * {
+                return _numToString[x].begin();
+            }
+            auto constexpr stringToNum(u32 x) -> char {
+                return _stringToNum[x];
+            }
+        } printerTable;
+
+        // 保证 1 <= n <= 4
+        auto putStringWithLength(char const *first, size_t n) -> char const * {
+            switch (n) {
+            case 4:  put(*first++);  [[fallthrough]];
+            case 3:  put(*first++);  [[fallthrough]];
+            case 2:  put(*first++);  [[fallthrough]];
+            default:   put(*first++);
+            }
+            return first;
+        }
+
+        template <typename T, i32 digits>
+        auto writeIntegerPow2(T x) -> void {  // x 的十进制位数为 2 的幂次
+            if constexpr(digits == 4) {
+                putStringWithLength(printerTable.numToString(x), 4);
+            } else {
+                writeIntegerPow2<T, digits / 2>(x / pow10<T, digits / 2>::value);
+                writeIntegerPow2<T, digits / 2>(x % pow10<T, digits / 2>::value);
+            }
+        }
+
+        template <typename T, i32 digits>
+        auto writeIntegerAny(T x) -> void {  // x 的十进制位数不大于 digits
+            if constexpr(digits <= 4) {
+                i32 d = (digits >= 4 and x >= 1000) + (digits >= 3 and x >= 100) + (digits >= 2 and x >= 10) + 1;
+                putStringWithLength(printerTable.numToString(x) + (4 - (d)), (d));
+            } else {
+                i32 constexpr near = 1 << std::__lg(digits - 1);  // 取一个 2 的若干次方
+                if (x >= pow10<T, near>::value) {
+                    writeIntegerAny<T, digits - near>(x / pow10<T, near>::value);
+                    writeIntegerPow2<T, near>(x % pow10<T, near>::value);
+                } else {
+                    writeIntegerAny<T, near>(x);
+                }
+            }
+        }
+
+        template <typename T>
+        auto writeUnsignedInteger(T x) -> void {
+            return writeIntegerAny<T, std::numeric_limits<T>::digits10 + 1>(x);
+        }
+
+        template <typename T>
+        auto writeSignedInteger(T x) -> void {
+            if (x < 0) {
+                typename std::make_unsigned_t<T> unsigned_x = x;
+                unsigned_x = -unsigned_x;
+                putchar('-'), writeUnsignedInteger(unsigned_x);
+            } else {
+                writeUnsignedInteger(x);
+            }
+        }
+        template <typename T, typename std::enable_if<is_integral_or_int128<T>::value>::type* = nullptr>
+        Printer &write(T x) {
+            if constexpr (std::is_unsigned<T>::value) {
+                writeUnsignedInteger(x);
+            } else {
+                writeSignedInteger(x);
+            }
             return *this;
         }
         Printer &write(char ch) {
