@@ -1,13 +1,14 @@
 // Do not expand include
 #include "lib"
 #include "libs/range.hpp"
+#include "libs/fixed_int.hpp"
 #ifdef __linux__
 #define linux
 #endif  // def __linux__
 using namespace lib;
 
 constexpr const int MaxTimes = inf;
-constexpr const int FileCount = 2;
+constexpr const int FileCount = 3;
 constexpr const char *FileNames[] = {
     "check_arena0.cpp",
     "check_arena1.cpp",
@@ -19,10 +20,13 @@ constexpr const char *FileNames[] = {
 constexpr const char *InputFileName = "1" ".in";
 constexpr const char *OutputFileName = "1" ".out";
 #ifdef linux
-constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra -fsanitize=address,undefined";
+constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra -fsanitize=address,undefined -DONLINE_JUDGE=LUOGU_GZA";
 #else  // not def linux
-constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra -Wl,-stack=2147483647";
+constexpr const char *CompileCommand = "g++ {} -o {}.exe -O2 -std=c++23 -Wall -Wextra -Wl,-stack=2147483647 -DONLINE_JUDGE=LUOGU_GZA";
 #endif  // def linux
+
+constexpr const char *PrevTimeFilename = ".checkarena_prev_time";  // 存储上次修改时间的配置文件名
+
 constexpr const bool InterruptOnConflict = true;       // 结果出现冲突时中断进程
 constexpr const bool InterruptOnMainConflict = true;   // 特别地，当 file[0] 结果出现冲突，中断进程
 constexpr const bool ClearEachTime = false;
@@ -39,6 +43,75 @@ namespace _Generator {
 namespace Generator = _Generator::Generator;
 
 namespace Checker {
+    class Configure {
+        using Self = Configure;
+        std::string filename;
+        std::unordered_map<std::string, std::string> items;
+        
+        public:
+        struct ParseError: public std::exception {
+            std::string message;
+            ParseError(std::string const &s): message(s) {}
+            
+            auto what() const noexcept -> char const * override {
+                return message.c_str();
+            }
+        };
+        struct KeyError: public std::exception {
+            std::string message;
+            KeyError(std::string const &s): message(s) {}
+            
+            auto what() const noexcept -> char const * override {
+                return message.c_str();
+            }
+        };
+        Configure(std::string const &filename): filename(filename) {
+            std::fstream fin(filename, std::ios::in);
+            if (not fin.good())  return;
+            std::string line;
+            while (std::getline(fin, line)) {
+                auto split = line.find(':');
+                if (split == std::string::npos)  throw ParseError{"Cannot get ':'."};
+                items.insert({line.substr(0, split), line.substr(split + 1)});
+            }
+        }
+        ~Configure() {
+            save();
+        }
+
+        template <typename T>
+        auto getItem(std::string const &key, T &&val) -> T {
+            if (not items.contains(key))  return val;
+            std::stringstream st(items.at(key), std::ios::in);
+
+            T x;  st >> x;
+            return x;
+        }
+        template <typename T>
+        auto getItem(std::string const &key) -> T {
+            if (not items.contains(key))  throw KeyError{"Unknown Key: " + key};
+            std::stringstream st(items.at(key), std::ios::in);
+
+            T x;  st >> x;
+            return x;
+        }
+        template <typename T>
+        auto setItem(std::string const &key, T &&val) -> void {
+            std::stringstream st;
+
+            st << std::forward<T>(val);
+            items[key] = st.str();
+        }
+        auto save() -> void {
+            std::fstream fout(filename, std::ios::out);
+            if (not fout.is_open())  assert(false);
+            for (auto const &[key, value]: items) {
+                fout << key << ": " << value << endl;
+            }
+        }
+    };
+    Configure prevTimeConfig{PrevTimeFilename};
+
     void generate(std::fstream &out) {
         Generator::generate(out);
     }
@@ -68,17 +141,47 @@ namespace Checker {
         return res;
     }
 
+    using Time = std::time_t;
+    auto getFileLastModifyTime(std::string const &path) -> Time {
+        auto lastTime = std::filesystem::last_write_time(path).time_since_epoch();
+
+        lastTime -= std::filesystem::file_time_type::clock::now().time_since_epoch();
+        lastTime += std::chrono::system_clock::now().time_since_epoch();
+        // std::cout << "* " << path << " " << lastTime << std::endl;
+        return std::chrono::duration_cast<std::chrono::seconds>(lastTime).count();
+    }
+    auto isFileModified(std::string const &path) -> bool {
+        Time constexpr eps = 2;  // 差值在此范围内认为没被修改
+        try {
+            auto record_time = prevTimeConfig.getItem<Time>(path);
+            auto real_time = getFileLastModifyTime(path);
+    
+            return record_time - real_time < -eps;
+        } catch (Configure::KeyError &) {
+            return true;
+        }
+    }
     char tmp[1024];
     void compile() {
         for (auto i: range(FileCount)) {
-            *std::format_to(tmp, CompileCommand, FileNames[i], i) = 0;
-            std::cout << tmp << std::endl;
-            if (std::system(tmp))  throw std::string(FileNames[i]) + "compile error";
+            if (isFileModified(FileNames[i])) {
+                *std::format_to(tmp, CompileCommand, FileNames[i], i) = 0;
+                std::cout << tmp << std::endl;
+                if (std::system(tmp))  throw std::string(FileNames[i]) + "compile error";
+                prevTimeConfig.setItem(FileNames[i], std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+        } else {
+                std::cout << std::format("File \"{}\" skipped compile!", FileNames[i]) << std::endl;
+            }
         }
+        prevTimeConfig.save();
     }
 
     void clear() {
+#ifndef linux
         std::system("cls");
+#else
+        std::system("clear");
+#endif
     }
 
     struct Result {
@@ -86,6 +189,8 @@ namespace Checker {
         double duration;
         int ret;
     };
+
+  
 
     void main() {
         compile();

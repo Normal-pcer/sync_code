@@ -15,20 +15,19 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        int const _N = 5, _M = 5;
+        int const _N = 10, _M = 3, _V = 5;
         auto N = _N, M = _M;
 
         out << N << " " << M << endl;
-        for (auto _: range(N))  out << randint(-100, 100) << " ";
-        out << endl;
+        for (auto _: range(N))  out << randint(1, _V) << " ";
         for (auto _: range(M)) {
-            auto op = randint(0, 3);
-            auto x = randint(1, N);
-            auto y = randint(1, N);
-            auto z = randint(-100, 100);
-
-            if (op == 0)  out << op << " " << x << " " << y << endl;
-            else  out << op << " " << x << " " << y << " " << z << endl;
+            auto op = randint(1, 2);
+            if (op == 1)  out << 1 << " " << randint(1, N) << " " << randint(1, _V) << endl;
+            else {
+                auto l = randint(1, N), r = randint(1, N);
+                if (l > r)  std::swap(l, r);
+                out << 2 << " " << l << " " << r << endl;
+            }
         }
     }
 }

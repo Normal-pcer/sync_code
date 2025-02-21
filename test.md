@@ -1,51 +1,131 @@
-# [NWRRC2015] Journey to the “The World’s Start”
+# P8010 「Wdsr-3」令人感伤的红雨
 
-## 题面翻译
+## 题目背景
 
-杰瑞在一条地铁线路上，这条线有$n$个站，世界的起点在最后一个，地铁很快，你可以在一分钟内从一个站点到达下一个站点。
+「秋静叶」是在秋季掌管「落叶」的「神」。在秋季即将迎来落幕之时，因她的「力量」使然，山里会变得火红一片。同时，将「红叶」变为「落叶」也是她工作的一环。
 
-杰瑞需要一张旅行卡才能乘地铁。每张旅行卡都有一个范围$r$和价格$p$。使用范围为$r$的旅行卡，他一次就只能最多旅行$r$站。因此，如果他在第二站进入地铁，他应该在$i−r$到$i+r$的其中一站下车。它需要$d[i]$在第一站下车或者重新进入地铁，不需要时间进入第一站或离开最后一站。
+「秋穰子」是在秋季掌管「丰收」的「神」。与「秋静叶」的职责相反，她掌管着秋天果实的「成熟」、秋粮的「收获」。
 
-杰瑞不是很富有，但他有一些空闲时间，所以他决定买一张最便宜的旅行卡，这样他就可以在不超过$t$分钟的时间内从地铁的第一站坐到到最后一站。
+交织着「快乐」与「忧愁」的「秋天」，怎能让人不有感而发呢？
 
 ## 题目描述
 
-Jerry Prince is the fourth grade student and he goes to New-Lodnon to visit the most popular amusement park `The World's Start`.
+秋穰子和秋静叶是掌管秋天的神灵，因而控制着田地的收成。具体而言，有 $n$ 块田依次排列，第 $i$ 块田的丰收程度为 $a_i$。秋之姐妹会据此得出一年的年成。
 
-An airport he arrives at is next to the first stop of the metro line. This line has $n$ stops and `The World's Start` is on the last of them. The metro of New-Lodnon is pretty fast so you may assume that you can get from a stop to the next one in just one minute.
+在综合考察了各方面因素后，秋之姐妹得出了收获第 $l$ 块至第 $r$ 块田地可以获得的作物总量 $\Omega(l,r)$。具体定义如下：
 
-Jerry needs a travel card to use the metro. Each travel card has a range $r$ and a price $p$ . With a travel card of range $r$ Jerry may travel no more than $r$ stops at once. Therefore, if Jerry enters metro at the stop $i$ he should exit on one of the stops from $i − r$ to $i + r$ inclusive. It takes $d_{i}$ minutes to exit and reenter metro at i-th stop. There is no time required to enter the first stop or exit the last one.
+$$
+\begin{aligned}
+\Alpha(l,r)&=\max_{i=l}^r\{i\times[a_i=\max_{j=l}^r\{a_j\}]\}\cr
+\Beta(l,r)&=\max_{i=l}^r\{\min_{j=1}^i\{\Alpha(j,i)\}\}-\min_{i=l}^r\{\max_{j=1}^i\{\Alpha(j,i)\}\}\cr
+\Omega(l,r)&=\min_{i=l}^r\{\min_{j=i}^r\{|\Beta(i,j)|\}\}
+\end{aligned}$$
 
-Jerry is not very rich but he has some spare time, so he decided to buy the cheapest travel card that will allow him to travel from the first metro stop to the last one in no more than $t$ minutes.
+$\text{A}(l, r)$ 即最右侧的最大值的下标。
+
+
+在**提示说明**部分有相关符号的解释。
+
+---
+
+由于相关因素的影响，田地的丰收程度会发生变化。因此秋之姐妹会对 $a$ 进行 $q$ 次操作：
+
+1. 形如 $\colorbox{f0f0f0}{\verb!1 x y!}$，表示让 $a_1,a_{2},a_{3},\cdots ,a_x$ **分别加上** $y$。
+2. 形如 $\colorbox{f0f0f0}{\verb!2 l r!}$，表示询问 $\Omega(l,r)$ 的值。
 
 ## 输入格式
 
-The first line of the input file contains two integers $n$ and $t$ -- the number of stops and the maximum possible time $(2 \le n \le 50 000$ ; $n - 1 \le t \le 10^{9}).$
-
-The second line contains $n - 1$ integers $p_{r}$ -- the prices of travel cards with range $r = 1$ . . . $n − 1 (1 \le p_{r} \le 100 000)$
-
-The third line contains $n - 2$ integers $d_{i}$ -- the number of minutes required to reenter metro at stop $i = 2$ . . . $n - 1 (1 \le d_{i} \le 10^{5}).$
+- 第一行有两个正整数 $n,q$，分别表示田地总数、操作次数。  
+- 接下来一行有 $n$ 个整数，表示每块田地的丰收程度。  
+- 接下来 $q$ 行，第一个数字 $op$ 表示该操作的种类。  
+  - 如果 $op=1$，那么接下来会有两个整数 $x,y$，含义如题意所示。  
+  - 如果 $op=2$，那么接下来会有两个正整数 $l,r$，含义如题意所示。
 
 ## 输出格式
 
-Output a single integer $p$ -- the lowest possible price of one travel card that allows Jerry to travel from the first to the last stop in no more than $t$ minutes.
+- 输出若干行。对于每一个操作 $2$，输出对应的结果。
 
-## 样例 #1
+## 输入输出样例 #1
 
-### 样例输入 #1
-
-```
-4 4
-1 2 3
-1 4
-```
-
-### 样例输出 #1
+### 输入 #1
 
 ```
-2
+6 3
+1 1 4 5 1 4
+2 3 5
+1 2 5
+2 3 5
 ```
 
-## 提示
+### 输出 #1
 
-Time limit: 2 s, Memory limit: 256 MB.
+```
+0
+1
+```
+
+## 输入输出样例 #2
+
+### 输入 #2
+
+```
+10 6
+1 3 5 7 8 12 14 15 17 18
+2 5 9
+1 3 10
+2 4 5
+1 1 10
+2 4 6
+2 1 10
+```
+
+### 输出 #2
+
+```
+0
+1
+3
+0
+```
+
+## 说明/提示
+
+样例 $3$ 见下发的附件 $\textbf{\textit{sequence3.in}}/\textbf{\textit{sequence3.ans}}$。
+
+#### 数据范围及约定
+
+$$
+\def\arraystretch{1.5}
+\begin{array}{|c|c|c|c|}
+\hline
+\textbf{Subtask} & \bm{n,q\le} & \textbf{特殊性质} & \textbf{分值} \\
+\hline
+1 & 100 & - & 10 \\
+\hline
+2 & 5 \times 10^3 & - & 15 \\
+\hline
+3 & 10^5 & \text{A} & 10 \\
+\hline
+4 & 10^5 & \text{B} & 5 \\
+\hline
+5 & 10^5 & - & 30 \\
+\hline
+6 & 6 \times 10^6 & - & 30 \\
+\hline
+\end{array}
+$$
+
+**特殊性质** $\textbf{A}$：保证对于任意的 $i\in[1,n-1]$，都有 $a_i<a_{i+1}$。  
+**特殊性质** $\textbf{B}$：保证没有操作 $1$。
+
+对于全部数据，保证 $1 \leq n,q \leq 6\times10^6$，$a_i,y_i\in[0,10^9]$，$1\le x_i\le n$，$1\le l_i\le r_i \le n$。
+
+#### 符号解释
+
+- $[P]$ 是艾弗森括号，其中 $P$ 是一个条件。如果 $P$ 为真，则该式子的值为 $1$；否则为 $0$。也就是说，  
+$$[P]=\begin{cases}1 & \text{$P$ 为真}\cr 0 & \text{$P$ 为假}\end{cases}$$  
+- $\min\limits_{i=l}^r\{P\}$ 表示当 $i$ 取 $l,l+1,l+2,\cdots,r$ 时，表达式 $P$ 的取值的最小值；同理定义了 $\max\limits_{i=l}^r\{P\}$。
+
+#### 提示
+
+本题输入输出量较大，请注意常数因子的影响。

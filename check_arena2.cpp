@@ -1,158 +1,92 @@
-#include<bits/stdc++.h>
-#define lson(root) (root << 1)
-#define rson(root) (root << 1 | 1)
+#include<iostream>
+#include<cstdio>
+#include<cmath>
+#include<algorithm>//头文件不多说
 using namespace std;
-struct edge
-{
-	int to , nxt;
-}e[200010];
-struct node
-{
-	int mn , lazy;
-}tree[400010];
-int n , m , tot = 0 , head[100010] , a[100010] , id , dep[100010] , sz[100010] , son[100010] , fa[100010] , dfn[100010] , cnt = 0 , rk[100010] , tp[100010];
-void add(int u , int v)
-{
-	++ tot;
-	e[tot].to = v;
-	e[tot].nxt = head[u];
-	head[u] = tot;
-}
-void dfs1(int u , int pa)
-{
-	dep[u] = dep[pa] + 1 , sz[u] = 1 , fa[u] = pa;
-	for(int i = head[u] ; i != 0 ; i = e[i].nxt)
-	{
-		int v = e[i].to;
-		if(v == pa) continue;
-		dfs1(v , u);
-		sz[u] += sz[v];
-		if(sz[son[u]] < sz[v]) son[u] = v;
+typedef long long ll;
+typedef unsigned long long ull;
+template <typename T>
+inline void read(T&x){//快读，实测超级快读不搭配其他技巧也过不了
+	int w=0;x=0;
+	char ch = getchar();
+	while(ch<'0' || ch>'9'){
+		if(ch=='-') w=1;
+		ch = getchar();
 	}
-}
-void dfs2(int u , int tp_fa)
-{
-	dfn[u] = ++ cnt , rk[cnt] = u , tp[u] = tp_fa;
-	if(son[u]) dfs2(son[u] , tp_fa);
-	for(int i = head[u] ; i != 0 ; i = e[i].nxt)
-	{
-		int v = e[i].to;
-		if(v == fa[u] || v == son[u]) continue;
-		dfs2(v , v);
+	while(ch>='0' && ch<='9'){
+		x = (x<<1)+(x<<3)+(ch^48);
+		ch = getchar();
 	}
+	if(w) x=-x;
 }
-void pushup(int root)
-{
-	tree[root].mn = min(tree[lson(root)].mn , tree[rson(root)].mn);
+template <typename T,typename...Args>
+inline void read(T&t,Args&...args){
+	read(t);read(args...);
 }
-void pushdown(int root , int l , int r)
-{
-	if(tree[root].lazy == 0) return;
-	tree[lson(root)].mn = tree[root].lazy;
-	tree[lson(root)].lazy = tree[root].lazy;
-	tree[rson(root)].mn = tree[root].lazy;
-	tree[rson(root)].lazy = tree[root].lazy;
-	tree[root].lazy = 0;
+template <typename T>
+inline T Max(T x,T y){//实测手写会比自带的max、if和三目运算快
+  return (x > y ? x : y);
 }
-void update(int root , int l , int r , int L , int R , int val)
-{
-	if(L <= l && R >= r)
-	{
-		tree[root].mn = tree[root].lazy = val;
-		return;
+const int N = 6e6+10;
+int n,m;
+int P=1,DEP=0;
+struct Tree{//用结构体内存访问比较连续
+	ll mx; int pos;
+	Tree(){
+		mx = 0; pos = 0;
 	}
-	int mid = (l + r) >> 1;
-	pushdown(root , l , r);
-	if(L <= mid) update(lson(root) , l , mid , L , R , val);
-	if(R > mid) update(rson(root) , mid + 1 , r , L , R , val);
-	pushup(root);
-}
-int query(int root , int l , int r , int L , int R)
-{
-	if(L <= l && R >= r) return tree[root].mn;
-	int mid = (l + r) >> 1 , ans = INT_MAX;
-	pushdown(root , l , r);
-	if(L <= mid) ans = min(ans , query(lson(root) , l , mid , L , R));
-	if(R > mid) ans = min(ans , query(rson(root) , mid + 1 , r , L , R));
-	return ans;
-}
-void build(int root , int l , int r)
-{
-	if(l == r)
-	{
-		tree[root].mn = a[rk[l]];
-		return;
+	Tree(ll tmx,int tpos){
+		mx = tmx; pos = tpos;
 	}
-	int mid = (l + r) >> 1;
-	build(lson(root) , l , mid);
-	build(rson(root) , mid + 1 , r);
-	pushup(root);
-}
-void uv_update(int u , int v , int val)
-{
-	while(tp[u] != tp[v])
-	{
-		if(dep[tp[u]] < dep[tp[v]]) swap(u , v);
-		update(1 , 1 , n , dfn[tp[u]] , dfn[u] , val);
-		u = fa[tp[u]];
+	inline Tree operator + (const Tree&G) const{//实测重载运算符比外层调用函数快
+		if(mx==G.mx) return Tree(mx,Max(pos,G.pos));
+		else if(mx>G.mx) return Tree(mx,pos);
+		else return G;
 	}
-	if(dep[u] < dep[v]) swap(u , v);
-	update(1 , 1 , n , dfn[v] , dfn[u] , val);
-}
-int dfs(int u , int v)
-{
-	while(tp[u] != tp[v])
-	{
-		if(fa[tp[u]] == v) return tp[u];
-		u = fa[tp[u]];
+}tr[N*3];
+ll tag[N*3];
+int main(){
+// 	freopen("in.in","r",stdin);
+// 	freopen("out.out","w",stdout);
+	
+	read(n,m);
+	while(P<=n+1) P<<=1;
+	for(int i=1,x;i<=n;++i){
+		read(x); tr[i+P] = Tree(1ll*x,i);//直接读入省掉建树的常数
 	}
-	return son[v];
-}
-int uv_query(int u , int v)
-{
-	if(rk[u] == id) return tree[1].mn;
-	int ans = INT_MAX;
-	if(dfn[id] < u || dfn[id] > v)
-	{
-//		while(tp[u] != tp[v])
-//		{
-//			if(dep[tp[u]] < dep[tp[v]]) swap(u , v);
-//			ans = min(ans , query(1 , 1 , n , dfn[tp[u]] , dfn[u])); 
-//			u = fa[tp[u]];
-//		}
-//		if(dep[u] < dep[v]) swap(u , v);
-//		ans = min(ans , query(1 , 1 , n , dfn[v] , dfn[u]));
-		return query(1 , 1 , n , u , v);
-	}
-	int k = dfs(id , rk[u]);
-	ans = min(ans , query(1 , 1 , n , 1 , dfn[k] - 1));
-	if(dfn[k] + sz[k] <= n) ans = min(ans , query(1 , 1 , n , dfn[k] + sz[k] , n));
-	return ans;
-}
-int main()
-{
-	scanf("%d%d" , &n , &m);
-	for(int i = 1 ; i < n ; i ++)
-	{
-		int u , v;
-		scanf("%d%d" , &u , &v);
-		add(u , v) , add(v , u); 
-	}
-	for(int i = 1 ; i <= n ; i ++) scanf("%d" , &a[i]);
-	scanf("%d" , &id);
-	dfs1(id , 0) , dfs2(id , id);
-	build(1 , 1 , n);
-	while(m --)
-	{
-		int op , x , y , z;
-		scanf("%d%d" , &op , &x);
-		if(op == 1) id = x;
-		if(op == 2)
-		{
-			scanf("%d%d" , &y , &z);
-			uv_update(x , y , z);
+	for(int i=P-1;i;--i) tr[i] = tr[i<<1]+tr[i<<1|1];//用重载运算符
+	for(int i=1,opt,x,y;i<=m;++i){
+		read(opt,x,y);
+		if(opt==1){//把update内容搬到主函数里
+			int l = 1+P-1,r = x+P+1; ll k = 1ll*y;
+			while(l^1^r){
+				if(~l&1) tr[l^1].mx+=k,tag[l^1]+=k;
+				if(r&1) tr[r^1].mx+=k,tag[r^1]+=k;
+				l>>=1;r>>=1;//直接更新，实测比写push_up函数快
+				tr[l] = tr[l<<1]+tr[l<<1|1];
+				tr[l].mx += tag[l];//标记永久化要加累加标记值
+				tr[r] = tr[r<<1]+tr[r<<1|1];
+				tr[r].mx += tag[r];
+			}
+			for(l>>=1; l ;l>>=1){//更新上传
+				tr[l] = tr[l<<1]+tr[l<<1|1];
+				tr[l].mx += tag[l];
+			}
 		}
-		if(op == 3) printf("%d\n" , uv_query(dfn[x] , min(dfn[x] + sz[x] - 1 , n)));
+		else{//把query内容搬到主函数里
+			int l = 1+P-1,r = y+P+1; Tree resl,resr;
+			while(l^1^r){
+				if(~l&1) resl = resl+tr[l^1];//注意左右区间合并顺序
+				if(r&1) resr = tr[r^1]+resr;
+				l>>=1;r>>=1;
+				resl.mx += tag[l];//累加标记值
+				resr.mx += tag[r];
+			}
+			printf("%d\n",Max(0,x-(resl+resr).pos));//没有答案输出0
+		}
 	}
+
+	// fclose(stdin);
+ 	// fclose(stdout);
 	return 0;
 }
