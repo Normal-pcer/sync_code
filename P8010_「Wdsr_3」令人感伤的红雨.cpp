@@ -266,7 +266,6 @@ namespace FastIO {
 }
 using FastIO::read, FastIO::read_cstr, FastIO::write, FastIO::write_cstr, FastIO::println, FastIO::println_cstr;
 
-
 /**
  * A(l, r) 的意义：区间最大值最靠右的出现位置
  * 先考虑固定右端点，向左延伸的区间。在左端点向左移动的过程中，单调不减。
