@@ -1,5 +1,13 @@
+/**
+ * @link https://neooj.com:8082/oldoj/problem.php?id=3361
+ */
+#include "./libs/debug_macros.hpp"
+
+#include "./lib_v4.hpp"
+
+#include "./libs/fixed_int.hpp"
 // 是否支持 __int128
-#define IO_ENABLE_INT128
+// #define IO_ENABLE_INT128
 #ifdef __linux__
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -153,14 +161,9 @@ namespace lib {
         template <typename T> struct pow10<T, 0> { T static constexpr value = 1; };
 
         struct PrinterTable {
-#if __cplusplus < 201703L
-#define PRINTER_TABLE_CONSTEXPR
-#else
-#define PRINTER_TABLE_CONSTEXPR constexpr
-#endif
             std::array<std::array<char, 4>, 10000> _numToString;
             std::array<char, 65536> _stringToNum;
-            PRINTER_TABLE_CONSTEXPR PrinterTable() {
+            PrinterTable() {
                 std::memset(_stringToNum.begin(), -1, sizeof(_stringToNum));
                 for (i32 i = 0; i <= 9; i++) {
                     for (i32 j = 0; j <= 9; j++) {
@@ -173,10 +176,10 @@ namespace lib {
                     }
                 }
             }
-            auto PRINTER_TABLE_CONSTEXPR numToString(i32 x) -> char const * {
+            auto numToString(i32 x) -> char const * {
                 return _numToString[x].begin();
             }
-            auto PRINTER_TABLE_CONSTEXPR stringToNum(u32 x) -> char {
+            auto stringToNum(u32 x) -> char {
                 return _stringToNum[x];
             }
         } printerTable;
@@ -298,4 +301,105 @@ namespace lib {
     struct DefaultIO: public FileReadScanner<MaxSize>, FileWritePrinter<MaxSize> {};
     DefaultIO<1<<20> io;
 #endif  // def __linux__
+}
+using namespace lib;
+
+/*
+考虑求多少个区间的 gcd 为 x
+固定区间的左端点为 l，区间右端点向右移动。
+这个过程中，区间 gcd 一定不减。
+可以二分查找最小和最大的区间。
+
+对于查询的每个 gcd 都可以这么做，40% 的数据 gcd 的种类不会太多，40% 的数据查询次数不会太多。
+单次复杂度是 O(N*logN*logN)
+加个记忆化感觉可以获得 80 分。
+经过验证，手动构造方案，N = 3000 还是可以过的。
+
+选定了一个右端点，接下来向右最多会有 log 种区间 gcd（每一次至少减半）
+可以直接预处理，复杂度为 O(N*logN*logN)（gcd 越来越小，均摊复杂度 O(1)）
+*/
+namespace Solution_7409812912917923 {
+    template <typename T>  T gcd(T x, T y) { return std::__gcd(x, y); }
+    template <typename T, typename U, typename Func, typename Comp = std::less<>>
+    auto lower_bound_mapping(T begin, T end, U val, Func &&mapping, Comp cmp = {}) -> T {
+        while (end - begin >= 1) {
+            auto mid = begin + ((end - begin) >> 1);
+            if (cmp(mapping(mid), val)) {
+                begin = mid + 1;
+            } else {
+                end = mid;
+            }
+        }
+        return begin;
+    }
+    template <typename T, typename U, typename Func, typename Comp = std::less<>>
+    auto upper_bound_mapping(T begin, T end, U val, Func &&mapping, Comp cmp = {}) -> T {
+        while (end - begin >= 1) {
+            auto mid = begin + ((end - begin) >> 1);
+            if (not cmp(val, mapping(mid))) {
+                begin = mid + 1;
+            } else {
+                end = mid;
+            }
+        }
+        return begin;
+    }
+#define cin kobe
+#define cout bryant
+    auto solve() -> void {
+        i32 N;  io >> N;
+        std::vector<i32> a(N);
+        for (auto &x: a)  io >> x;
+
+        // F[j][i] 表示 [i, i + 1 << j) 个数的区间 gcd
+        auto log_N = std::__lg(N);
+        std::vector<std::vector<i32>> F(log_N + 1, std::vector<i32>(N));
+        F[0] = a;
+        for (i32 j = 1; j <= log_N; j++) {
+            for (i32 i = 0; i < N; i++) {
+                if (i + (1 << j) > N)  break;
+                F[j][i] = gcd(F[j - 1][i], F[j - 1][i + (1 << (j - 1))]);
+            }
+        }
+
+        auto query = [&](i32 begin, i32 end) -> i32 {
+            if (begin == end)  return 0x3f3f3f3f;
+            auto dis = end - begin;
+            auto log_dis = std::__lg(dis);
+
+            return gcd(F[log_dis][begin], F[log_dis][end - (1 << log_dis)]);
+        };
+
+        std::unordered_map<i32, i64> cnt;  // gcd 为 i 的区间数量
+        {
+            // 枚举左端点
+            for (i32 l = 0; l < N; l++) {
+                auto f = [&](i32 x) { return x == N+1? 1: query(l, x); };
+                auto cur = query(l, l + 1);
+                auto begin = l + 1;
+                while (cur != 1) {
+                    // [begin, end) 为右端点，区间 gcd 为 cur
+                    auto end = upper_bound_mapping(l + 1, N + 1, cur, f, std::greater<>{});
+                    auto len = end - begin;
+                    cnt[cur] += len;
+                    begin = end, cur = f(end);
+                }
+                cnt[1] += N - begin + 1;  // 最后一个区间为 1
+            }
+        }
+
+        i32 Q;  io >> Q;
+        while (Q --> 0) {
+            i32 l, r;  io >> l >> r;
+            l--, r--;  // 下标从 0 开始
+            auto x = query(l, r + 1);
+            io << x << " " << cnt[x] << endl;
+        }
+    }
+}
+
+int main(int argc, char const *argv[]) {
+    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
+    Solution_7409812912917923::solve();
+    return 0;
 }

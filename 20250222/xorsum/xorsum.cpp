@@ -29,7 +29,7 @@ namespace Solution {
     }
     i32 constexpr maxN = 3001;
     // F[i][j][k]: 在本位上，前 i 个数，选出 j 个，异或和为 k 的方案数（k = 0 或 1）
-    std::array<std::array<std::array<i32, 2>, maxN>, maxN> F;
+    std::array<std::array<i32, 2>, maxN> F;
     std::array<i32, maxN> nums;
     std::array<i32, maxN> ans;
     std::array<i32, maxN> cur_bit;
@@ -42,8 +42,8 @@ namespace Solution {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr), std::cout.tie(nullptr);
 
-        std::freopen(FILE_NAME ".in", "r", stdin);
-        std::freopen(FILE_NAME ".out", "w", stdout);
+        // std::freopen(FILE_NAME ".in", "r", stdin);
+        // std::freopen(FILE_NAME ".out", "w", stdout);
 
         i32 N;  std::cin >> N;
         for (i32 i = 1; i <= N; i++)  std::cin >> nums[i];
@@ -55,18 +55,17 @@ namespace Solution {
 
             std::memset(F.begin(), 0, sizeof(F));
 
-            F[0][0][0] = 1;
+            F[0][0] = 1;
             for (i32 i = 1; i <= N; i++) {
-                for (i32 j = 0; j <= N; j++) {
+                for (i32 j = N; j >= 0; j--) {
                     for (auto k: {0, 1}) {
-                        F[i][j][k] = near_mod(F[i][j][k] + F[i-1][j][k]);
-                        if (j != 0)  F[i][j][k] = near_mod(F[i][j][k] + F[i-1][j-1][k ^ cur_bit[i]]);
+                        if (j != 0)  F[j][k] = near_mod(F[j][k] + F[j-1][k ^ cur_bit[i]]);
                     }
                 }
             }
 
             for (i32 j = 1; j <= N; j++) {
-                ans[j] = near_mod(ans[j] + (static_cast<i64>(F[N][j][1]) << d) % mod);
+                ans[j] = near_mod(ans[j] + (static_cast<i64>(F[j][1]) << d) % mod);
             }
         }
 

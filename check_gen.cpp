@@ -15,19 +15,34 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        int const _N = 10, _M = 3, _V = 5;
-        auto N = _N, M = _M;
+        int const _N = 10, _M = 10;
+        
+        while (true) {
+            std::string s;
+            int s_size = randint(1, _N);
+            for (auto _: range(s_size))  s.push_back(randint('a', 'd'));
 
-        out << N << " " << M << endl;
-        for (auto _: range(N))  out << randint(1, _V) << " ";
-        for (auto _: range(M)) {
-            auto op = randint(1, 2);
-            if (op == 1)  out << 1 << " " << randint(1, N) << " " << randint(1, _V) << endl;
-            else {
-                auto l = randint(1, N), r = randint(1, N);
-                if (l > r)  std::swap(l, r);
-                out << 2 << " " << l << " " << r << endl;
+            std::string t = s;
+            auto modify = randint(1, _M);
+            for (auto _: range(modify)) {
+                if (t.empty())  t = 'c';
+                auto op = randint(1, 3);
+                auto pos = randint(0, t.size() - 1);
+                if (op == 1) {
+                    t.insert(t.begin() + pos, randint('a', 'd'));
+                } else if (op == 2) {
+                    t.erase(t.begin() + pos);
+                } else {
+                    t.at(pos) = randint('a', 'd');
+                }
             }
+
+            if (s.empty() or t.empty())  continue;
+            auto m = randint(1, _M);
+            out << m << endl;
+            out << s << endl;
+            out << t << endl;
+            break;
         }
     }
 }
