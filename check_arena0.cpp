@@ -1,36 +1,55 @@
-// LUOGU_RID: 204085138
 #include<bits/stdc++.h>
+#define int long long
 using namespace std;
-int T , dp[2][1000010];
-void solve()
-{
-	string s , t; int k; scanf("%d" , &k); cin >> s >> t; s = '_' + s , t = '_' + t;
-//	for(int i = 0 ; i <= (int)max(s.size() , t.size()) ; i ++) dp[0][i] = dp[1][i] = 0;
-	if(s.size() > t.size()) swap(s , t);
-	// s çŸ­ 
-	if(int(t.size() - s.size()) > k) return puts("No") , void();
-	memset(dp , 0x3f , sizeof(dp));
-	dp[0][0] = 0;
-	for(int i = 1 ; i < (int)s.size() ; i ++)
-	{
-		for(int j = max(0 , i - k) ; j <= min((int)t.size() - 1 , i + k) ; j ++)
-		{
-			dp[i & 1][j] = min({dp[(i - 1) & 1][j - 1] + (s[i] != t[j]) , dp[(i - 1) & 1][j] + 1 , dp[i & 1][j - 1] + 1});
+string a,b;
+const int mo=1E9;
+int k;
+const int N=1e6+5;
+int dp[N][45];
+signed main(){
+	int T=1;
+//	cin>>T;
+	while(T--){
+		
+		cin>>k;
+		cin>>a>>b;
+		int n=a.size();
+		int m=b.size();
+		a="-"+a;
+		b="f"+b;
+		if(n>m){
+			swap(n,m);
+			swap(a,b);
 		}
+		if(m-n>k){
+			cout<<"No";
+			continue;
+		}
+		for(int i=0;i<=n;i++){
+			for(int j=0;j<=44;j++){
+//				printf("dp[%d][%d]=%d\n",i,j,dp[i][j]);
+				dp[i][j]=0x3f3f3f3f;
+			}
+		}
+		dp[0][k]=0;
+		for(int i=1;i<=n;i++){
+			for(int j=max(1ll,i-k);j<=min(m,i+k);j++){
+				int t=j-i+k;
+				dp[i][t]=min({dp[i-1][t]+1,dp[i-1][t-1]+(a[i]!=b[j]),dp[i][j-1]});
+			}
+		}
+		if(dp[n][m-n+k]<=k) cout<<"Yes"<<endl;
+		else cout<<"No"<<endl;
+//		for(int i=0;i<=n;i++){
+//			for(int j=0;j<=k;j++){
+//				printf("dp[%d][%d]=%d\n",i,j,dp[i][j]);
+//				dp[i][j]=-1;
+//			}
+//		}		
 	}
-//	printf("%d\n" , dp[(s.size() - 1) & 1][t.size() - 1]);
-//	printf("%d %d\n" , t.size() , s.size());
-	if(dp[(s.size() - 1) & 1][t.size() - 1] <= k) puts("Yes");
-	else puts("No");
 }
-int main()
-{
-//	freopen("data.in" , "r" , stdin);
-//	freopen("1.ans" , "w" , stdout);
-//	freopen("edit.in" , "r" , stdin);
-//	freopen("edit.ans" , "w" , stdout);
-//	scanf("%d" , &T);
-	int T = 1;
-	while(T --) solve();
-	return 0;
-}
+/*
+3
+bbcbcddcc
+bcbccddccc
+*/

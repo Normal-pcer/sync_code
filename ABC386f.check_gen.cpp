@@ -15,7 +15,7 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        int const _N = 5, _M = 5;
+        int const _N = 10, _M = 10;
         
         while (true) {
             std::string s;
