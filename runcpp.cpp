@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <csignal>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -15,6 +16,14 @@
 #include <filesystem>
 #include <functional>
 #include <unordered_map>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <shlobj.h>
+#else
+#include <unistd.h>
+#include <sys/wait.h>
+#endif
 
 namespace views = std::views;
 namespace ranges = std::ranges;
@@ -50,6 +59,130 @@ int constexpr fileNotFoundCode = 2;
 int constexpr compileErrorCode = 3;
 int constexpr runtimeErrorCode = 4;
 bool constexpr openWithEditorOnCreate = true;
+
+auto getConfigPath() -> std::string;
+
+#ifdef _WIN32  // Windows
+auto getConfigPath() -> std::string {
+    static char path[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, path))) {
+        return std::string(path) + "\\runcpp\\";
+    }
+    return "";
+}
+#else  // Mac/Linux
+auto getConfigPath() -> std::string {
+    char const *home = std::getenv("HOME");
+    if (home != nullptr) {
+        std::filesystem::path config_dir{home};
+        config_dir /= ".config";
+        return config_dir.string() + "/runcpp/";
+    }
+    return "";
+}
+
+#endif  // def _WIN32
+
+/**
+ * 启动一个程序并等待
+ * @param program 程序名
+ * @param args 参数列表
+ * @returns 程序返回值
+ */
+auto launch(std::string const &program, std::string const &args) -> int {
+#ifdef _WIN32
+    STARTUPINFOA si;  // 启动信息
+    PROCESS_INFORMATION pi = {};  // 进程信息
+
+    // 初始化 si
+    std::memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+
+    std::signal(SIGINT, SIG_IGN);
+    SetConsoleCtrlHandler(nullptr, TRUE);  // 禁用控制台事件处理
+    std::string cmd = program + " " + args;
+    auto success = CreateProcessA(
+        nullptr,  // 应用程序名称（从命令解析）
+        cmd.data(),  // 命令行
+        nullptr,
+        nullptr,
+        FALSE,  // 继承句柄
+        0,
+        nullptr,
+        nullptr,
+        &si,
+        &pi
+    );
+
+    if (not success) {
+        SetConsoleCtrlHandler(nullptr, FALSE);  // 恢复控制台事件处理
+        return -1;
+    }
+
+    CloseHandle(pi.hThread);
+    WaitForSingleObject(pi.hProcess, INFINITE);  // 等待子进程结束
+
+    DWORD exitCode;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    CloseHandle(pi.hProcess);  // 关闭进程
+    
+    SetConsoleCtrlHandler(nullptr, FALSE);  // 恢复控制台事件处理
+    std::signal(SIGINT, SIG_DFL);
+    return static_cast<int>(exitCode);
+
+#else  // not def _WIN32
+    pid_t pid = fork();
+    if (pid < 0) {  // 失败
+        return -1;
+    } else if (pid == 0) {
+        // 作为子进程
+        std::signal(SIGINT, SIG_DFL);
+        // 手动解析参数
+        auto it = args.begin();
+        std::vector<std::string> parts {program};
+        std::vector<char *> pointers;
+        while (it != args.end()) {
+            auto find = std::find(it, args.end(), ' ');
+            parts.push_back(std::string(it, find));
+            if (find != args.end())  find++;
+            it = find;
+        }
+        for (auto &part: parts) {
+            pointers.push_back(part.data());
+        }
+        pointers.push_back(nullptr);
+        execvp(program.c_str(), pointers.data());
+        return -1;
+    } else {
+        // 作为父进程，忽略 SIGINT 中断
+        std::signal(SIGINT, SIG_IGN);
+
+        int status;
+        waitpid(pid, &status, 0);
+
+        std::signal(SIGINT, SIG_DFL);  // 恢复
+
+        if (WIFEXITED(status)) {
+            return WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            std::cerr << 111 << std::endl;
+            return -1;
+        }
+        return -1;
+    }
+#endif  // def _WIN32
+    return -1;
+}
+/**
+ * 启动一个程序
+ * 
+ * @param command 完整的命令，相当于空格分隔的 program 和 args
+ */
+auto launch(std::string const &command) -> int {
+    auto space = command.find(' ');
+    if (space == std::string::npos)  return launch(command, "");
+    else  return launch(command.substr(0, space), command.substr(space + 1));
+}
 
 auto replace_string(std::string const &base, std::string const &match, std::string const &replace) -> std::string {
     std::string res;
@@ -167,6 +300,10 @@ public:
         items[key] = st.str();
     }
     auto save() -> void {
+        auto dir = std::filesystem::path{filename}.parent_path();
+        if (not std::filesystem::exists(dir)) {
+            std::filesystem::create_directories(dir);  // 不存在就创建
+        }
         std::fstream fout(filename, std::ios::out);
         if (not fout.is_open())  assert(false);
         for (auto const &[key, value]: items) {
@@ -346,10 +483,10 @@ auto matchFileName(std::string const &match) -> std::string {
 }
 
 int main(int argc, char const *argv[]) {
-    Configure default_args{defaultArgumentsFileName};
-    Configure compile_presets{compileArgumentsPresetsFileName};
-    Configure prev_time{prevTimeFileName};  // 文件上次编译时间
-    Configure config{configFileName};  // 其他配置项
+    Configure default_args{getConfigPath() + defaultArgumentsFileName};
+    Configure compile_presets{getConfigPath() + compileArgumentsPresetsFileName};
+    Configure prev_time{getConfigPath() + prevTimeFileName};  // 文件上次编译时间
+    Configure config{getConfigPath() + configFileName};  // 其他配置项
     ArgumentManager am{argc, argv, &default_args};
 
     if (am.has("help")) {
@@ -362,7 +499,6 @@ int main(int argc, char const *argv[]) {
         }
         if (values.size() >= 1) {
             auto index = values[0];
-
             std::vector<std::string> reserved{"list"};
 
             auto presets = compile_presets.getItemsMap();
@@ -513,7 +649,7 @@ int main(int argc, char const *argv[]) {
             auto compile_command = std::format(compileCommand, filename_no_ext, compile_args);
             std::cout << "> " << compile_command << std::endl;
             std::cout << compilingMessage << std::flush;
-            auto compiler_code = std::system(compile_command.c_str());
+            auto compiler_code = launch(compile_command.c_str());
 
             if (compiler_code != 0) {
                 std::cerr << std::endl;
@@ -527,7 +663,7 @@ int main(int argc, char const *argv[]) {
         }
         
         if (am.has("gdb")) {
-            std::system(std::format(runGDBCommand, filename_no_ext).c_str());
+            launch(std::format(runGDBCommand, filename_no_ext).c_str());
             return 0;
         }
         if (am.has("debug")) {
@@ -536,7 +672,7 @@ int main(int argc, char const *argv[]) {
             std::cout << runMessage << std::endl;
         }
         auto begin = std::chrono::system_clock::now();
-        auto runtime_code = std::system(
+        auto runtime_code = launch(
             am.has("debug")
                 ? std::format(runDebugCommand, filename_no_ext).c_str()
                 : std::format(runCommand, filename_no_ext).c_str()

@@ -1,3 +1,4 @@
+preset:gdb
 search:1
 expand-include:1
 create:1

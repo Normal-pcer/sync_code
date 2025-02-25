@@ -15,33 +15,13 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        int const _N = 5, _M = 5;
+        int const _N = 3, _V = 1e9;
         
         while (true) {
-            std::string s;
-            int s_size = randint(1, _N);
-            for (auto _: range(s_size))  s.push_back(randint('a', 'd'));
-
-            std::string t = s;
-            auto modify = randint(1, _M);
-            for (auto _: range(modify)) {
-                if (t.empty())  t = 'c';
-                auto op = randint(1, 3);
-                auto pos = randint(0, t.size() - 1);
-                if (op == 1) {
-                    t.insert(t.begin() + pos, randint('a', 'd'));
-                } else if (op == 2) {
-                    t.erase(t.begin() + pos);
-                } else {
-                    t.at(pos) = randint('a', 'd');
-                }
-            }
-
-            if (s.empty() or t.empty())  continue;
-            auto m = randint(1, _M);
-            out << m << endl;
-            out << s << endl;
-            out << t << endl;
+            auto N = _N;
+            out << N << endl;
+            for (auto _: range(N))  out << randint(1, _V) << " ";
+            out << endl;
             break;
         }
     }

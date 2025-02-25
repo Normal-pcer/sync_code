@@ -1,0 +1,1 @@
+gdb:-std=c++23 -ggdb3 -Wl,-stack=2147483647 -ftrapv -Wall -Wextra

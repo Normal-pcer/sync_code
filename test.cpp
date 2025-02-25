@@ -1,31 +1,102 @@
 #include <bits/stdc++.h>
-bool DEBUG_MODE=false;
-#define debug if(DEBUG_MODE)
-template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
-template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
-#define never if constexpr(0)
-const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
-const char endl = '\n';
+#ifdef _WIN32 
+#include <windows.h>
+#else  // not def _WIN32
+#include <unistd.h>
+#include <sys/wait.h>
+#endif  // def _WIN32
 
-#define __lambda_1(expr) [&](){return expr;}
-#define __lambda_2(a, expr) [&](auto a){return expr;}
-#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
-#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
-#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
-#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
-#define lam lambda
-namespace lib{
-#if __cplusplus > 201703LL
-namespace ranges = std::ranges;
-namespace views = std::views;
-#endif
+
+/**
+ * 启动一个程序并等待
+ * @param program 程序名
+ * @param args 参数列表
+ * @returns 程序返回值
+ */
+auto launch(std::string const &program, std::string const &args) -> int {
+#ifdef _WIN32
+    STARTUPINFOA si;  // 启动信息
+    PROCESS_INFORMATION pi = {};  // 进程信息
+
+    // 初始化 si
+    std::memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+
+    std::signal(SIGINT, SIG_IGN);
+    SetConsoleCtrlHandler(nullptr, TRUE);  // 禁用控制台事件处理
+    std::string cmd = program + " " + args;
+    auto success = CreateProcessA(
+        nullptr,  // 应用程序名称（从命令解析）
+        cmd.data(),  // 命令行
+        nullptr,
+        nullptr,
+        FALSE,  // 继承句柄
+        0,
+        nullptr,
+        nullptr,
+        &si,
+        &pi
+    );
+
+    if (not success) {
+        SetConsoleCtrlHandler(nullptr, FALSE);  // 恢复控制台事件处理
+        return -1;
+    }
+
+    CloseHandle(pi.hThread);
+    WaitForSingleObject(pi.hProcess, INFINITE);  // 等待子进程结束
+
+    DWORD exitCode;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    CloseHandle(pi.hProcess);  // 关闭进程
+    
+    SetConsoleCtrlHandler(nullptr, FALSE);  // 恢复控制台事件处理
+    std::signal(SIGINT, SIG_DFL);
+    return static_cast<int>(exitCode);
+
+#else  // not def _WIN32
+    pid_t pid = fork();
+    if (pid < 0) {  // 失败
+        return -1;
+    } else if (pid == 0) {
+        // 作为子进程
+        std::signal(SIGINT, SIG_DFL);
+        // 手动解析参数
+        auto it = args.begin();
+        std::vector<std::string> parts {program};
+        std::vector<char *> pointers;
+        while (it != args.end()) {
+            auto find = std::find(it, args.end(), ' ');
+            parts.push_back(std::string(it, find));
+            if (find != args.end())  find++;
+            it = find;
+        }
+        for (auto &part: parts) {
+            pointers.push_back(part.data());
+        }
+        pointers.push_back(nullptr);
+        execvp(program.c_str(), pointers.data());
+        return -1;
+    } else {
+        // 作为父进程，忽略 SIGINT 中断
+        std::signal(SIGINT, SIG_IGN);
+
+        int status;
+        waitpid(pid, &status, 0);
+
+        std::signal(SIGINT, SIG_DFL);  // 恢复
+
+        if (WIFEXITED(status)) {
+            return WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            std::cerr << 111 << std::endl;
+            return -1;
+        }
+        return -1;
+    }
+#endif  // def _WIN32
+    return -1;
 }
 
 int main() {
-	std::vector vec{0, 1, 2, 3, 4, 5};
-	std::rotate(vec.begin() + 2, vec.begin() + 4, vec.begin() + 4 + 1);
-	for (auto x: vec)  std::cout << x << " ";
-	std::cout << vec[1000];
-	return 0
-	;
 }

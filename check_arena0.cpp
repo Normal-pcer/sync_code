@@ -1,55 +1,61 @@
 #include<bits/stdc++.h>
-#define int long long
 using namespace std;
-string a,b;
-const int mo=1E9;
-int k;
-const int N=1e6+5;
-int dp[N][45];
-signed main(){
-	int T=1;
-//	cin>>T;
-	while(T--){
-		
-		cin>>k;
-		cin>>a>>b;
-		int n=a.size();
-		int m=b.size();
-		a="-"+a;
-		b="f"+b;
-		if(n>m){
-			swap(n,m);
-			swap(a,b);
-		}
-		if(m-n>k){
-			cout<<"No";
-			continue;
-		}
-		for(int i=0;i<=n;i++){
-			for(int j=0;j<=44;j++){
-//				printf("dp[%d][%d]=%d\n",i,j,dp[i][j]);
-				dp[i][j]=0x3f3f3f3f;
-			}
-		}
-		dp[0][k]=0;
-		for(int i=1;i<=n;i++){
-			for(int j=max(1ll,i-k);j<=min(m,i+k);j++){
-				int t=j-i+k;
-				dp[i][t]=min({dp[i-1][t]+1,dp[i-1][t-1]+(a[i]!=b[j]),dp[i][j-1]});
-			}
-		}
-		if(dp[n][m-n+k]<=k) cout<<"Yes"<<endl;
-		else cout<<"No"<<endl;
-//		for(int i=0;i<=n;i++){
-//			for(int j=0;j<=k;j++){
-//				printf("dp[%d][%d]=%d\n",i,j,dp[i][j]);
-//				dp[i][j]=-1;
-//			}
-//		}		
+typedef long long ll;
+typedef __int128 i128;
+
+constexpr int mod=1004535809;
+
+struct dbi{
+	int val;
+	long double _v;
+	dbi(){
+		val=_v=0;
 	}
+	dbi(ll x){
+		val=_v=x%mod;
+	}
+	dbi(ll x,long double _x){
+		val=x%mod;
+		_v=_x;
+	}
+	auto operator <=> (const dbi& b) const{
+		return _v<=>b._v;
+	}
+	dbi operator + (const dbi &b) const{
+		return dbi(val+b.val,_v+b._v);
+	}
+	dbi operator - (const dbi &b) const{
+		return dbi(val-b.val+mod,_v-b._v);
+	}
+	dbi operator * (const dbi &b) const{
+		return dbi(ll(val)*b.val,_v*b._v);
+	}
+};
+
+int n;
+ll a[1000001];
+dbi b[1000001],e[1000001],sum,tmp,ans;
+
+int main(){
+	ios::sync_with_stdio(false);
+	cin.tie(nullptr);
+	cout.tie(nullptr);
+	cin>>n;
+	for (int i=1;i<=n;i++){
+		cin>>a[i];
+		b[i]=b[i-1]+dbi(a[i]);
+		e[i-1]=dbi(ll(i-1)*(n-i+1));
+		sum=sum+e[i-1]*dbi(a[i]);
+		if (i>1) tmp=tmp+(e[i-2]-e[i-1])*dbi(a[i]);
+	}
+	tmp=tmp+dbi(a[1]*(n-1));
+	ans=sum;
+	for (int i=2;i<=n;i++){
+		sum=sum+tmp;
+		tmp=tmp-b[n]*dbi(2);
+		tmp=tmp+dbi(2*n*a[i]);
+		ans=min(ans,sum);
+	}
+	cout<<ans.val;
+	return 0;
 }
-/*
-3
-bbcbcddcc
-bcbccddccc
-*/
