@@ -6,7 +6,6 @@
 #include <sys/wait.h>
 #endif  // def _WIN32
 
-
 /**
  * 启动一个程序并等待
  * @param program 程序名

@@ -414,7 +414,8 @@ auto processFileName(std::string filename) -> std::string {
 }
 
 // 尝试从当前目录的文件中匹配目标文件
-auto matchFileName(std::string const &match) -> std::string {
+auto matchFileName(std::string const &x) -> std::string {
+    auto match = x.ends_with(".cpp")? x.substr(0, x.size() - 4): x;
     std::filesystem::path cur_dir{"."}; 
     auto dir_it = std::filesystem::directory_iterator{cur_dir};
 
@@ -423,7 +424,8 @@ auto matchFileName(std::string const &match) -> std::string {
         auto path = entry.path();
         auto str = path.filename().string();
         if (str.ends_with(".cpp")) {
-            files.push_back(processFileName(str));
+            auto processed = processFileName(str);
+            files.push_back(processed.substr(0, processed.size() - 4));
         }
     }
 
@@ -476,7 +478,7 @@ auto matchFileName(std::string const &match) -> std::string {
 
     i32 choice;  std::cin >> choice;
     if (0 <= choice and choice < static_cast<i32>(options.size())) {
-        return options[choice];
+        return processFileName(options[choice]);
     } else {
         return "";
     }

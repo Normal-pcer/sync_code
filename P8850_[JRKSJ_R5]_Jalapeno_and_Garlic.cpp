@@ -4,7 +4,6 @@
 
 #include "./lib_v4.hpp"
 
-
 #include "./libs/fixed_int.hpp"
 using i128 = __int128;
 using namespace lib;

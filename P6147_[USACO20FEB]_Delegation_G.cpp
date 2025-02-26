@@ -3,7 +3,9 @@
  */
 #include "./libs/debug_macros.hpp"
 
+
 #include "./lib_v4.hpp"
+
 
 #include "./libs/fixed_int.hpp"
 using namespace lib;
@@ -24,6 +26,7 @@ using namespace lib;
  * 至多有一条链能够接着延伸上去，函数返回值表示这条链的有无和长度
  */
 namespace Solution_1323743511846362 {
+
     void solve() {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr), std::cout.tie(nullptr);
@@ -52,18 +55,35 @@ namespace Solution_1323743511846362 {
                 }
             }
 
-            if (children.size() == 0) {
-                return 1;  // 向上延伸
-            }
-            i32 count = 0, last = 0;
-            for (auto x: children) {
-                if (children.count(k - x) != (k - x == x? 2: 1)) {
-                    count++, last = x;
+            debug  std::cout << std::format("dfs {} {} {} children: ", p, prev, k) << std::endl;
+            debug  for (auto x: children)  std::cout << x << " ";
+            debug  std::cout << std::endl;
+
+            // 尝试给 children 配对
+            std::vector<i32> extra;
+            for (auto it = children.begin(); it != children.end(); ) {
+                auto value = *it;
+                auto other = k - value;
+
+                it = children.erase(it);  // 擦除自身
+                auto it2 = children.find(other);
+                if (it2 != children.end()) {
+                    if (it == it2)  ++it;  // 此时 it 和 it2 一起失效，跑到下一个
+                    children.erase(it2);
+                } else {
+                    extra.push_back(value);
                 }
             }
-            if (count >= 1)  no_solution = true;
-            if (count == 1)  return last + 1;
-            else  return 0;
+
+            if (extra.size() == 0) {
+                return 1;  // 作为最底端，向上延伸
+            } else if (extra.size() == 1) {
+                return extra.back() + 1;  // 接着唯一的未配对向上延伸
+            } else {
+                // 无解
+                no_solution = true;
+                return 0;
+            }
         };
 
         std::cout << 1;  // k = 1 必然有解

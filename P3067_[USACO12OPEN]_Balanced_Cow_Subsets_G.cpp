@@ -4,6 +4,7 @@
 
 #include "./lib_legecy.hpp"
 #include "./libs/io.hpp"
+
 using namespace lib;
 
 namespace Solution_1600440631359333 {
