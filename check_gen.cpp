@@ -17,32 +17,22 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 const _N = 1e5, _M = 2e5, _K = 4e5;
-            // 先随一棵树
-            auto N = _N, M = _M, K = _K, T = 1;
-            std::vector<i32> prev(N + 1);
-            for (i32 i = 2; i <= N; i++) {
-                prev[i] = randint(std::max(1, i - 5), i - 1);
-            }
+            i32 const _N = 4;
+            i32 N = _N;
+            std::vector<i32> r(N), c(N);
+            ranges::iota(r, 0);
+            ranges::iota(c, 0);
 
-            std::vector<std::pair<i32, i32>> edges;
-            std::vector<std::set<i32>> graph(N+1);
-            for (i32 i = 2; i <= N; i++) {
-                edges.push_back({i, prev[i]});
-                graph[i].insert(prev[i]);
+            std::mt19937 rng{std::random_device{}()};
+            ranges::shuffle(r, rng);
+            ranges::shuffle(c, rng);
+            std::vector<std::pair<i32, i32>> p(N);
+            for (i32 i = 0; i < N; i++) {
+                p[r[i]].first = i + 1;
+                p[c[i]].second = i + 1;
             }
-            for (i32 i = N; i <= M; ) {
-                auto p = randint(1, N), q = randint(1, N);
-                if (p == q)  continue;
-                if (graph[p].contains(q))  continue;
-                graph[p].insert(q);
-                edges.push_back({p, q});
-                i++;
-            }
-            out << N << " " << M << " " << K << " " << T << endl;
-            for (auto [x, y]: edges)  out << x << " " << y << endl;
-            for (auto _: range(K))  out << randint(1, N) << " ";
-            out << endl;
+            out << N << endl;
+            for (auto [x, y]: p)  out << x << " " << y << endl;
             break;
         }
     }

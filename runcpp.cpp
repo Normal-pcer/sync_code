@@ -20,10 +20,12 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <shlobj.h>
+#include <combaseapi.h>
 #else
 #include <unistd.h>
 #include <sys/wait.h>
 #endif
+// Windows 需要以下编译选项：-lole32 -lshell32 -luuid
 
 namespace views = std::views;
 namespace ranges = std::ranges;
@@ -60,18 +62,35 @@ int constexpr compileErrorCode = 3;
 int constexpr runtimeErrorCode = 4;
 bool constexpr openWithEditorOnCreate = true;
 
-auto getConfigPath() -> std::string;
-
-#ifdef _WIN32  // Windows
-auto getConfigPath() -> std::string {
-    static char path[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, path))) {
-        return std::string(path) + "\\runcpp\\";
-    }
-    return "";
+/**
+ * 认定一个字节流 std::string 的编码为 UTF-8 并转化为 std::u8string
+ */
+auto stringToU8(std::string const &s) -> std::u8string {
+    return std::u8string(s.begin(), s.end());
 }
-#else  // Mac/Linux
+
+/**
+ * 将 std::u8string 转化为 std::string 字节流
+ */
+auto u8ToString(std::u8string const &s) -> std::string {
+    return std::string(s.begin(), s.end());
+}
+
 auto getConfigPath() -> std::string {
+#ifdef _WIN32  // Windows
+    wchar_t *appdata_dir = nullptr;
+    // AppData/local
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &appdata_dir))) {
+        std::filesystem::path path{appdata_dir};
+        CoTaskMemFree(appdata_dir);
+        path /= "runcpp";
+
+        auto u8str = path.u8string();
+        return std::string(u8str.begin(), u8str.end());
+    } else {
+        return "";
+    }
+#else  // Mac/Linux
     char const *home = std::getenv("HOME");
     if (home != nullptr) {
         std::filesystem::path config_dir{home};
@@ -79,9 +98,8 @@ auto getConfigPath() -> std::string {
         return config_dir.string() + "/runcpp/";
     }
     return "";
-}
-
 #endif  // def _WIN32
+}
 
 /**
  * 启动一个程序并等待
@@ -216,14 +234,14 @@ auto replace_string_generate(std::string const &base, std::string const &match, 
 }
 
 auto get_file_content(std::string const &filename) -> std::string {
-    std::fstream fin(filename, std::ios::in);
+    std::fstream fin(std::filesystem::path(stringToU8(filename)), std::ios::in);
     std::string content, line;
     while (std::getline(fin, line))  content += line, content += '\n';
     return content;
 }
 
 auto set_file_content(std::string const &filename, std::string const content) -> void {
-    std::fstream fout(filename, std::ios::out);
+    std::fstream fout(std::filesystem::path(stringToU8(filename)), std::ios::out);
     assert(fout);
     fout << content;
 }
@@ -261,7 +279,7 @@ public:
         }
     };
     Configure(std::string const &filename): filename(filename) {
-        std::fstream fin(filename, std::ios::in);
+        std::fstream fin(std::filesystem::path{stringToU8(filename)}, std::ios::in);
         if (not fin.good())  return;
         std::string line;
         while (std::getline(fin, line)) {
@@ -304,7 +322,7 @@ public:
         if (not std::filesystem::exists(dir)) {
             std::filesystem::create_directories(dir);  // 不存在就创建
         }
-        std::fstream fout(filename, std::ios::out);
+        std::fstream fout(std::filesystem::path{stringToU8(filename)}, std::ios::out);
         if (not fout.is_open())  assert(false);
         for (auto const &[key, value]: items) {
             if (value.empty())  continue;
@@ -554,7 +572,7 @@ int main(int argc, char const *argv[]) {
                 if (std::filesystem::exists(template_path)) {
                     std::filesystem::copy(template_path, original_filename);
                 } else {
-                    std::fstream fs(original_filename, std::ios::out);
+                    std::fstream fs(std::filesystem::path{stringToU8(original_filename)}, std::ios::out);
                     if (fs)  fs.close();
                     else  assert(false);
                 }
@@ -577,7 +595,7 @@ int main(int argc, char const *argv[]) {
         }
 
         if (am.has("expand-include")) {  // 展开带有双引号的头文件
-            std::fstream fin(filename, std::ios::in);
+            std::fstream fin(std::filesystem::path{stringToU8(filename)}, std::ios::in);
             std::string s, line;
             while (std::getline(fin, line))  s += line, s += "\n";
             fin.close();
@@ -595,7 +613,7 @@ int main(int argc, char const *argv[]) {
                             std::string filename;
                             ranges::copy(std::next(it1), it2, std::back_inserter(filename));
 
-                            std::fstream source_file(filename, std::ios::in);
+                            std::fstream source_file(std::filesystem::path{stringToU8(filename)}, std::ios::in);
                             if (source_file) {
                                 std::string file_content, line;
                                 while (std::getline(source_file, line))  file_content += line, file_content += '\n';
@@ -607,7 +625,7 @@ int main(int argc, char const *argv[]) {
                     res += line, res += '\n';
                 }
 
-                std::fstream fout(filename, std::ios::out);
+                std::fstream fout(std::filesystem::path{stringToU8(filename)}, std::ios::out);
                 fout << res;
             }
         }
