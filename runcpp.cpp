@@ -86,7 +86,7 @@ auto getConfigPath() -> std::string {
         path /= "runcpp";
 
         auto u8str = path.u8string();
-        return std::string(u8str.begin(), u8str.end());
+        return std::string(u8str.begin(), u8str.end()) + "\\";
     } else {
         return "";
     }
@@ -95,7 +95,8 @@ auto getConfigPath() -> std::string {
     if (home != nullptr) {
         std::filesystem::path config_dir{home};
         config_dir /= ".config";
-        return config_dir.string() + "/runcpp/";
+        config_dir /= "runcpp";
+        return config_dir.string() + "/";
     }
     return "";
 #endif  // def _WIN32
@@ -338,12 +339,8 @@ class ArgumentManager {
     std::unordered_map<std::string, std::string> map;
     std::vector<std::string> values;
 public:
-    ArgumentManager(int argc, char const *argv[], Configure *default_config) {
-        std::vector<std::string> args;
-        for (int i = 1; i < argc; i++) {
-            args.emplace_back(argv[i]);
-        }
-
+    ArgumentManager(std::vector<std::string> args, Configure *default_config) {
+        args.erase(args.begin());  // 忽略当前文件名
         if (default_config != nullptr) {
             for (auto const &[key, value]: default_config->getItemsMap()) {
                 if (value == "0")  continue;
@@ -502,12 +499,42 @@ auto matchFileName(std::string const &x) -> std::string {
     }
 }
 
+/**
+ * 自动识别程序参数的字符集，如果需要，转换为 UTF-8 编码的 std::string
+ */
+auto argumentEncoding(int argc, char const *argv[]) -> std::vector<std::string> {
+    std::vector<std::string> res;
+#ifdef _WIN32
+    for (int i = 0; i < argc; i++) {
+        char const *arg = argv[i];
+        auto wide_char_len = MultiByteToWideChar(CP_ACP, 0, arg, -1, nullptr, 0);  // 通过 Windows API 将入参从本地编码转换为宽字符
+        if (wide_char_len > 0) {
+            std::vector<wchar_t> buf(wide_char_len);
+            MultiByteToWideChar(CP_ACP, 0, arg, -1, buf.data(), buf.size());
+
+            auto utf8_len = WideCharToMultiByte(CP_UTF8, 0, buf.data(), -1, nullptr, 0, nullptr, nullptr);
+            if (utf8_len > 0) {
+                std::vector<char> bytes(utf8_len);
+                WideCharToMultiByte(CP_UTF8, 0, buf.data(), -1, bytes.data(), bytes.size(), nullptr, nullptr);
+                res.emplace_back(bytes.data());
+            }
+        }
+    }
+#else  // not def _WIN32
+    // 默认即为 UTF-8 编码，无需特殊处理
+    for (int i = 0; i < argc; i++) {
+        res.emplace_back(argv[i]);
+    }
+#endif  // def _WIN32
+    return res;
+}
+
 int main(int argc, char const *argv[]) {
     Configure default_args{getConfigPath() + defaultArgumentsFileName};
     Configure compile_presets{getConfigPath() + compileArgumentsPresetsFileName};
     Configure prev_time{getConfigPath() + prevTimeFileName};  // 文件上次编译时间
     Configure config{getConfigPath() + configFileName};  // 其他配置项
-    ArgumentManager am{argc, argv, &default_args};
+    ArgumentManager am{argumentEncoding(argc, argv), &default_args};
 
     if (am.has("help")) {
         showHelp();

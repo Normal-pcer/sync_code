@@ -1,0 +1,66 @@
+#include <type_traits>
+#include <iostream>
+
+template <typename T>
+struct return_type {};
+
+template <typename T, typename ...args>
+struct return_type<T(args...)> { using type = T; };
+
+template <typename T>
+using rvalue_reference_to = T &&;
+
+template <typename T>
+using array_of = T[111];
+
+template <typename T>
+using pointer_to = T *;
+
+// <% 即 {，<: 即 [
+// decltype('o.O') 为 int
+int main() {
+    try {
+        [O_O = 0] {
+            // https: 是 goto 的 label
+            // 后面的是单行注释
+            typedef struct o O;  // 声明不完整类型 struct o 同时赋予别名 O
+
+            o *(*((&&o(o * o))[111]))(o *o);  // 声明函数 o，返回值为下文的 FunctionReturnType
+            // 此时的 o 指代刚才定义的函数
+
+            static_assert(std::is_function_v<decltype(o)>);
+            using FunctionReturnType = rvalue_reference_to<
+                array_of<
+                    pointer_to<
+                        O *(O *)
+                    >
+                >
+            >;
+            static_assert(std::is_same_v<FunctionReturnType, return_type<decltype(o)>::type>);
+            static_assert(std::is_same_v<decltype(o), FunctionReturnType(O *)>);
+
+            // decltype(0 [o(0)](0)) 其实就是 O *
+            static_assert(std::is_same_v<FunctionReturnType, decltype(o(0))>);
+            static_assert(std::is_same_v<decltype(0[o(0)]), decltype(o(0)[0])>);
+            static_assert(std::is_same_v<
+                pointer_to<O *(O *)>,
+                std::remove_reference_t<decltype(0[o(0)])>
+            >);
+            static_assert(std::is_same_v<
+                pointer_to<O *(O *)> &&,
+                decltype(0[o(0)])
+            >);
+            static_assert(std::is_same_v<decltype(0 [o(0)](0)), O *>);
+            // 0'0 为数字分隔符，等价于 0
+
+            if (O *O = decltype(0 [o(0)](0))(0))  // O *O = O *(nullptr)，一定进入 else 分支
+                ;// 1, 000.00;
+            else
+                return 0 == O == 0 ? throw O_O : O_O;  // 0 == O == 0 即 O != 0，一定正常返回 O_O = 0
+            // 实际不会到达这里而触发未定义行为
+        }();
+    }
+    catch (...) {
+        throw;
+    }
+}
