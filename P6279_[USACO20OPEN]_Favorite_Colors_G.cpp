@@ -1,11 +1,39 @@
 /**
  * @link https://www.luogu.com.cn/problem/P6279
  */
-#include "./libs/debug_macros.hpp"
+#ifndef ONLINE_JUDGE
+#define GNU_DEBUG
+#define _GLIBCXX_DEBUG 1
+#define _GLIBCXX_DEBUG_PEDANTIC 1
+#define _GLIBCXX_SANITIZE_VECTOR 1
+#endif
 
-#include "./lib_v4.hpp"
+#include <bits/stdc++.h>
+bool DEBUG_MODE=false;
+#define debug if(DEBUG_MODE)
+template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
+template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
+#define never if constexpr(0)
+const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
+const char endl = '\n';
 
-#include "./libs/fixed_int.hpp"
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
+#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+#define lam lambda
+namespace lib{
+#if __cplusplus > 201703LL
+namespace ranges = std::ranges;
+namespace views = std::views;
+#endif
+}
+
+using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
+using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
+
 using namespace lib;
 
 /**
@@ -42,11 +70,11 @@ namespace Solution_3041603084108311 {
 
         auto merge = [&](i32 x, i32 y) -> void {
             x = fa[x], y = fa[y];
-            if (graph[x].size() < graph[y].size())  std::swap(x, y);  // 启发式合并
+            if (son_of[x].size() < son_of[y].size())  std::swap(x, y);  // 启发式合并
             // y 的所有孩子迁移到 x 上
             for (auto next: graph[y])  graph[x].push_back(next);
             for (auto son: son_of[y])  son_of[x].push_back(son), fa[son] = x;
-            graph[y].clear(), son_of[y].clear();
+            // graph[y].clear(), son_of[y].clear();
 
             if (graph[x].size() > 1)  q.push_back(x);
         };
@@ -69,16 +97,8 @@ namespace Solution_3041603084108311 {
         i32 next_c = 1;
 
         for (i32 i = 1; i <= N; i++) {
-            if (fa[i] == i) {
-                color[i] = next_c++;
-                for (auto s: son_of[i]) {
-                    color[s] = color[i];
-                }
-            }
-        }
-
-        for (auto c: color | views::drop(1)) {
-            std::cout << c << endl;
+            if (color[fa[i]] == 0)  color[fa[i]] = next_c++;
+            std::cout << color[fa[i]] << endl;
         }
     }
 }

@@ -58,7 +58,7 @@ auto solve() -> void {
         }
     }
 
-    std::cout << max - min + 1 << std::endl;
+    std::cout << mid_index << " " << min << " " << max - min + 1 << std::endl;
 }
 
 int main() {
