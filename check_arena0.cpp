@@ -1,7 +1,16 @@
 /**
  * @link https://www.luogu.com.cn/problem/AT_birthday0410_x
  */
-#include "./libs/debug_macros.hpp"
+#ifndef ONLINE_JUDGE
+#define GNU_DEBUG
+#define _GLIBCXX_DEBUG 1
+#define _GLIBCXX_DEBUG_PEDANTIC 1
+#define _GLIBCXX_SANITIZE_VECTOR 1
+#else
+#pragma GCC optimize(3)
+#pragma GCC optimize("Ofast")
+#pragma GCC optimize("fast-math")
+#endif
 
 #include <bits/stdc++.h>
 bool DEBUG_MODE = false;
@@ -25,7 +34,9 @@ namespace ranges = std::ranges;
 namespace views = std::views;
 #endif
 }
-#include "./libs/fixed_int.hpp"
+using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
+using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
+
 using f64 = double;
 
 using namespace lib;
@@ -1108,6 +1119,8 @@ char const constexpr font[16][65][39] = {{
     "......................................"
 }};
 
+std::mt19937 rng{std::random_device{}()};
+
 namespace Solution_5849927751344851 {
     char constexpr black = '#';
     char constexpr white = '.';
@@ -1208,13 +1221,13 @@ namespace Solution_5849927751344851 {
         };
 
         auto res_pixels = new_img;
-        i32 constexpr maxIgnoreSize = 6;  // 忽略小于等于多少个点的联通块
+        i32 constexpr maxIgnoreSize = 9;  // 忽略小于等于多少个点的联通块
         std::vector vis(height, std::vector<char>(width));
         for (i32 i = 0; i < height; i++) {
             for (i32 j = 0; j < width; j++) {
                 if (not vis[i][j]) {
                     auto block = walk(i, j, vis);
-                    if (block.size() < maxIgnoreSize) {
+                    if (block.size() <= maxIgnoreSize) {
                         for (auto [x, y]: block) {
                             res_pixels[x][y] = not res_pixels[x][y];
                         }
@@ -1404,20 +1417,20 @@ namespace Solution_5849927751344851 {
      */
     auto Image::match(Image other) const -> f64 {
         auto self = *this;
-        self = self.cutRows().cutColumns();
+        self = self.reduceNoise().cutRows().cutColumns();
         other = other.cutRows().cutColumns();
-        auto match_once = [&](Image a, Image b) -> f64 {
-            // std::cout << "match_once " << endl << a << endl << b << endl << "-----" << endl;
+        auto match_once = [&](Image a, Image b, i32 dx, i32 dy) -> f64 {
+            debug std::cout << "match_once " << endl << a << endl << b << endl;
             if (a.height == 0 or a.width == 0)  return 0;
             if (b.height == 0 or b.width == 0)  return 0;
             auto rows_scale = static_cast<f64>(a.height) / b.height;
             auto columns_scale = static_cast<f64>(a.width) / b.width;
 
             f64 score = 1;
-            f64 scale_punish_limit = 0.6;
+            f64 scale_punish_limit = 0.75;
             if (auto tmp = rows_scale / columns_scale; tmp < scale_punish_limit or tmp > 1 / scale_punish_limit) {
                 if (tmp > 1)  tmp = 1 / tmp;
-                score *= std::sqrt(tmp);
+                score *= std::log10(std::pow(tmp + 0.25, 2)) + 1;
             }
 
             a = a.stretch(1 / rows_scale, 1 / columns_scale);
@@ -1430,27 +1443,32 @@ namespace Solution_5849927751344851 {
             i32 same = 0;
             for (i32 i = 0; i < height; i++) {
                 for (i32 j = 0; j < width; j++) {
-                    if (a.pixels[i][j] == b.pixels[i][j])  same++;
+                    if (0 <= i + dx and i + dx < a.height and 0 <= j + dy and j + dy < a.width) {
+                        if (a.pixels[i + dx][j + dy] == b.pixels[i][j])  same++;
+                    } else {
+                        if (not b.pixels[i][j])  same++;
+                    }
                 }
             }
 
-            // std::cout << a << "\ncmp with\n" << b << "\n ans = " << same * 100 / (height * width) << "\n";
-            return score * same * 100 / (height * width);
+            
+            debug std::cout << "returns" << score << " * " << same << " + " << 0 << "   " << score * same * 100 / (height * width) << "-----" << endl;
+            return score * same * 100 / (height * width) + 0;
         };
 
-        auto rad = -pi / 6;
+        // 每次给予除了缩放以外的随机扰动
+        f64 constexpr maxRotate = pi / 12;
+        i32 constexpr maxMove = 3;
+        i32 constexpr maxIter = 30;
+
         f64 ans = 0;
-        for (i32 i = 0; i <= 4; i++, rad += pi / 12) {
-            f64 cur = 0;
-            auto self_rot = self.rotate(rad);
-            cur += match_once(self_rot, other);
-            cur += match_once(self_rot.stretch(0.5, 0.5), other.stretch(0.5, 0.5));
-            // cur += match_normalized(self_rot.stretch(0.25, 0.25), other.stretch(0.25, 0.25));
-            chkMax(ans, cur);
+        for (i32 i = 0; i < maxIter; i++) {
+            auto rot = std::uniform_real_distribution<f64>{-maxRotate, maxRotate}(rng);
+            auto dx = std::uniform_int_distribution<i32>{-maxMove, maxMove}(rng);
+            auto dy = std::uniform_int_distribution<i32>{-maxMove, maxMove}(rng);
+            chkMax(ans, match_once(self.rotate(rot), other, dx, dy));
         }
 
-        // std::cout << self.stretch(0.25, 0.25) << endl << "match" << other.stretch(0.25, 0.25) << " = " << ans << " * " << score << endl;
-        // std::cout << "rows_scale = " << rows_scale << ", columns_scale = " << columns_scale << endl;
         return ans;
     }
 
@@ -1504,6 +1522,7 @@ namespace Solution_5849927751344851 {
             } else {
                 auto b = st_nums.back(); st_nums.pop_back();
                 auto a = st_nums.back(); st_nums.pop_back();
+                if (node.val == '/' and b == 0)  return 0;
                 if (node.val == '+')  st_nums.push_back(a + b);
                 else if (node.val == '-')  st_nums.push_back(a - b);
                 else if (node.val == '*')  st_nums.push_back(a * b);
@@ -1552,12 +1571,15 @@ namespace Solution_5849927751344851 {
 
             auto chars = Image{lines}.reduceNoise().cutColumns().cutRows().split();
 
+            debug for (auto const &ch_img: chars)  std::cout << ch_img << endl;
+
             std::string s;
             for (auto const &ch_img: chars) {
                 // std::cout << ch_img << endl;
                 std::pair best{0, 0};
                 for (i32 i = 0; i < static_cast<i32>(chs.size()); i++) {
                     auto cur = ch_img.match(chs[i]);
+                    if (i == static_cast<i32>(chs.size()) - 1)  cur *= 0.9;  // 减号误认为除号
                     chkMax(best, {cur, i});
                 }
                 s += "0123456789()+-*/"[best.second];

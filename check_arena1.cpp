@@ -52,6 +52,7 @@ auto calc(std::string expr) -> i32 {
         } else {
             auto b = st_nums.back(); st_nums.pop_back();
             auto a = st_nums.back(); st_nums.pop_back();
+            if (node.val == '/' and b == 0)  return 0;
             if (node.val == '+')  st_nums.push_back(a + b);
             else if (node.val == '-')  st_nums.push_back(a - b);
             else if (node.val == '*')  st_nums.push_back(a * b);
