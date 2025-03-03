@@ -67,6 +67,7 @@ int main() {
     std::string s, s0;
     while (std::getline(std::cin, s)) s0 = s;
 
+    
     std::cout << calc(s0) << std::endl;
     return 0;
 }
