@@ -1,92 +1,83 @@
-#include<iostream>
-#include<cstdio>
-#include<cmath>
-#include<algorithm>//头文件不多说
+#include<bits/stdc++.h>
 using namespace std;
-typedef long long ll;
-typedef unsigned long long ull;
-template <typename T>
-inline void read(T&x){//快读，实测超级快读不搭配其他技巧也过不了
-	int w=0;x=0;
-	char ch = getchar();
-	while(ch<'0' || ch>'9'){
-		if(ch=='-') w=1;
-		ch = getchar();
-	}
-	while(ch>='0' && ch<='9'){
-		x = (x<<1)+(x<<3)+(ch^48);
-		ch = getchar();
-	}
-	if(w) x=-x;
+#define int long long
+#define rep(i,l,r) for(int i=(l);i<=(r);++i)
+#define pre(i,l,r) for(int i=(l);i>=(r);--i)
+const int N=2e5+5;
+int L[N],R[N],bel[N],sum[N],add[N],len[N];
+int A[N],B[N],C[N],n;
+struct node{
+	int a,b,c,id;
+}p[N];
+int calc(int l,int r){
+	return ((l+r)*(r-l+1))/2;
 }
-template <typename T,typename...Args>
-inline void read(T&t,Args&...args){
-	read(t);read(args...);
-}
-template <typename T>
-inline T Max(T x,T y){//实测手写会比自带的max、if和三目运算快
-  return (x > y ? x : y);
-}
-const int N = 6e6+10;
-int n,m;
-int P=1,DEP=0;
-struct Tree{//用结构体内存访问比较连续
-	ll mx; int pos;
-	Tree(){
-		mx = 0; pos = 0;
-	}
-	Tree(ll tmx,int tpos){
-		mx = tmx; pos = tpos;
-	}
-	inline Tree operator + (const Tree&G) const{//实测重载运算符比外层调用函数快
-		if(mx==G.mx) return Tree(mx,Max(pos,G.pos));
-		else if(mx>G.mx) return Tree(mx,pos);
-		else return G;
-	}
-}tr[N*3];
-ll tag[N*3];
-int main(){
-// 	freopen("in.in","r",stdin);
-// 	freopen("out.out","w",stdout);
-	
-	read(n,m);
-	while(P<=n+1) P<<=1;
-	for(int i=1,x;i<=n;++i){
-		read(x); tr[i+P] = Tree(1ll*x,i);//直接读入省掉建树的常数
-	}
-	for(int i=P-1;i;--i) tr[i] = tr[i<<1]+tr[i<<1|1];//用重载运算符
-	for(int i=1,opt,x,y;i<=m;++i){
-		read(opt,x,y);
-		if(opt==1){//把update内容搬到主函数里
-			int l = 1+P-1,r = x+P+1; ll k = 1ll*y;
-			while(l^1^r){
-				if(~l&1) tr[l^1].mx+=k,tag[l^1]+=k;
-				if(r&1) tr[r^1].mx+=k,tag[r^1]+=k;
-				l>>=1;r>>=1;//直接更新，实测比写push_up函数快
-				tr[l] = tr[l<<1]+tr[l<<1|1];
-				tr[l].mx += tag[l];//标记永久化要加累加标记值
-				tr[r] = tr[r<<1]+tr[r<<1|1];
-				tr[r].mx += tag[r];
-			}
-			for(l>>=1; l ;l>>=1){//更新上传
-				tr[l] = tr[l<<1]+tr[l<<1|1];
-				tr[l].mx += tag[l];
-			}
-		}
-		else{//把query内容搬到主函数里
-			int l = 1+P-1,r = y+P+1; Tree resl,resr;
-			while(l^1^r){
-				if(~l&1) resl = resl+tr[l^1];//注意左右区间合并顺序
-				if(r&1) resr = tr[r^1]+resr;
-				l>>=1;r>>=1;
-				resl.mx += tag[l];//累加标记值
-				resr.mx += tag[r];
-			}
-			printf("%d\n",Max(0,x-(resl+resr).pos));//没有答案输出0
-		}
-	}
 
-	// fclose(stdin);
- 	// fclose(stdout);
+void solve(){
+	cin>>n;
+	rep(i,1,n){
+		cin>>p[i].a>>p[i].b>>p[i].c;p[i].id=i;
+		A[i]=p[i].a;B[i]=p[i].b;C[i]=p[i].c;
+	}
+	sort(p+1,p+n+1,[&](const node&x,const node&y){
+		return x.c<y.c;
+	});
+	int now=0;
+	bool f=1;
+	rep(i,1,n){
+		int j=p[i].id;
+		if(A[j]==B[j]){
+			if(now>C[j]){
+				f=0;
+				break;
+			}
+			continue;
+		} 
+		if(A[j]>B[j]){
+			int k=0;
+			pre(q,j,1){
+				if(A[q]<=p[i].b-(j-q)){
+					break;
+				}
+				k=q;
+			}
+			rep(q,k,j) now+=A[q];
+			now-=calc(p[i].b-(j-k),p[i].b);
+			rep(q,k,j) A[q]=p[i].b-(j-q);
+			if(now>p[i].c){
+				f=0;break;
+			}
+		}
+		if(A[j]<B[j]){
+			int k=0;
+			rep(q,j,n){
+				if(A[q]>=p[i].b+(q-j)) break;
+				k=q;
+			}
+			rep(q,j,k) now-=A[q];
+			now+=calc(p[i].b,p[i].b+(k-j));
+			rep(q,j,k) A[q]=p[i].b+(q-j);
+			if(now>p[i].c){
+				f=0;
+				break; 
+			}
+		}
+	}
+	if(f){
+		cout<<"Yes\n";
+	}else{
+		cout<<"No\n";
+	}
+}
+int32_t main(){
+	// freopen("move.in","r",stdin);
+	// freopen("move.out","w",stdout);
+	ios::sync_with_stdio(false);
+	cin.tie(nullptr);
+	cout.tie(nullptr);
+	int c,t;
+	cin>>c>>t;
+	while(t--) ::solve();
 	return 0;
 }
+//tomxi

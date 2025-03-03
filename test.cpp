@@ -5,13 +5,11 @@
 Code by wjb;
 #define int long long
 
-
 bool randomNumCount = 1; // 这个不可更改
 int numMaxCount = 20;
 // 可接受范围：2 ~ 300000000，表示生成的最大数字个数
 int numMaxLength = 1;
 // 可接受范围：1 ~ 9，但是大于 9 也行。表示一个数字最大位数，填进去 2147483647 恶心做题人也不是不可以
-
 
 const int H = 110, W = 9100;
 const double PI = acos(-1.0);
@@ -938,7 +936,7 @@ signed main()
             }
             else
             {
-                ret.str += t1.str;
+                ret.str += t1.str; 
             }
             ret.str += tmp.str;
             if (t2.pri < tmp.pri ||                      // 判断后面需不需要加括号
@@ -961,5 +959,7 @@ signed main()
         }
     }
     psi ans = s.top();
+    fflush(stdout), std::cout << std::flush;
     init(ans.str);
+    std::cout << ans.str << std::endl;
 }

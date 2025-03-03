@@ -1,12 +1,8 @@
 /**
  * @link https://www.luogu.com.cn/problem/AT_birthday0410_x
  */
-#ifndef ONLINE_JUDGE
-#define GNU_DEBUG
-#define _GLIBCXX_DEBUG 1
-#define _GLIBCXX_DEBUG_PEDANTIC 1
-#define _GLIBCXX_SANITIZE_VECTOR 1
-#endif
+#include "./libs/debug_macros.hpp"
+
 #include <bits/stdc++.h>
 bool DEBUG_MODE = false;
 #define debug if(DEBUG_MODE)
@@ -29,8 +25,7 @@ namespace ranges = std::ranges;
 namespace views = std::views;
 #endif
 }
-using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
-using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
+#include "./libs/fixed_int.hpp"
 using f64 = double;
 
 using namespace lib;
@@ -1148,7 +1143,7 @@ namespace Solution_5849927751344851 {
         auto cutColumns() const -> Image;
         auto stretch(f64, f64) const -> Image;
         auto rotate(f64) const -> Image;
-        auto match(Image const &image) const -> f64;
+        auto match(Image) const -> f64;
 
         auto operator[] (uz index) -> std::vector<char> & { return pixels[index]; }
         auto operator[] (uz index) const -> std::vector<char> const & { return pixels[index]; }
@@ -1290,7 +1285,7 @@ namespace Solution_5849927751344851 {
         while (i < height and is_white(pixels[i]))  i++;
         while (j >= i and is_white(pixels[j]))  j--;
 
-        std::vector tmp(pixels.begin() + i, pixels.begin() + j + 1);
+        std::vector tmp(pixels.begin() + i, pixels.begin() + (j + 1));
         return Image{tmp};
     }
     /**
@@ -1352,37 +1347,52 @@ namespace Solution_5849927751344851 {
      */
     auto Image::rotate(f64 rad) const -> Image {
         rad = -rad;
-        f64 mid_r = height / 2.0, mid_c = width / 2.0;
-        f64 cos_r = std::cos(rad), sin_r = std::sin(rad);
-        std::vector new_pixels(height, std::vector<char>(width));
+    
+        Image middle;
+        middle.pixels = std::vector(height * 3 / 2, std::vector<char>(width * 3 / 2));
+        middle.width = width * 3 / 2, middle.height = height * 3 / 2;
+        i32 offset_r = height / 4, offset_c = width / 4;
+    
         for (i32 i = 0; i < height; i++) {
             for (i32 j = 0; j < width; j++) {
+                middle.pixels[i + offset_r][j + offset_c] = pixels[i][j];
+            }
+        }
+    
+        f64 mid_r = height / 2.0 + offset_r;
+        f64 mid_c = width / 2.0 + offset_c;
+        f64 cos_r = std::cos(rad), sin_r = std::sin(rad);
+    
+        std::vector new_pixels(middle.height, std::vector<char>(middle.width));
+    
+        for (i32 i = 0; i < middle.height; i++) {
+            for (i32 j = 0; j < middle.width; j++) {
                 // 逆时针旋转一定角度
                 f64 dx = i - mid_r, dy = j - mid_c;
                 f64 len = std::hypot(dx, dy);
                 f64 cos_cur = dx / len, sin_cur = dy / len;
-
+    
                 f64 new_cos = cos_cur * cos_r - sin_cur * sin_r;
                 f64 new_sin = sin_cur * cos_r + cos_cur * sin_r;
                 f64 new_x = mid_r + new_cos * len;
                 f64 new_y = mid_c + new_sin * len;
-
-                f64 area = 0;
-                for (i32 x = new_x; x <= new_x + 1; x++) {
-                    for (i32 y = new_y; y <= new_y + 1; y++) {
-                        if (0 <= x and x < height and 0 <= y and y < width and pixels[x][y]) {
-                            auto left = std::max<f64>(y, new_y);
-                            auto right = std::min<f64>(y + 1, new_y + 1);
-                            auto top = std::max<f64>(x, new_x);
-                            auto bottom = std::min<f64>(x + 1, new_x + 1);
-                            area += (right - left) * (bottom - top);
-                        }
-                    }
+    
+                i32 x0 = std::floor(new_x), y0 = std::floor(new_y);
+                i32 x1 = x0 + 1, y1 = y0 + 1;
+    
+                if (x0 >= 0 && x1 < middle.height && y0 >= 0 && y1 < middle.width) {
+                    f64 weight_x = new_x - x0, weight_y = new_y - y0;
+                    f64 value = (1 - weight_x) * (1 - weight_y) * middle.pixels[x0][y0] +
+                                (1 - weight_x) * weight_y * middle.pixels[x0][y1] +
+                                weight_x * (1 - weight_y) * middle.pixels[x1][y0] +
+                                weight_x * weight_y * middle.pixels[x1][y1];
+                    new_pixels[i][j] = value > 0.5 ? 1 : 0;
                 }
-                new_pixels[i][j] = area * 2 > 1;
             }
         }
-        return Image{new_pixels};
+    
+        // 返回裁剪后的图像
+        return Image{new_pixels}.cutColumns().cutRows();
     }
     /**
      * 计算与另一个图像的相似程度。
@@ -1392,22 +1402,26 @@ namespace Solution_5849927751344851 {
      * 2. 尝试改变两个图像的缩放，让宽高比相同。计算缩放比率，如果这个比率小于 0.7 则给予惩罚。
      * 3. 从 -pi/12 到 pi/12 尝试旋转数字，计算 1 倍、0.5 倍、0.25 倍缩放下匹配的像素数量之和。
      */
-    auto Image::match(Image const &other_) const -> f64 {
-        auto self = cutRows().cutColumns();
-        auto other = other_.cutRows().cutColumns();
+    auto Image::match(Image other) const -> f64 {
+        auto self = *this;
+        self = self.cutRows().cutColumns();
+        other = other.cutRows().cutColumns();
+        auto match_once = [&](Image a, Image b) -> f64 {
+            std::cout << "match_once " << endl << a << endl << b << endl;
+            if (a.height == 0 or a.width == 0)  return 0;
+            if (b.height == 0 or b.width == 0)  return 0;
+            auto rows_scale = static_cast<f64>(a.height) / b.height;
+            auto columns_scale = static_cast<f64>(a.width) / b.width;
 
-        auto rows_scale = static_cast<f64>(self.height) / other.height;
-        auto columns_scale = static_cast<f64>(self.width) / other.width;
+            f64 score = 1;
+            f64 scale_punish_limit = 0.6;
+            if (auto tmp = rows_scale / columns_scale; tmp < scale_punish_limit or tmp > 1 / scale_punish_limit) {
+                if (tmp > 1)  tmp = 1 / tmp;
+                score *= std::sqrt(tmp);
+            }
 
-        f64 score = 1;
-        f64 scale_punish_limit = 0.5;
-        if (auto tmp = rows_scale / columns_scale; tmp < scale_punish_limit or tmp > 1 / scale_punish_limit) {
-            if (tmp > 1)  tmp = 1 / tmp;
-            score *= std::sqrt(tmp);  // 乘以 tmp 的根号作为惩罚
-        }
+            a = a.stretch(1 / rows_scale, 1 / columns_scale);
 
-        self = self.stretch(1 / rows_scale, 1 / columns_scale);
-        auto match_normalized = [&](Image const &a, Image const &b) -> f64 {
             auto height = std::min(a.height, b.height);
             auto width = std::min(a.width, b.width);
 
@@ -1421,33 +1435,110 @@ namespace Solution_5849927751344851 {
             }
 
             // std::cout << a << "\ncmp with\n" << b << "\n ans = " << same * 100 / (height * width) << "\n";
-            return same * 100 / (height * width);
+            std::cout << "returns" << score << " * " << same << "   " << score * same * 100 / (height * width) << "-----" << endl;
+            return score * same * 100 / (height * width);
         };
 
         auto rad = -pi / 6;
         f64 ans = 0;
-        for (i32 i = 0; i <= 6; i++, rad += pi / 18) {
+        for (i32 i = 0; i <= 4; i++, rad += pi / 12) {
             f64 cur = 0;
             auto self_rot = self.rotate(rad);
-            cur += match_normalized(self_rot, other);
-            cur += match_normalized(self_rot.stretch(0.5, 0.5), other.stretch(0.5, 0.5));
+            cur += match_once(self_rot, other);
+            cur += match_once(self_rot.stretch(0.5, 0.5), other.stretch(0.5, 0.5));
             // cur += match_normalized(self_rot.stretch(0.25, 0.25), other.stretch(0.25, 0.25));
             chkMax(ans, cur);
         }
 
-        std::cout << self.stretch(0.25, 0.25) << endl << "match" << other.stretch(0.25, 0.25) << " = " << ans << " * " << score << endl;
-        std::cout << "rows_scale = " << rows_scale << ", columns_scale = " << columns_scale << endl;
-        return ans * score;
+        // std::cout << self.stretch(0.25, 0.25) << endl << "match" << other.stretch(0.25, 0.25) << " = " << ans << " * " << score << endl;
+        // std::cout << "rows_scale = " << rows_scale << ", columns_scale = " << columns_scale << endl;
+        return ans;
+    }
+
+    auto calc(std::string expr) -> i32 {
+        struct Node {
+            enum Type { Number, Operator } type;
+            i32 val;
+        };
+    
+        std::vector<Node> postfix;
+        {
+            std::vector<char> st;
+            auto priority = [](char c) -> i32 {
+                switch (c) {
+                case '*':  return 2;
+                case '/':  return 2;
+                case '+':  return 1;
+                case '-':  return 1;
+                default:   return 0;
+                }
+            };
+            for (auto ch : expr) {
+                if (ch == '(') {
+                    st.push_back(ch);
+                } else if (ch == ')') {
+                    while (not st.empty() and st.back() != '(') {
+                        postfix.push_back({Node::Operator, st.back()});
+                        st.pop_back();
+                    }
+                    st.pop_back();
+                } else if (ch == '+' or ch == '-' or ch == '*' or ch == '/') {
+                    while (not st.empty() and priority(st.back()) >= priority(ch)) {
+                        postfix.push_back({Node::Operator, st.back()});
+                        st.pop_back();
+                    }
+                    st.push_back(ch);
+                } else if (ch >= '0' && ch <= '9') {
+                    postfix.push_back({Node::Number, ch - '0'});
+                }
+            }
+            while (not st.empty()) {
+                postfix.push_back({Node::Operator, st.back()});
+                st.pop_back();
+            }
+        }
+    
+        std::vector<i32> st_nums;
+        for (auto node : postfix) {
+            if (node.type == Node::Number) {
+                st_nums.push_back(node.val);
+            } else {
+                auto b = st_nums.back(); st_nums.pop_back();
+                auto a = st_nums.back(); st_nums.pop_back();
+                if (node.val == '+')  st_nums.push_back(a + b);
+                else if (node.val == '-')  st_nums.push_back(a - b);
+                else if (node.val == '*')  st_nums.push_back(a * b);
+                else if (node.val == '/')  st_nums.push_back(a / b);
+                else  assert(false);
+            }
+        }
+        return st_nums.back();
     }
 
     void solve() {
+#ifndef ONLINE_JUDGE
         std::freopen("1.in", "r", stdin);
         std::freopen("1.out", "w", stdout);
+#endif
+        // auto test = [&]() -> void {
+        //     std::string line;
+        //     std::vector<std::string> lines;
+        //     for (; std::getline(std::cin, line); ) {
+        //         lines.push_back(line);
+        //     }
 
+        //     Image img{lines};
+        //     std::cout << img << endl << endl << endl;
+        //     std::cout << img.rotate(pi / 18) << endl;
+        // };
+        // static_cast<void>(test);
+        // return test();
         auto expr = [&]() -> std::string {
+            i32 T, W, H;  std::cin >> T >> W >> H;
             std::vector<std::string> lines;
             std::string line;
-            while (std::getline(std::cin, line)) {
+            for (auto _ = H; _ --> 0; ) {
+                std::getline(std::cin, line);
                 lines.push_back(line);
             }
 
@@ -1462,9 +1553,11 @@ namespace Solution_5849927751344851 {
 
             auto chars = Image{lines}.reduceNoise().cutColumns().cutRows().split();
 
+            for (auto const &ch_img: chars)  std::cout << ch_img << endl;
+
             std::string s;
             for (auto const &ch_img: chars) {
-                std::cout << ch_img << endl;
+                // std::cout << ch_img << endl;
                 std::pair best{0, 0};
                 for (i32 i = 0; i < static_cast<i32>(chs.size()); i++) {
                     auto cur = ch_img.match(chs[i]);
@@ -1474,7 +1567,8 @@ namespace Solution_5849927751344851 {
             }
             return s;
         }();
-        std::cout << expr << std::endl;
+        std::cerr << expr << std::endl;
+        // std::cout << calc(expr) << std::endl;
     }
 }
 
