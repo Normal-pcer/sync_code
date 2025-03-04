@@ -3,7 +3,6 @@
  */
 #include "./libs/debug_macros.hpp"
 
-
 #include <bits/stdc++.h>
 bool DEBUG_MODE = false;
 #define debug if(DEBUG_MODE)

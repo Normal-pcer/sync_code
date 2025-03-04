@@ -3,7 +3,6 @@
  */
 #include "./libs/debug_macros.hpp"
 
-
 #include <bits/stdc++.h>
 bool DEBUG_MODE = false;
 #define debug if(DEBUG_MODE)
@@ -28,7 +27,6 @@ namespace views = std::views;
 }
 #include "./libs/fixed_int.hpp"
 #include "./libs/io.hpp"
-
 
 using namespace lib;
 
