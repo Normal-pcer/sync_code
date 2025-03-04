@@ -228,7 +228,7 @@ namespace lib {
             if (x < 0) {
                 typename std::make_unsigned_t<T> unsigned_x = x;
                 unsigned_x = -unsigned_x;
-                putchar('-'), writeUnsignedInteger(unsigned_x);
+                put('-'), writeUnsignedInteger(unsigned_x);
             } else {
                 writeUnsignedInteger(x);
             }
