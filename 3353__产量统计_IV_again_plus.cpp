@@ -1,5 +1,33 @@
+/**
+ * @link https://neooj.com:8082/oldoj/problem.php?id=3353
+ */
+#include "./libs/debug_macros.hpp"
+
+#include <bits/stdc++.h>
+bool DEBUG_MODE = false;
+#define debug if(DEBUG_MODE)
+template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
+template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
+#define never if constexpr(0)
+const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
+const char endl = '\n';
+
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
+#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+#define lam lambda
+namespace lib{
+#if __cplusplus > 201703LL
+namespace ranges = std::ranges;
+namespace views = std::views;
+#endif
+}
+#include "./libs/fixed_int.hpp"
 // 是否支持 __int128
-#define IO_ENABLE_INT128
+// #define IO_ENABLE_INT128
 #ifdef __linux__
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -9,8 +37,6 @@
 #define requires(...)
 #endif
 namespace lib {
-    using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
-    using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
     struct EOFError: public std::exception {
         const char *what() const throw() {
             return "EOF when reading a char";
@@ -299,4 +325,136 @@ namespace lib {
     struct DefaultIO: public FileReadScanner<MaxSize>, FileWritePrinter<MaxSize> {};
     DefaultIO<1<<20> io;
 #endif  // def __linux__
+}
+using namespace lib;
+
+namespace Solution_6809431602119007 {
+#define cin kobe
+#define cout bryant
+
+    class BIT {
+        std::vector<std::pair<i32, i32>> record;
+        std::vector<i64> c;
+
+        auto constexpr static lowbit(i32 x) -> i32 { return x & -x; }
+    public:
+        BIT(i32 N): c(N+1) {}
+
+        auto addAt(i32 x, i32 val) -> void {
+            record.push_back({x, val});
+            x++;
+            while (x < static_cast<i32>(c.size())) {
+                c[x] += val;
+                x += lowbit(x);
+            }
+        }
+
+        auto sumPrefix(i32 x) -> i64 {
+            i64 res = 0;
+            x++;
+            while (x != 0) {
+                res += c[x];
+                x -= lowbit(x);
+            }
+            return res;
+        }
+
+        auto clear() -> void {
+            std::vector<std::pair<i32, i32>> copy;
+            copy.swap(record);
+
+            for (auto [x, val]: copy) {
+                addAt(x, -val);
+            }
+            record.clear();
+        }
+    };
+
+    struct Element {
+        i32 key0 = 0, key1 = 0;
+        i32 time = 0;
+        i32 value = 0;
+        i32 index = 0;
+        bool nega = false;
+    };  // other.key0 <= key0, other.key1 <= key1, other.time <= time 即可计数 value
+
+    using Iter = std::vector<Element>::iterator;
+    using Ans = std::vector<i64>;
+    auto cdq(Iter begin, Iter end, BIT &bit, Ans &out) -> void {
+        if (std::distance(begin, end) == 1)  return;
+        auto mid = begin + (std::distance(begin, end) >> 1);
+        cdq(begin, mid, bit, out), bit.clear();
+        cdq(mid, end, bit, out), bit.clear();
+
+        std::vector<Element> tmp(std::distance(begin, end));
+        auto i = begin, j = mid;
+        auto k = tmp.begin();
+        while (i != mid or j != end) {
+            if (j == end or (i != mid and i->key0 <= j->key0)) {
+                bit.addAt(i->key1, i->value);
+                *k++ = *i++;
+            } else {
+                if (j->nega)  out[j->index] -= bit.sumPrefix(j->key1);
+                else  out[j->index] += bit.sumPrefix(j->key1);
+                *k++ = *j++;
+            }
+        }
+        std::copy(tmp.begin(), tmp.end(), begin);
+    }
+
+    struct HashPair {
+        using Pair = std::pair<i32, i32>;
+        auto operator() (Pair const &x) const -> uz {
+            return static_cast<u32>(x.first) << 16 | static_cast<u32>(x.first);
+        }
+    };
+    void solve() {
+        i32 N, M;  io >> N >> M;
+        i32 Q;  io >> Q;
+
+        std::vector<Element> cdq_ele;
+        cdq_ele.reserve(Q * 4);
+
+       
+        // 当前某一天某一份的产量
+        std::unordered_map<std::pair<i32, i32>, i32, HashPair> values(N);
+        std::vector<i32> query_index_list;  // 所有需要输出答案的操作编号
+        query_index_list.reserve(Q);
+        i32 maxKey1 = 0;
+        for (i32 t = 0; t < Q; t++) {
+            i32 op;  io >> op;
+            if (op == 1) {
+                i32 x, y, c;  io >> x >> y >> c;
+                auto &cur = values[{x, y}];
+                auto del = c - cur;
+                cdq_ele.push_back(Element{x, y, t, del, t});
+                cur = c;
+                chkMax(maxKey1, y);
+            } else {
+                query_index_list.push_back(t);
+                i32 x0, x1, y0, y1;  io >> x0 >> x1 >> y0 >> y1;
+
+                cdq_ele.push_back(Element{x1, y1, t, 0, t, false});
+                if (x0 != 0)  cdq_ele.push_back(Element{x0 - 1, y1, t, 0, t, true});
+                if (y0 != 0)  cdq_ele.push_back(Element{x1, y0 - 1, t, 0, t, true});
+                if (x0 != 0 and y0 != 0)  cdq_ele.push_back(Element{x0 - 1, y0 - 1, t, 0, t, false});
+                chkMax(maxKey1, y1);
+            }
+        }
+
+        // 按照 time 排序，自然有序
+        BIT bit{maxKey1 + 1};
+        std::vector<i64> ans(Q);
+        cdq(cdq_ele.begin(), cdq_ele.end(), bit, ans);
+
+        for (auto i: query_index_list) {
+            io << ans[i] << endl;
+        }
+    }
+}
+
+int main(int argc, char const *argv[]) {
+    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
+    Solution_6809431602119007::solve();
+    return 0;
 }

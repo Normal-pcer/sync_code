@@ -1,5 +1,33 @@
+/**
+ * @link https://neooj.com:8082/oldoj/problem.php?id=3365
+ */
+#include "./libs/debug_macros.hpp"
+
+#include <bits/stdc++.h>
+bool DEBUG_MODE = false;
+#define debug if(DEBUG_MODE)
+template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
+template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
+#define never if constexpr(0)
+const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
+const char endl = '\n';
+
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
+#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+#define lam lambda
+namespace lib{
+#if __cplusplus > 201703LL
+namespace ranges = std::ranges;
+namespace views = std::views;
+#endif
+}
+#include "./libs/fixed_int.hpp"
 // 是否支持 __int128
-#define IO_ENABLE_INT128
+// #define IO_ENABLE_INT128
 #ifdef __linux__
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -299,4 +327,92 @@ namespace lib {
     struct DefaultIO: public FileReadScanner<MaxSize>, FileWritePrinter<MaxSize> {};
     DefaultIO<1<<20> io;
 #endif  // def __linux__
+}
+using namespace lib;
+
+namespace Solution_7879703182786257 {
+#define cin kobe
+#define cout bryant
+
+    struct MaxTwo {
+        i32 first = 0, second = 0;
+
+        auto operator| (MaxTwo other) const -> MaxTwo {
+            std::array<i32, 4> tmp{first, second, other.first, other.second};
+            i32 new_max = 0, new_sec = 0;
+            for (auto x: tmp) {
+                if (x >= new_max)  new_sec = new_max, new_max = x;
+                else if (x >= new_sec)  new_sec = x;
+            }
+            return {new_max, new_sec};
+        }
+    };
+    class SegTree {
+        struct Node {
+            i32 begin, end;
+            MaxTwo val;
+        };
+        std::vector<Node> tree;
+
+        auto static constexpr lson(i32 x) -> i32 { return x << 1; }
+        auto static constexpr rson(i32 x) -> i32 { return x << 1 | 1; }
+        auto pushUp(i32 p) -> void {
+            tree[p].val = tree[lson(p)].val | tree[rson(p)].val;
+        }
+        auto build(i32 begin, i32 end, std::vector<i32> const &init, i32 p) {
+            tree[p].begin = begin, tree[p].end = end;
+            if (begin + 1 == end) {
+                tree[p].val = {init[begin], 0};
+                return;
+            }
+            auto mid = begin + ((end - begin) >> 1);
+            build(begin, mid, init, lson(p));
+            build(mid, end, init, rson(p));
+            pushUp(p);
+        }
+    public:
+        SegTree(i32 N, std::vector<i32> const &init): tree((N + 1) << 2) {
+            build(0, N, init, 1);
+        }
+        auto assignAt(i32 pos, i32 val, i32 p = 1) -> void {
+            if (tree[p].begin + 1 == tree[p].end) {
+                tree[p].val = {val, 0};
+                return;
+            }
+            if (tree[lson(p)].end > pos)  assignAt(pos, val, lson(p));
+            else  assignAt(pos, val, rson(p));
+            pushUp(p);
+        }
+        auto queryRange(i32 begin, i32 end, i32 p = 1) -> MaxTwo {
+            if (tree[p].begin >= begin and tree[p].end <= end) {
+                return tree[p].val;
+            }
+            MaxTwo res{};
+            if (tree[lson(p)].end > begin)  res = res | queryRange(begin, end, lson(p));
+            if (tree[rson(p)].begin < end)  res = res | queryRange(begin, end, rson(p));
+            return res;
+        }
+    };
+    void solve() {
+        i32 N, Q;  io >> N >> Q;
+        std::vector<i32> init(N);
+        for (auto &x: init)  io >> x;
+
+        SegTree sgt{N, init};
+        for (auto q = Q; q --> 0; ) {
+            i32 op, x, y;  io >> op >> x >> y;
+            if (op == 1) {
+                sgt.assignAt(x - 1, y);
+            } else {
+                auto ans = sgt.queryRange(x - 1, y).second;
+                io << ans << endl;
+            }
+        }
+    }
+}
+
+int main(int argc, char const *argv[]) {
+    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
+    Solution_7879703182786257::solve();
+    return 0;
 }

@@ -19,7 +19,7 @@ namespace Generator {
         i32 T = _T;
         out << 0 << " " << T << endl;
         while (true) {
-            i32 constexpr _N = 4, _V = 12;
+            i32 constexpr _N = 5, _V = 15;
 
             i32 N = _N;
             std::vector<i32> ab(N * 2);
