@@ -89,14 +89,19 @@ namespace Solution_2812031851177643_1 {
 
     class SegTree {
         struct Node {
+            // 记 begin = x 的叶子节点上对应的原值为 f(x)
             i32 begin = 0, end = 0;
             i64 sum = 0;
+            i32 max = 0;  // f(x) 的最大值
+            i32 max_minus_index = 0;  // g(x) = f(x) - x 的最大值
             i32 iota_tag = -inf;  // 不为负无穷：赋值为 tag 到 tag + len - 1 的连续自然数
 
             auto constexpr len() const -> i32 { return end - begin; }
             auto constexpr iota(i32 x) -> void {
                 iota_tag = x;
                 sum = static_cast<i64>(x + (x + len() - 1)) * len() / 2;
+                max = x + len() - 1;
+                max_minus_index = x - begin;
             }
         };
         i32 N;
@@ -106,6 +111,8 @@ namespace Solution_2812031851177643_1 {
 
         auto pushUp(i32 p) -> void {
             tree[p].sum = tree[lson(p)].sum + tree[rson(p)].sum;
+            tree[p].max = std::max(tree[lson(p)].max, tree[rson(p)].max);
+            tree[p].max_minus_index = std::max(tree[lson(p)].max_minus_index, tree[rson(p)].max_minus_index);
         }
         auto pushDown(i32 p) -> void {
             if (tree[p].iota_tag != -inf) {
@@ -149,6 +156,8 @@ namespace Solution_2812031851177643_1 {
         auto assignAt(i32 pos, i32 val, i32 p = 1) -> void {
             if (tree[p].begin + 1 == tree[p].end) {
                 tree[p].sum = val;
+                tree[p].max = val;
+                tree[p].max_minus_index = val - pos;
                 return;
             }
             pushDown(p);
@@ -162,6 +171,46 @@ namespace Solution_2812031851177643_1 {
                 ss << "[" << i << "]" << sumRange(i, i + 1) << " ";
             }
             return ss.str();
+        }
+        // 寻找 [begin, end) 区间内的第一个 x 使得 f(x) >= val
+        // 不存在这样的 x，返回 end
+        auto lowerBound(i32 begin, i32 end, i32 val, i32 p = 1) -> i32 {
+            debug  std::cout << std::format("lowerBound {} {} {}", begin, end, val) << std::endl;
+            if (tree[p].begin + 1 == tree[p].end) {
+                if (tree[p].max >= val)  return tree[p].begin;
+                else  return end;
+            }
+
+            pushDown(p);
+            if (tree[lson(p)].end > begin and tree[lson(p)].max >= val) {
+                auto find = lowerBound(begin, end, val, lson(p));
+                if (find != end)  return find;
+            }
+            if (tree[rson(p)].begin < end and tree[rson(p)].max >= val) {
+                auto find = lowerBound(begin, end, val, rson(p));
+                if (find != end)  return find;
+            }
+            return end;
+        }
+
+        // 寻找 [begin, end) 区间内的第一个 x 使得 f(x) - x >= val
+        // 不存在这样的 x，返回 end
+        auto lowerBoundMinusIndex(i32 begin, i32 end, i32 val, i32 p = 1) -> i32 {
+            if (tree[p].begin + 1 == tree[p].end) {
+                if (tree[p].max_minus_index >= val)  return tree[p].begin;
+                else  return end;
+            }
+
+            pushDown(p);
+            if (tree[lson(p)].end > begin and tree[lson(p)].max_minus_index >= val) {
+                auto find = lowerBoundMinusIndex(begin, end, val, lson(p));
+                if (find != end)  return find;
+            }
+            if (tree[rson(p)].begin < end and tree[rson(p)].max_minus_index >= val) {
+                auto find = lowerBoundMinusIndex(begin, end, val, rson(p));
+                if (find != end)  return find;
+            }
+            return end;
         }
     };
     
@@ -198,14 +247,19 @@ namespace Solution_2812031851177643_1 {
                     if (cur_pos > box.target)  return false;  // 已经被移动走
                     
                     // 感觉似乎可以保证 cur_pos 到 target 没有固定的箱子
-                    auto after_target = upperBoundValue(index[i], N, box.target, lam(x, sgt.sumRange(x, x + 1)));
+                    // auto _after_target = upperBoundValue(index[i], N, box.target, lam(x, sgt.sumRange(x, x + 1)));
+                    auto after_target = sgt.lowerBound(index[i], N, box.target + 1);
+                    // assert(_after_target == after_target);
+
                     auto cnt0 = after_target - index[i];
                     // 寻找合适的地方安置这些箱子
-                    auto bind_until = upperBoundValue(after_target, N + 1, cnt0, [&](i32 x) {  // [index[i], bind_until) 需要绑定到一起赋值
-                        auto occupied = x - after_target;  // 已经被占用
-                        auto total = (x == N? infLL: sgt.sumRange(x, x + 1)) - box.target;
-                        return total - occupied;
-                    });
+                    // auto _bind_until = upperBoundValue(after_target, N + 1, cnt0, [&](i32 x) {  // [index[i], bind_until) 需要绑定到一起赋值
+                    //     auto occupied = x - after_target;  // 已经被占用
+                    //     auto total = (x == N? infLL: sgt.sumRange(x, x + 1)) - box.target;
+                    //     return total - occupied;
+                    // });
+                    auto bind_until = sgt.lowerBoundMinusIndex(after_target, N, cnt0 - after_target + box.target + 1);
+                    // assert(_bind_until == bind_until);
                     auto old_pos_sum = sgt.sumRange(index[i], bind_until);
                     sgt.iotaRange(index[i], bind_until, box.target);
                     auto new_pos_sum = sgt.sumRange(index[i], bind_until);
@@ -216,7 +270,8 @@ namespace Solution_2812031851177643_1 {
                     auto cur_pos = sgt.sumRange(index[i], index[i] + 1);  // 当前箱子
                     if (cur_pos < box.target)  return false;
 
-                    auto before_target = lowerBoundValue(0, index[i], box.target, lam(x, sgt.sumRange(x, x + 1))) - 1;
+                    // auto before_target = lowerBoundValue(0, index[i], box.target, lam(x, sgt.sumRange(x, x + 1))) - 1;
+                    auto before_target = sgt.lowerBound(0, index[i], box.target) - 1;
                     auto cnt0 = index[i] - before_target;
 
                     // (bind_after, index[i]]
