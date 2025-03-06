@@ -4,22 +4,17 @@ namespace Generator {
     #include "lib"
     #include "libs/range.hpp"
     #include "libs/fixed_int.hpp"
+    #include "randlib.hpp"
     using namespace lib;
-    namespace Random {
-        std::mt19937 random(std::random_device{}());
-        std::mt19937_64 random64(std::random_device{}());
-
-        int randint(int x, int y) { return std::uniform_int_distribution<int>{x, y}(random); }
-        long long randll(ll x, ll y) { return std::uniform_int_distribution<long long>{x, y}(random64); }
-    }
     using namespace Random;
 
     void generate(std::ostream &out) {
-        i32 constexpr _T = 1;
+        i32 constexpr _T = 100000;
         i32 T = _T;
         out << 0 << " " << T << endl;
+        while (T--)
         while (true) {
-            i32 constexpr _N = 4, _V = 12;
+            i32 constexpr _N = 4, _V = 15;
 
             i32 N = _N;
             std::vector<i32> ab(N * 2);
