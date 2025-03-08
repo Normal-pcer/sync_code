@@ -1,5 +1,5 @@
 /**
- * @link https://www.luogu.com.cn/problem/P4838
+ * @link https://www.luogu.com.cn/problem/P5343
  */
 #include "./libs/debug_macros.hpp"
 
@@ -29,14 +29,17 @@ namespace views = std::views;
 using namespace lib;
 
 /**
- * 状压记录最后的三个数
+ * 记 F[x] 表示使用指定长度块填充至总长度为 x 的方案数。
  * 
+ * F[x] <- F[x - len]
+ * 
+ * x <= 100
+ * 只有最近的 100 项可能有用
  */
-namespace Solution_3005915539153714 {
-    i32 constexpr mod = 19260817;
+namespace Solution_4188520239411906 {
     template <typename T>
     using init_list = std::initializer_list<T>;
-
+    i32 constexpr mod = 1e9 + 7;
     class Matrix {
         i32 height, width;
         std::vector<std::vector<i32>> data;
@@ -99,42 +102,45 @@ namespace Solution_3005915539153714 {
         }
     };
     void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
+        i32 N;  std::cin >> N;
+        auto blocks = [&]() -> std::vector<i32> {
+            
+            i32 cnt0, cnt1;
+            std::cin >> cnt0;
+            std::vector<i32> blocks0(cnt0);
+            for (auto &x: blocks0)  std::cin >> x;
 
-        Matrix T{8, 8};
-        for (u32 i = 0; i < 8; i++) {
-            auto common = i & 0b11;
-            T[i][common << 1] = 1;
-            if (common != 0b11)  T[i][common << 1 | 1] = 1;
+            std::cin >> cnt1;
+            std::vector<i32> blocks1(cnt1);
+            for (auto &x: blocks1)  std::cin >> x;
+
+            ranges::sort(blocks0), ranges::sort(blocks1);
+            blocks0.erase(ranges::unique(blocks0).begin(), blocks0.end());
+            blocks1.erase(ranges::unique(blocks1).begin(), blocks1.end());
+
+            std::vector<i32> res;
+            ranges::set_intersection(blocks0, blocks1, std::back_inserter(res));
+            return res;
+        }();
+
+        auto max_x = ranges::max(blocks);
+        Matrix T{max_x + 1, max_x + 1};
+
+        for (auto x: blocks)  T[0][x] = 1;
+        for (i32 i = 1; i < max_x; i++) {
+            T[i + 1][i] = 1;
         }
 
-        Matrix A{{1, 1, 1, 1, 1, 1, 1, 0}};
-
-        i32 M;  std::cin >> M;
-        for (auto m = M; m --> 0; ) {
-            i32 N;  std::cin >> N;
-            if (N == 1)  std::cout << 2 << endl;
-            else if (N == 2)  std::cout << 4 << endl;
-            else if (N == 3)  std::cout << 7 << endl;
-            else {
-                auto ans_mat = A * T.qpow(N - 3);
-                // auto ans_mat = A;
-                // for (i32 i = 0; i < N; i++) {
-                //     ans_mat = ans_mat * T;
-                //     std::cout << "i = " << i << ", ans_mat = " << std::endl;
-                //     std::cout << ans_mat << std::endl;
-                // }
-                i32 ans = 0;
-                for (auto x: ans_mat[0])  ans = (ans + x) % mod;
-                std::cout << ans << endl;
-            }
-        }
+        Matrix A{1, max_x + 1};
+        A[0][0] = 1;
+        A = A * T.qpow(N);
+        auto ans = A[0][0];
+        std::cout << ans << std::endl;
     }
 }
 
 int main(int argc, char const *argv[]) {
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    Solution_3005915539153714::solve();
+    Solution_4188520239411906::solve();
     return 0;
-} 
+}
