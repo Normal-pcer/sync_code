@@ -4,40 +4,35 @@ namespace Generator {
     #include "lib"
     #include "libs/range.hpp"
     #include "libs/fixed_int.hpp"
-    #include "randlib.hpp"
     using namespace lib;
+    #include "randlib.hpp"
     using namespace Random;
 
     void generate(std::ostream &out) {
-        i32 constexpr _T = 100000;
+        i32 constexpr _T = 50000;
         i32 T = _T;
         out << 0 << " " << T << endl;
         while (T--)
         while (true) {
-            i32 constexpr _N = 4, _V = 15;
+            i32 constexpr _N = 8, _V = 20;
 
-            i32 N = _N;
-            std::vector<i32> ab(N * 2);
-            std::set<i32> s;
-            for (auto &x: ab) {
-                while (true) {
-                    i32 tmp = randint(1, _V);
-                    if (s.contains(tmp))  continue;
-                    s.insert(tmp);
-                    x = tmp;
-                    break;
-                }
-            }
-
-            ranges::sort(ab);
+            auto N = _N;
+            auto ab = sorted(sample(1, _V, N * 2));
             for (i32 i = 0; i < N - 1; i++) {
                 if (randint(1, 2) == 1)  std::swap(ab[i * 2 + 1], ab[i * 2 + 2]);
             }
+            std::vector<i32> a(N), b(N);
+            i64 all_t = 0;
+            for (i32 i = 0; i < N; i++) {
+                a[i] = ab[i * 2];
+                b[i] = ab[i * 2 + 1];
+                all_t += b[i] - a[i];
+            }
+            all_t += randint(-1, 1);
 
             out << N << endl;
-            auto maxTime = static_cast<i64>(N) * _V * 3 / 5;
             for (i32 i = 0; i < N; i++) {
-                out << ab[i * 2] << " " << ab[i * 2 + 1] << " " << randint(1, maxTime) << endl;
+                out << a[i] << " " << b[i] << " " << all_t << endl;
             }
             break;
         }

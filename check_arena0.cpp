@@ -1,4 +1,7 @@
 #include <bits/stdc++.h>
+#include "./libs/io.hpp"
+
+using namespace lib;
 using namespace std;
 #define ll long long
 #define ls (u << 1)
@@ -22,7 +25,7 @@ void pushup(ll u){
 	tr[u].sum = tr[ls].sum + tr[rs].sum;
 	tr[u].mx  = max(tr[ls].mx, tr[rs].mx);
 }
-void pushdown(ll type, ll u, ll l, ll r, ll val){
+void pushdown(ll u, ll l, ll r){
 	if(tr[u].lazy != -9e18){
 		ll mid = (l + r) >> 1;
 		ll x1 = tr[u].lazy, x2 = tr[u].lazy + len(l, mid);
@@ -30,10 +33,8 @@ void pushdown(ll type, ll u, ll l, ll r, ll val){
 		tr[ls].sum  = (x1 + (x1 + len(l, mid) - 1)) * len(l, mid) / 2;
 		tr[rs].lazy = x2;
 		tr[rs].sum  = (x2 + (x2 + len(mid + 1, r) - 1)) * len(mid + 1, r) / 2;
-		if(type == 1){
-			tr[ls].mx = val + mid - l;
-			tr[rs].mx = val + r - mid - 1;
-		}
+		tr[ls].mx   = x1 + len(l, mid) - 1;
+		tr[rs].mx   = x2 + len(mid + 1, r) - 1;
 		tr[u].lazy  = -9e18;
 	}
 }
@@ -52,11 +53,12 @@ void update(ll u, ll l, ll r, ll L, ll R, ll val){
 		ll x = val + l - L;
 		tr[u].lazy = x;
 		tr[u].sum  = (x + (x + len(l, r) - 1)) * len(l, r) / 2;
-		tr[u].mx   = val + r - l;
+		// tr[u].mx   = val + r - l;
+        tr[u].mx = x + len(l, r) - 1;
 		return;
 	}
 	ll mid = (l + r) >> 1;
-	pushdown(1, u, l, r, val);
+	pushdown(u, l, r);
 	if(L <= mid) update(ls, l, mid, L, R, val);
 	if(mid < R)  update(rs, mid + 1, r, L, R, val);
 	pushup(u);
@@ -64,23 +66,66 @@ void update(ll u, ll l, ll r, ll L, ll R, ll val){
 ll query(ll u, ll l, ll r, ll L, ll R){
 	if(L <= l && r <= R) return tr[u].sum;
 	ll mid = (l + r) >> 1, ans = 0;
-	pushdown(0, u, l, r, 0);
+	pushdown(u, l, r);
 	if(L <= mid) ans += query(ls, l, mid, L, R);
 	if(mid < R)  ans += query(rs, mid + 1, r, L, R);
 	return ans;
 }
-ll UpperBound(ll u, ll l, ll r, ll x0){
-//	cout << l << " " << r << endl;
+ll LowerBound(ll u, ll l, ll r, ll x0){
+	//	cout << l << " " << r << endl;
 	if(l == r){
-		if(cop[x0].b + l - x0 - 1 >= tr[u].mx) return n + 1;
-		else return l;
+        if (l == x0)  return n + 1;
+		// if(cop[x0].b + l - x0 - 1 >= tr[u].mx) return n + 1;
+		// if (tr[u].mx - r < cop[x0].b - x0 - 1)  return n + 1;
+		// else return l;
+		if (tr[u].mx - r >= cop[x0].b - x0 - 1)  return l;
+		else  return n + 1;
 	}else{
+		pushdown(u, l, r);
 		ll mid = (l + r) >> 1;
-		if(x0 >= mid) return UpperBound(rs, mid + 1, r, x0);
-		else{
-			if(cop[x0].b + mid - x0 - 1 >= tr[ls].mx) return UpperBound(rs, mid + 1, r, x0);
-			else return UpperBound(ls, l, mid, x0);
+
+		// auto val = cop[x0].b + mid - x0 - 1;
+		if (mid > x0 and tr[ls].mx - mid >= cop[x0].b - x0 - 1) {
+			auto find = LowerBound(ls, l, mid, x0);
+			if (find != n + 1)  return find;
 		}
+		if (tr[rs].mx - r >= cop[x0].b - x0 - 1) {
+			auto find = LowerBound(rs, mid + 1, r, x0);
+			if (find != n + 1)  return find;
+		}
+		return n + 1;
+	}
+	//cop[posstart].b + mid - posstart - 1 < query(1, 1, n, mid, mid)
+}
+ll UpperBound(ll u, ll l, ll r, ll x0){
+    // assert(std::ranges::max(std::views::iota(l, r + 1) | std::views::transform([&](auto x) -> ll { return query(1, 1, n, x, x); })) == tr[u].mx);
+	//	cout << l << " " << r << endl;
+	if(l == r){
+        // if (l == x0)  return n + 1;
+		// if(cop[x0].b + l - x0 - 1 >= tr[u].mx) return n + 1;
+		// if (tr[u].mx - r < cop[x0].b - x0 - 1)  return n + 1;
+		// else return l;
+		if (tr[u].mx - r > cop[x0].b - x0 - 1)  return l;
+		else  return n + 1;
+	}else{
+		pushdown(u, l, r);
+		ll mid = (l + r) >> 1;
+
+		// auto val = cop[x0].b + mid - x0 - 1;
+        // assert(std::ranges::max(std::views::iota(l, mid + 1) | std::views::transform([&](auto x) -> ll { return query(1, 1, n, x, x); })) == tr[ls].mx);
+        // assert(tr[rs].mx == tr[u].mx);
+        // assert(std::ranges::max(std::views::iota(mid + 1, r + 1) | std::views::transform([&](auto x) -> ll { return query(1, 1, n, x, x); })) == tr[rs].mx);
+        assert(tr[ls].mx == query(1, 1, n, mid, mid));
+        assert(tr[rs].mx == query(1, 1, n, r, r) and tr[rs].mx == tr[u].mx);
+        if (mid > x0 and tr[ls].mx - mid > cop[x0].b - x0 - 1) {
+			auto find = UpperBound(ls, l, mid, x0);
+			if (find != n + 1)  return find;
+		}
+		if (tr[rs].mx - r > cop[x0].b - x0 - 1) {
+			auto find = UpperBound(rs, mid + 1, r, x0);
+			if (find != n + 1)  return find;
+		}
+		return n + 1;
 	}
 	//cop[posstart].b + mid - posstart - 1 < query(1, 1, n, mid, mid)
 }
@@ -96,18 +141,18 @@ bool checkC(ll x){
 int main(){
 	ios::sync_with_stdio(false);
 	cin.tie(0); cout.tie(0);
-	cin >> c >> T;
+	io >> c >> T;
 	if(checkA(c)){
 		while(T--){
-			cin >> n;
+			io >> n;
 			ll cnt = 0;
-			for(ll i = 1; i <= n; i++) cin >> a[i].a >> a[i].b >> a[i].t, cnt += abs(a[i].b - a[i].a);
-			cout << (cnt <= a[1].t ? "Yes\n" : "No\n");
+			for(ll i = 1; i <= n; i++) io >> a[i].a >> a[i].b >> a[i].t, cnt += abs(a[i].b - a[i].a);
+			io << (cnt <= a[1].t ? "Yes\n" : "No\n");
 		}
 	}else if(checkB(c)){
 		while(T--){
-			cin >> n;
-			for(ll i = 1; i <= n; i++) cin >> a[i].a >> a[i].b >> a[i].t;
+			io >> n;
+			for(ll i = 1; i <= n; i++) io >> a[i].a >> a[i].b >> a[i].t;
 			sort(a + 1, a + n + 1);
 			bool flag = 0;
 			ll now = 0;
@@ -117,14 +162,14 @@ int main(){
 					flag = 1; break;
 				}
 			}
-			cout << (flag ? "No\n" : "Yes\n");
+			io << (flag ? "No\n" : "Yes\n");
 		}
 	}else if(checkC(c)){
 		while(T--){
 			pos3.clear();
-			cin >> n;
-			memset(cop, 0, sizeof cop);
-			for(ll i = 1; i <= n; i++) cin >> a[i].a >> a[i].b >> a[i].t, cop[i] = a[i];
+			io >> n;
+			cop[n + 1] = {0, 0, 0};
+			for(ll i = 1; i <= n; i++) io >> a[i].a >> a[i].b >> a[i].t, cop[i] = a[i];
 			sort(a + 1, a + n + 1);
 			for(ll i = 1; i <= n; i++) pos3[{a[i].a, {a[i].b, a[i].t}}] = i;
 			for(ll i = 1; i <= n; i++) pos2[i] = pos3[{cop[i].a, {cop[i].b, cop[i].t}}], pos1[pos3[{cop[i].a, {cop[i].b, cop[i].t}}]] = i, rk.insert(i);
@@ -135,30 +180,29 @@ int main(){
 				ll now = *rk.begin(); rk.erase(now);
 				ll posstart = pos1[now], posend = pos1[now] + 1, nowcnt = 0;
 				if(query(1, 1, n, posstart, posstart) == cop[posstart].b) continue;
-//				ll l = posstart + 1, r = n + 1;
-//				while(l < r){
-//					ll mid = (l + r) >> 1;
-//					if(cop[posstart].b + mid - posstart - 1 < query(1, 1, n, mid, mid)) r = mid;
-//					else l = mid + 1;
-//				}
-//				while(posend <= n && cop[posstart].b + nowcnt >= query(1, 1, n, posend, posend)) posend++, nowcnt++;
-				posend = UpperBound(1, 1, n, posstart) - 1, nowcnt = posend - posstart;
+				posend = UpperBound(1, 1, n, posstart) - 1;
+                // nowcnt = posend - posstart;
+                // nowcnt = posend - posstart - 1;
+                assert(query(1, 1, n, posend, posend) - posend <= cop[posstart].b - posstart - 1);
+                assert(posend == n or query(1, 1, n, posend + 1, posend + 1) - posend - 1 > cop[posstart].b - posstart - 1);
+                // posend = upperBoundValue(posstart + 1, n + 1, cop[posstart].b - posstart - 1, [&](ll x) { return query(1, 1, n, x, x) - x; }) - 1;
+
 				cnt += cop[posstart].b * (nowcnt + 1) + (nowcnt + 1) * nowcnt / 2 - query(1, 1, n, posstart, posend);
 				update(1, 1, n, posstart, posend, cop[posstart].b);
 				if(cnt > cop[posstart].t){
 					flag = 1; break;
 				}
 			}
-			cout << (flag ? "No\n" : "Yes\n");
+			io << (flag ? "No\n" : "Yes\n");
 		}
-	}else while(T--) cout << "Yes\n";
+	}else while(T--) io << "Yes\n";
 	return 0;
 }
 /*
 0 1
 4
-2 5 16
-6 8 12
+2 4 13
+3 8 16
 7 13 15
-9 15 12
+10 14 36
 */

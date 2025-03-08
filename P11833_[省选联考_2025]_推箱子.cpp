@@ -290,8 +290,8 @@ namespace Solution_2812031851177643_1 {
                 bool can_continue = true;
                 if (box.start <= box.target)  can_continue = right();
                 else  can_continue = left();
-                if (not can_continue)  return false;
-                if (cur > box.time)  return false;
+                if (not can_continue)  return  std::cout << "Cannot Continue" << std::endl, false;
+                if (cur > box.time)  return std::cout << "Time Limit Exceed" << std::endl, false;
             }
             return true;
         }();

@@ -1,9 +1,31 @@
 /**
  * @link https://www.luogu.com.cn/problem/P1357
  */
-#include "libs/debug_macros.hpp"
-#include "lib"
-#include "libs/fixed_int.hpp"
+#include "./libs/debug_macros.hpp"
+
+#include <bits/stdc++.h>
+bool DEBUG_MODE = false;
+#define debug if(DEBUG_MODE)
+template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
+template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
+#define never if constexpr(0)
+const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
+const char endl = '\n';
+
+#define __lambda_1(expr) [&](){return expr;}
+#define __lambda_2(a, expr) [&](auto a){return expr;}
+#define __lambda_3(a, b, expr) [&](auto a, auto b){return expr;}
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c){return expr;}
+#define __lambda_overload(a, b, c, d, e, args...) __lambda_##e
+#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+#define lam lambda
+namespace lib{
+#if __cplusplus > 201703LL
+namespace ranges = std::ranges;
+namespace views = std::views;
+#endif
+}
+#include "./libs/fixed_int.hpp"
 using namespace lib;
 
 /**
@@ -19,6 +41,8 @@ using namespace lib;
  * 每一次的转移方式都是比较规律的，似乎可以用一次矩阵乘法来描述。
  * 例如一个状态 11010 只能从 01101 或 11101 这样的转移过来。
  * 所以 N 次迭代变成了 N 次矩阵乘法，于是可以用矩阵快速幂优化。
+ * 
+ * 答案矩阵应该是表示“可以从一个状态推到另一个状态”的方案数。自己推到自己即为环。
  */
 namespace Solution_8620626636490178 {
     i32 constexpr mod = 1e9 + 7;
@@ -102,7 +126,8 @@ namespace Solution_8620626636490178 {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr), std::cout.tie(nullptr);
 
-        i32 N, M, K;  std::cin >> N >> M >> K;
+        i64 N;  i32 M, K;
+        std::cin >> N >> M >> K;
 
         u32 max_stat = (u32)1 << M;
         // 状态的高位表示下标较高的花圃对应颜色
@@ -112,20 +137,23 @@ namespace Solution_8620626636490178 {
         for (u32 i = 0; i < max_stat; i++) {
             if (std::popcount(i) > K)  continue;
             // 一个状态的低 M-1 位需要和上一个状态的高 M-1 位相同
-            u32 common = i & ((u32)1 << (M-1)) - 1;
+            u32 common = i & (((u32)1 << (M-1)) - 1);
             edges.push_back({i, common << 1});
-            edges.push_back({i, common << 1 | 1});
+            if (std::popcount(common << 1 | 1) <= K)  edges.push_back({i, common << 1 | 1});
         }
 
-        Matrix T{max_stat, max_stat};
+        Matrix T{static_cast<i32>(max_stat), static_cast<i32>(max_stat)};
         for (auto [x, y]: edges) {
-            T.data[x][y] = 1;
+            T.data[y][x] = 1;  // 很奇怪，建反向边是正确的
         }
 
-        Matrix A{1, max_stat};
+        // 答案矩阵和转移矩阵其实是一样的
+        auto ans_mat = qpow(T, N);
+        i32 ans = 0;
         for (u32 i = 0; i < max_stat; i++) {
-            A.data[0][i] = 1;
+            ans = (ans + ans_mat.data[i][i]) % mod;
         }
+        std::cout << ans << endl;
     }
 }
 
