@@ -1,0 +1,6 @@
+> g++ "P2586_[ZJOI2008]_杀蚂蚁.cpp" -o "P2586_[ZJOI2008]_杀蚂蚁.exe" -Wall -Wextra -finput-charset=utf-8 -std=c++23 -g
+正在编译...
+> "P2586_[ZJOI2008]_杀蚂蚁.exe" -d
+========DEBUG========
+=====================
+Exited after 0.0527s, with code 0.
