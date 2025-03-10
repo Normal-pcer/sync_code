@@ -18,10 +18,12 @@ namespace lib {
     };
     template <typename T>  struct is_integral_or_int128 { constexpr static bool value = std::is_integral<T>::value; };
     template <typename T>  struct is_floating_point_or_float128 { constexpr static bool value = std::is_floating_point<T>::value; };
+    template <typename T>  struct make_unsigned { using type = std::make_unsigned_t<T> };
 #ifdef IO_ENABLE_INT128
     template <>  struct is_integral_or_int128<__int128> { constexpr static bool value = true; };
     template <>  struct is_integral_or_int128<unsigned __int128> { constexpr static bool value = true; };
     template <>  struct is_floating_point_or_float128<__float128> { constexpr static bool value = true; };
+    template <>  struct make_unsigned<__int128> { using type = unsigned __int128; };
 #endif  // def IO_ENABLE_INT128
     template <typename T> struct is_number {
         constexpr static bool value = is_integral_or_int128<T>::value || is_floating_point_or_float128<T>::value;
@@ -78,7 +80,7 @@ namespace lib {
             for (; not isBlank(ch); ch = gc())  s.push_back(ch); 
             return *this;
         }
-        Scanner &operator>> (auto &x) {
+        Scanner &operator>> (auto &&x) {
             return read(x);
         }
         
@@ -227,7 +229,7 @@ namespace lib {
         template <typename T>
         auto writeSignedInteger(T x) -> void {
             if (x < 0) {
-                typename std::make_unsigned_t<T> unsigned_x = x;
+                typename make_unsigned<T>::type unsigned_x = x;
                 unsigned_x = -unsigned_x;
                 put('-'), writeUnsignedInteger(unsigned_x);
             } else {

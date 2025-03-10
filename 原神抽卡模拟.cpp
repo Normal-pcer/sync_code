@@ -89,7 +89,7 @@ namespace Solution {
                 cnt = 0;
             }
             i++;
-            if (i % 10000 == 0)  std::cout << i << ": 小保底不歪" << static_cast<double>(up_cnt) / tot << std::endl;
+            if (i % 100000 == 0)  std::cout << i << ": 小保底不歪" << static_cast<double>(up_cnt) / tot << std::endl;
         }
     }
 }

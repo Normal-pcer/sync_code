@@ -59,7 +59,7 @@ namespace Random {
     template <typename T>
     auto sample(T &&range, uz N) -> auto {
         auto cnt = range.size();
-        using ResultType = decltype(*range.begin());
+        using ResultType = std::remove_reference_t<decltype(*range.begin())>;
         assert(N <= cnt);
         if (cnt < N * 2) {
             std::vector<ResultType> res(N);
