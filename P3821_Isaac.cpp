@@ -88,12 +88,14 @@ namespace Solution_2703541250956849 {
         using Edge = std::tuple<i32, i32, i32>;
         std::vector<Edge> origin_edges(edge_count);
         for (auto &[x, y, val]: origin_edges) {
-            if (x > y)  std::swap(x, y);
             std::cin >> x >> y >> val, x--, y--;
+            if (x > y)  std::swap(x, y);
         }
 
         ranges::reverse(origin_edges);
-        auto to_be_erased = ranges::unique(origin_edges, std::equal_to{}, lam(x, std::pair(std::get<0>(x), std::get<1>(x))));
+        auto proj = lam(x, std::pair(std::get<0>(x), std::get<1>(x)));
+        ranges::stable_sort(origin_edges, std::less{}, proj);
+        auto to_be_erased = ranges::unique(origin_edges, std::equal_to{}, proj);
         origin_edges.erase(to_be_erased.begin(), to_be_erased.end());
         edge_count = origin_edges.size();
 

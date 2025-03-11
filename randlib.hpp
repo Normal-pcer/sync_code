@@ -22,7 +22,7 @@ namespace Random {
     template <typename T, typename U>
     auto randrange(T first, U last) -> decltype(first + last) {
         using ResultType = decltype(first + last);
-        if constexpr (std::is_integral_v<ResultType>)  return randint(first, last + 1);
+        if constexpr (std::is_integral_v<ResultType>)  return randint(first, last - 1);
         else if constexpr (std::is_floating_point_v<ResultType>)  return randreal(first, last);
         else  static_assert(false, "first + last must be integral or floating point number.");
     }
@@ -49,7 +49,9 @@ namespace Random {
             std::vector<T> res(N);
             for (i32 i = 0; i < N; i++) {
                 auto x = randrange(first, last);
-                for (; s.contains(x); x++);
+                for (; s.contains(x); x++) {
+                    if (x == last)  x = first;
+                }
                 s.insert(x);
                 res[i] = x;
             }

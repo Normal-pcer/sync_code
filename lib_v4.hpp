@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-bool DEBUG_MODE=false;
+bool DEBUG_MODE = false;
 #define debug if(DEBUG_MODE)
 template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
 template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
