@@ -10,18 +10,25 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 4, maxM = 4, maxK = 4, maxF = 2, maxV = 5;
-            auto N = maxN, M = randint(1, maxM), K = randint(1, maxK);
-            
-            out << N << ' ' << M << " " << randint(1, N) << " " << randint(1, N) << " " << K << endl;
-            for (auto _: range(M))  out << randint(1, N) << ' ' << randint(1, N) << " " << randint(1, maxV) << endl;
-            auto f = randint(1, maxF);
-            out << f << endl;
-            for (auto _: range(f)) {
-                auto cnt = randint(2, 4);
-                auto x = sample(1, N + 1, cnt);
-                out << cnt << " " << x << endl;
+            i64 constexpr maxN = 100, maxM = 3000, maxQ = 100, maxV = 4294967295U, maxT = 4294967295U;
+            auto N = maxN, M = maxM, Q = maxQ;
+
+            out << N << " " << M << " " << Q << endl;
+            for (auto _: range(N))  out << randint(1, maxV) << " ";
+            out << endl;
+
+            std::set<std::pair<i32, i32>> edges;
+            for (auto _: range(M)) {
+                while (true) {
+                    auto x = randint(1, N - 1);
+                    auto y = randint(x + 1, N);
+                    if (edges.contains({x, y}))  continue;
+                    out << x << " " << y << endl;
+                    edges.insert({x, y});
+                    break;
+                }
             }
+            for (auto _: range(Q))  out << randint(1, maxT) << endl;
             break;
         }
     }

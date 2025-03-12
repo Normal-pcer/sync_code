@@ -1,5 +1,5 @@
 /**
- * @link https://www.luogu.com.cn/problem/P3821
+ * @link https://www.luogu.com.cn/problem/P6569
  */
 #include "./libs/debug_macros.hpp"
 
@@ -9,40 +9,49 @@
 using namespace lib;
 
 /**
- * 首先一个显然的发现是类似 P2579，游走周期都不会太大，所以取它们的 lcm 是可行的，此时即为全图的一个周期。
- * 希望最小化路径上边权的最大值。
+ * 一个点下一轮的点权由上一轮固定的几个点转移而来，比较像矩阵乘法的形式。
+ * 有若干次查询。每次查询做一下矩阵快速幂即可。
+ * 具体地，G[i][0][j] 表示第 i 天第 j 个城市的魔法值。
+ * 那么会有一个转移矩阵 T，乘若干次即可。
+ * 这里矩阵乘法的“乘”还是乘，“加”变为异或。
+ * 然而乘法和按位异或之间并不满足分配律。
+ * 但是注意到每次乘以 0/1，可以替换为按位与 0/~0。
+ * 按位与、按位异或是满足分配律的。
  * 
- * P2579 要求的是两个点之间有多少种路线。最大值的最小值直接做显然不是很好做。
- * 可以使用二分。每一次选定一个值，把所有边权大于这个值的直接去掉，判断这两个点现在是否可达。
+ * 然而这样的复杂度为 Q * N**3 * log(a)，过不去。
+ * 考虑优化。可以使用类似 P6772 美食家 的优化。
+ * 预处理出 T**1, T**2, T**4, T**8，每次查询的时候依次累乘到 G0 上。
+ * 这样的好处是把矩阵乘法从 N**3 变为了 N**2（因为 G0 的高度为 1）
+ * 预处理：N**3 * log(a)
+ * 查询：N**2 * log(a) * q
  * 
- * 垃圾题。
+ * 写挂了。荣获 10 分。
+ * 我要提高通过率。
+ * 
+ * 优化前后进行对拍。当然优化没有写错。
+ * 随便写一个暴力对拍，好像还是挺对的。
+ * 首先有一个问题是读入需要 u32。
+ * RE 了。数据拉满和自己对拍。
+ * T**2**i 预处理少了一项。
  */
-namespace Solution_2703541250956849 {
-    template <typename T, typename U, typename Func, typename Comp = std::less<>>
-    auto lowerBoundValue(T begin, T end, U val, Func &&func, Comp &&cmp = {}) -> T {
-        while (end - begin >= 1) {
-            auto mid = std::midpoint(begin, end);
-            if (cmp(func(mid), val))  begin = mid + 1;
-            else  end = mid;
-        }
-        return begin;
-    }
+namespace Solution_7296640937131565 {
     class Matrix {
         i32 height, width;
-        std::vector<std::vector<char>> data;
+        std::vector<std::vector<u32>> data;
     public:
-        Matrix(i32 height, i32 width): height(height), width(width), data(height, std::vector<char>(width)) {}
+        Matrix(i32 height, i32 width): height(height), width(width), data(height, std::vector<u32>(width)) {}
 
-        auto operator[](uz idx) const -> std::vector<char> const & { return data[idx]; }
-        auto operator[](uz idx) -> std::vector<char> & { return data[idx]; }
-        auto operator* (Matrix other) const -> Matrix {
+        auto operator[] (uz idx) const -> std::vector<u32> const & { return data[idx]; }
+        auto operator[] (uz idx) -> std::vector<u32> & { return data[idx]; }
+
+        auto operator* (Matrix const &other) const -> Matrix {
             assert(width == other.height);
             Matrix res{height, other.width};
 
             for (i32 i = 0; i < height; i++) {
                 for (i32 j = 0; j < other.width; j++) {
                     for (i32 k = 0; k < width; k++) {
-                        res[i][j] |= data[i][k] and other[k][j];
+                        res[i][j] ^= data[i][k] & other.data[k][j];
                     }
                 }
             }
@@ -52,26 +61,26 @@ namespace Solution_2703541250956849 {
         auto static identity(i32 N) -> Matrix {
             Matrix res{N, N};
             for (i32 i = 0; i < N; i++) {
-                res[i][i] = 1;
+                res[i][i] = ~(u32)0;
             }
             return res;
         }
-
-        auto qpow(i64 b) -> Matrix {
+        auto qpow(i64 b) const -> Matrix {
+            assert(b >= 0);
             assert(height == width);
+
             auto a = *this, res = identity(height);
-            for (; b; b >>= 1, a = a * a) {
+            for (; b != 0; b >>= 1, a = a * a) {
                 if (b & 1)  res = res * a;
             }
             return res;
         }
-
         auto friend operator<< (std::ostream &os, Matrix const &mat) -> std::ostream & {
             for (i32 i = 0; i < mat.height; i++) {
                 if (i != 0)  os << endl;
                 for (i32 j = 0; j < mat.width; j++) {
                     if (j != 0)  os << " ";
-                    os << static_cast<i32>(mat[i][j]);
+                    os << std::bitset<4>(mat[i][j]);
                 }
             }
             return os;
@@ -81,96 +90,49 @@ namespace Solution_2703541250956849 {
         std::ios::sync_with_stdio(false);
         std::cin.tie(nullptr), std::cout.tie(nullptr);
 
-        i32 node_count, edge_count, start, end, time_need;
-        std::cin >> node_count >> edge_count >> start >> end >> time_need;
-        start--, end--;
+        i32 N, M, Q;  std::cin >> N >> M >> Q;
+        std::vector<u32> init(N + 1);
+        for (auto &x: init | views::drop(1))  std::cin >> x;
 
-        using Edge = std::tuple<i32, i32, i32>;
-        std::vector<Edge> origin_edges(edge_count);
-        for (auto &[x, y, val]: origin_edges) {
-            if (x > y)  std::swap(x, y);
-            std::cin >> x >> y >> val, x--, y--;
+        std::vector<std::pair<i32, i32>> edges(M);
+        for (auto &[x, y]: edges)  std::cin >> x >> y;
+
+        Matrix T{N + 1, N + 1};  // 转移矩阵
+        // 每一条边的一个点都会影响到另一个点，所以 T 为邻接矩阵
+        for (auto [x, y]: edges) {
+            T[x][y] = T[y][x] = ~(u32)0;
         }
 
-        ranges::reverse(origin_edges);
-        auto to_be_erased = ranges::unique(origin_edges, std::equal_to{}, lam(x, std::pair(std::get<0>(x), std::get<1>(x))));
-        origin_edges.erase(to_be_erased.begin(), to_be_erased.end());
-        edge_count = origin_edges.size();
+        Matrix G0{1, N + 1};
+        for (i32 i = 1; i <= N; i++)  G0[0][i] = init[i];
 
-        i32 fish_count;  std::cin >> fish_count;
-        std::vector<std::vector<i32>> routes(fish_count);
-        for (auto &x: routes) {
-            i32 t;  std::cin >> t;
-            x.resize(t);
-            for (auto &item: x)  std::cin >> item, item--;
+        std::vector<Matrix> pow_T_pow_2_i;
+        pow_T_pow_2_i.push_back(T);
+        for (i32 i = 1; i < 32; i++) {
+            auto const &prev = pow_T_pow_2_i.back();
+            pow_T_pow_2_i.push_back(prev * prev);
         }
 
-        auto check_with_edges = [&](std::vector<std::pair<i32, i32>> const &edges) -> bool {
-            std::vector A(12, Matrix{1, node_count});  // 每个矩阵：到达某个点的方案数
-            Matrix graph{node_count, node_count};
-            for (auto [x, y]: edges) {
-                graph[x][y] = graph[y][x] = 1;
+        for (auto q = Q; q --> 0; ) {
+            u32 x;  std::cin >> x;
+            auto Gx = G0;
+            for (i32 i = 0; i < 32; i++) {
+                if (((u32)1 << i) & x)  Gx = Gx * pow_T_pow_2_i[i];
             }
+            // for (i32 i = 0; i < x; i++) {
+                // std::cout << "G[" << i << "] = \n" << Gx << endl;
+                // Gx = Gx * T;
+            // }
+            // std::cout << "G[" << x << "] = \n" << Gx << endl;
+            auto ans = Gx[0][1];
 
-            i32 term_count = time_need / 12;
-            i32 remains = time_need % 12;
-
-            // 记录每个鱼此时的位置
-            std::vector<std::vector<i32>::iterator> routes_cur(fish_count);
-            for (i32 i = 0; i < fish_count; i++)  routes_cur[i] = routes[i].begin();
-
-            auto Once = Matrix::identity(node_count);  // 乘以这个矩阵相当于转移 12 次
-            for (i32 t = 0; t < 12; t++) {
-                Once = Once * graph;
-                for (i32 f = 0; f < fish_count; f++) {
-                    ++routes_cur[f];
-                    if (routes_cur[f] == routes[f].end())  routes_cur[f] = routes[f].begin();
-                    auto fish_pos = *routes_cur[f];
-                    for (i32 prev = 0; prev < node_count; prev++) {
-                        Once[prev][fish_pos] = 0;
-                    }
-                }
-            }
-
-            auto ans_mat = Once.qpow(term_count);
-            for (i32 t = 0; t < remains; t++) {
-                ans_mat = ans_mat * graph;
-                debug  std::cout << ans_mat << std::endl;
-                for (i32 f = 0; f < fish_count; f++) {
-                    ++routes_cur[f];
-                    if (routes_cur[f] == routes[f].end())  routes_cur[f] = routes[f].begin();
-                    auto fish_pos = *routes_cur[f];
-                    for (i32 prev = 0; prev < node_count; prev++) {
-                        ans_mat[prev][fish_pos] = 0;
-                    }
-                }
-            }
-            auto ans = ans_mat[start][end];
-            return ans;
-        };
-        
-        auto check_with_limit = [&](i32 limit) -> bool {  // 通过给定的血量检查
-            std::vector<std::pair<i32, i32>> edges_selected;
-            ranges::copy(
-                origin_edges
-                    | views::filter([&](Edge const &e) { return std::get<2>(e) <= limit; })
-                    | views::transform([&](Edge const &e) { return std::pair{std::get<0>(e), std::get<1>(e)}; }),
-                std::back_inserter(edges_selected)
-            );
-            return check_with_edges(edges_selected);
-        };
-
-        auto max_k = ranges::max(origin_edges | views::transform(lam(const &e, std::get<2>(e))));
-        auto min_k = ranges::min(origin_edges | views::transform(lam(const &e, std::get<2>(e))));
-        auto ans = lowerBoundValue(min_k, max_k + 1, true, check_with_limit);
-        char const constexpr *impossible = "'IMP0SSBLE!!'";  // 题面是这么说的。
-        if (ans == max_k + 1)  std::cout << impossible << endl;
-        else  std::cout << ans << endl;
+            std::cout << ans << endl;
+        }
     }
 }
 
 int main(int argc, char const *argv[]) {
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    Solution_2703541250956849::solve();
+    Solution_7296640937131565::solve();
     return 0;
 }

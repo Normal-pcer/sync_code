@@ -5,7 +5,6 @@
 #include "./lib_v2.hpp"
 #include "./libs/range.hpp"
 
-
 using namespace lib;
 
 namespace Solution_1275913551310634 {

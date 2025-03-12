@@ -34,7 +34,7 @@ using namespace lib;
  * 否则预处理复杂度为两个 log。
  * 
  * WA 一个点，令人忍俊不禁。
- * 
+ * 没有判无解。
  */
 namespace Solution_9386299235767661 {
     i64 constexpr inf64 = 0x3f3f3f3f3f3f3f3f;  // ! 别忘了改回来
