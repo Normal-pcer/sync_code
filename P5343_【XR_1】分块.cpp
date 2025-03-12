@@ -3,7 +3,9 @@
  */
 #include "./libs/debug_macros.hpp"
 
+
 #include "./lib_v4.hpp"
+
 
 #include "./libs/fixed_int.hpp"
 using namespace lib;
@@ -82,40 +84,47 @@ namespace Solution_4188520239411906 {
         }
     };
     void solve() {
-        i32 N;  std::cin >> N;
-        auto blocks = [&]() -> std::vector<i32> {
+        std::ios::sync_with_stdio(false);
+        std::cin.tie(nullptr), std::cout.tie(nullptr);
+
+        i64 N;  std::cin >> N;
+        // 所有可以使用的长度
+        auto len_collection = [&]() -> std::vector<i32> {
+            auto sort_unique = [&](auto &vec) -> void {
+                ranges::sort(vec);
+                auto erase = ranges::unique(vec);
+                vec.erase(erase.begin(), erase.end());
+            };
             
-            i32 cnt0, cnt1;
-            std::cin >> cnt0;
-            std::vector<i32> blocks0(cnt0);
-            for (auto &x: blocks0)  std::cin >> x;
+            i32 n0;  std::cin >> n0;
+            std::vector<i32> v0(n0);
+            for (auto &x: v0)  std::cin >> x;
 
-            std::cin >> cnt1;
-            std::vector<i32> blocks1(cnt1);
-            for (auto &x: blocks1)  std::cin >> x;
+            i32 n1;  std::cin >> n1;
+            std::vector<i32> v1(n1);
+            for (auto &x: v1)  std::cin >> x;
 
-            ranges::sort(blocks0), ranges::sort(blocks1);
-            blocks0.erase(ranges::unique(blocks0).begin(), blocks0.end());
-            blocks1.erase(ranges::unique(blocks1).begin(), blocks1.end());
-
+            sort_unique(v0), sort_unique(v1);
             std::vector<i32> res;
-            ranges::set_intersection(blocks0, blocks1, std::back_inserter(res));
+            ranges::set_intersection(v0, v1, std::back_inserter(res));
             return res;
         }();
 
-        auto max_x = ranges::max(blocks);
-        Matrix T{max_x + 1, max_x + 1};
-
-        for (auto x: blocks)  T[0][x] = 1;
-        for (i32 i = 1; i < max_x; i++) {
-            T[i + 1][i] = 1;
+        auto max_len = ranges::max(len_collection);
+        Matrix A0{1, max_len + 1};  // A[i][0][j] 表示 F[i - j]，越界为 0
+        A0[0][0] = 1;
+        
+        Matrix T{max_len + 1, max_len + 1};  // 转移矩阵
+        for (auto len: len_collection) {
+            T[len - 1][0] = 1;
+        }
+        for (i32 i = 1; i <= max_len; i++) {
+            T[i - 1][i] = 1;
         }
 
-        Matrix A{1, max_x + 1};
-        A[0][0] = 1;
-        A = A * T.qpow(N);
-        auto ans = A[0][0];
-        std::cout << ans << std::endl;
+        auto AN = A0 * T.qpow(N);
+        auto ans = AN[0][0];
+        std::cout << ans << endl;
     }
 }
 
