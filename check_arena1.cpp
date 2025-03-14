@@ -1,138 +1,267 @@
 /**
- * @link https://www.luogu.com.cn/problem/P6569
+ * @link https://www.luogu.com.cn/problem/P10137
  */
-#include "./libs/debug_macros.hpp"
-
-#include "./lib_v4.hpp"
-
-#include "./libs/fixed_int.hpp"
-using namespace lib;
-
-/**
- * 一个点下一轮的点权由上一轮固定的几个点转移而来，比较像矩阵乘法的形式。
- * 有若干次查询。每次查询做一下矩阵快速幂即可。
- * 具体地，G[i][0][j] 表示第 i 天第 j 个城市的魔法值。
- * 那么会有一个转移矩阵 T，乘若干次即可。
- * 这里矩阵乘法的“乘”还是乘，“加”变为异或。
- * 然而乘法和按位异或之间并不满足分配律。
- * 但是注意到每次乘以 0/1，可以替换为按位与 0/~0。
- * 按位与、按位异或是满足分配律的。
- * 
- * 然而这样的复杂度为 Q * N**3 * log(a)，过不去。
- * 考虑优化。可以使用类似 P6772 美食家 的优化。
- * 预处理出 T**1, T**2, T**4, T**8，每次查询的时候依次累乘到 G0 上。
- * 这样的好处是把矩阵乘法从 N**3 变为了 N**2（因为 G0 的高度为 1）
- * 预处理：N**3 * log(a)
- * 查询：N**2 * log(a) * q
- * 
- * 写挂了。荣获 10 分。
- * 我要提高通过率。
- * 
- * 优化前后进行对拍。当然优化没有写错。
- * 随便写一个暴力对拍，好像还是挺对的。
- * 首先有一个问题是读入需要 u32。
- * RE 了。数据拉满和自己对拍。
- * T**2**i 预处理少了一项。
+ #include <algorithm>
+ #include <bits/ranges_algo.h>
+ #include <cassert>
+ #include <cstdint>
+ #include <cstring>
+ #include <iostream>
+ #include <iterator>
+ #include <numeric>
+ #include <utility>
+ #include <vector>
+ #include <format>
+ bool DEBUG_MODE = false;
+ #define debug if (DEBUG_MODE)
+ template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
+ template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
+ #define never if constexpr(0)
+ const int inf = 0x3f3f3f3f;  const long long infLL = 0x3f3f3f3f3f3f3f3fLL; using ll = long long; using ull = unsigned long long;
+ const char endl = '\n';
+ 
+ #define __lambda_1(expr) [&]() { return expr; }
+ #define __lambda_2(a, expr) [&](auto a) { return expr; }
+ #define __lambda_3(a, b, expr) [&](auto a, auto b) { return expr; }
+ #define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c) { return expr; }
+ #define __lambda_overload(a, b, c, d, e, ...) __lambda_##e
+ #define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+ #define lam lambda
+ using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
+ using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
+ 
+ #define __SingleValueLog(x) #x << "=" << (x)
+ #define __ToOutStream_1(x) << __SingleValueLog(x)
+ #define __ToOutStream_2(x, ...) << __SingleValueLog(x) << ", " __ToOutStream_1(__VA_ARGS__)
+ #define __ToOutStream_3(x, ...) << __SingleValueLog(x) << ", " __ToOutStream_2(__VA_ARGS__)
+ #define __ToOutStream_4(x, ...) << __SingleValueLog(x) << ", " __ToOutStream_3(__VA_ARGS__)
+ #define __ToOutStream_5(x, ...) << __SingleValueLog(x) << ", " __ToOutStream_4(__VA_ARGS__)
+ #define __ToOutStream_6(x, ...) << __SingleValueLog(x) << ", " __ToOutStream_5(__VA_ARGS__)
+ #define __ToOutStream_7(x, ...) << __SingleValueLog(x) << ", " __ToOutStream_6(__VA_ARGS__)
+ #define __ToOutStream_8(x, ...) << __SingleValueLog(x) << ", " __ToOutStream_7(__VA_ARGS__)
+ #define __ToOutStream_9(x, ...) << __SingleValueLog(x) << ", " __ToOutStream_8(__VA_ARGS__)
+ #define __ToOutStream_overload(_1, _2, _3, _4, _5, _6, _7, _8, _9, _0, ...) __ToOutStream_##_0
+ #define __ToOutStream(...) __ToOutStream_overload(__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1)(__VA_ARGS__)
+ #define printValues(...) std::cout << __LINE__ << ": " __ToOutStream(__VA_ARGS__) << std::endl
+ 
+ /*
+ 从 x 值相同的地方开始向右走。
+ (x0, y0) 以及 (x0, y1) 进行第一次转弯时的 x 值一定一致。
+ 快速查询一个方向上的终点可以使用倍增法。
+ 
+ 一定是类似 R -> U -> R -> U 的转弯方式。
+ R[i][j] 表示从 x = i 的点开始向右走，第 2**j 次转弯时所处的 x 坐标。
+ U[i][j] 表示从 y = i 的点开始向上走，第 2**j 次转弯时所处的 y 坐标。
+ 那么我们似乎就可以快速求出从一个点（十字路口）向右第 i 次转弯时的位置了。
+ 
  */
-namespace Solution_7296640937131565 {
-    class Matrix {
-        i32 height, width;
-        std::vector<std::vector<u32>> data;
-    public:
-        Matrix(i32 height, i32 width): height(height), width(width), data(height, std::vector<u32>(width)) {}
-
-        auto operator[] (uz idx) const -> std::vector<u32> const & { return data[idx]; }
-        auto operator[] (uz idx) -> std::vector<u32> & { return data[idx]; }
-
-        auto operator* (Matrix const &other) const -> Matrix {
-            assert(width == other.height);
-            Matrix res{height, other.width};
-
-            for (i32 i = 0; i < height; i++) {
-                for (i32 j = 0; j < other.width; j++) {
-                    for (i32 k = 0; k < width; k++) {
-                        res[i][j] ^= data[i][k] & other.data[k][j];
-                    }
-                }
-            }
-            return res;
-        }
-
-        auto static identity(i32 N) -> Matrix {
-            Matrix res{N, N};
-            for (i32 i = 0; i < N; i++) {
-                res[i][i] = ~(u32)0;
-            }
-            return res;
-        }
-        auto qpow(i64 b) const -> Matrix {
-            assert(b >= 0);
-            assert(height == width);
-
-            auto a = *this, res = identity(height);
-            for (; b != 0; b >>= 1, a = a * a) {
-                if (b & 1)  res = res * a;
-            }
-            return res;
-        }
-        auto friend operator<< (std::ostream &os, Matrix const &mat) -> std::ostream & {
-            for (i32 i = 0; i < mat.height; i++) {
-                if (i != 0)  os << endl;
-                for (i32 j = 0; j < mat.width; j++) {
-                    if (j != 0)  os << " ";
-                    os << std::bitset<4>(mat[i][j]);
-                }
-            }
-            return os;
-        }
-    };
-    void solve() {
-        std::ios::sync_with_stdio(false);
-        std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-        i32 N, M, Q;  std::cin >> N >> M >> Q;
-        std::vector<u32> init(N + 1);
-        for (auto &x: init | views::drop(1))  std::cin >> x;
-
-        std::vector<std::pair<i32, i32>> edges(M);
-        for (auto &[x, y]: edges)  std::cin >> x >> y;
-
-        Matrix T{N + 1, N + 1};  // 转移矩阵
-        // 每一条边的一个点都会影响到另一个点，所以 T 为邻接矩阵
-        for (auto [x, y]: edges) {
-            T[x][y] = T[y][x] = ~(u32)0;
-        }
-
-        Matrix G0{1, N + 1};
-        for (i32 i = 1; i <= N; i++)  G0[0][i] = init[i];
-
-        std::vector<Matrix> pow_T_pow_2_i;
-        pow_T_pow_2_i.push_back(T);
-        for (i32 i = 1; i < 32; i++) {
-            auto const &prev = pow_T_pow_2_i.back();
-            pow_T_pow_2_i.push_back(prev * prev);
-        }
-
-        for (auto q = Q; q --> 0; ) {
-            u32 x;  std::cin >> x;
-            auto Gx = G0;
-            for (i32 i = 0; i < 32; i++) {
-                if (((u32)1 << i) & x)  Gx = Gx * pow_T_pow_2_i[i];
-            }
-            // for (i32 i = 0; i < x; i++) {
-                // std::cout << "G[" << i << "] = \n" << Gx << endl;
-                // Gx = Gx * T;
-            // }
-            // std::cout << "G[" << x << "] = \n" << Gx << endl;
-            auto ans = Gx[0][1];
-
-            std::cout << ans << endl;
-        }
-    }
-}
-
-int main(int argc, char const *argv[]) {
-    DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    Solution_7296640937131565::solve();
-    return 0;
-}
+ namespace Solution_7715973200731060 {
+     namespace ranges = std::ranges;
+ 
+     template <typename T, typename U, typename Func, typename Comp = std::less<>>
+     auto lowerBoundValue(T begin, T end, U x, Func &&f, Comp &&cmp = {}) -> T {
+         while (end - begin >= 1) {
+             auto mid = std::midpoint(begin, end);
+             if (cmp(f(mid), x))  begin = mid + 1;
+             else  end = mid;
+         }
+         return begin;
+     }
+ 
+     void solve() {
+         std::ios::sync_with_stdio(false);
+         std::cin.tie(nullptr), std::cout.tie(nullptr);
+ 
+         i32 N, Q;  std::cin >> N >> Q;
+         struct Road {
+             enum Direction {
+                 Horizontal, Vertical
+             } dir = Horizontal;
+             i32 value = 0;
+         };
+ 
+         std::vector<i64> all_x, all_y;
+         std::vector<Road> roads;
+         for (i32 i = 0; i < N; i++) {
+             char ch;  i32 x;
+             std::cin >> ch >> x;
+             if (ch == 'V')  roads.push_back({Road::Vertical, x}), all_x.push_back(x);
+             else  roads.push_back({Road::Horizontal, x}), all_y.push_back(x);
+         }
+         all_x.push_back(infLL), all_y.push_back(infLL);
+ 
+         auto sort_unique = [](auto &x) {
+             ranges::sort(x);
+             auto tmp = ranges::unique(x);
+             x.erase(tmp.begin(), tmp.end());
+         };
+         sort_unique(all_x);
+         sort_unique(all_y);
+ 
+         auto logN = std::__lg(N) + 1;
+         // 为了访存连续调换 i, j
+         i32 r_cnt = all_x.size() - 1, u_cnt = all_y.size() - 1;
+         std::vector R(logN, std::vector<i64>(r_cnt + 1, r_cnt));
+         std::vector U(logN, std::vector<i64>(u_cnt + 1, u_cnt));
+ 
+         // 首先需要处理出一个点的下一次转弯在哪里
+         // 如果一段的长度为奇数，自然需要进行一次转弯；否则和下一个点一起转弯。
+         for (i32 i = r_cnt - 1; i --> 0; ) {
+             auto dis = all_x[i + 1] - all_x[i];
+             if (dis % 2 == 0) {
+                 R[0][i] = R[0][i + 1];
+             } else {
+                 R[0][i] = i + 1;
+             }
+         }
+         for (i32 i = u_cnt - 1; i --> 0; ) {
+             auto dis = all_y[i + 1] - all_y[i];
+             if (dis % 2 == 0) {
+                 U[0][i] = U[0][i + 1];
+             } else {
+                 U[0][i] = i + 1;
+             }
+         }
+ 
+         for (i32 j = 1; j < logN; j++) {
+             R[j][r_cnt] = r_cnt;
+             for (i32 i = 0; i < r_cnt; i++) {
+                 if (i + (1 << j) >= r_cnt)  break;
+                 R[j][i] = R[j - 1][R[j - 1][i]];
+             }
+         }
+         for (i32 j = 1; j < logN; j++) {
+             U[j][u_cnt] = u_cnt;
+             for (i32 i = 0; i < u_cnt; i++) {
+                 if (i + (1 << j) >= u_cnt)  break;
+                 U[j][i] = U[j - 1][U[j - 1][i]];
+             }
+         }
+ 
+         // for (i32 j = 0; j < logN; j++) {
+         //     for (i32 i = 0; i <= r_cnt; i++) {
+         //         printValues(j, i, R[j][i]);
+         //     }
+         //     for (i32 i = 0; i <= u_cnt; i++) {
+         //         printValues(j, i, U[j][i]);
+         //     }
+         // }
+ 
+         // 从点 (x0, y0) 开始向上走，返回转弯第 cnt 次的点。
+         auto walk_from = [&](i64 x0, i64 y0, i32 cnt) -> std::pair<i64, i64> {
+             auto cnt_r = cnt / 2;
+             auto cnt_u = cnt - cnt / 2;
+ 
+             auto x = x0;
+             for (i32 i = 0; i < logN; i++) {
+                 if (cnt_r & (1 << i))  x = R[i][x];
+             }
+             auto y = y0;
+             for (i32 i = 0; i < logN; i++) {
+                 if (cnt_u & (1 << i))  y = U[i][y];
+             }
+             debug  std::cout << std::format("walk_from {} {} {} -> {} {}", x0, y0, cnt, all_x[x], all_y[y]) << std::endl;
+             return {all_x[x], all_y[y]};
+         };
+ 
+         // 点 (x0, y0) 开始向上走，返回路程恰好为 dis 的点
+         auto walk_from_dis = [&](i64 x0, i64 y0, i64 dis) -> std::pair<i64, i64> {
+             auto cnt_to_dis = [&](i32 cnt) -> i64 {
+                 auto [x1, y1] = walk_from(x0, y0, cnt);
+                 // if (x1 == r_cnt or y1 == u_cnt)  return infLL;
+                 return x1 - all_x[x0] + y1 - all_y[y0];
+             };
+ 
+             auto cnt = lowerBoundValue(0, N / 5 * 6, dis, cnt_to_dis) - 1;
+             auto [x1, y1] = walk_from(x0, y0, cnt);
+             auto dis_pass = cnt_to_dis(cnt);
+             auto dis_remains = dis - dis_pass;
+             if (dis_pass % 2 == 0) {
+                 // 向北继续走
+                 y1 += dis_remains;
+             } else {
+                 x1 += dis_remains;
+             }
+             return {x1, y1};
+         };
+         for (auto q = Q; q --> 0; ) {
+             i64 x, y, val;  std::cin >> x >> y >> val;
+ 
+             auto x1 = x, y1 = y;
+             auto need_turn = false;  // 还需要再转一次
+             // 走到一个交叉口
+             if (ranges::binary_search(all_x, x)) {
+                 // 位于一条街上
+                 auto up_to_iter = ranges::lower_bound(all_y, y);
+                 if (std::next(up_to_iter) == all_y.end()) {
+                     y1 += val;
+                     val = 0;
+                 } else {
+                     auto up_to = *up_to_iter;
+                     auto dis = up_to - y;
+                     if (val <= dis) {
+                         std::cout << x1 << " " << y1 + val << endl;
+                         continue;
+                     }
+                     y1 = up_to;
+                     if (dis % 2 == 1)  need_turn = true;
+                     val -= dis;
+                 }
+             } else if (ranges::binary_search(all_y, y)) {
+                 // 在一条路上
+                 auto right_to_iter = ranges::lower_bound(all_x, x);
+                 if (std::next(right_to_iter) == all_x.end()) {
+                     x1 += val;
+                     val = 0;
+                 } else {
+                     auto right_to = *right_to_iter;
+                     auto dis = right_to - x;
+                     if (val <= dis) {
+                         std::cout << x1 + val << " " << y1 << endl;
+                         continue;
+                     }
+                     x1 = right_to;
+                     if (dis % 2 == 1)  need_turn = true;
+                     val -= dis;
+                 }
+             } else {
+                 assert(false), __builtin_unreachable();
+             }
+ 
+             auto getIndex = [&](i32 x, auto const &in) -> i32 {
+                 auto it = ranges::lower_bound(in, x);
+                 assert(*it == x);
+                 return std::distance(in.begin(), it);
+             };
+ 
+             if (val == 0) {
+                 std::cout << x1 << " " << y1 << endl;
+                 continue;
+             }
+             x1 = getIndex(x1, all_x);
+             y1 = getIndex(y1, all_y);
+ 
+             if (need_turn) {
+                 auto nx = R[0][x1];
+                 if (all_x[nx] - all_x[x1] >= val) {
+                     std::cout << all_x[x1] + val << " " << all_y[y1] << endl;
+                     continue;
+                 }
+                 val -= all_x[nx] - all_x[x1];
+                 x1 = nx;
+             }
+ 
+             auto [ans_x, ans_y] = walk_from_dis(x1, y1, val);
+             std::cout << ans_x << " " << ans_y << endl;
+         }
+ 
+     }
+ }
+ 
+ // 但他们好可爱 qwq
+ int main(int dyy, char const *cyy[]) {
+     DEBUG_MODE = (dyy-1) and not std::strcmp("-d", cyy[1]);
+     Solution_7715973200731060::solve();
+     return 0;
+ }
+ 

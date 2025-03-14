@@ -1,3 +1,4 @@
+#include <random>
 namespace Random {
     std::mt19937 rng{std::random_device{}()};
 
@@ -22,6 +23,7 @@ namespace Random {
     template <typename T, typename U>
     auto randrange(T first, U last) -> decltype(first + last) {
         using ResultType = decltype(first + last);
+        assert(static_cast<ResultType>(first) != static_cast<ResultType>(last));
         if constexpr (std::is_integral_v<ResultType>)  return randint(first, last - 1);
         else if constexpr (std::is_floating_point_v<ResultType>)  return randreal(first, last);
         else  static_assert(false, "first + last must be integral or floating point number.");

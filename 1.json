@@ -1,0 +1,2812 @@
+{
+    "pieces": [
+        {
+            "team": "red",
+            "type": "master",
+            "position": { "x": 4, "y": 0, "_screenX": 1024, "_screenY": 806.8955223880597 },
+            "htmlElement": {},
+            "htmlElementId": "red-master1",
+            "health": 7500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 7500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1700, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    { "base": 500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 12, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>master",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>masterAttack",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "guard",
+            "position": {
+                "x": 3,
+                "y": 0,
+                "_screenX": 941.5252293577981,
+                "_screenY": 806.8955223880597
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-guard1",
+            "health": 2500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 1
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>guard", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>guard", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "guard",
+            "position": {
+                "x": 5,
+                "y": 0,
+                "_screenX": 1106.4747706422017,
+                "_screenY": 806.8955223880597
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-guard2",
+            "health": 2500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 2
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>guard", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>guard", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "elephant",
+            "position": {
+                "x": 2,
+                "y": 0,
+                "_screenX": 859.0504587155963,
+                "_screenY": 806.8955223880597
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-elephant1",
+            "health": 3500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 3500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2000, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 3
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 18, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 2,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>elephant",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>elephant",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "elephant",
+            "position": {
+                "x": 6,
+                "y": 0,
+                "_screenX": 1188.9495412844037,
+                "_screenY": 806.8955223880597
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-elephant2",
+            "health": 3500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 3500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2000, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 4
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 18, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 2,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>elephant",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>elephant",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "horse",
+            "position": {
+                "x": 1,
+                "y": 0,
+                "_screenX": 776.5756880733945,
+                "_screenY": 806.8955223880597
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-horse1",
+            "health": 3000,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 3000, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2750, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 200,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 5
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 15, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 2,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>horse", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>horse", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "horse",
+            "position": {
+                "x": 7,
+                "y": 0,
+                "_screenX": 1271.4243119266055,
+                "_screenY": 806.8955223880597
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-horse2",
+            "health": 3000,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 3000, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2750, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 200,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 6
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 15, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 2,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>horse", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>horse", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "chariot",
+            "position": {
+                "x": 0,
+                "y": 0,
+                "_screenX": 694.1009174311927,
+                "_screenY": 806.8955223880597
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-chariot1",
+            "health": 4500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 4500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2200, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 200,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 7
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 20, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 3,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>chariot",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>chariot",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "chariot",
+            "position": {
+                "x": 8,
+                "y": 0,
+                "_screenX": 1353.8990825688074,
+                "_screenY": 806.8955223880597
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-chariot2",
+            "health": 4500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 4500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2200, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 200,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 8
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 20, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 3,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>chariot",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>chariot",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "gun",
+            "position": { "x": 4, "y": 2, "_screenX": 1024, "_screenY": 642.0530679933665 },
+            "htmlElement": {},
+            "htmlElementId": "red-gun1",
+            "health": 4750,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 4750, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    { "base": 150, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 20, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 4,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>gunMove",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>gunAttack",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "gun",
+            "position": {
+                "x": 7,
+                "y": 2,
+                "_screenX": 1271.4243119266055,
+                "_screenY": 642.0530679933665
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-gun2",
+            "health": 4750,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 4750, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 150,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 10
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 20, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 4,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>gunMove",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>gunAttack",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "pawn",
+            "position": {
+                "x": 0,
+                "y": 3,
+                "_screenX": 694.1009174311927,
+                "_screenY": 559.6318407960199
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-pawn1",
+            "health": 2250,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 11
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "pawn",
+            "position": {
+                "x": 2,
+                "y": 4,
+                "_screenX": 859.0504587155963,
+                "_screenY": 477.2106135986733
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-pawn2",
+            "health": 2249.4280317502876,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 12
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "pawn",
+            "position": { "x": -10, "y": -10, "_screenX": null, "_screenY": null },
+            "htmlElement": {},
+            "htmlElementId": "red-pawn3",
+            "health": -994.7673585263503,
+            "dead": true,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    { "base": 100, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "pawn",
+            "position": {
+                "x": 6,
+                "y": 3,
+                "_screenX": 1188.9495412844037,
+                "_screenY": 559.6318407960199
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-pawn4",
+            "health": 2250,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 14
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "red",
+            "type": "pawn",
+            "position": {
+                "x": 8,
+                "y": 3,
+                "_screenX": 1353.8990825688074,
+                "_screenY": 559.6318407960199
+            },
+            "htmlElement": {},
+            "htmlElementId": "red-pawn5",
+            "health": 2250,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 15
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "master",
+            "position": { "x": 4, "y": 9, "_screenX": 1024, "_screenY": 65.1044776119403 },
+            "htmlElement": {},
+            "htmlElementId": "black-master1",
+            "health": 5932.018666968427,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 7500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1700, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    { "base": 500, "modifiers": [], "description": "Base" },
+                    {
+                        "base": 1,
+                        "modifiers": [
+                            {
+                                "amount": 2.4037911288895,
+                                "expire": 12,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 32
+                            }
+                        ],
+                        "description": "Improve"
+                    }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 12, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>master",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>masterAttack",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": [
+                {
+                    "name": "御守三晖",
+                    "id": "masterSelfDefense",
+                    "description": "防御力提升240%",
+                    "relatedModifierIds": [32],
+                    "_expire": 12,
+                    "enabled": true,
+                    "continuedAction": null,
+                    "negative": false,
+                    "level": 2,
+                    "showLevel": false
+                }
+            ]
+        },
+        {
+            "team": "black",
+            "type": "guard",
+            "position": {
+                "x": 3,
+                "y": 9,
+                "_screenX": 941.5252293577981,
+                "_screenY": 65.1044776119403
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-guard1",
+            "health": 2500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 17
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>guard", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>guard", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "guard",
+            "position": {
+                "x": 5,
+                "y": 9,
+                "_screenX": 1106.4747706422017,
+                "_screenY": 65.1044776119403
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-guard2",
+            "health": 2500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 18
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>guard", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>guard", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "elephant",
+            "position": {
+                "x": 2,
+                "y": 9,
+                "_screenX": 859.0504587155963,
+                "_screenY": 65.1044776119403
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-elephant1",
+            "health": 3500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 3500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2000, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 19
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 18, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 2,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>elephant",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>elephant",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "elephant",
+            "position": {
+                "x": 6,
+                "y": 9,
+                "_screenX": 1188.9495412844037,
+                "_screenY": 65.1044776119403
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-elephant2",
+            "health": 3500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 3500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2000, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 20
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 18, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 2,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>elephant",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>elephant",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "horse",
+            "position": {
+                "x": 1,
+                "y": 9,
+                "_screenX": 776.5756880733945,
+                "_screenY": 65.1044776119403
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-horse1",
+            "health": 3000,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 3000, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2750, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 200,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 21
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 15, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 2,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>horse", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>horse", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "horse",
+            "position": {
+                "x": 7,
+                "y": 9,
+                "_screenX": 1271.4243119266055,
+                "_screenY": 65.1044776119403
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-horse2",
+            "health": 3000,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 3000, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2750, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 200,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 22
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 15, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 2,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>horse", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>horse", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "chariot",
+            "position": {
+                "x": 0,
+                "y": 9,
+                "_screenX": 694.1009174311927,
+                "_screenY": 65.1044776119403
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-chariot1",
+            "health": 4500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 4500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2200, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 200,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 23
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 20, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 3,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>chariot",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>chariot",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "chariot",
+            "position": {
+                "x": 8,
+                "y": 9,
+                "_screenX": 1353.8990825688074,
+                "_screenY": 65.1044776119403
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-chariot2",
+            "health": 4500,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 4500, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2200, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 200,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 24
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 20, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 3,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>chariot",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>chariot",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "gun",
+            "position": {
+                "x": 1,
+                "y": 7,
+                "_screenX": 776.5756880733945,
+                "_screenY": 229.94693200663357
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-gun1",
+            "health": 4750,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 4750, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 150,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 25
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 20, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 4,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>gunMove",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>gunAttack",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "gun",
+            "position": {
+                "x": 7,
+                "y": 7,
+                "_screenX": 1271.4243119266055,
+                "_screenY": 229.94693200663357
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-gun2",
+            "health": 4750,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 4750, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 150,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 26
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 20, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 4,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>gunMove",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<REGISTERED FUNCTION>gunAttack",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "pawn",
+            "position": {
+                "x": 0,
+                "y": 6,
+                "_screenX": 694.1009174311927,
+                "_screenY": 312.3681592039801
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-pawn1",
+            "health": 2250,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 27
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "pawn",
+            "position": {
+                "x": 2,
+                "y": 5,
+                "_screenX": 859.0504587155963,
+                "_screenY": 394.78938640132674
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-pawn2",
+            "health": 2249.4201508758238,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 28
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "pawn",
+            "position": { "x": 4, "y": 4, "_screenX": 1024, "_screenY": 477.2106135986733 },
+            "htmlElement": {},
+            "htmlElementId": "black-pawn3",
+            "health": 1103.0275830657777,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    { "base": 100, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "pawn",
+            "position": {
+                "x": 6,
+                "y": 6,
+                "_screenX": 1188.9495412844037,
+                "_screenY": 312.3681592039801
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-pawn4",
+            "health": 2250,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 30
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        },
+        {
+            "team": "black",
+            "type": "pawn",
+            "position": {
+                "x": 8,
+                "y": 6,
+                "_screenX": 1353.8990825688074,
+                "_screenY": 312.3681592039801
+            },
+            "htmlElement": {},
+            "htmlElementId": "black-pawn5",
+            "health": 2250,
+            "dead": false,
+            "maxHealth": {
+                "multiplicationAreas": [
+                    { "base": 2250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "attackDamage": {
+                "multiplicationAreas": [
+                    { "base": 1250, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "defense": {
+                "multiplicationAreas": [
+                    {
+                        "base": 100,
+                        "modifiers": [
+                            {
+                                "amount": 11000,
+                                "expire": 5,
+                                "operation": "<STRINGIFIED FUNCTION>(arg1, arg2) => arg1 + arg2",
+                                "enabled": true,
+                                "clearOnExpire": true,
+                                "clearOnDisable": true,
+                                "id": 31
+                            }
+                        ],
+                        "description": "Base"
+                    },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalRate": {
+                "multiplicationAreas": [
+                    { "base": 0.1, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "criticalDamage": {
+                "multiplicationAreas": [
+                    { "base": 0.75, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "weight": {
+                "multiplicationAreas": [
+                    { "base": 8, "modifiers": [], "description": "Base" },
+                    { "base": 1, "modifiers": [], "description": "Improve" }
+                ]
+            },
+            "damageType": 1,
+            "movingDestinationsCallbackProvider": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackingTargetsCallback": {
+                "multiplicationAreas": [
+                    { "base": "<REGISTERED FUNCTION>pawn", "modifiers": [], "description": "Base" }
+                ]
+            },
+            "attackActionCallbackProvider": {
+                "multiplicationAreas": [
+                    {
+                        "base": "<STRINGIFIED FUNCTION>(piece, target) => {\n    if (target.team === piece.team)\n        return false; // 不能攻击友军\n    let damageObject = piece.SimulateAttack(target);\n    damageObject.apply();\n    return true;\n}",
+                        "modifiers": [],
+                        "description": "Base"
+                    }
+                ]
+            },
+            "clickListener": "<STRINGIFIED FUNCTION>(event) => {\n            if (onPieceClick(this))\n                event.stopPropagation();\n        }",
+            "statusEffects": []
+        }
+    ],
+    "players": {
+        "red": { "actionCards": [], "team": "red" },
+        "black": { "actionCards": [], "team": "black" }
+    },
+    "round": 10,
+    "triggers": [
+        {
+            "action": "<STRINGIFIED FUNCTION>(damage) => {\n        // 如果「将」被攻击\n        if (damage.target?.type === PieceType.Master) {\n            /**\n             * x从0到3141.6，防御力增量从0到300%；x足够大时，防御力增量固定为300%。\n             * 前半段曲线为余弦函数，后半段曲线为直线。\n             */\n            const defenseImproveCalculation = (x) => {\n                return x >= 1000 * Math.PI ? 3 : -1.5 * Math.cos(x / 1000) + 1.5;\n            };\n            // x从0到3000，防御力增量次数从0到3；x足够大时，防御力增量次数固定为3。\n            const defenseLastCalculation = (x) => {\n                return x >= 3000 ? 3 : Math.ceil(x / 1000);\n            };\n            let defense = defenseImproveCalculation(damage.amount);\n            let last = defenseLastCalculation(damage.amount);\n            console.log(\"defense: \", defense);\n            if (last === 0)\n                return; // 伤害过低（<0.5）无需触发御守三晖\n            let effect = new StatusEffect(\"御守三晖\", \"masterSelfDefense\", `防御力提升${Math.round(defense * 100)}%`, [\n                damage.target.defense\n                    .area(1)\n                    .modify(new AttributeModifier(defense, last)),\n            ], Math.round(defense)).hideLevel();\n            damage.target.pushEffects(effect);\n            console.log(damage.target);\n            console.log(\"对其应用了御守三晖\");\n        }\n    }",
+            "event": "DamageTrigger"
+        }
+    ],
+    "schedules": []
+}
