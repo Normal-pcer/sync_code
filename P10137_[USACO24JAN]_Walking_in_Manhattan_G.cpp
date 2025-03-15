@@ -31,7 +31,6 @@ const char endl = '\n';
 
 #include "./libs/debug_log.hpp"
 
-
 /*
 从 x 值相同的地方开始向右走。
 (x0, y0) 以及 (x0, y1) 进行第一次转弯时的 x 值一定一致。
