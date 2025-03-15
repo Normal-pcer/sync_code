@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Luogu Alias And Customize Tags
 // @namespace    http://tampermonkey.net/
-// @version      2025-01-23
+// @version      2025-03-15
 // @description  try to take over the world!
 // @author       normalpcer
 // @match        https://www.luogu.com.cn/*
@@ -331,6 +331,12 @@ class UserTag {
         for (let link of links) {
             if (!(link instanceof HTMLElement)) {
                 console.log("UserTag::apply(): link is not HTMLElement.");
+                continue;
+            }
+            // 防止意外匹配
+            let url = link instanceof HTMLAnchorElement ? link.href : window.location.href;
+            if (parseInt(url.replace(/.*?(\d+).*/g, "$1")) !== this.id.uid) {
+                console.log(url.replace(/.*?(\d+).*/g, "$1"), parseInt(url.replace(/.*?(\d+).*/g, "$1")));
                 continue;
             }
             // 已经放置过标签

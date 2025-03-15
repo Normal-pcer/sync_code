@@ -18,7 +18,7 @@ inline int read()
     return x*f;
 }
 }
-using IO::read;
+using IO::read; 
 
 i64 constexpr inf64 = 0x3f3f3f3f3f3f3f3fLL;
 

@@ -85,8 +85,8 @@ namespace Solution {
                 bit_g.addAt(cnt - 1, cnt - 1);
                 cnt--;
             } else {
-                auto ans = bit_g.sumPrefix(N) - bit_g.sumPrefix(x);
-                ans -= x * (bit.sumPrefix(N) - bit.sumPrefix(x));
+                auto ans = bit_g.sumPrefix(N + Q + 5) - bit_g.sumPrefix(x);
+                ans -= x * (bit.sumPrefix(N + Q + 5) - bit.sumPrefix(x));
                 std::cout << ans << endl;
             }
         }
