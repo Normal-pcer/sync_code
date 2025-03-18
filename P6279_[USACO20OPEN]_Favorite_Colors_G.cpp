@@ -3,9 +3,7 @@
  */
 #include "./libs/debug_macros.hpp"
 
-
 #include "./lib_v4.hpp"
-
 
 #include "./libs/fixed_int.hpp"
 
