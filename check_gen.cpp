@@ -9,12 +9,16 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
+        i32 maxT = 1e5;
+        auto T = maxT;
+
+        out << T << endl;
+        for (auto t = T; t --> 0; )
         while (true) {
-            i32 constexpr maxN = 3, maxV = 5;
-            auto N = maxN;
-            out << N << endl;
-            for (auto _: range(N))  out << randint(1, maxV) << " ";
-            out << endl;
+            i64 constexpr maxN = 8, maxV = 30;
+
+            auto N = maxN;  out << N << endl;
+            for (auto _: range(N))  out << randint(1, maxV) << endl;
             break;
         }
     }

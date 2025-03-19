@@ -101,7 +101,7 @@ namespace Solution_5063138640260486 {
         ranges::sort(a);
 
         auto can_allocate = [&](i32 m) -> bool {
-            auto next_delta = m, next_time = 0;
+            i64 next_delta = m, next_time = 0;
             auto it = a.begin();
             i32 friend_count = 0;
             for (auto _ = m; _ --> 0; ) {
@@ -113,7 +113,7 @@ namespace Solution_5063138640260486 {
             return it == a.end();
         };
 
-        auto x = lowerBoundValue(1, N + 1, true, can_allocate);
+        auto x = lowerBoundValue(0, N + 1, true, can_allocate);
         auto ans = static_cast<i64>(x) * (x + 1) / 2;
         ans = std::min(ans, a[N - 1]);
         std::cout << ans << endl;
@@ -127,7 +127,7 @@ int main(int argc, char const *argv[]) {
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
     i32 T;  std::cin >> T;
     while (T --> 0) {
-        Solution_5063138640260486::solve_force();
+        Solution_5063138640260486::solve();
     }
     return 0;
 }

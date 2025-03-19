@@ -233,7 +233,14 @@ auto replace_string_generate(std::string const &base, std::string const &match, 
     }
     return res;
 }
-
+auto hashString(std::string const &s) -> uz {
+    uz res = 0;
+    uz constexpr base = 131;
+    for (auto ch: s) {
+        res = res * base + ch;
+    }
+    return res;
+}
 auto get_file_content(std::string const &filename) -> std::string {
     std::fstream fin(std::filesystem::path(stringToU8(filename)), std::ios::in);
     std::string content, line;
@@ -605,7 +612,7 @@ int main(int argc, char const *argv[]) {
                 }
                 auto content = get_file_content(original_filename);
                 auto hashName = [&]() -> std::string {
-                    u64 hash = std::hash<std::string>{}(original_filename);
+                    u64 hash = hashString(original_filename);
                     hash = hash % 9000'0000'0000'0000LL + 1000'0000'0000'0000LL;
                     return std::to_string(hash);
                 }();
@@ -635,8 +642,8 @@ int main(int argc, char const *argv[]) {
                     if (line.starts_with("#include")) {
                         // 查找两个引号
                         auto it1 = ranges::find(line.begin(), line.end(), '\"');
-                        auto it2 = ranges::find(std::next(it1), line.end(), '\"');
-                        if (it1 != line.end() and it2 != line.end()) {  // 这之间的范围是文件名
+                        auto it2 = it1 == line.end()? line.end(): ranges::find(std::next(it1), line.end(), '\"');
+                        if (it2 != line.end()) {  // 这之间的范围是文件名
                             std::string filename;
                             ranges::copy(std::next(it1), it2, std::back_inserter(filename));
 
@@ -668,7 +675,7 @@ int main(int argc, char const *argv[]) {
             }
         }
         // 检查能不能省略编译
-        auto hashed_compile_args = std::hash<std::string>{}(compile_args);
+        auto hashed_compile_args = hashString(compile_args);
         auto ellipsis = [&]() -> bool {
             if (config.hasKey("lastCompileArgs")) {
                 if (config.getItem<uz>("lastCompileArgs") == hashed_compile_args) {
@@ -679,7 +686,7 @@ int main(int argc, char const *argv[]) {
                             auto record_time = prev_time.getItem<Time>(path);
                             auto real_time = getFileLastModifyTime(path);
                     
-                            return record_time - real_time < -eps;
+                            return record_time - real_time > eps;
                         } catch (Configure::KeyError &) {
                             return true;
                         }
@@ -705,7 +712,7 @@ int main(int argc, char const *argv[]) {
             }
 
             prev_time.setItem(filename, std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-            config.setItem("lastCompileArgs", std::hash<std::string>{}(compile_args));
+            config.setItem("lastCompileArgs", hashString(compile_args));
             std::cout << "\r";
         }
         

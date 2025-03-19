@@ -1,7 +1,28 @@
 /**
  * @link https://www.luogu.com.cn/problem/P10194
  */
-#include "./lib_v5.hpp"
+#include <bits/stdc++.h>
+bool DEBUG_MODE = false;
+#define debug if (DEBUG_MODE)
+#define never if constexpr(0)
+template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
+template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
+using ll = long long; using ull = unsigned long long;
+int constexpr inf = 0x3f3f3f3f;  long long constexpr infLL = 0x3f3f3f3f3f3f3f3fLL;  char constexpr endl = '\n';
+
+#define __lambda_1(expr) [&]() { return expr; }
+#define __lambda_2(a, expr) [&](auto a) { return expr; }
+#define __lambda_3(a, b, expr) [&](auto a, auto b) { return expr; }
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c) { return expr; }
+#define __lambda_overload(a, b, c, d, e, ...) __lambda_##e
+#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+#define lam lambda
+namespace lib {
+#if __cplusplus > 201703LL
+    namespace ranges = std::ranges;
+    namespace views = std::views;
+#endif
+}
 
 #include "./libs/fixed_int.hpp"
 using namespace lib;
@@ -110,9 +131,6 @@ namespace Solution_9569068163890147 {
             // 单调栈，存储 i 使得 limit[i] 单调递增（不严格）
             std::deque<i32> st;
             for (i32 i = 0; i < N + N; i++) {
-                auto prev_pop_item = i;  // 上一个被弹出的元素
-                // 从前面删除过期的元素
-                // while (not st.empty() and i - st.front() >= N)  st.pop_front();
                 debug  std::cout << "i = " << i << std::endl;
                 debug {
                     std::cout << "st:";
@@ -121,13 +139,16 @@ namespace Solution_9569068163890147 {
                 }
                 // 维护单调栈
                 while (not st.empty() and a[st.back()] > a[i]) {
-                    auto delta = a[st.back()] - a[i];  // 区间减少的幅度
-                    auto seg_before_front = i - prev_pop_item;
-                    auto seg_back = i - st.back();
-                    if (st.back() < N and i - st.back() < N) {  // 去重
-                        ada.addRange(seg_before_front + 1, seg_back + 1, -delta);
+                    auto cur = st.back();  st.pop_back();
+                    auto back = st.empty()? -1: st.back();  // 左端点取 (back, cur] 的前缀最小值为 a[cur]
+                    back = std::max(back, i - N);
+                    auto delta = a[cur] - a[i];  // 区间减少的幅度
+                    auto seg_begin = i - std::min(cur, N - 1);
+                    auto seg_end = i - back;
+                    debug  std::cout << "back = " << back << std::endl;
+                    if (back + 1 < N) {  // 去重
+                        ada.addRange(seg_begin, seg_end, -delta);
                     }
-                    prev_pop_item = st.back(), st.pop_back();
                 }
                 st.push_back(i);
             }

@@ -1,10 +1,9 @@
 #include <bits/stdc++.h>
 bool DEBUG_MODE = false;
 #define debug if (DEBUG_MODE)
-#define never if constexpr(0)
+#define never if constexpr (false)
 template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
 template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
-using ll = long long; using ull = unsigned long long;
 int constexpr inf = 0x3f3f3f3f;  long long constexpr infLL = 0x3f3f3f3f3f3f3f3fLL;  char constexpr endl = '\n';
 
 #define __lambda_1(expr) [&]() { return expr; }
