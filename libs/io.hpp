@@ -1,4 +1,4 @@
-// 是否支持 __int128
+// 是否支持 int128_t
 #define IO_ENABLE_INT128
 #ifdef __linux__
 #include <sys/stat.h>
@@ -8,6 +8,16 @@
 #if __cplusplus < 202002L
 #define requires(...)
 #endif
+#ifdef IO_ENABLE_INT128
+#ifdef __GNUC__
+#define GCC_EXTENSION __extension__
+#else  // not def __GCC__
+#define GCC_EXTENSION
+#endif  // def __GCC__
+GCC_EXTENSION using int128_t = __int128;
+GCC_EXTENSION using uint128_t = unsigned __int128;
+GCC_EXTENSION using float128_t = __float128;
+#endif  // def IO_ENABLE_INT128
 namespace lib {
     using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
     using u16 = uint16_t; using u32 = uint32_t; using u64 = uint64_t; using uz = size_t;
@@ -15,15 +25,15 @@ namespace lib {
         const char *what() const throw() {
             return "EOF when reading a char";
         }
-    };
+    }; 
     template <typename T>  struct is_integral_or_int128 { constexpr static bool value = std::is_integral<T>::value; };
     template <typename T>  struct is_floating_point_or_float128 { constexpr static bool value = std::is_floating_point<T>::value; };
-    template <typename T>  struct make_unsigned { using type = std::make_unsigned_t<T> };
+    template <typename T>  struct make_unsigned { using type = std::make_unsigned_t<T>; };
 #ifdef IO_ENABLE_INT128
-    template <>  struct is_integral_or_int128<__int128> { constexpr static bool value = true; };
-    template <>  struct is_integral_or_int128<unsigned __int128> { constexpr static bool value = true; };
-    template <>  struct is_floating_point_or_float128<__float128> { constexpr static bool value = true; };
-    template <>  struct make_unsigned<__int128> { using type = unsigned __int128; };
+    template <>  struct is_integral_or_int128<int128_t> { constexpr static bool value = true; };
+    template <>  struct is_integral_or_int128<uint128_t> { constexpr static bool value = true; };
+    template <>  struct is_floating_point_or_float128<float128_t> { constexpr static bool value = true; };
+    template <>  struct make_unsigned<int128_t> { using type = uint128_t; };
 #endif  // def IO_ENABLE_INT128
     template <typename T> struct is_number {
         constexpr static bool value = is_integral_or_int128<T>::value || is_floating_point_or_float128<T>::value;

@@ -1,133 +1,223 @@
 /**
- * @link https://www.luogu.com.cn/problem/P10139
+ * @link https://www.luogu.com.cn/problem/P7297
  */
 #include "./lib_v5.hpp"
 #include "./libs/fixed_int.hpp"
 using namespace lib;
 
 /**
- * 假设自己留下了 m 个数。
- * 第一次向里面插入元素的时机是 m，然后是 m + (m - 1), m + (m - 1) + (m - 2)...
- * 所有小于 m 的数都可以留给助手。
+ * 考虑将所有相同品种的奶牛放在一条链上，例如：
+ * c = 1:  1, 2, 3, 4, 5
+ *        a1
+ * c = 2:  1, 2, 3, 4, 5
+ *              a3
+ * c = 3:  1, 2, 3, 4, 5
+ *                 a4
+ * c = 4:  1, 2, 3, 4, 5
+ *           a2       a5
  * 
- * 2 5 100 1 4 5
- * 先从小到大排序：1 2 4 5 5 100
- * 如果把 1 2 4 都留给助手，此时 m = 3，剩下最小的是 5，所以 5 在第 3 秒就已经被插入了，不行；
- * 1 2 都留给助手，此时 m = 4，5 会在第 4 秒被插入。
- * 不对，不一定非要把小的分配给助手。
+ * 一条链的相邻两个点之间会有双向连边，边权为 1。
+ * 不同链之间还可以有边权为 0 的连边。
+ * 从颜色 4 连接到 2，便可以：
  * 
- * 我们先固定一个 m，比如指定 m = 3。
- * 那么 Bessie 放入元素的时间就是 3, 5, 6 这三个时刻。
- * 第 6 秒由 Bessie 放入一个 100。
- * 第 5 秒可以由助手放入一个 5，或许就让助手放？
- * 第 5 秒还可以再由 Bessie 放入一个 5。
- * 第 4 秒可以让助手放一个 4。
- * 第 3 秒可以让 Bessie 放一个 2。
- * 第 1 秒让助手放一个 1。
+ *           a2       a5
+ * c = 4:  1, 2, 3, 4, 5
+ *         |  |  |  |  |
+ * c = 2:  1, 2, 3, 4, 5
+ *              a3
  * 
- * 似乎这样从大到小遍历一次，就可以让助手放尽可能多的数了。
- * 让助手拿到的数尽可能多，同时不能让助手拖 Bessie 的后腿。
- * 助手不能比 Bessie 晚结束多于 m 秒。
- * 这种限制下，再让助手多拿数大概就是最优了。
- * 
- * 可以二分判断 Bessie 最少持有多少个数。
- * 
- * 如果严格限制助手不能比 Bessie 早结束可以吗？
- * 还是比较奇怪。再想想。
- * 
- * 再试试从小到大思考。还是固定 Bessie 拿 m = 3 个数。
- * 1 2 4 5 5 100
- * Bessie 放第一个数是第 3 秒。1 和 2 一定可以安全地放置。Bessie 放第一个大于等于 3 的数即 4。
- * 接下来是 5 秒。Bessie 放一个 5。
- * 接下来是 6 秒。助手可以放一个 5，Bessie 放一个 6。
- * 
- * 
- * 感觉还是这样合理一些。
- * 突然发现似乎最后得到的答案和 a[n] 取较小值即可。
- * 
+ * 这样有一个问题是自己不一定能连向自己。可以把每个颜色的链拆分成出和入两种。
+ * 似乎只有目标颜色和奶牛颜色相同的时候才能连中间这个边，不然会乱转移。
  */
-namespace Solution_5063138640260486 {
-    void solve_force() {
-        i32 N;  std::cin >> N;
-        std::vector<i64> a(N);
-        for (auto &x: a)  std::cin >> x;
+namespace Solution_4625777215395361 {
+    auto solve_force() -> void {
+        i32 N, K;  std::cin >> N >> K;
+        std::vector<i32> a(N);
+        for (auto &x: a)  std::cin >> x, x--;  // 颜色使用 0-index
 
-        using Status = u32;
-        auto stat_cnt = (Status)1 << N;
-
-        i64 ans = infLL;
-        for (Status i = 0; i < stat_cnt; i++) {
-            std::deque<i64> self, other;
-
-            for (i32 j = 0; j < N; j++) {
-                if (i & ((Status)1 << j))  self.push_back(a[j]);
-                else  other.push_back(a[j]);
+        std::vector mat(K, std::vector<char>(K));
+        for (auto &line: mat) {
+            for (auto &x: line) {
+                char tmp;  std::cin >> tmp;
+                x = (tmp == '1');
             }
-
-            ranges::sort(self), ranges::sort(other);
-            std::vector<i64> res;
-
-            i64 t = 0;
-            while (not self.empty()) {
-                t += self.size();
-                auto x = self.front();  self.pop_front();
-                while (not other.empty() and other.front() < t)  res.push_back(other.front()), other.pop_front();
-                res.push_back(x);
-            }
-            if (not other.empty())  t = other.back();
-            ranges::copy(other, std::back_inserter(res));
-
-            if (ranges::is_sorted(res))  chkMin(ans, t);
         }
+        
+        struct GraphNode {
+            i32 p = 0, dis = 0;
+        };
+        std::vector<std::vector<GraphNode>> graph(N);
+        for (i32 i = 0; i != N; i++) {
+            for (i32 j = 0; j != N; j++) {
+                if (i == j)  continue;
+                if (mat[a[i]][a[j]]) {
+                    graph[i].push_back({j, std::abs(i - j)});
+                }
+            }
+        }
+
+        auto ans = [&]() -> i32 {
+            struct Node {
+                i32 p = 0, val = 0;
+
+                // 反向三路比较
+                auto operator<=> (Node const &other) const -> std::weak_ordering {
+                    return other.val <=> val;
+                }
+                auto operator== (Node const &other) const -> bool = default;
+            };
+
+            std::vector<char> vis(N);
+            std::priority_queue<Node> q;
+            q.push({0, 0});
+            while (not q.empty()) {
+                auto x = q.top(); q.pop();
+                if (x.p == N - 1) return x.val;
+                if (vis[x.p]) continue;
+                vis[x.p] = true;
+                for (auto next: graph[x.p]) {
+                    if (not vis[next.p]) {
+                        q.push({next.p, x.val + next.dis});
+                    }
+                }
+            }
+            return -1;
+        }();
 
         std::cout << ans << endl;
     }
-    template <typename T, typename U, typename Func, typename Comp = std::less<>>
-    auto lowerBoundValue(T begin, T end, U x, Func &&f, Comp &&cmp = {}) -> T {
-        while (end - begin >= 1) {
-            auto mid = std::midpoint(begin, end);
-            if (cmp(f(mid), x)) {
-                begin = mid + 1;
-            } else {
-                end = mid;
+    void solve() {
+        std::ios::sync_with_stdio(false);
+        std::cin.tie(nullptr), std::cout.tie(nullptr);
+
+        i32 N, K;  std::cin >> N >> K;
+        std::vector<i32> a(N);
+        for (auto &x: a)  std::cin >> x, x--;  // 颜色使用 0-index
+
+        std::vector mat(K, std::vector<char>(K));
+        i32 mat_popcount = 0;
+        for (auto &line: mat) {
+            for (auto &x: line) {
+                char tmp;  std::cin >> tmp;
+                x = (tmp == '1');
+                mat_popcount += (tmp == '1');
             }
         }
-        return begin;
-    }
-    void solve() {
-        i32 N;  std::cin >> N;
-        std::vector<i64> a(N);
-        for (auto &x: a)  std::cin >> x;
-        ranges::sort(a);
 
-        auto can_allocate = [&](i32 m) -> bool {
-            auto next_delta = m, next_time = 0;
-            auto it = a.begin();
-            i32 friend_count = 0;
-            for (auto _ = m; _ --> 0; ) {
-                next_time += next_delta, next_delta--;
-                while (it != a.end() and *it < next_time)  it++, friend_count++;
-                if (it == a.end())  return true;
-                it++;
+        // 定义节点在图上的编号
+        // 为原始存在的点定义点编号
+        auto get_index_for_origin = lam(x, x);
+
+        // 为链上的点定义点编号
+        // 链编号：k * 2 为出链，k * 2 + 1 为入链
+        auto get_out_chain = lam(x, x * 2);
+        auto get_in_chain = lam(x, x * 2 + 1);
+        auto get_index_for_chain = lam(chain_index, point_index, (chain_index + 1) * N + point_index);
+
+        std::vector<std::tuple<i32, i32, bool>> edges;  // (p0, p1, 边权)
+        [&]() {
+            // 边比较多。让 vector 预留一定的空间。
+            // 预估的边数
+            auto edge_count_similar = (4 * K * N) + (mat_popcount * 2 * N) + (K * N) + (2 * N);
+            edges.reserve(edge_count_similar);
+
+            // 每条链上相邻点连边
+            for (i32 c = 0; c < K + K; c++) {
+                for (i32 i = 0; i < N - 1; i++) {
+                    auto p0 = get_index_for_chain(c, i);
+                    auto p1 = get_index_for_chain(c, i + 1);
+                    edges.push_back({p0, p1, true});
+                    edges.push_back({p1, p0, true});
+                }
             }
-            return it == a.end();
-        };
 
-        auto x = lowerBoundValue(1, N + 1, true, can_allocate);
-        auto ans = static_cast<i64>(x) * (x + 1) / 2;
-        ans = std::min(ans, a[N - 1]);
+            // 互相可达的链，对应点连满双向边
+            for (i32 i = 0; i < K; i++) {
+                for (i32 j = 0; j < K; j++) {
+                    if (not mat[i][j]) continue;
+                    for (i32 p = 0; p < N; p++) {
+                        auto p0 = get_index_for_chain(get_out_chain(i), p);
+                        auto p1 = get_index_for_chain(get_in_chain(j), p);
+                        if (a[p] == j) edges.push_back({p0, p1, false});
+                        if (a[p] == i) edges.push_back({p1, p0, false});
+                    }
+                }
+            }
+
+            // 一入一出一定能连满单向边
+            never for (i32 i = 0; i < K; i++) {
+                for (i32 p = 0; p < N; p++) {
+                    auto p0 = get_index_for_chain(get_in_chain(i), p);
+                    auto p1 = get_index_for_chain(get_out_chain(i), p);
+                    edges.push_back({p0, p1, false});
+                }
+            }
+
+            // 每个点连到自己所在的链上
+            for (i32 i = 0; i < N; i++) {
+                auto in_c = get_in_chain(a[i]);
+                auto out_c = get_out_chain(a[i]);
+
+                edges.push_back({get_index_for_origin(i), get_index_for_chain(out_c, i), false});
+                edges.push_back({get_index_for_chain(in_c, i), get_index_for_origin(i), false});
+            }
+        }();
+        debug {
+            std::cout << "edges:" << std::endl;
+            for (auto &[x, y, val]: edges) {
+                std::cout << x << " " << y << " " << val << std::endl;
+            }
+
+            for (i32 k = 0; k < K; k++) {
+                std::cout << "in" << k << ": " << get_index_for_chain(get_in_chain(k), 0) << std::endl;
+                std::cout << "out" << k << ": " << get_index_for_chain(get_out_chain(k), 0) << std::endl;
+            }
+        }
+
+        // 建图
+        i32 graph_nodes_count = (K * 2 + 1) * N;
+        struct GraphNode {
+            i32 p = 0;
+            bool dis = 0;
+        };
+        std::vector<std::vector<GraphNode>> graph(graph_nodes_count);
+
+        for (auto &[x, y, val]: edges) {
+            graph[x].push_back({y, val});
+        }
+
+        // 查询最短路
+        auto start_node = get_index_for_origin(0);
+        auto target_node = get_index_for_origin(N - 1);
+        auto ans = [&]() -> i32 {
+            // 可以直接优化成 0-1 bfs
+            struct Point {
+                i32 p = 0, val = 0;
+            };
+            std::deque<Point> q;
+            std::vector<char> vis(graph_nodes_count);
+            q.push_back({start_node, 0});
+            while (not q.empty()) {
+                auto x = q.front(); q.pop_front();
+                if (x.p == target_node) return x.val;
+                if (vis[x.p]) continue;
+                vis[x.p] = true;
+                for (auto next: graph[x.p]) {
+                    if (not vis[next.p]) {
+                        if (next.dis) q.push_back({next.p, x.val + 1});
+                        else q.push_front({next.p, x.val});
+                    }
+                }
+            }
+            return -1;
+        }();
+
         std::cout << ans << endl;
     }
 }
 
 int main(int argc, char const *argv[]) {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-
     DEBUG_MODE = (argc-1) and not strcmp("-d", argv[1]);
-    i32 T;  std::cin >> T;
-    while (T --> 0) {
-        Solution_5063138640260486::solve_force();
-    }
+    Solution_4625777215395361::solve_force();
     return 0;
 }

@@ -15,7 +15,7 @@ public:
     RollingContainer(): init(value_type{}), storage(T(size)) {
         last.fill(~(size_t)0);
     }
-    RollingContainer(value_typwe &&init): init(std::move(init)), storage(T(size)) {
+    RollingContainer(value_type &&init): init(std::move(init)), storage(T(size)) {
         last.fill(~(size_t)0);
     }
     RollingContainer(value_type const &init): init(value_type{}), storage(T(size)), initSourcePtr(&init) {

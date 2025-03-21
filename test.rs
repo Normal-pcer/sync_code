@@ -1,6 +1,11 @@
+use std::io;
+
 fn main() {
-    let mut x = 5;
-    println!("The value of x is: {x}");
-    x = 6;
-    println!("The value of x is: {x}");
+    let mut line = String::new();
+    io::stdin()
+        .read_line(&mut line)
+        .expect("err");
+
+    // let a:
+    println!("{}", line);
 }

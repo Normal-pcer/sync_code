@@ -10,11 +10,11 @@ char const constexpr *inputFormat = "{}.in";
 char const constexpr *outputFormat = "{}.out";
 char const constexpr *dirName = "data_gen_result";
 char const constexpr *standardProgram = "check_arena0.exe";
-i32 const constexpr dataCount = 20;
-
+i32 const constexpr dataBegin = 1;
+i32 const constexpr dataEnd = 3;
 int main() {
     std::filesystem::path cur_path{"."};
-    for (i32 i = 1; i <= dataCount; i++) {
+    for (i32 i = dataBegin; i < dataEnd; i++) {
         auto input_path = cur_path / dirName / std::format(inputFormat, i);
         auto output_path = cur_path / dirName / std::format(outputFormat, i);
 

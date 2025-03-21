@@ -56,6 +56,7 @@ char const constexpr *setPresetMessage = "Set preset \"{}\" to \"{}\"? (y/n)";
 char const constexpr *removePresetMessage = "Remove preset \"{}\"? (y/n)";
 char const constexpr *invalidPresetNameMessage = "Preset name \"{}\" is invalid";
 char const constexpr *skipCompile = "Skipped compiling \"{}\"";
+char const constexpr *executableNameFormat = "{}.exe";
 int constexpr noInputFileCode = 1;
 int constexpr fileNotFoundCode = 2;
 int constexpr compileErrorCode = 3;
@@ -659,8 +660,10 @@ int main(int argc, char const *argv[]) {
                     res += line, res += '\n';
                 }
 
-                std::fstream fout(std::filesystem::path{stringToU8(filename)}, std::ios::out);
-                fout << res;
+                if (res != s) {
+                    std::fstream fout(std::filesystem::path{stringToU8(filename)}, std::ios::out);
+                    fout << res;
+                }
             }
         }
 
@@ -686,7 +689,7 @@ int main(int argc, char const *argv[]) {
                             auto record_time = prev_time.getItem<Time>(path);
                             auto real_time = getFileLastModifyTime(path);
                     
-                            return record_time - real_time > eps;
+                            return record_time - real_time < eps;
                         } catch (Configure::KeyError &) {
                             return true;
                         }
@@ -697,9 +700,14 @@ int main(int argc, char const *argv[]) {
             return false;
         }();
 
+        if (not std::filesystem::exists(
+            stringToU8(std::format(executableNameFormat, filename_no_ext))
+        ))  ellipsis = false;  // 可执行文件不存在，一定不会跳过编译
+
         if (ellipsis) {
             std::cout << std::format(skipCompile, filename) << std::endl;
         } else {
+            prev_time.setItem(filename, std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
             auto compile_command = std::format(compileCommand, filename_no_ext, compile_args);
             std::cout << "> " << compile_command << std::endl;
             std::cout << compilingMessage << std::flush;
@@ -711,7 +719,6 @@ int main(int argc, char const *argv[]) {
                 return compileErrorCode;
             }
 
-            prev_time.setItem(filename, std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
             config.setItem("lastCompileArgs", hashString(compile_args));
             std::cout << "\r";
         }
