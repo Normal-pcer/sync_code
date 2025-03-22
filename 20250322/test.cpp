@@ -1,0 +1,33 @@
+#pragma region genshin
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+ys,qd!
+#pragma endregion genshin
