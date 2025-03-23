@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Luogu Alias And Customize Tags
 // @namespace    http://tampermonkey.net/
-// @version      2025-01-23
+// @version      2025-01-23 15:17
 // @description  try to take over the world!
 // @author       normalpcer
 // @match        https://www.luogu.com.cn/*
@@ -267,9 +267,8 @@ class SettingBox {
         let title_element = document.createElement("h2");
         title_element.innerText = this.title;
         // "收起"按钮
-        let fold_button = document.createElement("input");
-        fold_button.type = "button";
-        fold_button.value = "收起";
+        let fold_button = document.createElement("span");
+        fold_button.innerText = "[收起]";
         fold_button.style.marginLeft = "0.5em";
         fold_button.setAttribute("fold", "0");
         title_element.appendChild(fold_button);
@@ -280,24 +279,25 @@ class SettingBox {
             queries.appendChild(x.createElement());
         }
         // “确定”按钮
-        let button_element = document.createElement("input");
-        button_element.type = "button";
-        button_element.value = "确定";
+        let confirm_button = document.createElement("input");
+        confirm_button.type = "button";
+        confirm_button.value = "确定";
+        confirm_button.classList.add("am-btn", "am-btn-primary", "am-btn-sm");
         if (this.callback !== null) {
             let callback = this.callback;
             let args = this.items;
-            button_element.onclick = () => callback(args);
+            confirm_button.onclick = () => callback(args);
         }
-        queries.appendChild(button_element);
+        queries.appendChild(confirm_button);
         new_element.appendChild(queries);
         fold_button.onclick = () => {
             if (fold_button.getAttribute("fold") === "0") {
-                fold_button.value = "展开";
+                fold_button.innerText = "[展开]";
                 fold_button.setAttribute("fold", "1");
                 queries.style.display = "none";
             }
             else {
-                fold_button.value = "收起";
+                fold_button.innerText = "[收起]";
                 fold_button.setAttribute("fold", "0");
                 queries.style.display = "block";
             }
@@ -340,12 +340,15 @@ class UserTag {
             }
             if (link.children.length === 1 && link.children[0] instanceof HTMLSpanElement) {
                 // 特别地，仅有一个 span 是允许的
+                link = link.children[0];
             }
             else if (link.children.length !== 0) {
                 // 否则，要求 link 为叶子节点
                 // console.log("UserTag::apply(): link is not a leaf node.");
                 continue;
             }
+            if (!(link instanceof HTMLElement))
+                continue; // 让 Typescript 认为 link 是 HTMLElement
             // console.log(link);
             // 获取用户名颜色信息
             // - 如果存在颜色属性，直接使用
@@ -364,7 +367,7 @@ class UserTag {
                     let rgb = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
                     if (rgb !== null) {
                         // 十进制转为十六进制
-                        const f = (x) => parseInt(x).toString(16);
+                        const f = (x) => parseInt(x).toString(16).padStart(2, "0");
                         colorHex = "#" + f(rgb[1]) + f(rgb[2]) + f(rgb[3]);
                     }
                     else {
@@ -394,14 +397,19 @@ class UserTag {
                         colorHex = data;
                         existsColorStyle = true;
                     }
-                    else {
-                        continue;
-                    }
-                }
-                else {
-                    continue;
                 }
             }
+            // 完全无法推断，使用缺省值灰色
+            if (!existsColorStyle && colorName === "") {
+                let color = Colors.get("gray");
+                if (color !== undefined) {
+                    colorHex = color;
+                }
+                else {
+                    throw "UserTag::apply(): cannot find color gray.";
+                }
+            }
+            console.log(`tag ${this.tag} for ${this.id.uid}. colorHex = ${colorHex}, colorName = ${colorName}`);
             // 生成标签
             let new_element = document.createElement("span");
             new_element.classList.add("lg-bg-" + colorName);
@@ -410,15 +418,30 @@ class UserTag {
             new_element.classList.add(Prefix + "customized-tag");
             new_element.innerText = this.tag;
             if (!existsColorStyle) {
-                colorHex = Colors.get(colorName) ?? "#333333";
+                let color = Colors.get(colorName);
+                if (color !== undefined) {
+                    colorHex = color;
+                }
+                else {
+                    throw "UserTag::apply(): cannot find color " + colorName;
+                }
             }
             new_element.style.setProperty("background", colorHex, "important");
             new_element.style.setProperty("border-color", colorHex, "important");
+            new_element.style.setProperty("color", "#fff", "important");
             // 特别地，如果 innerText 不以空格结尾，添加 0.3em 的 margin-left
             if (!link.innerText.endsWith(" ")) {
                 new_element.style.marginLeft = "0.3em";
             }
             // 插入到文档中
+            if (!(link instanceof HTMLAnchorElement)) {
+                if (link.parentElement instanceof HTMLAnchorElement) {
+                    link = link.parentElement;
+                }
+            }
+            if (!(link instanceof HTMLElement)) {
+                throw "UserTag::apply(): link is not HTMLElement before insertion.";
+            }
             let parent = link.parentElement;
             if (parent === null) {
                 throw "UserTag::apply(): cannot find parent.";
