@@ -1,5 +1,7 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <numeric>
 
 int main() {
-    assert(false);
+    std::cout << std::numeric_limits<int>::max() << std::endl;
+    return 0;
 }

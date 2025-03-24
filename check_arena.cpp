@@ -38,7 +38,7 @@ constexpr const char *RunCommand = "{}.exe < {} > {}_{}";
 #endif  // def linux
 
 namespace _Generator {
-    #include "check_gen.cpp"
+#include "check_gen.cpp"
 }
 namespace Generator = _Generator::Generator;
 
