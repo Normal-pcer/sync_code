@@ -1,0 +1,12 @@
+# .clang-tidy
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  modernize-*,
+  performance-*,
+  -modernize-use-trailing-return-type,
+  -bugprone-reserved-identifier,
+  -bugprone-macro-parentheses
+CheckOptions:
+  readability-identifier-naming.StrictCase: 'true'

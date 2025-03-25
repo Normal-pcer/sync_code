@@ -1,0 +1,10 @@
+CompileFlags:
+  Add: [-std=c++20]  # 指定 C++ 标准
+
+Diagnostics:
+  ClangTidy: 
+    CheckOptions:
+      readability-identifier-naming.StrictCase: true
+
+Index:
+  Background: Build

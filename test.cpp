@@ -1,22 +1,17 @@
-#include <bits/stdc++.h>
-#include "libs/fixed_int.hpp"
-#define FILENAME "jump"
+/**
+ * @link
+ */
+#include "lib"
+using namespace lib;
 
-/*
-
-*/
-namespace Solution {
+namespace Solution_6314180276493067 {
     auto solve() -> void {
 
     }
 }
 
-int main() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-    std::freopen(FILENAME ".in", "r", stdin);
-    std::freopen(FILENAME ".out", "w", stdout);
-
+auto main(int argc, char const *argv[]) -> int {
+    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
+    Solution_6314180276493067::solve();
     return 0;
 }
