@@ -1,5 +1,7 @@
-// 是否支持 int128_t
+// 是否支持 int128
+#ifdef __SIZEOF_INT128__
 #define IO_ENABLE_INT128
+#endif  // def __SIZEOF_INT128__
 #ifdef __linux__
 #include <sys/stat.h>
 #include <sys/mman.h>

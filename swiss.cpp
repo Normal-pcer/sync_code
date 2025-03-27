@@ -112,8 +112,8 @@ namespace Solution {
 auto main() -> int {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr), std::cout.tie(nullptr);
-    // std::freopen(FILENAME ".in", "r", stdin);
-    // std::freopen(FILENAME ".out", "w", stdout);
+    std::freopen(FILENAME ".in", "r", stdin);
+    std::freopen(FILENAME ".out", "w", stdout);
 
     Solution::solve();
 }

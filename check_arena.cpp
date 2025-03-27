@@ -1,5 +1,5 @@
 // Do not expand include
-#include "lib"
+#include "lib_v5.hpp"
 #include "libs/range.hpp"
 #include "libs/fixed_int.hpp"
 #ifdef __linux__
@@ -8,7 +8,7 @@
 using namespace lib;
 
 constexpr const int MaxTimes = inf;
-constexpr const int FileCount = 3;
+constexpr const int FileCount = 2;
 constexpr const char *FileNames[] = {
     "check_arena0.cpp",
     "check_arena1.cpp",
