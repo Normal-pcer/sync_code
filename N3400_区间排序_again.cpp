@@ -1,9 +1,9 @@
 /**
- * @link https://neooj.com:8082/oldoj/problem.php?id=3399
+ * @link https://neooj.com:8082/oldoj/problem.php?id=3400
  */
 #include "./lib_v5.hpp"
 #include "./libs/fixed_int.hpp"
-// 是否支持 int128
+// 是否支持 int128_t
 // #define IO_ENABLE_INT128
 #ifdef __linux__
 #include <sys/stat.h>
@@ -319,125 +319,53 @@ namespace lib {
 }
 using namespace lib;
 
-namespace Solution_3593834255407005 {
-    i32 constexpr maxVal = 3;
-    i32 constexpr maxRevPairIndex = 3;
+namespace Solution_5981885567252765 {
+    i32 constexpr nullI32 = 0x80000000U;  // i32 的无效值
     using i8 = std::int8_t;
-    template <typename T>
-    auto copy(T const &x) -> T { return x; }
+
+    template <typename T, uz size>
+    auto operator+ (std::array<T, size> const &lhs, std::array<T, size> const &rhs) {
+        std::array<T, size> ans;
+        for (uz i = 0; i != size; i++) {
+            ans[i] = lhs[i] + rhs[i];
+        }
+        return ans;
+    }
+
+    i8 constexpr maxVal = 3;
+    using Counter = std::array<i32, maxVal>;
+
     class SegTree {
         struct Node {
             i32 begin = 0, end = 0;
-            std::array<i32, maxVal> cnt;
-            std::array<i8, maxVal> replace_tag;  // tag 以 -1 为无效值
-            std::array<std::array<i64, maxVal>, maxVal> pair_cnt;
+            Counter count;
+            i32 assign_tag = nullI32;  // -1 为无效
 
-            Node() {
-                cnt.fill(0), replace_tag.fill(-1);
-
-                for (auto &line: pair_cnt) {
-                    for (auto &item: line) {
-                        item = 0;
-                    }
-                }
-            }
-
-            auto empty() const -> bool { return begin == end; }
-
-            auto replace(i8 from, i8 to) -> void {
-                auto new_pair_cnt = pair_cnt;  // 重新计数各种对的数量
-                for (i32 other = 0; other < maxVal; other++) {
-                    new_pair_cnt[other][from] = 0;
-                    new_pair_cnt[from][other] = 0;
-                    new_pair_cnt[other][to] += pair_cnt[other][from];
-                    new_pair_cnt[to][other] += pair_cnt[from][other];
-                }
-                pair_cnt = new_pair_cnt;
-
-                cnt[to] += cnt[from];
-                cnt[from] = 0;
-                replace_tag[from] = to;
-            }
-
-            auto multipleReplace(std::array<i8, maxVal> targets) -> void {
-                auto new_tag = replace_tag;
-                for (i32 i = 0; i < maxVal; i++) {
-                    if (new_tag[i] == -1) {
-                        new_tag[i] = targets[i];
-                    } else {
-                        new_tag[i] = targets[new_tag[i]];
-                    }
-                }
-                decltype(pair_cnt) new_pair_cnt;
-                std::memset(new_pair_cnt.data(), 0, sizeof(new_pair_cnt));
-                for (i32 i = 0; i < maxVal; i++) {
-                    for (i32 j = 0; j < maxVal; j++) {
-                        new_pair_cnt[targets[i]][targets[j]] += pair_cnt[i][j];
-                    }
-                }
-                pair_cnt = new_pair_cnt;
-
-                std::array<i32, maxVal> new_cnt;
-                new_cnt.fill(0);
-                for (i32 from = 0; from < maxVal; from++) {
-                    auto to = targets[from];
-                    new_cnt[to] += cnt[from];
-                }
-                cnt = new_cnt;
-
-                replace_tag = new_tag;
-            }
-
-            auto countRevPair() const -> i64 {
-                i64 ans = 0;
-                ans += pair_cnt[1][0];
-                ans += pair_cnt[2][0];
-                ans += pair_cnt[2][1];
-                return ans;
-            }
-
-            auto merge_from(Node const &lhs, Node const &rhs) -> Node & {
-                if (lhs.empty()) return *this = rhs;
-                if (rhs.empty()) return *this = lhs;
-                for (i32 i = 0; i < maxVal; i++) {
-                    cnt[i] = lhs.cnt[i] + rhs.cnt[i];
-                }
-                for (i32 i = 0; i < maxVal; i++) {
-                    for (i32 j = 0; j < maxVal; j++) {
-                        pair_cnt[i][j] = lhs.pair_cnt[i][j] + rhs.pair_cnt[i][j];  // 各自贡献
-                        pair_cnt[i][j] += static_cast<i64>(lhs.cnt[i]) * rhs.cnt[j];  // 中间贡献
-                    }
-                }
-                for (i32 i = 0; i < maxVal; i++) {
-                    replace_tag[i] = -1;
-                }
-                return *this;
+            auto len() const -> i32 { return end - begin; }
+            auto assign(i32 x) -> void {
+                count.fill(0);
+                count[x] = len();
+                assign_tag = x;
             }
         };
-        i32 N;
         std::vector<Node> tree;
-
         auto static constexpr lson(i32 p) -> i32 { return p << 1; }
         auto static constexpr rson(i32 p) -> i32 { return p << 1 | 1; }
 
-        auto pushDown(i32 p) -> void {
-            auto targets = tree[p].replace_tag;
-            if (std::any_of(targets.begin(), targets.end(), lam(x, x != -1))) {
-                for (i32 i = 0; i < maxVal; i++) {
-                    if (targets[i] == -1) targets[i] = static_cast<i8>(i);
-                }
-                tree[lson(p)].multipleReplace(targets);
-                tree[rson(p)].multipleReplace(targets);
-                tree[p].replace_tag.fill(-1);
-            }
-        }
         auto pushUp(i32 p) -> void {
-            tree[p].merge_from(tree[lson(p)], tree[rson(p)]);
+            tree[p].count = tree[lson(p)].count + tree[rson(p)].count;
+        }
+        auto pushDown(i32 p) -> void {
+            if (tree[p].assign_tag != nullI32) {
+                tree[lson(p)].assign(tree[p].assign_tag);
+                tree[rson(p)].assign(tree[p].assign_tag);
+                tree[p].assign_tag = nullI32;
+            }
         }
         auto build(i32 begin, i32 end, i32 p, std::vector<i8> const &init) -> void {
             tree[p].begin = begin, tree[p].end = end;
             if (end - begin == 1) {
-                tree[p].cnt[init[begin]]++;
+                tree[p].count[init[begin]] = 1;
                 return;
             }
             auto mid = begin + ((end - begin) >> 1);
@@ -446,87 +374,93 @@ namespace Solution_3593834255407005 {
             pushUp(p);
         }
     public:
-        SegTree(i32 N, std::vector<i8> const &init): N(N), tree(N << 2) {
+        SegTree(i32 N, std::vector<i8> const &init): tree(N << 2) {
             build(0, N, 1, init);
         }
-        auto queryRange(i32 begin, i32 end, i32 p = 1) -> Node {
+        auto countRange(i32 begin, i32 end, i32 p = 1) -> Counter {
+            if (begin == end) return {};
             if (tree[p].begin >= begin and tree[p].end <= end) {
-                return tree[p];
+                return tree[p].count;
             }
             pushDown(p);
-            Node res{};
-            if (tree[lson(p)].end > begin) res.merge_from(copy(res), queryRange(begin, end, lson(p)));
-            if (tree[rson(p)].begin < end) res.merge_from(copy(res), queryRange(begin, end, rson(p)));
-            return res;
+            Counter ans{};
+            if (tree[lson(p)].end > begin) ans = ans + countRange(begin, end, lson(p));
+            if (tree[rson(p)].begin < end) ans = ans + countRange(begin, end, rson(p));
+            return ans;
         }
-        auto replaceRange(i32 begin, i32 end, i8 from, i8 to, i32 p = 1) -> void {
+        auto assignRange(i32 begin, i32 end, i8 val, i32 p = 1) -> void {
+            if (begin == end) return;
             if (tree[p].begin >= begin and tree[p].end <= end) {
-                tree[p].replace(from, to);
+                tree[p].assign(val);
                 return;
             }
             pushDown(p);
-            if (tree[lson(p)].end > begin) replaceRange(begin, end, from, to, lson(p));
-            if (tree[rson(p)].begin < end) replaceRange(begin, end, from, to, rson(p));
+            if (tree[lson(p)].end > begin) assignRange(begin, end, val, lson(p));
+            if (tree[rson(p)].begin < end) assignRange(begin, end, val, rson(p));
             pushUp(p);
         }
-        auto multipleReplaceRange(i32 begin, i32 end, std::array<i8, maxVal> targets, i32 p = 1) -> void {
-            if (tree[p].begin >= begin and tree[p].end <= end) {
-                tree[p].multipleReplace(targets);
-                return;
-            }
-            pushDown(p);
-            if (tree[lson(p)].end > begin) multipleReplaceRange(begin, end, targets, lson(p));
-            if (tree[rson(p)].begin < end) multipleReplaceRange(begin, end, targets, rson(p));
-            pushUp(p);
+        auto sortRange(i32 begin, i32 end) -> void {
+            if (begin == end) return;
+            auto count = countRange(begin, end);
+            assert(count[0] + count[1] + count[2] == end - begin);
+            if (count[0] != 0) assignRange(begin, begin + count[0], 0);
+            if (count[1] != 0) assignRange(begin + count[0], begin + count[0] + count[1], 1);
+            if (count[2] != 0) assignRange(begin + count[0] + count[1], end, 2);
         }
-        auto getAt(i32 pos, i32 p = 1) -> i8 {
-            if (tree[p].end - tree[p].begin == 1) {
-                return std::distance(
-                    tree[p].cnt.begin(),
-                    std::max_element(tree[p].cnt.begin(), tree[p].cnt.end())
-                );
-            }
-            pushDown(p);
-            if (tree[lson(p)].end > pos) return getAt(pos, lson(p));
-            else return getAt(pos, rson(p));
-        }
-        auto print() -> void {
-            for (i32 i = 0; i < N; i++) {
-                std::cout << static_cast<i32>(getAt(i)) << ' ';
-            }
-            std::cout << std::endl;
+        auto sortRevRange(i32 begin, i32 end) -> void {
+            if (begin == end) return;
+            auto count = countRange(begin, end);
+            assert(count[0] + count[1] + count[2] == end - begin);
+            if (count[2] != 0) assignRange(begin, begin + count[2], 2);
+            if (count[1] != 0) assignRange(begin + count[2], begin + count[2] + count[1], 1);
+            if (count[0] != 0) assignRange(begin + count[2] + count[1], end, 0);
         }
     };
     auto solve() -> void {
-        i32 N, Q; io >> N >> Q;
-        std::vector<i8> init(N);
-        for (auto &x: init) {
-            i32 tmp; io >> tmp;
-            x = static_cast<i8>(tmp);
+        i32 N, M, X; io >> N >> M >> X;
+        std::vector<i8> a(N);
+        for (auto &x: a) {
+            i32 tmp = 0; io >> tmp;
+            x = 0 + (tmp >= X) + (tmp > X);
         }
 
-        SegTree sgt{N, init};
-        for (auto q = Q; q --> 0; ) {
-            i32 op, l, r;
-            io >> op >> l >> r;
-            l--, r--;
+        SegTree sgt{N, a};
+        for (auto m = M; m --> 0; ) {
+            i32 op, x, y;
+            io >> op >> x >> y;
+            x--, y--;
 
             if (op == 1) {
-                auto ans = sgt.queryRange(l, r + 1).countRevPair();
-                io << ans << endl;
+                sgt.sortRange(x, y + 1);
             } else {
-                i32 x, y, z;
-                io >> x >> y >> z;
-
-                sgt.multipleReplaceRange(l, r + 1, {{static_cast<i8>(x), static_cast<i8>(y), static_cast<i8>(z)}});
+                sgt.sortRevRange(x, y + 1);
             }
-            // sgt.print();
+
+            // for (i32 i = 0; i < N; i++) {
+            //     auto count = sgt.countRange(i, i + 1);
+            //     if (count[0] == 1) std::cout << 0;
+            //     if (count[1] == 1) std::cout << 1;
+            //     if (count[2] == 1) std::cout << 2;
+            //     std::cout << " ";
+            // }
+            // std::cout << std::endl;
         }
+
+        for (i32 i = 0; i < N; i++) {
+            auto count = sgt.countRange(i, i + 1);
+            if (count[1] == 1) {
+                io << (i + 1) << endl;
+                return;
+            }
+        }
+        io << 0 << endl;
     }
 }
 
 auto main(int argc, char const *argv[]) -> int {
     DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
-    Solution_3593834255407005::solve();
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr), std::cout.tie(nullptr);
+    Solution_5981885567252765::solve();
     return 0;
 }

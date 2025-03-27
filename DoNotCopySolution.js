@@ -6,6 +6,7 @@
 // @description  try to take over the world!
 // @author       You
 // @match        https://www.luogu.com.cn/problem/*
+// @match        https://www.luogu.com.cn/*
 // @match        https://www.luogu.com.cn/training/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=luogu.com.cn
 // @grant        none

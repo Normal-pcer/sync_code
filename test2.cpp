@@ -1,7 +1,8 @@
-#include <iostream>
-#include <numeric>
+#include "./libs/null_number.hpp"
 
+using namespace lib;
 int main() {
-    std::cout << std::numeric_limits<int>::max() << std::endl;
-    return 0;
+    double x = null;
+    std::cout << x << std::endl;
+    std::cout << (x == null) << std::endl;
 }

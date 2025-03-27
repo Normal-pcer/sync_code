@@ -102,16 +102,19 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        i32 constexpr maxT = 10;
-        i32 T = maxT;
-        out << T << endl;
-        for (auto _: range(T))
         while (true) {
-            i32 constexpr maxN = 10, maxR = 10, maxV = 20;
-            auto N = maxN, R = maxR;
+            i32 constexpr maxN = 800, maxQ = 800;
+            auto N = maxN, Q = maxQ;
+            out << N << " " << Q << endl;
+            for (auto _: range(N)) out << randint(0, 2) << endl;
 
-            out << N << " " << R << endl;
-            for (auto _: range(N)) out << randreal(0.0, 1.0) << " " << randint(1, maxV) << endl;
+            for (auto q = Q; q --> 0; ) {
+                auto op = randint(1, 2), l = randint(1, N - 1), r = randint(l, N);
+                if (op == 1) out << op << " " << l << " " << r << endl;
+                else {
+                    out << op << " " << l << " " << r << " " << randint(0, 2) << " " << randint(0, 2) << " " << randint(0, 2) << endl;
+                }
+            }
             break;
         }
     }
