@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>象棋结算界面</title>
+    <style>
+        /* 页面容器 */
+        .settlement-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            text-align: center;
+            font-family: '微软雅黑', sans-serif;
+        }
+
+        /* 胜利文字特效 */
+        .winner-text {
+            font-size: 2.5em;
+            color: #e74c3c;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: bounce 1s ease infinite;
+        }
+
+        /* 胜利原因 */
+        .reason {
+            font-size: 1.2em;
+            color: #34495e;
+            margin: 20px 0;
+        }
+
+        /* 统计信息 */
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-item {
+            padding: 15px;
+            border-right: 1px solid #eee;
+        }
+
+        .stat-item:last-child {
+            border-right: none;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* 星光特效 */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 1.5s ease-in-out infinite;
+        }
+
+        /* 动画效果 */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+
+        @keyframes twinkle {
+            0%, 100% {opacity: 0;}
+            50% {opacity: 1;}
+        }
+    </style>
+</head>
+<body>
+    <div class="settlement-container">
+        <!-- 胜利文字 -->
+        <div class="winner-text" id="winnerText">红方获胜！</div>
+        <div class="reason" id="winReason">通过精彩绝杀取得胜利</div>
+
+        <!-- 统计信息 -->
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="redScore">3</div>
+                <div>红方胜场</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="blackScore">1</div>
+                <div>黑方胜场</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalMoves">45</div>
+                <div>本局步数</div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="replay()">再战一局</button>
+            <button class="btn btn-secondary" onclick="shareResult()">分享战绩</button>
+        </div>
+    </div>
+
+    <!-- 星光特效 -->
+    <div class="stars" id="stars"></div>
+
+    <script>
+        // 初始化参数（根据实际游戏结果修改）
+        const winner = 'red';  // red/black
+        const winReason = '将死对方';
+        const redScore = 3;
+        const blackScore = 1;
+        const totalMoves = 45;
+
+        // 页面加载时初始化数据
+        function init() {
+            document.getElementById('winnerText').textContent 
+                = winner === 'red' ? '红方获胜！' : '黑方获胜！';
+            document.getElementById('winnerText').style.color 
+                = winner === 'red' ? '#e74c3c' : '#34495e';
+            
+            document.getElementById('winReason').textContent = `通过 ${winReason} 取得胜利`;
+            document.getElementById('redScore').textContent = redScore;
+            document.getElementById('blackScore').textContent = blackScore;
+            document.getElementById('totalMoves').textContent = totalMoves;
+
+            createStars(50); // 创建星光特效
+        }
+
+        // 创建星光特效
+        function createStars(count) {
+            const stars = document.getElementById('stars');
+            for(let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                star.style.animationDuration = `${Math.random() * 1 + 0.5}s`;
+                stars.appendChild(star);
+            }
+        }
+
+        // 按钮事件处理
+        function replay() {
+            window.location.reload(); // 这里应替换为实际重新开始逻辑
+        }
+
+        function shareResult() {
+            const text = `象棋对战结果：红方 ${redScore}:${blackScore} 黑方，本局${totalMoves}步，通过${winReason}取胜！`;
+            if(navigator.share) {
+                navigator.share({ text })
+                    .catch(err => console.log('分享失败:', err));
+            } else {
+                alert('分享功能暂不可用');
+            }
+        }
+
+        // 初始化页面
+        init();
+    </script>
+</body>
+</html>

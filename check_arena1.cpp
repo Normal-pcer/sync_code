@@ -1,119 +1,137 @@
-#include <bits/stdc++.h>
+#include "./lib_v6.hpp"
 #include "./libs/fixed_int.hpp"
-#define FILENAME "swiss"
+using namespace lib;
 
-char constexpr endl = '\n';
-
-/*
-执行无穷次，趋近于按照实力值排序。
-上升的分数有限制。最多上升 R 分。
-能够成为对应排名的人，当前分数的浮动一定不超过 2R。
-所以最后值域很小，用类似桶排序的方法即可。
-
-复杂度：O(N + 4R)。
-*/
 namespace Solution {
-    struct Person {
-        i32 score = 0, weight = 0, index = 0;
+    class BIT {
+        std::vector<std::pair<i32, i64>> ops;
+        std::vector<i64> c;
 
-        auto operator< (Person const &other) -> bool {  // 按照排名排序
-            if (score == other.score) return index < other.index;
-            return score > other.score;
+        auto constexpr static lowbit(i32 x) -> i32 { return x & -x; }
+    public:
+        BIT() {}
+        BIT(i32 N): c(N + 1) {}
+
+        auto addAt(i32 x, i64 val) -> void {
+            ops.emplace_back(x, val);
+            x++;
+            while (x < static_cast<i32>(c.size())) {
+                c[x] += val;
+                x += lowbit(x);
+            }
+        }
+        auto sumPrefix(i32 x) -> i64 {
+            x++;  i64 res = 0;
+            while (x != 0) {
+                res += c[x];
+                x -= lowbit(x);
+            }
+            return res;
+        }
+        auto clear() -> void {
+            decltype(ops) ops_copy;
+            ops.swap(ops_copy);
+
+            for (auto [x, val]: ops_copy) {
+                addAt(x, -val);
+            }
+            ops.clear();
         }
     };
-    auto solve2() -> void {
-        i32 N, R, Q; std::cin >> N >> R >> Q;
-        N += N;
-        std::vector<Person> persons(N);
-        for (i32 i = 0; i < N; i++) persons[i].index = i;
-        for (i32 i = 0; i < N; i++) std::cin >> persons[i].score;
-        for (i32 i = 0; i < N; i++) std::cin >> persons[i].weight;
-
-        for (auto t = R; t --> 0; ) {
-            std::sort(persons.begin(), persons.end());
-
-            for (i32 i = 0; i < N; i += 2) {
-                if (persons[i].weight < persons[i + 1].weight) persons[i + 1].score++;
-                else persons[i].score++;
-            }
-        }
-
-        std::sort(persons.begin(), persons.end());
-        std::cout << persons[Q - 1].index + 1 << endl;
-    }
-    
-    auto solve() -> void {
-        i32 N, R, Q; std::cin >> N >> R >> Q;
-        N += N;
-        std::vector<Person> persons(N);
-        for (i32 i = 0; i < N; i++) persons[i].index = i;
-        for (i32 i = 0; i < N; i++) std::cin >> persons[i].score;
-        for (i32 i = 0; i < N; i++) std::cin >> persons[i].weight;
-
-        std::nth_element(persons.begin(), persons.begin() + Q - 1, persons.end());
-        auto max_possible_score = persons[Q - 1].score + 2 * R + 10;
-        auto min_possible_score = persons[Q - 1].score - 2 * R - 10;
-
-        std::vector<Person> possible;
-        for (auto x: persons) {
-            if (x.score <= max_possible_score and x.score >= min_possible_score) {
-                possible.push_back(x);
-            }
-        }
-
-        auto cur_it = std::lower_bound(possible.begin(), possible.end(), persons[Q - 1]);
-        auto new_rank = cur_it - possible.begin();  // 在有效人中的排名
-
-        auto my_sort = [&](std::vector<Person> &vec) -> void {
-            if (vec.empty()) return;
-            i32 constexpr inf = 0x3f3f3f3f;
-            auto min = inf, max = -inf;
-            for (auto x: vec) {
-                min = std::min(min, x.score);
-                max = std::max(max, x.score);
-            }
-            
-            i32 size = vec.size();
-            std::vector<i32> index_buc(N, -1);
-
-            for (i32 i = 0; i != size; i++) {
-                index_buc[vec[i].index] = i;
-            }
-
-            std::vector<std::vector<i32>> score_buc(max - min + 1);
-            for (i32 i = N; i --> 0; ) {
-                if (index_buc[i] != -1) {
-                    auto j = index_buc[i];
-                    score_buc[vec[j].score - min].push_back(j);
-                }
-            }
-            std::vector<Person> res;
-            res.reserve(vec.size());
-            std::for_each(score_buc.rbegin(), score_buc.rend(), [&](auto &line) -> void {
-                for (auto x: line) res.push_back(vec[x]);
-            });
-            vec = res;
+    // 三维偏序
+    class PartialOrderCounter3D {
+    public:
+        struct Element {
+            enum Type { Update, Query } type = Update;
+            i32 x = 0, y = 0, z = 0;
+            i32 index = 0;
         };
 
-        for (auto t = R; t --> 0; ) {
-            my_sort(possible);
+        std::vector<Element> ele;
+        PartialOrderCounter3D() {}
+        PartialOrderCounter3D(std::vector<Element> ele): ele(std::move(ele)) {}
 
-            for (i32 i = 0; i < N; i += 2) {
-                if (persons[i].weight < persons[i + 1].weight) persons[i + 1].score++;
-                else persons[i].score++;
+        auto count() -> std::vector<i64> {
+            auto max_z = ranges::max( ele | views::transform(lam(x, x.z)) );
+            auto max_index = ranges::max( ele | views::transform(lam(x, x.index)) );
+
+            BIT bit{max_z + 1};
+            std::vector<i64> ans(max_index + 1);
+
+            ranges::partition(ele, lam(e, e.type == Element::Update));
+            ranges::stable_sort(ele, std::less{}, lam(e, e.x));
+            cdq(ele.begin(), ele.end(), bit, ans);
+            return ans;
+        }
+    private:
+        using ElementIter = std::vector<Element>::iterator;
+        // 按照 y 进行归并排序的同时统计答案
+        auto cdq(ElementIter begin, ElementIter end, BIT &bit, std::vector<i64> &ans) -> void {
+            i32 constexpr limit = 6;
+            if (end - begin <= limit) {
+                for (auto i = begin; i != end; i++) {
+                    if (i->type != Element::Query) continue;
+                    for (auto j = begin; j != end; j++) {
+                        if (i->x < j->x) break;
+                        if (j->type == Element::Update and j->y <= i->y and j->z <= i->z) {
+                            ans[i->index]++;
+                        }
+                    }
+                }
+                // 插入排序，按照 y 排序。
+                for (auto i = begin; i != end; i++) {
+                    ranges::rotate(ranges::upper_bound(begin, i, i->y, ranges::less{}, lam(e, e.y)), i, i + 1);
+                }
+                return;
             }
+            auto mid = begin + std::midpoint<uz>(0, end - begin);
+            cdq(begin, mid, bit, ans), bit.clear();
+            cdq(mid, end, bit, ans), bit.clear();
+
+            auto it1 = begin, it2 = mid;
+            while (it1 != mid or it2 != end) {
+                if (it2 == end or (it1 != mid and it1->y <= it2->y)) {
+                    if (it1->type == Element::Update) {
+                        assert(it1->z >= 0);
+                        bit.addAt(it1->z, 1);
+                    }
+                    it1++;
+                } else {
+                    if (it2->type == Element::Query and it2->z >= 0) {
+                        auto cnt = bit.sumPrefix(it2->z);
+                        ans[it2->index] += cnt;
+                    }
+                    it2++;
+                }
+            }
+            ranges::inplace_merge(begin, mid, end, std::less{}, lam(e, e.y));
+        }
+    };
+    auto solve() -> void {
+        i32 N, K; std::cin >> N >> K;
+
+        using Ele3d = PartialOrderCounter3D::Element;
+        std::vector<Ele3d> ele;
+        ele.reserve(N + N);
+
+        for (i32 i = 0; i < N; i++) {
+            i32 x, y, z; std::cin >> x >> y >> z;
+            ele.push_back({Ele3d::Update, x, y, z, i});
+            ele.push_back({Ele3d::Query, x, y, z, i});
         }
 
-        my_sort(possible);
-        std::cout << possible[new_rank].index + 1 << endl;
+        auto ans = PartialOrderCounter3D{std::move(ele)}.count();
+        std::vector<i32> cnt(N + 1);
+        for (auto x: ans) cnt[x]++;
+        for (i32 i = 1; i <= N; i++) {
+            std::cout << cnt[i] << endl;
+        }
     }
 }
 
 auto main() -> int {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr), std::cout.tie(nullptr);
-    // std::freopen(FILENAME ".in", "r", stdin);
-    // std::freopen(FILENAME ".out", "w", stdout);
 
-    Solution::solve2();
+    Solution::solve();
 }
