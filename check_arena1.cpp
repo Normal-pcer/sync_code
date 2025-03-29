@@ -1,137 +1,160 @@
+/**
+ * @link https://www.luogu.com.cn/problem/P6554
+ */
 #include "./lib_v6.hpp"
 #include "./libs/fixed_int.hpp"
+#include "./libs/less_inf_number.hpp"
 using namespace lib;
 
-namespace Solution {
-    class BIT {
-        std::vector<std::pair<i32, i64>> ops;
-        std::vector<i64> c;
+/*
+考虑换根。
+根从 A 换到 B，观察各个点的增量。
+B 的子树下，所有点的期望都不会变。
+A 的所有子树中，除了 B 所在的，其他的也都不会变。
+A 的期望需要减去 B 的贡献。
+然而 A 和 B 两个点的 size 都会改变。
+观察暴力 dp 的式子：
+F[i] <- val[i] + sigma(F[j]) / children
 
-        auto constexpr static lowbit(i32 x) -> i32 { return x & -x; }
-    public:
-        BIT() {}
-        BIT(i32 N): c(N + 1) {}
+可以通过 F[i] 反推出 F[j] 之和，然后再加上或减去另一个点的 F 值即可。
+*/
+namespace Solution_9254495447996924 {
+    using f64 = double;
+    auto solveForce() -> void {
+        i32 N; std::cin >> N;
+        std::vector<std::vector<i32>> graph(N + 1);
+        for (auto _ = N - 1; _ --> 0; ) {
+            i32 x, y;
+            std::cin >> x >> y;
+            graph[x].push_back(y);
+            graph[y].push_back(x);
+        }
+        std::vector<i32> val(N + 1);
+        for (i32 i = 1; i <= N; i++) std::cin >> val[i];
 
-        auto addAt(i32 x, i64 val) -> void {
-            ops.emplace_back(x, val);
-            x++;
-            while (x < static_cast<i32>(c.size())) {
-                c[x] += val;
-                x += lowbit(x);
+        std::vector<i32> leafCount(N + 1, 0);
+        auto countRecursion = [&](i32 p, i32 prev, auto &&self) -> void {
+            bool hasChild = false;
+            leafCount[p] = 0;
+            for (auto next: graph[p]) {
+                if (next != prev) {
+                    hasChild = true;
+                    self(next, p, self);
+                    leafCount[p] += leafCount[next];
+                }
             }
-        }
-        auto sumPrefix(i32 x) -> i64 {
-            x++;  i64 res = 0;
-            while (x != 0) {
-                res += c[x];
-                x -= lowbit(x);
-            }
-            return res;
-        }
-        auto clear() -> void {
-            decltype(ops) ops_copy;
-            ops.swap(ops_copy);
-
-            for (auto [x, val]: ops_copy) {
-                addAt(x, -val);
-            }
-            ops.clear();
-        }
-    };
-    // 三维偏序
-    class PartialOrderCounter3D {
-    public:
-        struct Element {
-            enum Type { Update, Query } type = Update;
-            i32 x = 0, y = 0, z = 0;
-            i32 index = 0;
+            if (not hasChild) leafCount[p] = 1;
         };
 
-        std::vector<Element> ele;
-        PartialOrderCounter3D() {}
-        PartialOrderCounter3D(std::vector<Element> ele): ele(std::move(ele)) {}
-
-        auto count() -> std::vector<i64> {
-            auto max_z = ranges::max( ele | views::transform(lam(x, x.z)) );
-            auto max_index = ranges::max( ele | views::transform(lam(x, x.index)) );
-
-            BIT bit{max_z + 1};
-            std::vector<i64> ans(max_index + 1);
-
-            ranges::partition(ele, lam(e, e.type == Element::Update));
-            ranges::stable_sort(ele, std::less{}, lam(e, e.x));
-            cdq(ele.begin(), ele.end(), bit, ans);
-            return ans;
-        }
-    private:
-        using ElementIter = std::vector<Element>::iterator;
-        // 按照 y 进行归并排序的同时统计答案
-        auto cdq(ElementIter begin, ElementIter end, BIT &bit, std::vector<i64> &ans) -> void {
-            i32 constexpr limit = 6;
-            if (end - begin <= limit) {
-                for (auto i = begin; i != end; i++) {
-                    if (i->type != Element::Query) continue;
-                    for (auto j = begin; j != end; j++) {
-                        if (i->x < j->x) break;
-                        if (j->type == Element::Update and j->y <= i->y and j->z <= i->z) {
-                            ans[i->index]++;
-                        }
-                    }
-                }
-                // 插入排序，按照 y 排序。
-                for (auto i = begin; i != end; i++) {
-                    ranges::rotate(ranges::upper_bound(begin, i, i->y, ranges::less{}, lam(e, e.y)), i, i + 1);
-                }
-                return;
-            }
-            auto mid = begin + std::midpoint<uz>(0, end - begin);
-            cdq(begin, mid, bit, ans), bit.clear();
-            cdq(mid, end, bit, ans), bit.clear();
-
-            auto it1 = begin, it2 = mid;
-            while (it1 != mid or it2 != end) {
-                if (it2 == end or (it1 != mid and it1->y <= it2->y)) {
-                    if (it1->type == Element::Update) {
-                        assert(it1->z >= 0);
-                        bit.addAt(it1->z, 1);
-                    }
-                    it1++;
-                } else {
-                    if (it2->type == Element::Query and it2->z >= 0) {
-                        auto cnt = bit.sumPrefix(it2->z);
-                        ans[it2->index] += cnt;
-                    }
-                    it2++;
+        std::vector<f64> F(N + 1, 0);
+        auto getExpectRecursion = [&](i32 p, i32 prev, auto &&self) -> f64 {
+            f64 ans = 0;
+            f64 probPerLeaf = static_cast<f64>(1) / leafCount[p];
+            bool hasChild = false;
+            for (auto next: graph[p]) {
+                if (next != prev) {
+                    hasChild = true;
+                    ans += self(next, p, self) * probPerLeaf * leafCount[next];
                 }
             }
-            ranges::inplace_merge(begin, mid, end, std::less{}, lam(e, e.y));
-        }
-    };
-    auto solve() -> void {
-        i32 N, K; std::cin >> N >> K;
+            if (not hasChild) return F[p] = val[p];
+            ans += val[p];
+            return F[p] = ans;
+        };
+        auto getExpect = lam(x, getExpectRecursion(x, 0, getExpectRecursion));
 
-        using Ele3d = PartialOrderCounter3D::Element;
-        std::vector<Ele3d> ele;
-        ele.reserve(N + N);
-
-        for (i32 i = 0; i < N; i++) {
-            i32 x, y, z; std::cin >> x >> y >> z;
-            ele.push_back({Ele3d::Update, x, y, z, i});
-            ele.push_back({Ele3d::Query, x, y, z, i});
-        }
-
-        auto ans = PartialOrderCounter3D{std::move(ele)}.count();
-        std::vector<i32> cnt(N + 1);
-        for (auto x: ans) cnt[x]++;
+        f64 max = -inf;
         for (i32 i = 1; i <= N; i++) {
-            std::cout << cnt[i] << endl;
+            countRecursion(i, 0, countRecursion);
+            auto cur = getExpect(i);
+            // std::cout << "Root = " << i << ", cur = " << cur << endl;
+            chkMax(max, cur);
         }
+        std::cout << std::fixed << std::setprecision(2) << max << endl;
+    }
+    auto solve() -> void {
+        i32 N; std::cin >> N;
+        std::vector<std::vector<i32>> graph(N + 1);
+        for (auto _ = N - 1; _ --> 0; ) {
+            i32 x, y;
+            std::cin >> x >> y;
+            graph[x].push_back(y);
+            graph[y].push_back(x);
+        }
+        std::vector<i32> val(N + 1);
+        for (i32 i = 1; i <= N; i++) std::cin >> val[i];
+
+        std::vector<i32> leafCount(N + 1, 0);
+        auto countRecursion = [&](i32 p, i32 prev, auto &&self) -> void {
+            bool hasChild = false;
+            for (auto next: graph[p]) {
+                if (next != prev) {
+                    hasChild = true;
+                    self(next, p, self);
+                    leafCount[p] += leafCount[next];
+                }
+            }
+            if (not hasChild) leafCount[p] = 1;
+        };
+        countRecursion(1, 0, countRecursion);
+
+        std::vector<f64> F(N + 1, 0);
+        auto getExpectRecursion = [&](i32 p, i32 prev, auto &&self) -> f64 {
+            f64 ans = 0;
+            f64 probPerLeaf = static_cast<f64>(1) / leafCount[p];
+            bool hasChild = false;
+            for (auto next: graph[p]) {
+                if (next != prev) {
+                    hasChild = true;
+                    ans += self(next, p, self) * probPerLeaf * leafCount[next];
+                }
+            }
+            if (not hasChild) return F[p] = val[p];
+            ans += val[p];
+            return F[p] = ans;
+        };
+        auto getExpect = lam(x, getExpectRecursion(x, 0, getExpectRecursion));
+
+        getExpect(1);  // 初始以 1 为根
+
+        f64 ans = -inf;
+        auto modifyRootRecursion = [&](i32 p, i32 prev, f64 Fp, i32 countP, auto &&self) -> void {
+            // std::cout << "F[" << p << "] = " << Fp << endl;
+            chkMax(ans, Fp);
+            for (auto next: graph[p]) {
+                if (next != prev) {
+                    auto newCountNext = countP;
+                    if (graph[next].size() == 1) newCountNext--;
+                    auto newCountP = countP - leafCount[next];
+                    auto newFp = [&]() -> f64 {
+                        // 所有子节点的 F 值之和
+                        auto sumChildren = (Fp - val[p]) * countP;
+                        auto sumOtherChildren = sumChildren - F[next] * leafCount[next];
+                        auto expect = newCountP == 0
+                            ? 0
+                            : sumOtherChildren / newCountP;
+                        return expect + val[p];
+                    }();
+                    auto newFnext = [&]() -> f64 {
+                        auto sumChildren = (F[next] - val[next]) * countP;
+                        auto sumNewChildren = sumChildren + newFp * newCountP;
+                        return sumNewChildren / newCountNext + val[next];
+                    }();
+
+                    self(next, p, newFnext, newCountNext, self);
+                }
+            }
+        };
+        modifyRootRecursion(1, 0, F[1], leafCount[1], modifyRootRecursion);
+
+        std::cout << std::fixed << std::setprecision(6) << ans << endl;
     }
 }
 
-auto main() -> int {
+auto main(int argc, char const *argv[]) -> int {
+    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-    Solution::solve();
+    Solution_9254495447996924::solveForce();
+    return 0;
 }

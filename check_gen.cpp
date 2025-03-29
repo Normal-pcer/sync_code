@@ -103,13 +103,14 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 2e6, maxK = 2e5;
+            i32 constexpr maxN = 4, maxV = 3;
             auto N = maxN;
-            out << N << " " << maxK << endl;
-
-            for (auto _: range(N)) {
-                out << randint(1, maxK) << " " << randint(1, maxK) << " " << randint(1, maxK) << endl;
+            out << N << endl;
+            for (i32 i = 2; i <= N; i++) {
+                out << randint(std::max(1, 1), i - 1) << " " << i << endl;
             }
+            for (auto _: range(N)) out << randint(-maxV, maxV) << " ";
+            out << endl;
             break;
         }
     }
