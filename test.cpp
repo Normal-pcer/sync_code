@@ -1,98 +1,41 @@
-#include <bits/stdc++.h>
+#include <cstdint>
+#include <iostream>
 
-template <typename T, typename std::enable_if_t<std::is_integral_v<T>, int> = 0>
-auto add_overflow(T x, T y, T *res) -> bool {
-    return __builtin_add_overflow(x, y, res);
-}
-
-template <typename T, typename std::enable_if_t<std::is_integral_v<T>, int> = 0>
-auto inc_overflow(T *x) -> bool {
-    return __builtin_add_overflow(*x, 1, x);
-}
-
-template <typename T>
-struct Wrap {
-    T value = 0;
-
-    friend auto inc_overflow(Wrap *x) -> bool {
-        return inc_overflow(&x->value);
-    }
-    friend auto add_overflow(Wrap const &x, Wrap const &y, Wrap *res) -> bool {
-        return add_overflow(x.value, y.value, &res->value);
-    }
-    auto inplace_invert() -> Wrap & {
-        value = ~value;
-        return *this;
-    }
+struct MagicParams {
+    uint64_t magic;  // 魔术数
+    int shift;       // 移位参数
 };
 
-template <typename T>
-struct S {
-    T low{}, high{};
+MagicParams compute_magic(uint32_t d) {
+    if (d == 0) throw std::invalid_argument("d cannot be zero");
 
-    friend auto inc_overflow(S *x) -> bool {
-        auto flag = inc_overflow(&x->low);
-        if (flag) return inc_overflow(&x->high);
-    }
-
-    friend auto add_overflow(S const &x, S const &y, S *res) -> bool {
-        auto flag = add_overflow(x.low, y.low, &res->low);
-        auto flag2 = add_overflow(x.high, y.high, &res->high);
-        if (flag) flag2 |= inc_overflow(&res->high);
-        return flag2;
+    int k = 32; // 初始位数（32位整数）
+    // 找到最小的 k 使得 2^k >= d * (2^32)
+    while (((1ULL << k) / d) < (1ULL << 32)) {
+        k++;
     }
 
-    auto inplace_invert() -> S & {
-        low.inplace_invert();
-        high.inplace_invert();
-        return *this;
-    }
-    auto operator~ () const -> S {
-        auto tmp = *this;
-        tmp.inplace_invert();
-        return tmp;
-    }
-    auto inplace_neg() -> S & {
-        inplace_invert();
-        inc_overflow(this);
-        return *this;
-    }
-    auto operator- () const -> S {
-        auto tmp = *this;
-        tmp.inplace_neg(this);
-        return *tmp;
-    }
-    auto operator+= (S const &other) -> S & {
-        add_overflow(*this, other, *this);
-        return *this;
-    }
-    auto operator-= (S const &other) -> S & {
-        *this += -other;
-        return *this;
-    }
-    auto operator+ () const -> S {
-        return *this;
-    }
-    auto operator+ (S const &other) -> S {
-        auto tmp = *this;
-        tmp += other;
-        return tmp;
-    }
-    auto operator- (S const &other) -> S {
-        auto tmp = *this;
-        tmp -= other;
-        return tmp;
-    }
+    // 计算魔术数 m = ceil(2^k / d)
+    uint64_t m = (1ULL << k) / d;
+    if ((1ULL << k) % d != 0) m++;  // 向上取整
 
-};
+    // 移位参数为 k（而非 k - 32）
+    return {m, k};
+}
 
 int main() {
-    using u64 = Wrap<unsigned long long>;
-    using u128 = S<u64>;
-    u128 x, y, z;
-    x.low = x.high = u64{0xEFFFFFFFFFFFFFFFULL};
-    y.low = u64{0xEEEEEEEEEEEEEEEEULL};
-    std::cout << add_overflow(x, y, &z) << std::endl;
-    z = ~z;
-    std::cout << z.high.value << " " << z.low.value << std::endl;
+    uint32_t d = 100;
+    auto [m, shift] = compute_magic(d);
+    
+    std::cout << "Magic number for " << d << ": 0x" << std::hex << m 
+              << " (shift " << std::dec << shift << " bits)" << std::endl;
+    
+    // 验证计算：n % 10
+    int32_t n = 12345678;
+    int32_t q = (n * m) >> shift;  // 直接使用 shift = k
+    int32_t r = n - q * d;          // 余数
+    if (r < 0) r += d;              // 处理负数
+    
+    std::cout << n << " % " << d << " = " << r << std::endl;
+    return 0;
 }

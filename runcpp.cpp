@@ -418,7 +418,7 @@ auto showHelp() -> void {
 -config-preset 进入预设配置模式
 -config-preset <name> <content> 添加或修改一个预设编译选项
 -config-preset <name> 删除一个预设
--condig-preset list 列出所有预设
+-config-preset list 列出所有预设
 )" << std::endl;
 }
 
