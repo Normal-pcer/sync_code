@@ -16,6 +16,11 @@ char constexpr endl = '\n';
 
 #define FILENAME "fire"
 
+/*
+先处理一个点离最近的火有多远。
+多源最短路。弄一个超级节点跑 dijkstra 即可。
+之后正常 bfs。
+*/
 namespace Solution_6065476225470371 {
     auto solve() -> void {
         i32 r, c;
@@ -44,8 +49,41 @@ namespace Solution_6065476225470371 {
             }
         }
 
+        i32 constexpr inf = 0x3f3f3f3f;
+        // 距离最近的火源
+        std::vector<std::vector<i32>> dis(r, std::vector<i32>(c, inf));
+
         std::array<i32, 4> dxs{ -1, +1,  0,  0 };
         std::array<i32, 4> dys{  0,  0, -1, +1 };
+        [&]() {  // 最短路
+            struct Node {
+                Point p{};
+                i32 dis{};
+            };
+            std::deque<Node> q;
+
+            for (auto f: fire) q.push_back({f, 0});
+            std::vector<std::vector<char>> vis(r, std::vector<char>(c));
+            while (not q.empty()) {
+                auto x = q.front(); q.pop_front();
+                if (vis[x.p.x][x.p.y]) continue;
+                if (mat[x.p.x][x.p.y] == '#') continue;
+                vis[x.p.x][x.p.y] = true;
+                dis[x.p.x][x.p.y] = x.dis;
+                for (i32 i = 0; i < 4; i++) {
+                    auto nx = x.p.x + dxs[i];
+                    auto ny = x.p.y + dys[i];
+                    if (nx < 0 or nx >= r) continue;
+                    if (ny < 0 or ny >= c) continue;
+                    if (not vis[nx][ny]) {
+                        q.push_back({Point{nx, ny}, x.dis + 1});
+                    }
+                }
+            }
+        }();
+
+        // 初始时间为 0
+        // 不能经过距离火源小于等于当前时间的点
         auto ans = [&]() {
             struct Node {
                 Point p{};
@@ -55,31 +93,11 @@ namespace Solution_6065476225470371 {
             std::vector<std::vector<char>> vis(r, std::vector<char>(c));
 
             q.push_back({s, 0});
-            i32 prevDis = 0;
             while (not q.empty()) {
                 auto x = q.front(); q.pop_front();
                 if (vis[x.p.x][x.p.y]) continue;
-                if (x.dis != prevDis) {
-                    auto cp = mat;
-                    for (i32 i = 0; i < r; i++) {
-                        for (i32 j = 0; j < c; j++) {
-                            if (cp[i][j] == 'F') {
-                                for (i32 k = 0; k < 4; k++) {
-                                    auto nx = i + dxs[k];
-                                    auto ny = j + dys[k];
-                                    if (nx < 0 or nx >= r) continue;
-                                    if (ny < 0 or ny >= c) continue;
-                                    if (mat[nx][ny] != '#') {
-                                        mat[nx][ny] = 'F';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    prevDis = x.dis;
-                }
                 if (mat[x.p.x][x.p.y] == '#') continue;
-                if (mat[x.p.x][x.p.y] == 'F') continue;
+                if (dis[x.p.x][x.p.y] <= x.dis) continue;
                 vis[x.p.x][x.p.y] = true;
                 for (i32 i = 0; i < 4; i++) {
                     auto nx = x.p.x + dxs[i];

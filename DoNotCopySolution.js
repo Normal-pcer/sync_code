@@ -103,9 +103,10 @@ function generatePassword(length = 12) {
         }
 
         const selector =
-            "#app > div.main-container.lside-bar > main > div > div > div.side > div:nth-child(1) > a:nth-child(6)";
+            "#app > div.main-container.lside-nav > main > div > div > div.side > div:nth-child(1) > a:nth-child(6)";
         let element = document.querySelector(selector);
         if (element !== null && element instanceof HTMLElement) {
+            // console.log("solution botton");
             // element.parentElement?.removeChild(element);
             if (element.style.display !== "none") {
                 element.setAttribute("origin-display", element.style.display);

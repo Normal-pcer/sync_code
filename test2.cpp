@@ -1,49 +1,77 @@
-#include <cstdio>
-#include <cstring>
-const int N=1010;
-int max(int x,int y){return x>y?x:y;}
-int n,m,p;
-int f[N][N],cost[N],q[N][N],loc[N][N],l[N],r[N],add[N],dp[N];
-int get(int i,int j)//获取单队编号
-{
-    return ((j-i)%n+n)%n;
+#include <bits/stdc++.h>
+bool DEBUG_MODE = false;
+#define debug if (DEBUG_MODE)
+#define never if constexpr (false)
+template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
+template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
+#define __lambda_1(expr) [&]() { return expr; }
+#define __lambda_2(a, expr) [&](auto a) { return expr; }
+#define __lambda_3(a, b, expr) [&](auto a, auto b) { return expr; }
+#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c) { return expr; }
+#define __lambda_overload(a, b, c, d, e, ...) __lambda_##e
+#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+#define lam lambda
+char constexpr endl = '\n';
+#include "./libs/fixed_int.hpp"
+
+#define FILENAME "joioji"
+
+/*
+
+*/
+namespace Solution_6065476225470371 {
+    auto solve() -> void {
+        i32 N; std::cin >> N;
+        std::string s; std::cin >> s;
+
+        auto countPre = [&](char x, auto out_it) -> void {
+            i32 cnt = 0;
+            for (auto ch: s) {
+                if (ch == x) cnt++;
+                *out_it++ = cnt;
+            }
+        };
+
+        std::vector<std::vector<i32>> cnt_ps(3, std::vector<i32>(N));
+        countPre('J', cnt_ps[0].begin());
+        countPre('O', cnt_ps[1].begin());
+        countPre('I', cnt_ps[2].begin());
+
+        // 用 cnt_ps[0][i] - cnt_ps[1][i] - cnt_ps[2][i] 作为特征
+        std::map<std::pair<i32, i32>, std::vector<i32>> map;
+        for (i32 i = 0; i < N; i++) {
+            auto iden = std::make_pair(cnt_ps[0][i] - cnt_ps[1][i], cnt_ps[1][i] - cnt_ps[2][i]);
+            map[iden].push_back(i);
+        }
+        map[{0, 0}].push_back(-1);
+
+        for (auto &item: map) {
+            auto &line = item.second;
+            std::sort(line.begin(), line.end());
+        }
+
+        i32 ans = 0;
+        for (i32 i = -1; i < N; i++) {
+            auto iden = i == -1? std::make_pair(0, 0): std::make_pair(cnt_ps[0][i] - cnt_ps[1][i], cnt_ps[1][i] - cnt_ps[2][i]);
+            auto it = map.find(iden);
+            if (it != map.end()) {
+                auto const &nums = it->second;
+                if (not nums.empty()) {
+                    chkMax(ans, nums.back() - i);
+                }
+            }
+        }
+        std::cout << ans << endl;
+    }
 }
-int main()
-{
-    scanf("%d%d%d",&n,&m,&p);
-    for(int i=1;i<=n;i++)
-        for(int j=1;j<=m;j++)
-        {
-            scanf("%d",&f[j][i]);
-            f[j][i]+=f[j-1][i-1];
-        }
-    for(int i=0;i<n;i++)
-    {
-        scanf("%d",cost+i);
-        q[i][++r[i]]=-cost[i],l[i]++;
-    }
-    memset(dp,-0x3f,sizeof(dp));
-    dp[0]=0;
-    for(int i=1;i<=m;i++)
-    {
-        for(int j=0;j<n;j++)
-        {
-            int id=get(i,j);
-            while(l[id]<=r[id]&&loc[id][l[id]]+p<i) l[id]++;
-            if(!j) add[id]+=f[i][n];
-            if(l[id]<=r[id])
-                dp[i]=max(dp[i],q[id][l[id]]+add[id]+f[i][j]);
-        }
-        for(int j=0;j<n;j++)
-        {
-            int id=get(i,j);
-            int tmp=dp[i]-add[id]-f[i][j]-cost[j];
-            while(l[id]<=r[id]&&q[id][r[id]]<=tmp)
-                r[id]--;
-            loc[id][++r[id]]=i;
-            q[id][r[id]]=tmp;
-        }
-    }
-    printf("%d\n",dp[m]);
+
+auto main(int argc, char const *argv[]) -> int {
+    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
+    std::freopen(FILENAME ".in", "r", stdin);
+    std::freopen(FILENAME ".out", "w", stdout);
+
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr), std::cout.tie(nullptr);
+    Solution_6065476225470371::solve();
     return 0;
 }

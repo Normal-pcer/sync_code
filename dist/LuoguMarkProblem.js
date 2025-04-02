@@ -6,7 +6,7 @@
 // @description  try to take over the world!
 // @author       You
 // @match        https://www.luogu.com.cn/training*
-// @match        https://www.luogu.com.cn/problems*
+// @match        https://www.luogu.com.cn/problem*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=luogu.com.cn
 // @grant        none
 // ==/UserScript==
@@ -45,6 +45,7 @@
             const span_list = problem.getElementsByTagName("span");
             const status_icon = span_list[0];
             const problem_id = span_list[1].innerText;
+            console.log("Found problem", problem_id);
             if (enableFor(problem_id)) {
                 const display = () => {
                     const flag = Flags[problem_id] ?? null;
@@ -91,8 +92,6 @@
         }
     };
     window.onload = () => {
-        if (window.location.href.includes("training") || window.location.href.includes("problems")) {
-            setTimeout(problemListPage, 0);
-        }
+        setTimeout(problemListPage, 500);
     };
 })();
