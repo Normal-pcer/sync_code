@@ -103,11 +103,7 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 4000;
-            auto N = maxN;
-            out << N << endl;
-            for (auto _: range(N)) out << "JOI"[randint(0, 2)];
-            out << endl;
+            out << randint(1, 5) << " " << randint(1, 5) << endl;
             break;
         }
     }

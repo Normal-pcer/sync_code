@@ -1,110 +1,167 @@
-#include <bits/stdc++.h>
-bool DEBUG_MODE = false;
-#define debug if (DEBUG_MODE)
-#define never if constexpr (false)
-template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
-template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
-#define __lambda_1(expr) [&]() { return expr; }
-#define __lambda_2(a, expr) [&](auto a) { return expr; }
-#define __lambda_3(a, b, expr) [&](auto a, auto b) { return expr; }
-#define __lambda_4(a, b, c, expr) [&](auto a, auto b, auto c) { return expr; }
-#define __lambda_overload(a, b, c, d, e, ...) __lambda_##e
-#define lambda(...) __lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
-#define lam lambda
-char constexpr endl = '\n';
-#include "./libs/fixed_int.hpp"
+#include <cctype>
+#include <iostream>
+#include <memory>
+#include <queue>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-#define FILENAME "fire"
 
-namespace Solution_6065476225470371 {
-    auto solve() -> void {
-        i32 r, c;
-        std::cin >> r >> c;
+using namespace std;
 
-        std::vector<std::string> mat(r);
+struct Token {
+    enum Type {
+        KEYWORD, IDENT, CONST, OP, SYMBOL, END
+    };
+    Type type;
+    string value;
+    Token(Type t, const string& v) : type(t), value(v) {}
+};
 
-        struct Point {
-            i32 x{};
-            i32 y{};
-        };
+vector<Token> tokens;
+size_t pos = 0;
 
-        Point s{};
-        for (auto &line: mat) {
-            std::cin >> line;
-        }
+queue<int> input_data;
+ostringstream output_buffer;
 
-        std::vector<Point> fire;
-        for (i32 i = 0; i < r; i++) {
-            for (i32 j = 0; j < c; j++) {
-                if (mat[i][j] == 'F') {
-                    fire.push_back({i, j});
-                } else if (mat[i][j] == 'J') {
-                    s.x = i, s.y = j;
-                }
-            }
-        }
+struct Variable {
+    bool is_array;
+    vector<int> dimensions;
+    vector<int> data;
 
-        std::array<i32, 4> dxs{ -1, +1,  0,  0 };
-        std::array<i32, 4> dys{  0,  0, -1, +1 };
-        auto ans = [&]() {
-            struct Node {
-                Point p{};
-                i32 dis{};
-            };
-            std::deque<Node> q;
-            std::vector<std::vector<char>> vis(r, std::vector<char>(c));
-
-            q.push_back({s, 0});
-            i32 prevDis = 0;
-            while (not q.empty()) {
-                auto x = q.front(); q.pop_front();
-                if (vis[x.p.x][x.p.y]) continue;
-                if (x.dis != prevDis) {
-                    auto cp = mat;
-                    for (i32 i = 0; i < r; i++) {
-                        for (i32 j = 0; j < c; j++) {
-                            if (cp[i][j] == 'F') {
-                                for (i32 k = 0; k < 4; k++) {
-                                    auto nx = i + dxs[k];
-                                    auto ny = j + dys[k];
-                                    if (nx < 0 or nx >= r) continue;
-                                    if (ny < 0 or ny >= c) continue;
-                                    if (mat[nx][ny] != '#') {
-                                        mat[nx][ny] = 'F';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    prevDis = x.dis;
-                }
-                if (mat[x.p.x][x.p.y] == '#') continue;
-                if (mat[x.p.x][x.p.y] == 'F') continue;
-                vis[x.p.x][x.p.y] = true;
-                for (i32 i = 0; i < 4; i++) {
-                    auto nx = x.p.x + dxs[i];
-                    auto ny = x.p.y + dys[i];
-                    if (nx < 0 or nx >= r) return x.dis + 1;
-                    if (ny < 0 or ny >= c) return x.dis + 1;
-                    if (not vis[nx][ny]) {
-                        q.push_back({Point{nx, ny}, x.dis + 1});
-                    }
-                }
-            }
-            return -1;
-        }();
-        if (ans == -1) std::cout << "IMPOSSIBLE" << endl;
-        else std::cout << ans << endl;
+    Variable() : is_array(false), dimensions(), data(1, 0) {}
+    Variable(const vector<int>& dims) : is_array(true), dimensions(dims) {
+        int size = 1;
+        for (int d : dims) size *= d;
+        data.resize(size, 0);
     }
-}
 
-auto main(int argc, char const *argv[]) -> int {
-    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
-    std::freopen(FILENAME ".in", "r", stdin);
-    std::freopen(FILENAME ".out", "w", stdout);
+    int get(const vector<int>& indices) {
+        int index = 0, stride = 1;
+        for (int i = indices.size() - 1; i >= 0; --i) {
+            index += indices[i] * stride;
+            stride *= dimensions[i];
+        }
+        return data[index];
+    }
 
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-    Solution_6065476225470371::solve();
+    void set(const vector<int>& indices, int value) {
+        int index = 0, stride = 1;
+        for (int i = indices.size() - 1; i >= 0; --i) {
+            index += indices[i] * stride;
+            stride *= dimensions[i];
+        }
+        data[index] = value;
+    }
+};
+
+struct Scope {
+    Scope* parent;
+    unordered_map<string, Variable> variables;
+
+    Scope(Scope* p = nullptr) : parent(p) {}
+
+    Variable* find(const string& name) {
+        Scope* current = this;
+        while (current) {
+            auto it = current->variables.find(name);
+            if (it != current->variables.end()) return &it->second;
+            current = current->parent;
+        }
+        return nullptr;
+    }
+};
+
+struct Function {
+    vector<string> params;
+    struct Block;
+    Block* body;
+};
+
+struct Expr {
+    virtual int evaluate(Scope* scope) = 0;
+    virtual ~Expr() {}
+};
+
+struct ConstExpr : Expr {
+    int value;
+    ConstExpr(int v) : value(v) {}
+    int evaluate(Scope*) override { return value; }
+};
+
+struct VarExpr : Expr {
+    string name;
+    vector<unique_ptr<Expr>> indices;
+
+    VarExpr(const string& n) : name(n) {}
+    int evaluate(Scope* scope) override {
+        Variable* var = scope->find(name);
+        if (!var) return 0;
+        vector<int> idx;
+        for (auto& e : indices) idx.push_back(e->evaluate(scope));
+        return var->get(idx);
+    }
+};
+
+struct AssignExpr : Expr {
+    unique_ptr<VarExpr> var;
+    unique_ptr<Expr> value_expr;
+
+    AssignExpr(unique_ptr<VarExpr> v, unique_ptr<Expr> e) : var(move(v)), value_expr(move(e)) {}
+    int evaluate(Scope* scope) override {
+        int value = value_expr->evaluate(scope);
+        Variable* target = scope->find(var->name);
+        vector<int> indices;
+        for (auto& e : var->indices) indices.push_back(e->evaluate(scope));
+        target->set(indices, value);
+        return value;
+    }
+};
+
+struct Program {
+    vector<Function> functions;
+    Scope global_scope;
+
+    void run() {
+        input_data.push(0);
+        input_data.pop();
+        for (auto& f : functions) {
+            if (f.params.empty() && f.body) {
+                executeBlock(f.body, &global_scope);
+                break;
+            }
+        }
+    }
+
+    void executeBlock(struct Block* block, Scope* scope) {
+        for (auto& stmt : block->stmts) {
+            if (dynamic_cast<ReturnStmt*>(stmt.get())) {
+                stmt->execute(scope);
+                return;
+            }
+            stmt->execute(scope);
+        }
+    }
+};
+
+int main() {
+    int N;
+    cin >> N;
+    for (int i = 0; i < N; ++i) {
+        int num;
+        cin >> num;
+        input_data.push(num);
+    }
+    cin.ignore();
+    string line;
+    while (getline(cin, line)) {
+        // Tokenization logic here
+    }
+    // Parsing logic here
+    Program program;
+    program.run();
+    cout << output_buffer.str();
     return 0;
 }

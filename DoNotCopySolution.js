@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         禁止抄题解
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-25
+// @version      2025-04-03
 // @description  try to take over the world!
 // @author       You
 // @match        https://www.luogu.com.cn/problem/*
@@ -51,10 +51,13 @@ function generatePassword(length = 12) {
     if (href.indexOf("problem/solution/") !== -1) {
         const match = href.match(/[?&]password=([\w\d]*)/);
         if (match !== null && match[1] !== undefined) {
-            let correct = sessionStorage.getItem("solution-password");
-            correct === match[1];
-            return;
+            let correct = localStorage.getItem("solution-password");
+            console.log(`correct = ${correct}, match[1] = ${match[1]}`);
+            if (correct === match[1]) {
+                return;
+            }
         }
+        // alert("禁止抄题解!");
         window.location.href = "about:blank";
     }
     let cnt = 0;
@@ -67,6 +70,9 @@ function generatePassword(length = 12) {
             let score = (() => {
                 for (const e of possible) {
                     if (e instanceof HTMLSpanElement) {
+                        if (e.innerText.includes("Accepted")) {
+                            return 100;
+                        }
                         let num = parseInt(e.innerText);
                         if (!isNaN(num)) {
                             return num;
@@ -77,33 +83,42 @@ function generatePassword(length = 12) {
             })();
 
             if (score !== null && score >= 60) {
+                console.log("Accepted");
                 const lis = document.getElementsByClassName("hide-solution");
                 for (const e of lis) {
                     if (e instanceof HTMLElement) {
                         e.style.display = e.getAttribute("origin-display") ?? "block";
                     }
                 }
-                // 允许查看题解
-                // 创建一个新的查看题解密码
-                const nextPassword = generatePassword();
-                sessionStorage.setItem("solution-password", nextPassword);
+
+                
 
                 const selector =
-                    "#app > div.main-container.lside-bar > main > div > div > div.side > div:nth-child(1) > a:nth-child(6)";
+                    "#app > div.main-container.lside-nav > main > div > div > div.side > div:nth-child(1) > a[href*=\"solution\"]";
                 let element = document.querySelector(selector);
-                if (element !== null && element instanceof HTMLAnchorElement && !element.href.includes("password=")) {
+                if (
+                    element !== null &&
+                    element instanceof HTMLAnchorElement &&
+                    !element.href.includes("password=")
+                ) {
+                    // 允许查看题解
+                    // 创建一个新的查看题解密码
+                    const nextPassword = generatePassword();
+                    localStorage.setItem("solution-password", nextPassword);
+                    console.log(`password: ${nextPassword}`);
                     if (element.href.includes("?")) {
                         element.href += `&password=${nextPassword}`;
                     } else {
                         element.href += `?password=${nextPassword}`;
                     }
+                    console.log(`href: ${element.href}`);
                 }
                 return;
             }
         }
 
         const selector =
-            "#app > div.main-container.lside-nav > main > div > div > div.side > div:nth-child(1) > a:nth-child(6)";
+            "#app > div.main-container.lside-nav > main > div > div > div.side > div:nth-child(1) > a[href*=\"solution\"]";
         let element = document.querySelector(selector);
         if (element !== null && element instanceof HTMLElement) {
             // console.log("solution botton");

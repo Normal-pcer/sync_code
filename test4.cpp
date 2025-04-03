@@ -1,8 +1,11 @@
-#include <cstring>
-#include <iostream>
+#include <vector>
+
+struct A {
+    int x = 2, y = 5;
+};
 
 int main() {
-    long double x; std::memset(&x, 0x7f, sizeof(x));
-    std::cout << x << std::endl;
+    std::vector<A> v;
+    v.push_back({0, 2});
     return 0;
 }
