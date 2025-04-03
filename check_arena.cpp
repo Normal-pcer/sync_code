@@ -1,5 +1,5 @@
 // Do not expand include
-#include "lib"
+#include "lib_v5.hpp"
 #include "libs/range.hpp"
 #include "libs/fixed_int.hpp"
 #ifdef __linux__
@@ -38,7 +38,7 @@ constexpr const char *RunCommand = "{}.exe < {} > {}_{}";
 #endif  // def linux
 
 namespace _Generator {
-    #include "check_gen.cpp"
+#include "check_gen.cpp"
 }
 namespace Generator = _Generator::Generator;
 

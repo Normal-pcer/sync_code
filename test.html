@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国象棋 - 动态结算</title>
+    <link rel="stylesheet" href="test.css">
+</head>
+<body>
+    <div class="result-container">
+        <div class="result-content">
+            <div class="result-title" id="resultTitle">红方胜利</div>
+            <div class="result-message" id="resultMessage">炮击毙敌将！</div>
+            
+            <div class="battlefield">
+                <!-- 棋盘背景 -->
+                <div class="chessboard-bg"></div>
+                
+                <!-- 将(小人) -->
+                <div class="general-character" id="general">
+                    <div class="general-head"></div>
+                    <div class="general-body"></div>
+                    <div class="general-crown">將</div>
+                </div>
+                
+                <!-- 炮 -->
+                <div class="cannon" id="cannon">
+                    <div class="cannon-body"></div>
+                    <div class="cannon-muzzle"></div>
+                </div>
+                
+                <!-- 子弹 -->
+                <div class="bullet" id="bullet"></div>
+                
+                <!-- 爆炸效果 -->
+                <div class="explosion" id="explosion"></div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-rematch" id="rematchBtn">再来一局</button>
+                <button class="btn btn-exit" id="exitBtn">退出游戏</button>
+            </div>
+        </div>
+    </div>
+    <script src="test2.js"></script>
+</body>
+</html>
