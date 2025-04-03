@@ -1,166 +1,56 @@
-/**
- * @link https://www.luogu.com.cn/problem/P2051
- */
-#include "./lib_v6.hpp"
-#include "./libs/fixed_int.hpp"
-using namespace lib;
-
-/*
-那么，似乎是要求一行内不能有三个棋子，一列内也不能有三个棋子。
-考虑如何描述状态。
-可以记录有几列已经放了 2 个棋子，有几列已经放了 1 个棋子。
-似乎是有道理的。
-
-F[i][cnt0][cnt1] 表示：
-当前一共遍历了 i 行，上一行有 cnt0 列没有放棋子，cnt1 列恰好放了 1 个棋子。这种情况的方案数。
-
-考虑转移。感觉向外递推好写一些。
-F[i][cnt0][cnt1]，希望继续取若干列。
-
-希望在 cnt0 上面取 x 个，cnt1 上面取 y 个。
-F[i + 1][cnt0 - x][cnt1 - y + x] <- F[i][cnt0][cnt1] * C(cnt0, x) * C(cnt1, y);
-
-初始值：F[0][cols][0] = 1。
-答案：F[rows] 求和。
-
-这个东西是 5 次方，复杂度有点劣了。
-
-一行最多有两个棋子，所以随便转移就行了。
-
-*/
-namespace Solution_6431247307212205 {
-    i32 constexpr mod = 9999973;
-    auto constexpr addMod(i32 a, i32 b) -> i32 {
-        a += b;
-        if (a >= mod) a -= mod;
-        return a;
-    }
-    auto constexpr mulMod(i32 a, i32 b) -> i32 {
-        return static_cast<i32>(static_cast<i64>(a) * b % mod);
-    }
-    auto constexpr powMod(i64 a, i64 b) -> i32 {
-        i64 res = 1;
-        for (; b != 0; b >>= 1, a = a * a % mod) {
-            if (b & 1) res = res * a % mod;
-        }
-        return res;
-    }
-    auto solveForce() -> void {
-        i32 rowsCount, colsCount;
-        std::cin >> rowsCount >> colsCount;
-
-        auto blocksCount = rowsCount * colsCount;
-        using Stat = u32;
-        auto statCount = (Stat)1 << blocksCount;
-
-        i32 ans = 0;
-        for (Stat s = 0; s != statCount; s++) {
-            auto getAt = [&](i32 row, i32 col) -> Stat {
-                auto pos = row * colsCount + col;
-                return s & ((Stat)1 << pos);
-            };
-
-            auto correct = [&]() -> bool {
-                for (i32 i = 0; i != rowsCount; i++) {
-                    for (i32 j = 0; j != colsCount; j++) {
-                        if (not getAt(i, j)) continue;
-                        // 是否存在棋子可以互相攻击
-                        auto walkAxis = [&](i32 x, i32 y, i32 dx, i32 dy) -> bool {
-                            auto isPointLegal = [&](i32 x, i32 y) -> bool {
-                                return 0 <= x and x < rowsCount and 0 <= y and y < colsCount;
-                            };
-                            i32 cnt = 0;
-                            while (isPointLegal(x, y)) {
-                                cnt += static_cast<bool>(getAt(x, y));
-                                if (cnt == 3) return true;
-                                x += dx, y += dy;
-                            }
-                            return false;
-                        };
-                        auto correct = [&]() -> bool {
-                            auto flag = false;
-                            flag |= walkAxis(i, j, 0, 1);
-                            flag |= walkAxis(i, j, 0, -1);
-                            flag |= walkAxis(i, j, 1, 0);
-                            flag |= walkAxis(i, j, -1, 0);
-    
-                            return not flag;
-                        }();
-                        if (not correct) return false;
-                    }
-                }
-                return true;
-            }();
-            ans += correct;
-        }
-
-        std::cout << ans % mod << endl;
-    }
-    struct FacManager {
-        std::vector<i32> fac;
-        std::vector<i32> invFac;
-
-        FacManager(i32 n): fac(n + 1), invFac(n + 1) {
-            fac[0] = 1;
-            for (i32 i = 1; i <= n; i++) {
-                fac[i] = mulMod(fac[i - 1], i);
-            }
-            invFac[n] = powMod(fac[n], mod - 2);
-            for (i32 i = n; i --> 0; ) {
-                invFac[i] = mulMod(invFac[i + 1], i + 1);
-            }
-            assert(invFac[0] == 1);
-        }
-
-        auto calcC(i32 a, i32 b) -> i32 {
-            assert(a >= b and b >= 0);
-            return mulMod(mulMod(fac[a], invFac[b]), invFac[a - b]);
-        }
-    };
-    auto solve() -> void {
-        i32 rowsCount, colsCount;
-        std::cin >> rowsCount >> colsCount;
-
-        i32 constexpr maxColsCount = 101;
-        FacManager fm{maxColsCount};
-        
-        std::vector F(rowsCount + 1, std::vector(colsCount + 1, std::vector<i32>(colsCount + 1, 0)));
-        F[0][colsCount][0] = 1;
-        for (i32 i = 0; i < rowsCount; i++) {
-            for (i32 cnt0 = 0; cnt0 <= colsCount; cnt0++) {
-                for (i32 cnt1 = 0; cnt1 <= colsCount; cnt1++) {
-                    // 从 F[i][cnt0][cnt1] 向外转移
-                    // 如果在这一行放置两个？
-                    auto checkTransform = [&](i32 ncnt0, i32 ncnt1, i32 scale) -> void {
-                        if (ncnt0 < 0 or ncnt1 < 0) return;
-                        if (ncnt0 + ncnt1 > colsCount) return;
-                        F[i + 1][ncnt0][ncnt1] = addMod(F[i + 1][ncnt0][ncnt1], mulMod(F[i][cnt0][cnt1], scale));
-                    };
-
-                    checkTransform(cnt0 - 1, cnt1, mulMod(cnt0, cnt1));  // 0 1
-                    checkTransform(cnt0 - 2, cnt1 + 2, fm.calcC(std::max(2, cnt0), 2)); // 0 0
-                    checkTransform(cnt0, cnt1 + 2, fm.calcC(std::max(2, cnt1), 2));  // 1 1
-                    checkTransform(cnt0 - 1, cnt1 + 1, cnt0); // 0
-                    checkTransform(cnt0, cnt1 - 1, cnt1);  // 1
-                    checkTransform(cnt0, cnt1, 1);  // 无
-                }
-            }
-        }
-
-        i32 ans = 0;
-        for (i32 cnt0 = 0; cnt0 <= colsCount; cnt0++) {
-            for (i32 cnt1 = 0; cnt1 <= colsCount; cnt1++) {
-                ans = addMod(ans, F[rowsCount][cnt0][cnt1]);
-            }
-        }
-        std::cout << ans << endl;
-    }
+#include<bits/stdc++.h>
+using namespace std;
+int n,q,a[100001];
+struct d{
+	int w,b,lw,lb,rw,rb,mw,mb;
+	d(int w=0,int b=0,int lw=0,int lb=0,int rw=0,int rb=0,int mw=0,int mb=0):
+    w(w),b(b),lw(lw),lb(lb),rw(rw),rb(rb),mw(mw),mb(mb){}
+};
+inline d hb(d i,d j){
+	return d(
+	i.w+j.w, i.b+j.b,
+	(i.b?i.lw:i.w+j.lw), (i.w?i.lb:i.b+j.lb),
+	(j.b?j.rw:j.w+i.rw), (j.w?j.rb:j.b+i.rb),
+	max(max(i.mw,j.mw),i.rw+j.lw),
+	max(max(i.mb,j.mb),i.rb+j.lb));
 }
-
-auto main(int argc, char const *argv[]) -> int {
-    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-    Solution_6431247307212205::solveForce();
-    return 0;
+d dat[262144]; int len[262144],tg1[262144],tg2[262144];
+inline void P(int i,int typ){
+	d&t=dat[i];
+	if(typ==0) tg2[i]= 0, tg1[i]=0, t=d(0,len[i],0,len[i],0,len[i],0,len[i]);
+	if(typ==1) tg2[i]= 0, tg1[i]=1, t=d(len[i],0,len[i],0,len[i],0,len[i],0);
+	if(typ==2) tg2[i]^=1, swap(t.w,t.b), swap(t.lw,t.lb), swap(t.rw,t.rb), swap(t.mw,t.mb);
+}
+inline void pd(int i){
+	if(~tg1[i]) P(i<<1,tg1[i]), P(i<<1|1,tg1[i]);
+	if(tg2[i]) P(i<<1,2), P(i<<1|1,2);
+	tg1[i]=-1, tg2[i]=0;
+}
+void build(int i,int l,int r){
+	len[i]=r-l+1; tg1[i]=-1;
+	if(l==r) {int t=a[l]; dat[i]=d(t,t^1,t,t^1,t,t^1,t,t^1); return;}
+	build(i<<1,l,l+r>>1);
+	build(i<<1|1,(l+r>>1)+1,r);
+	dat[i]=hb(dat[i<<1],dat[i<<1|1]);
+}
+void Mdf(int i,int l,int r,int a,int b,int t){
+	if(b<l||r<a) return; if(a<=l&&r<=b) {P(i,t); return;}
+	pd(i); Mdf(i<<1,l,l+r>>1,a,b,t), Mdf(i<<1|1,(l+r>>1)+1,r,a,b,t);
+	dat[i]=hb(dat[i<<1],dat[i<<1|1]);
+}
+d Qur(int i,int l,int r,int a,int b){
+	if(b<l||r<a) return d(); if(a<=l&&r<=b) return dat[i];
+	pd(i); return hb(Qur(i<<1,l,l+r>>1,a,b),Qur(i<<1|1,(l+r>>1)+1,r,a,b));
+}
+int main(){
+	scanf("%d%d",&n,&q);
+	for(int i=1;i<=n;++i) scanf("%d",a+i);
+	build(1,1,n);
+	for(int i=1;i<=q;++i){
+		int opt,l,r;
+		scanf("%d%d%d",&opt,&l,&r); ++l, ++r;
+		if(opt<3) Mdf(1,1,n,l,r,opt);
+		else {d t=Qur(1,1,n,l,r); printf("%d\n",opt==3?t.w:t.mw);}
+	}
+	return 0;
 }
