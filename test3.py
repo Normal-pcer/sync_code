@@ -1,7 +1,7 @@
 a, b, c, d, x, y = [0] * 6
-a, b = map(int, input().split())
+x, y = map(int, input().split())
 
-cpa, cpb = a, b
+cpa, cpb = x, y
 
 # y 为 0，返回 0
 # y 为 1，返回 x
@@ -26,11 +26,28 @@ def isOdd(x: int):
     x -= tmp
     return x
 
-res = 0
+a = 0
 for _ in range(64):
-    res += condition2(a, isOdd(b))
-    b >>= 1
-    a += a
+    b -= b
+    b += y # is odd
+    c -= c
+    c += y
+    c >>= 1
+    c <<= 1
+    b -= c
+    d -= d
+    d += x
+    c -= c
+    c -= b
+    d ^= c
+    c -= c
+    c += x
+    c -= b
+    c -= d
+    c >>= 1
+    a += c
+    y >>= 1
+    x += x
 
-assert(cpa * cpb == res)
-print(res)
+print(a)
+assert(cpa * cpb == a)
