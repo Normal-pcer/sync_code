@@ -52,7 +52,7 @@ bool match(int i, int j) {
 int main(int argc, char const *argv[]) {
     initDebug;
 
-    debug {
+    never {
         freopen("P7914_in.txt", "r", stdin);
         freopen("P7914_out.txt", "w", stdout);
     }
@@ -129,7 +129,7 @@ int main(int argc, char const *argv[]) {
         }
     }
 
-    debug {
+    never {
         from(t, 0, _T-1) {
             printf("----T=%d----\n", t);
             upto(i, N) {

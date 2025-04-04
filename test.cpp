@@ -1,69 +1,166 @@
 /**
- * @link
+ * @link https://www.luogu.com.cn/problem/P7914
  */
-#include "./lib_v6.hpp"
-#include "./libs/fixed_int.hpp"
-using namespace lib;
+#include <bits/stdc++.h>
+#define initDebug DEBUG_MODE=(argc-1)&&!strcmp("-d", argv[1])
+#define debug if(DEBUG_MODE)
+#define log(f, a...) debug printf(f, ##a);
+#define upto(i,n) for(int i=1;i<=(n);i++)
+#define from(i,b,e) for(int i=(b);i<=(e);i++)
+#define rev(i,e,b) for(int i=(e);i>=(b);i--)
 
-namespace Solution_6314180276493067 {
-    auto solve() -> void {
-        i32 n, m;
-        std::cin >> n >> m;
+#define optimizeIO std::ios::sync_with_stdio(false); std::cin.tie(0); std::cout.tie(0);
+#define chkMax(base,cmp...) (base=std::max({(base),##cmp}))
+#define chkMin(base,cmp...) (base=std::min({(base),##cmp}))
+#define chkMaxEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMax(base,##cmp)){exchange;} else other;}
+#define chkMinEx(base,exchange,other,cmp...) {auto __b__=base;if(__b__!=chkMin(base,##cmp)){exchange;} else other;}
+#define update(base,op,modify...) base=op((base),##modify)
+#define ensure(con, otw) ((con)? (con): (otw))
+#define check(v, con, otw) (((v) con)? (v): (otw))
+#define optional(ptr) if(ptr)ptr
+#define never if(0)
+#define always if(1)
+#define bitOr(x,y) (((x)&(y))^(((x)^(y))|(~(x)&(y))))
+#define Infinity 2147483647
+#define putInt(n) printf("%d\n",(n))
+#define compare(x,y,g,e,l) (((x)>(y))?(g):(((x)<(y))?(l):(e)))
+bool DEBUG_MODE=false;
+typedef long long ll; typedef unsigned long long ull;
+inline void batchOutput(int *begin, int n, const char *format){upto(i, n)printf(format, begin[i]);printf("\n");} inline void batchOutput(int*begin, int n) {batchOutput(begin,n,"%3d ");}
+#define batchOutput2d(b, r, c, fmt) upto(i,r){upto(j,c)printf(fmt,b[i][j]);printf("\n");}
+template <class T=int>inline T read(){ T x=0;int f=1;char c;while((c=getchar())<'0'||c>'9')if(c=='-')f=-1;do{x=(((x<<2)+x)<<1)+c-'0';}while((c=getchar())>='0'&&c<='9');return x*f; }
 
-        using Stat = u32;
-        auto blocks = n * m;
+enum TypeCode {  // 类型编号
+    asterisks,  // 若干个连续的星号
+    single,  // 单个完整括号
+    suffixed,  // 以左括号开头，若干个连续的星号结尾
+    linked,  // 若干个括号用星号连接，类似(...)***(...)**(...)；包含单括号
+    prefixed,  // 以右括号结尾，若干个连续的星号开头
+    nodes,  // 星号开头结尾，中间若干个括号，类似**(...)***(...)**(...)****；包含星号串
+};
+const int _T = 6;
 
-        auto statCount = (Stat)1 << blocks;
-        i32 ans = 0x3f3f3f3f;
-        for (Stat s = 0; s != statCount; s++) {
-            auto walk = [&]() -> bool {
-                std::vector mat(n, std::vector<char>(m));
-                for (i32 i = 0; i < n; i++) {
-                    for (i32 j = 0; j < m; j++) {
-                        mat[i][j] = static_cast<bool>(s & ((Stat)1 << (i * m + j)));
-                    }
-                }
-                std::array<i32, 4> constexpr dxs{ +1, -1,  0,  0 };
-                std::array<i32, 4> constexpr dys{  0,  0, +1, -1 };
-                for (auto _ = blocks; _ --> 0; ) {
-                    auto getAt = [&](i32 i, i32 j) -> bool {
-                        if (i < 0 or i >= n) return false;
-                        if (j < 0 or j >= m) return false;
-                        return mat[i][j];
-                    };
+const int _N = 505; int N; const int _K = 505; int K; const int mod=1e9+7;
+char s[_N];
 
-                    for (i32 i = 0; i < n; i++) {
-                        for (i32 j = 0; j < m; j++) {
-                            if (mat[i][j]) continue;
-                            auto cnt = 0;
-                            for (i32 dir = 0; dir != 4; dir++) {
-                                cnt += getAt(i + dxs[dir], j + dys[dir]);
-                            }
-                            if (cnt >= 2) mat[i][j] = true;
-                        }
-                    }
-                }
+ll F[_N][_N][_T];  // F[i][j][k] 表示区间 [i, j] 中类型为 k 的方案数
 
-                for (i32 i = 0; i < n; i++) {
-                    for (i32 j = 0; j < m; j++) {
-                        if (not mat[i][j]) return false;
-                    }
-                }
-                return true;
-            };
-            if (walk()) {
-                chkMin(ans, std::popcount(s));
-            }
-        }
-        std::cout << ans << endl;
-        assert(ans == n / 2 + m / 2 + 1 - (n % 2 == 0 and m % 2 == 0));
-    }
+bool match(int i, int j) {
+    return ( (s[i] == '(' || s[i] == '?') && (s[j] == ')' || s[j] == '?') );
 }
 
-auto main(int argc, char const *argv[]) -> int {
-    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-    Solution_6314180276493067::solve();
+using ll = long long;
+auto qpow(ll a, ll b, int const mod) -> int {
+    ll res = 1;
+    for (; b != 0; b >>= 1, a = a * a % mod) {
+        if (b & 1) res = res * a % mod;
+    }
+    return res;
+}
+
+int main(int argc, char const *argv[]) {
+    initDebug;
+
+    never {
+        freopen("P7914_in.txt", "r", stdin);
+        freopen("P7914_out.txt", "w", stdout);
+    }
+
+    scanf("%d", &N); scanf("%d", &K);
+    scanf("%s", s+1);
+
+    int cnt = 0;
+    for (int i = 1; i <= N; i++) {
+        if (s[i] == '?') cnt++;
+    }
+
+    // S 仅包括连续的不超过 K 个 '*'
+    // 如果 A, B 合法：
+    // (), (S) 合法
+    // A+B, A+S+B 合法
+    // (SA), (AS) 合法
+
+    // 特别地，空字符串不合法
+
+    // 星号串需要初始化
+    from(i, 1, N)  F[i][i-1][TypeCode::asterisks] = 1;
+
+    from(l, 1, N) {  // 区间长度
+        from(i, 1, N) {  // 区间左端点
+            int j = i+l-1;  // 区间右端点
+            if (j > N) break;
+            // 星号串
+            // 如果可以，在 [i, j-1] 的基础上添加一个星号
+            if (l <= K)
+                F[i][j][TypeCode::asterisks] = F[i][j-1][TypeCode::asterisks] && 
+                        (s[j] == '*' || s[j] == '?');
+
+            // 单括号
+            // 不能直接嵌套括号，即 (()) 形式不合法
+            // 不能括号式的两边都是星号，即 nodes 不合法
+            F[i][j][TypeCode::single] = match(i, j) * (
+                F[i+1][j-1][TypeCode::asterisks] +
+                F[i+1][j-1][TypeCode::suffixed] +
+                F[i+1][j-1][TypeCode::linked] +
+                F[i+1][j-1][TypeCode::prefixed]
+            ); F[i][j][TypeCode::single] %= mod;
+
+            // 后缀形式
+            // 链接形式添加若干个后续星号
+            from(k, i, j-1) {  // [i, k] 为一个链接式
+                F[i][j][TypeCode::suffixed] += F[i][k][TypeCode::linked] * F[k+1][j][TypeCode::asterisks];
+                F[i][j][TypeCode::suffixed] %= mod;
+            } 
+
+            // 前缀形式
+            // 前缀式或者节点式追加一个单括号
+            from(k, i, j-1) {  // [i, k] 为一个前缀形式
+                F[i][j][TypeCode::prefixed] += F[i][k][TypeCode::prefixed] * F[k+1][j][TypeCode::single];
+                F[i][j][TypeCode::prefixed] += F[i][k][TypeCode::nodes] * F[k+1][j][TypeCode::single];
+                F[i][j][TypeCode::prefixed] %= mod;
+            } 
+
+            // 链接形式
+            // 后缀形式或链接形式追加一个单括号
+            // 直接一个单括号的情况一并加入
+            from(k, i, j-1) {  // [i, k] 为一个后缀形式
+                F[i][j][TypeCode::linked] += F[i][k][TypeCode::suffixed] * F[k+1][j][TypeCode::single];
+                F[i][j][TypeCode::linked] += F[i][k][TypeCode::linked] * F[k+1][j][TypeCode::single];
+                F[i][j][TypeCode::linked] %= mod;
+            } 
+            F[i][j][TypeCode::linked] += F[i][j][TypeCode::single];
+            F[i][j][TypeCode::linked] %= mod;
+
+            // 节点形式
+            // 前缀形式追加一串星号
+            // 星号串一并加入
+            from(k, i, j-1) {  // [i, k] 为一个前缀形式
+                F[i][j][TypeCode::nodes] += F[i][k][TypeCode::prefixed] * F[k+1][j][TypeCode::asterisks];
+                F[i][j][TypeCode::nodes] %= mod;
+            }
+            F[i][j][TypeCode::nodes] += F[i][j][TypeCode::asterisks];
+            F[i][j][TypeCode::nodes] %= mod;
+        }
+    }
+
+    never {
+        from(t, 0, _T-1) {
+            printf("----T=%d----\n", t);
+            upto(i, N) {
+                upto(j, N) {
+                    printf("%5lld", F[i][j][t]);
+                }
+                printf("\n");
+            }
+        }
+    }
+
+    
+
+    auto ans = F[1][N][TypeCode::linked];
+    ans = qpow(3, cnt, mod) - ans + mod;
+    ans %= mod;
+    printf("%lld\n", ans);
+
     return 0;
 }
