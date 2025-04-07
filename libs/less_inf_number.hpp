@@ -103,10 +103,10 @@ namespace lib {
     
         template <typename T> auto operator!= (T, InfType) -> std::enable_if_t<!HasInfinity<T>::value, void> = delete;
     
-        auto operator- (InfType) -> NegaInfType {
+        auto constexpr operator- (InfType) -> NegaInfType {
             return negaInf;
         }
-        auto operator+ (InfType) -> InfType {
+        auto constexpr operator+ (InfType) -> InfType {
             return inf;
         }
     

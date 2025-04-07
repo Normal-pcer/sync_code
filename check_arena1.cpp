@@ -1,56 +1,95 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
-int n,q,a[100001];
-struct d{
-	int w,b,lw,lb,rw,rb,mw,mb;
-	d(int w=0,int b=0,int lw=0,int lb=0,int rw=0,int rb=0,int mw=0,int mb=0):
-    w(w),b(b),lw(lw),lb(lb),rw(rw),rb(rb),mw(mw),mb(mb){}
-};
-inline d hb(d i,d j){
-	return d(
-	i.w+j.w, i.b+j.b,
-	(i.b?i.lw:i.w+j.lw), (i.w?i.lb:i.b+j.lb),
-	(j.b?j.rw:j.w+i.rw), (j.w?j.rb:j.b+i.rb),
-	max(max(i.mw,j.mw),i.rw+j.lw),
-	max(max(i.mb,j.mb),i.rb+j.lb));
-}
-d dat[262144]; int len[262144],tg1[262144],tg2[262144];
-inline void P(int i,int typ){
-	d&t=dat[i];
-	if(typ==0) tg2[i]= 0, tg1[i]=0, t=d(0,len[i],0,len[i],0,len[i],0,len[i]);
-	if(typ==1) tg2[i]= 0, tg1[i]=1, t=d(len[i],0,len[i],0,len[i],0,len[i],0);
-	if(typ==2) tg2[i]^=1, swap(t.w,t.b), swap(t.lw,t.lb), swap(t.rw,t.rb), swap(t.mw,t.mb);
-}
-inline void pd(int i){
-	if(~tg1[i]) P(i<<1,tg1[i]), P(i<<1|1,tg1[i]);
-	if(tg2[i]) P(i<<1,2), P(i<<1|1,2);
-	tg1[i]=-1, tg2[i]=0;
-}
-void build(int i,int l,int r){
-	len[i]=r-l+1; tg1[i]=-1;
-	if(l==r) {int t=a[l]; dat[i]=d(t,t^1,t,t^1,t,t^1,t,t^1); return;}
-	build(i<<1,l,l+r>>1);
-	build(i<<1|1,(l+r>>1)+1,r);
-	dat[i]=hb(dat[i<<1],dat[i<<1|1]);
-}
-void Mdf(int i,int l,int r,int a,int b,int t){
-	if(b<l||r<a) return; if(a<=l&&r<=b) {P(i,t); return;}
-	pd(i); Mdf(i<<1,l,l+r>>1,a,b,t), Mdf(i<<1|1,(l+r>>1)+1,r,a,b,t);
-	dat[i]=hb(dat[i<<1],dat[i<<1|1]);
-}
-d Qur(int i,int l,int r,int a,int b){
-	if(b<l||r<a) return d(); if(a<=l&&r<=b) return dat[i];
-	pd(i); return hb(Qur(i<<1,l,l+r>>1,a,b),Qur(i<<1|1,(l+r>>1)+1,r,a,b));
-}
-int main(){
-	scanf("%d%d",&n,&q);
-	for(int i=1;i<=n;++i) scanf("%d",a+i);
-	build(1,1,n);
-	for(int i=1;i<=q;++i){
-		int opt,l,r;
-		scanf("%d%d%d",&opt,&l,&r); ++l, ++r;
-		if(opt<3) Mdf(1,1,n,l,r,opt);
-		else {d t=Qur(1,1,n,l,r); printf("%d\n",opt==3?t.w:t.mw);}
+#define validx(a) ((a) >= 1 && (a) <= s)
+int r, s, sx;
+char c[301][301];
+
+// 一个 node 代表 DP 的一个状态
+struct node {
+	int len;
+	unsigned seq[10];
+	// seq 记录括号序列，每个二进制位上 0 代表 '('，1代表 ')'
+	// 用 10 个 32 位整数可以存下至多 320 个括号。
+	// 不用 std::bitset，因为它没有提供比较运算符。
+
+	void init(int x, unsigned y) {
+		len = x;
+		memset(seq, 0, sizeof seq);
+		seq[0] = y;
 	}
+	void set(unsigned x) {
+		seq[x/32] |= 1u<<x%32;
+	}
+} nd[2][301][152];
+
+// 比较括号序列的大小。
+bool cmpSeq(const node &a, const node &b) {
+	for(int i = (a.len-1)/32+1; i >= 0; --i) {
+		if(a.seq[i] != b.seq[i]) return a.seq[i] < b.seq[i];
+	}
+	return 0;
+};
+
+ostream &operator<<(ostream &out, const node &x) {
+	out<<x.len<<"\n";
+	for(int i = x.len-1; i >= 0; --i)
+		out<<(x.seq[i/32] & 1u<<i%32 ? ')' : '(');
+	return out;
+}
+
+int main() {
+	// ifstream cin("r:/test/retro.in");
+	ios::sync_with_stdio(0);
+	cin>>r>>s;
+	memset(nd, -1, sizeof nd);
+	for(int i = 1; i <= r; i++)
+		for(int j = 1; j <= s; j++) {
+			cin>>c[i][j];
+		}
+	// sx = 'M' 所在的横坐标
+	sx = find(c[r]+1, c[r]+s+1, 'M') - c[r];
+	for(int j = 1; j <= s; j++)
+		if(c[1][j] == ')') {
+			nd[1][j][1].init(1, 1);
+		} else if(c[1][j] != '(') {
+			nd[1][j][0].init(0, 0);
+		}
+	// 将 DP 转移中大量重复的代码写成函数，节省码量。
+	// 注意：为了方便，这个函数中没有向 seq 添加新的括号。
+	auto dpUpt = [](const node &cur, node &nxt, int df) -> bool {
+		if(cur.len+df > nxt.len || (cur.len+df == nxt.len && cmpSeq(cur, nxt))) {
+			nxt = cur;
+			nxt.len = cur.len+df;
+			return 1;
+		}
+		return 0;
+	};
+	for(int i = 1; i < r; ++i) {
+		// 及时清空滚动数组。
+		memset(nd[i+1 & 1], -1, sizeof nd[0]);
+		for(int j = 1; j <= s; j++) {
+			// 注意：非首行的炸弹作为起点，只能在滚动到此时进行初始化。
+			if(c[i+1][j] == '*') nd[i+1 & 1][j][0].init(0, 0);
+			// 只处理序列存在的节点。
+			for(int k = 0; k <= r/2 && k <= i; ++k) if(nd[i & 1][j][k].len >= 0) {
+				// 注意：为了方便，在新一轮 DP 开始前向 seq 中添加括号。
+				// 因为二进制用 0 代表左括号，所以只用管右括号。
+				if(c[i][j] == ')') {
+					nd[i & 1][j][k].set(nd[i & 1][j][k].len-1);
+				}
+				for(int dx: {-1, 0, 1}) if(validx(j+dx)) {
+					if(c[i+1][j+dx] == ')') {
+						dpUpt(nd[i & 1][j][k], nd[i+1 & 1][j+dx][k+1], 1);
+					} else if(c[i+1][j+dx] == '(') {
+						if(k > 0)
+							dpUpt(nd[i & 1][j][k], nd[i+1 & 1][j+dx][k-1], 1);
+					} else if(c[i+1][j+dx] != '*') {
+						dpUpt(nd[i & 1][j][k], nd[i+1 & 1][j+dx][k], 0);
+					}
+				}
+			}
+		}
+	}
+	cout<<nd[r & 1][sx][0]<<endl;
 	return 0;
 }

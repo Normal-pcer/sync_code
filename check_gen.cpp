@@ -103,15 +103,20 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 1000, maxM = 1000;
-            auto n = maxN, m = maxM;
-            out << n << " " << m << endl;
-            for (auto _: range(n)) out << randint(0, 1) << " ";
-            out << endl;
-            for (auto _: range(m)) {
-                auto l = randint(0, n - 1), r = randint(0, n - 1);
-                if (l > r) std::swap(l, r);
-                out << randint(0, 4) << " " << l << " " << r << endl;
+            i32 constexpr maxN = 6;
+            auto n = maxN, m = maxN;
+
+            out << n << ' ' << m << endl;
+            auto sx = randint(n - 1, n - 1), sy = randint(0, m - 1);
+            for (auto i: range(n)) {
+                for (auto j: range(m)) {
+                    if (i == sx and j == sy) {
+                        out << 'M';
+                    } else {
+                        out << ".*()"[randint(0, 3)];
+                    }
+                }
+                out << endl;
             }
             break;
         }
