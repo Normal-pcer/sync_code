@@ -103,7 +103,7 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 6;
+            i32 constexpr maxN = 300;
             auto n = maxN, m = maxN;
 
             out << n << ' ' << m << endl;
@@ -113,7 +113,7 @@ namespace Generator {
                     if (i == sx and j == sy) {
                         out << 'M';
                     } else {
-                        out << ".*()"[randint(0, 3)];
+                        out << "..*()"[randint(0, 4)];
                     }
                 }
                 out << endl;

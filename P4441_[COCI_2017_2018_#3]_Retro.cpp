@@ -3,9 +3,10 @@
  */
 #include "./lib_v6.hpp"
 #include "./libs/fixed_int.hpp"
-#include "./libs/less_inf_number.hpp"
+
 #include "./libs/debug_log.hpp"
 
+#include "./libs/rolling_container.hpp"
 using namespace lib;
 
 /*
@@ -58,9 +59,8 @@ namespace Solution_9523125753523414 {
             rangeCheck(index);
             auto target = charToBool(ch);
             auto [block, pos] = getBlockPos(index);
-            auto mask = target << pos;
-            data_[block] &= mask;
-            data_[block] |= mask;
+            auto mask = (u64)target << pos;
+            data_[block] = (data_[block] & ~((u64)1 << pos)) | mask;
         }
         auto pushBack(char ch) -> void {
             assert(size_ <= maxSize());
@@ -106,7 +106,8 @@ namespace Solution_9523125753523414 {
         }();
 
         i16 maxK = (rowsCount + 1) / 2;
-        std::vector F(rowsCount + 1, std::vector(colsCount, std::vector(maxK + 1, BracketString::makeBad())));
+        auto inner = std::vector(colsCount, std::vector(maxK + 1, BracketString::makeBad()));
+        RollingContainer<std::vector<decltype(inner)>, 2> F(inner);
         for (i16 col = 0; col != colsCount; col++) {
             F[0][col][0] = {};
         }
@@ -127,22 +128,20 @@ namespace Solution_9523125753523414 {
 
                         if (ch == '*') {
                             if (k != 0) return BracketString::makeBad();
-                            auto cur = mat[row][col];  // 当前所处点的字符
-                            if (cur != '(' and cur != ')') return BracketString::makeBad();
-                            return {};
+                            else return {};
                         } else if (ch == '.') {
                             // 直接延续之前的
                             return F[newRow][newCol][k];
                         } else if (ch == '(') {
                             i16 newK = k + 1;
-                            if (newK > maxK) return {};
+                            if (newK > maxK) return BracketString::makeBad();
                             auto res = F[newRow][newCol][newK];
                             if (res.bad()) return BracketString::makeBad();
                             res.pushBack(mat[newRow][newCol]);
                             return res;
                         } else if (ch == ')') {
                             i16 newK = k - 1;
-                            if (newK < 0) return {};
+                            if (newK < 0) return BracketString::makeBad();
                             auto res = F[newRow][newCol][newK];
                             if (res.bad()) return BracketString::makeBad();
                             res.pushBack(mat[newRow][newCol]);
@@ -154,17 +153,26 @@ namespace Solution_9523125753523414 {
                     
                     // 自定义的三路比较运算符，更小值是更希望的。
                     auto &cur = F[row][col][k];
-                    chkMin(cur, from(row - 1, col - 1));
-                    chkMin(cur, from(row - 1, col));
-                    chkMin(cur, from(row - 1, col + 1));
+                    std::pair<BracketString, std::pair<i32, i32>> best{};
+                    best.first = BracketString::makeBad();
+                    chkMin(best, {from(row - 1, col - 1), {row - 1, col - 1}});
+                    chkMin(best, {from(row - 1, col), {row - 1, col}});
+                    chkMin(best, {from(row - 1, col + 1), {row - 1, col + 1}});
+                    cur = best.first;
+
+                    // std::cout << std::format("{}, {}, {} <- {}, {}", row, col, k, best.second.first, best.second.second) << std::endl;
                 }
             }
         }
 
         auto ans = F[startRow][startCol][0];
+        if (ans.bad()) {
+            std::cout << -1 << endl << endl;
+            return;
+        }
         std::cout << ans.size() << endl;
 
-        for (i16 row = 1; row <= rowsCount; row++) {
+        debug for (i16 row = 1; row <= rowsCount; row++) {
             for (i16 col = 0; col < colsCount; col++) {
                 for (i16 k = 0; k <= std::min(maxK, row); k++) {
                     if (F[row][col][k].bad()) continue;
@@ -187,6 +195,8 @@ namespace Solution_9523125753523414 {
 
 auto main(int argc, char const *argv[]) -> int {
     DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr), std::cout.tie(nullptr);
     Solution_9523125753523414::solve();
     return 0;
 }
