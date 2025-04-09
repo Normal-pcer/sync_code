@@ -1,100 +1,207 @@
-#include <bits/stdc++.h>
-using namespace std;
-#define validx(a) ((a) >= 1 && (a) <= s)
-int r, s, sx;
-int constexpr maxN = 301;
-char c[maxN + 1][maxN + 1];
+/**
+ * @link https://www.luogu.com.cn/problem/P4284
+ */
+#include "./lib_v6.hpp"
+#include "./libs/fixed_int.hpp"
+using namespace lib;
 
-// 一个 node 代表 DP 的一个状态
-struct node {
-	int len;
-	unsigned seq[10];
-	// seq 记录括号序列，每个二进制位上 0 代表 '('，1代表 ')'
-	// 用 10 个 32 位整数可以存下至多 320 个括号。
-	// 不用 std::bitset，因为它没有提供比较运算符。
+/*
+只需要求出每个点被充电的概率。
+对一个节点的贡献，或许可以简单地分成子树内、子树外和自己三个部分。
 
-	void init(int x, unsigned y) {
-		len = x;
-		memset(seq, 0, sizeof seq);
-		seq[0] = y;
-	}
-	void set(unsigned x) {
-		seq[x/32] |= 1u<<x%32;
-	}
-} nd[2][maxN][(maxN + 1) / 2 + 1];
+每个点被充电的概率看起来转移有点奇怪。考虑不被充电的概率。
+考虑子树内的贡献。一个节点不被充电，需要每一条向孩子的连边满足：
+    要么节点没有充电，要么中间的连边没有开启。
 
-// 比较括号序列的大小。
-bool cmpSeq(const node &a, const node &b) {
-	for(int i = (a.len-1)/32+1; i >= 0; --i) {
-		if(a.seq[i] != b.seq[i]) return a.seq[i] < b.seq[i];
-	}
-	return 0;
-};
+令 F[i] 表示：i 点没有被子树中的点或自己点亮的概率。
+转移：
+    初始 F[u] = 1 - u.prob
+    对于 u 向孩子的连边 edge：
+        令 p1 = F[edges.to]
+        p2 = 1 - edge.prob
+        F[u] *= (p1 + p2 - p1*p2)
 
-ostream &operator<<(ostream &out, const node &x) {
-	out<<x.len<<"\n";
-	for(int i = x.len-1; i >= 0; --i)
-		out<<(x.seq[i/32] & 1u<<i%32 ? ')' : '(');
-	return out;
+G[i] 表示：i 点没有被子树外的点点亮的概率。
+然后可以发现 G[i] 其实没法算。
+考虑用类似换根的方式来更新 F[i]。
+
+把根节点从 u 转到 v（连边为 edge），观察 F[i] 的变化量：
+    首先，从 u 的子树中剔除 v 的子树：
+        p1 = F[v]
+        p2 = 1 - edge.prob
+        new_F[u] <- F[u] / (p1 + p2 - p1*p2)
+    接下来，u 的小子树作为孩子连到 v 上：
+        p1 = new_F[u]  # 只统计小子树上的
+        p2 = 1 - edge.prob
+        new_F[v] <- F[v] * (p1 + p2 - p1*p2)
+
+在换根的过程中，通过参数传递实际的 F[v] 即可。
+*/
+namespace Solution_2673123382433204 {
+    using f64 = double;
+    auto solveForce() -> void {
+        i32 n; std::cin >> n;
+
+        struct GraphNode {
+            i32 to;
+            double prob;
+        };
+        std::vector<std::tuple<i32, i32, f64>> edges;
+        
+        for (auto _ = n - 1; _ --> 0; ) {
+            i32 a, b; f64 p;
+            std::cin >> a >> b >> p;
+            p /= 100;
+            edges.push_back({a, b, p});
+        }
+
+        std::vector<f64> probPoint(n + 1);
+        for (i32 i = 1; i <= n; i++) {
+            std::cin >> probPoint[i];
+            probPoint[i] /= 100;
+        }
+
+        i32 constexpr maxIter = 1e5;
+        i64 ans = 0;
+        for (auto _ = maxIter; _ --> 0; ) {
+            std::vector<char> open(n + 1);
+            std::mt19937 rng{std::random_device{}()};
+            auto rand = lam((std::uniform_real_distribution<f64>{0, 1}(rng)));
+            for (i32 p = 1; p <= n; p++) {
+                open[p] = rand() < probPoint[p];
+            }
+            
+            std::vector<std::vector<GraphNode>> graph(n + 1);
+            for (auto [a, b, p]: edges) {
+                if (rand() < p) {
+                    graph[a].push_back({b, p});
+                    graph[b].push_back({a, p});
+                }
+            }
+            std::deque<i32> q;
+            for (i32 p = 1; p <= n; p++) {
+                if (open[p]) {
+                    q.push_back(p);
+                }
+            }
+            std::vector<char> vis(n + 1);
+            while (not q.empty()) {
+                auto x = q.front(); q.pop_front();
+                if (vis[x]) continue;
+                vis[x] = true;
+                open[x] = true;
+
+                for (auto e: graph[x]) {
+                    if (vis[e.to]) continue;
+                    q.push_back(e.to);
+                }
+            }
+
+            ans += ranges::count(open, true);
+        }
+        std::cout << std::fixed << std::setprecision(6) << static_cast<f64>(ans) / maxIter << endl;
+    }
+    auto solve() -> void {
+        i32 n;
+        std::cin >> n;
+
+        std::cout << std::fixed << std::setprecision(6);
+        if (n <= 0) {
+            std::cout << 0 << endl;
+            return;
+        }
+
+        struct GraphNode {
+            i32 to;
+            f64 prob;
+        };
+        std::vector<std::vector<GraphNode>> graph(n + 1);
+
+        f64 constexpr eps = 1e-9;
+        for (auto _ = n - 1; _ --> 0; ) {
+            i32 x, y, percent;
+            std::cin >> x >> y >> percent;
+            auto prob = static_cast<f64>(percent) * 0.01;
+            if (prob < eps) prob = eps;
+            if (1 - prob < eps) prob = 1 - eps;
+            graph[x].push_back({y, prob});
+            graph[y].push_back({x, prob});
+        }
+
+        std::vector<f64> probOf(n + 1);
+        for (i32 i = 1; i <= n; i++) {
+            i32 percent;
+            std::cin >> percent;
+            probOf[i] = static_cast<f64>(percent) * 0.01;
+            if (probOf[i] < eps) probOf[i] = eps;
+            if (1 - probOf[i] < eps) probOf[i] = 1 - eps;
+        }
+
+        std::vector<f64> F(n + 1);
+        auto getInitF = [&](i32 u, i32 prev, auto &&getInitF) -> void {
+            F[u] = 1 - probOf[u];
+            for (auto edge: graph[u]) {
+                if (edge.to == prev) continue;
+                getInitF(edge.to, u, getInitF);
+
+                auto p1 = F[edge.to];
+                auto p2 = 1 - edge.prob;
+                F[u] *= (p1 + p2 - p1 * p2);
+            }
+        };
+
+        getInitF(1, 0, getInitF);
+
+        std::vector<f64> G(n + 1);
+        // 当前根节点在 u，进行换根
+        auto modifyRoot = [&](i32 u, i32 prev, f64 F_u, auto &&modifyRoot) -> void {
+            G[u] = F_u;
+            for (auto edge: graph[u]) {
+                if (edge.to == prev) continue;
+
+                auto v = edge.to;
+                auto new_F_u = [&] -> f64 {
+                    auto p1 = F[v];
+                    auto p2 = 1 - edge.prob;
+                    return F_u / (p1 + p2 - p1 * p2);
+                }();
+                auto new_F_v = [&] -> f64 {
+                    auto p1 = new_F_u;
+                    auto p2 = 1 - edge.prob;
+                    return F[v] * (p1 + p2 - p1 * p2);
+                }();
+
+                modifyRoot(edge.to, u, new_F_v, modifyRoot);
+            }
+        };
+
+        modifyRoot(1, 0, F[1], modifyRoot);
+
+        f64 ans = 0;
+        for (i32 p = 1; p <= n; p++) {
+            ans += 1 - G[p];
+        }
+
+        std::cout << ans << endl;
+        debug for (i32 p = 1; p <= n; p++) {
+            ranges::fill(F, 0);
+            getInitF(p, 0, getInitF);
+
+            assert(std::abs(F[p] - G[p]) < 1e-6);
+        }
+    }
 }
 
-int main() {
-	// ifstream cin("r:/test/retro.in");
-	ios::sync_with_stdio(0);
-	int t = 1;
-	while (t--) {
-		cin>>r>>s;
-		memset(nd, -1, sizeof nd);
-		memset(c, 0, sizeof c);
-		for(int i = 1; i <= r; i++)
-			for(int j = 1; j <= s; j++) {
-				cin>>c[i][j];
-			}
-		// sx = 'M' 所在的横坐标
-		sx = find(c[r]+1, c[r]+s+1, 'M') - c[r];
-		for(int j = 1; j <= s; j++)
-			if(c[1][j] == ')') {
-				nd[1][j][1].init(1, 1);
-			} else if(c[1][j] != '(') {
-				nd[1][j][0].init(0, 0);
-			}
-		// 将 DP 转移中大量重复的代码写成函数，节省码量。
-		// 注意：为了方便，这个函数中没有向 seq 添加新的括号。
-		auto dpUpt = [](const node &cur, node &nxt, int df) -> bool {
-			if(cur.len+df > nxt.len || (cur.len+df == nxt.len && cmpSeq(cur, nxt))) {
-				nxt = cur;
-				nxt.len = cur.len+df;
-				return 1;
-			}
-			return 0;
-		};
-		for(int i = 1; i < r; ++i) {
-			// 及时清空滚动数组。
-			memset(nd[i+1 & 1], -1, sizeof nd[0]);
-			for(int j = 1; j <= s; j++) {
-				// 注意：非首行的炸弹作为起点，只能在滚动到此时进行初始化。
-				if(c[i+1][j] == '*') nd[i+1 & 1][j][0].init(0, 0);
-				// 只处理序列存在的节点。
-				for(int k = 0; k <= r/2 && k <= i; ++k) if(nd[i & 1][j][k].len >= 0) {
-					// 注意：为了方便，在新一轮 DP 开始前向 seq 中添加括号。
-					// 因为二进制用 0 代表左括号，所以只用管右括号。
-					if(c[i][j] == ')') {
-						nd[i & 1][j][k].set(nd[i & 1][j][k].len-1);
-					}
-					for(int dx: {-1, 0, 1}) if(validx(j+dx)) {
-						if(c[i+1][j+dx] == ')') {
-							dpUpt(nd[i & 1][j][k], nd[i+1 & 1][j+dx][k+1], 1);
-						} else if(c[i+1][j+dx] == '(') {
-							if(k > 0)
-								dpUpt(nd[i & 1][j][k], nd[i+1 & 1][j+dx][k-1], 1);
-						} else if(c[i+1][j+dx] != '*') {
-							dpUpt(nd[i & 1][j][k], nd[i+1 & 1][j+dx][k], 0);
-						}
-					}
-				}
-			}
-		}
-		cout<<nd[r & 1][sx][0]<<endl;
-	}
-	return 0;
+auto main(int argc, char const *argv[]) -> int {
+    DEBUG_MODE = (argc != 1) and (std::strcmp("d", argv[1]) == 0);
+
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr), std::cout.tie(nullptr);
+
+    i32 T; 
+    std::cin >> T;
+    while (T --> 0) {
+        Solution_2673123382433204::solve();
+    }
+    return 0;
 }

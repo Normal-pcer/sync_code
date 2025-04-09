@@ -105,16 +105,24 @@ namespace Solution_2673123382433204 {
         i32 n;
         std::cin >> n;
 
+        std::cout << std::fixed << std::setprecision(6);
+        if (n <= 0) {
+            std::cout << 0 << endl;
+            return;
+        }
+
         struct GraphNode {
             i32 to;
             f64 prob;
         };
         std::vector<std::vector<GraphNode>> graph(n + 1);
 
+        f64 constexpr eps = 1e-11;
         for (auto _ = n - 1; _ --> 0; ) {
             i32 x, y, percent;
             std::cin >> x >> y >> percent;
-            auto prob = static_cast<f64>(percent) / 100;
+            auto prob = static_cast<f64>(percent) * 0.01;
+            if (percent == 100) prob = 1 - eps;
             graph[x].push_back({y, prob});
             graph[y].push_back({x, prob});
         }
@@ -123,7 +131,7 @@ namespace Solution_2673123382433204 {
         for (i32 i = 1; i <= n; i++) {
             i32 percent;
             std::cin >> percent;
-            probOf[i] = static_cast<f64>(percent) / 100;
+            probOf[i] = static_cast<f64>(percent) * 0.01;
         }
 
         std::vector<f64> F(n + 1);
@@ -144,23 +152,40 @@ namespace Solution_2673123382433204 {
         std::vector<f64> G(n + 1);
         // 当前根节点在 u，进行换根
         auto modifyRoot = [&](i32 u, i32 prev, f64 F_u, auto &&modifyRoot) -> void {
+            G[u] = F_u;
             for (auto edge: graph[u]) {
                 if (edge.to == prev) continue;
 
+                auto v = edge.to;
                 auto new_F_u = [&] -> f64 {
                     auto p1 = F[v];
                     auto p2 = 1 - edge.prob;
-                    return F[u] / (p1 + p2 - p1 * p2);
-                };
+                    return F_u / (p1 + p2 - p1 * p2);
+                }();
                 auto new_F_v = [&] -> f64 {
                     auto p1 = new_F_u;
                     auto p2 = 1 - edge.prob;
-                    return F[v] * (p1 + p2 - p1 * p1);
-                };
+                    return F[v] * (p1 + p2 - p1 * p2);
+                }();
 
                 modifyRoot(edge.to, u, new_F_v, modifyRoot);
             }
         };
+
+        modifyRoot(1, 0, F[1], modifyRoot);
+
+        f64 ans = 0;
+        for (i32 p = 1; p <= n; p++) {
+            ans += 1 - G[p];
+        }
+
+        std::cout << ans << endl;
+        debug for (i32 p = 1; p <= n; p++) {
+            ranges::fill(F, 0);
+            getInitF(p, 0, getInitF);
+
+            assert(std::abs(F[p] - G[p]) < 1e-6);
+        }
     }
 }
 
@@ -170,6 +195,6 @@ auto main(int argc, char const *argv[]) -> int {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr), std::cout.tie(nullptr);
 
-    Solution_2673123382433204::solveForce();
+    Solution_2673123382433204::solve();
     return 0;
 }

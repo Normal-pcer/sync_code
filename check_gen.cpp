@@ -102,22 +102,24 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
+        i32 constexpr maxT = 1e6;
+        auto T = maxT;
+        out << T << endl;
+        while (T --> 0)
         while (true) {
-            i32 constexpr maxN = 300;
-            auto n = maxN, m = maxN;
+            i32 constexpr maxN = 20;
+            auto N = maxN;
+            out << N << endl;
 
-            out << n << ' ' << m << endl;
-            auto sx = randint(n - 1, n - 1), sy = randint(0, m - 1);
-            for (auto i: range(n)) {
-                for (auto j: range(m)) {
-                    if (i == sx and j == sy) {
-                        out << 'M';
-                    } else {
-                        out << "..*()"[randint(0, 4)];
-                    }
-                }
-                out << endl;
+            std::vector v{0, 50, 100};
+            for (i32 i = 2; i <= N; i++) {
+                auto prev = randint(1, i - 1);
+                out << prev << " " << i << " " << v[randint(0, 2)] << endl;
             }
+            for (auto _: range(N)) {
+                out << v[randint(0, 2)] << " ";
+            }
+            out << endl;
             break;
         }
     }

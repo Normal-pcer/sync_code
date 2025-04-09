@@ -1,200 +1,207 @@
 /**
- * @link https://www.luogu.com.cn/problem/P4441
+ * @link https://www.luogu.com.cn/problem/P4284
  */
 #include "./lib_v6.hpp"
 #include "./libs/fixed_int.hpp"
-
-#include "./libs/debug_log.hpp"
-
-#include "libs/rolling_container.hpp"
 using namespace lib;
 
 /*
-F[i][j][k] 表示从点 (i, j) 走到游戏结束，栈的大小为 k，最优解的长度。
-不仅要记录长度，还要记录
+只需要求出每个点被充电的概率。
+对一个节点的贡献，或许可以简单地分成子树内、子树外和自己三个部分。
+
+每个点被充电的概率看起来转移有点奇怪。考虑不被充电的概率。
+考虑子树内的贡献。一个节点不被充电，需要每一条向孩子的连边满足：
+    要么节点没有充电，要么中间的连边没有开启。
+
+令 F[i] 表示：i 点没有被子树中的点或自己点亮的概率。
+转移：
+    初始 F[u] = 1 - u.prob
+    对于 u 向孩子的连边 edge：
+        令 p1 = F[edges.to]
+        p2 = 1 - edge.prob
+        F[u] *= (p1 + p2 - p1*p2)
+
+G[i] 表示：i 点没有被子树外的点点亮的概率。
+然后可以发现 G[i] 其实没法算。
+考虑用类似换根的方式来更新 F[i]。
+
+把根节点从 u 转到 v（连边为 edge），观察 F[i] 的变化量：
+    首先，从 u 的子树中剔除 v 的子树：
+        p1 = F[v]
+        p2 = 1 - edge.prob
+        new_F[u] <- F[u] / (p1 + p2 - p1*p2)
+    接下来，u 的小子树作为孩子连到 v 上：
+        p1 = new_F[u]  # 只统计小子树上的
+        p2 = 1 - edge.prob
+        new_F[v] <- F[v] * (p1 + p2 - p1*p2)
+
+在换根的过程中，通过参数传递实际的 F[v] 即可。
 */
-namespace Solution_9523125753523414 {
-    template <typename Value, typename Source>
-    struct MaxItem {
-        Value value;
-        Source source;
+namespace Solution_2673123382433204 {
+    using f64 = double;
+    auto solveForce() -> void {
+        i32 n; std::cin >> n;
 
-        auto friend operator<=> (MaxItem const &lhs, MaxItem const &rhs) -> std::weak_ordering {
-            return lhs.value <=> rhs.value;
-        }
-    };
-    class BracketString {
-        uz static constexpr maxBlocks = 5;
-        uz static constexpr badSize = std::numeric_limits<uz>::max();
-        uz size_{};
-        std::array<u64, maxBlocks> data_{};
-
-        auto static getBlockPos(uz index) -> std::pair<uz, uz> {
-            return {index >> 6, index & 63};
-        }
-        auto rangeCheck(uz index) const -> void {
-            if (index >= size()) {
-                throw std::range_error{std::format("BracketString out-of-bound access: at pos {} (which size is {})", index, size())};
-            }
-        }
-        auto static charToBool(char ch) -> bool {
-            // 0 = '('  1 = ')'
-            assert(ch == '(' or ch == ')');
-            return ch == ')';
-        }
-    public:
-        BracketString() {}
+        struct GraphNode {
+            i32 to;
+            double prob;
+        };
+        std::vector<std::tuple<i32, i32, f64>> edges;
         
-        auto size() const -> uz { return size_; };
-        auto bad() const -> bool { return size() == badSize; }
-        auto static maxSize() -> uz {
-            return 64 * maxBlocks;
-        };
-        auto getAt(uz index) const -> char {
-            rangeCheck(index);
-            auto [block, pos] = getBlockPos(index);
-            return "()"[(data_[block] >> pos) & 1];
-        };
-        auto setAt(uz index, char ch) -> void {
-            rangeCheck(index);
-            auto target = charToBool(ch);
-            auto [block, pos] = getBlockPos(index);
-            auto mask = (u64)target << pos;
-            data_[block] = (data_[block] & ~((u64)1 << pos)) | mask;
-        }
-        auto pushBack(char ch) -> void {
-            assert(size_ <= maxSize());
-            size_++;
-            setAt(size() - 1, ch);
+        for (auto _ = n - 1; _ --> 0; ) {
+            i32 a, b; f64 p;
+            std::cin >> a >> b >> p;
+            p /= 100;
+            edges.push_back({a, b, p});
         }
 
-        auto static makeBad() -> BracketString {
-            BracketString res;
-            res.size_ = badSize;
-            return res;
+        std::vector<f64> probPoint(n + 1);
+        for (i32 i = 1; i <= n; i++) {
+            std::cin >> probPoint[i];
+            probPoint[i] /= 100;
         }
 
-        // 先按照长度反向比较，再按照 **高位优先** 的字典序比较
-        auto friend operator<=> (BracketString const &lhs, BracketString const &rhs) -> std::strong_ordering {
-            if (lhs.bad()) return std::strong_ordering::greater;
-            if (rhs.bad()) return std::strong_ordering::less;
-            if (auto cmp = rhs.size() <=> lhs.size(); cmp != 0) return cmp;
-            for (auto i = BracketString::maxBlocks; i --> 0; ) {
-                if (auto cmp = lhs.data_[i] <=> rhs.data_[i]; cmp != 0) {
-                    return cmp;
+        i32 constexpr maxIter = 1e5;
+        i64 ans = 0;
+        for (auto _ = maxIter; _ --> 0; ) {
+            std::vector<char> open(n + 1);
+            std::mt19937 rng{std::random_device{}()};
+            auto rand = lam((std::uniform_real_distribution<f64>{0, 1}(rng)));
+            for (i32 p = 1; p <= n; p++) {
+                open[p] = rand() < probPoint[p];
+            }
+            
+            std::vector<std::vector<GraphNode>> graph(n + 1);
+            for (auto [a, b, p]: edges) {
+                if (rand() < p) {
+                    graph[a].push_back({b, p});
+                    graph[b].push_back({a, p});
                 }
             }
-            return std::strong_ordering::equal;
+            std::deque<i32> q;
+            for (i32 p = 1; p <= n; p++) {
+                if (open[p]) {
+                    q.push_back(p);
+                }
+            }
+            std::vector<char> vis(n + 1);
+            while (not q.empty()) {
+                auto x = q.front(); q.pop_front();
+                if (vis[x]) continue;
+                vis[x] = true;
+                open[x] = true;
+
+                for (auto e: graph[x]) {
+                    if (vis[e.to]) continue;
+                    q.push_back(e.to);
+                }
+            }
+
+            ans += ranges::count(open, true);
         }
-    };
+        std::cout << std::fixed << std::setprecision(6) << static_cast<f64>(ans) / maxIter << endl;
+    }
     auto solve() -> void {
-        i16 rowsCount, colsCount;
-        std::cin >> rowsCount >> colsCount;
-        
-        std::vector<std::string> mat(rowsCount + 1);
-        for (i32 row = 1; row <= rowsCount; row++) {
-            mat[row].reserve(colsCount);
-            std::cin >> mat[row];
-        }
-        for (auto _ = colsCount; _ --> 0; ) mat[0].push_back('*');
+        i32 n;
+        std::cin >> n;
 
-        i32 startRow = rowsCount;
-        i32 startCol = [&]() {
-            auto found = mat[startRow].find('M');
-            assert(found != std::string::npos);
-            return found;
-        }();
-
-        i16 maxK = (rowsCount + 1) / 2;
-        auto inner = std::vector(colsCount, std::vector(maxK + 1, BracketString::makeBad()));
-        RollingContainer<std::vector<decltype(inner)>, 2> F(inner);
-        for (i16 col = 0; col != colsCount; col++) {
-            F[0][col][0] = {};
-        }
-        for (i16 row = 1; row <= rowsCount; row++) {
-            for (i16 col = 0; col != colsCount; col++) {
-                if (mat[row][col] == '*') {
-                    F[row][col][0] = {};
-                }
-            }
-        }
-
-        for (i16 row = 1; row <= rowsCount; row++) {
-            for (i16 col = 0; col < colsCount; col++) {
-                for (i16 k = 0; k <= std::min(maxK, row); k++) {
-                    auto from = [&](i16 newRow, i16 newCol) -> BracketString {
-                        if (newCol < 0 or newCol >= colsCount) return BracketString::makeBad();
-                        auto ch = mat[newRow][newCol];
-
-                        if (ch == '*') {
-                            if (k != 0) return BracketString::makeBad();
-                            else return {};
-                        } else if (ch == '.') {
-                            // 直接延续之前的
-                            return F[newRow][newCol][k];
-                        } else if (ch == '(') {
-                            i16 newK = k + 1;
-                            if (newK > maxK) return BracketString::makeBad();
-                            auto res = F[newRow][newCol][newK];
-                            if (res.bad()) return BracketString::makeBad();
-                            res.pushBack(mat[newRow][newCol]);
-                            return res;
-                        } else if (ch == ')') {
-                            i16 newK = k - 1;
-                            if (newK < 0) return BracketString::makeBad();
-                            auto res = F[newRow][newCol][newK];
-                            if (res.bad()) return BracketString::makeBad();
-                            res.pushBack(mat[newRow][newCol]);
-                            return res;
-                        } else {
-                            assert(false), __builtin_unreachable();
-                        }
-                    };
-                    
-                    // 自定义的三路比较运算符，更小值是更希望的。
-                    auto &cur = F[row][col][k];
-                    std::pair<BracketString, std::pair<i32, i32>> best{};
-                    best.first = BracketString::makeBad();
-                    chkMin(best, {from(row - 1, col - 1), {row - 1, col - 1}});
-                    chkMin(best, {from(row - 1, col), {row - 1, col}});
-                    chkMin(best, {from(row - 1, col + 1), {row - 1, col + 1}});
-                    cur = best.first;
-
-                    // std::cout << std::format("{}, {}, {} <- {}, {}", row, col, k, best.second.first, best.second.second) << std::endl;
-                }
-            }
-        }
-
-        auto ans = F[startRow][startCol][0];
-        if (ans.bad()) {
-            std::cout << -1 << endl << endl;
+        std::cout << std::fixed << std::setprecision(6);
+        if (n <= 0) {
+            std::cout << 0 << endl;
             return;
         }
-        std::cout << ans.size() << endl;
 
-        debug for (i16 row = 1; row <= rowsCount; row++) {
-            for (i16 col = 0; col < colsCount; col++) {
-                for (i16 k = 0; k <= std::min(maxK, row); k++) {
-                    if (F[row][col][k].bad()) continue;
-                    printValues(row, col, k);
-                    std::cout << "size = " << F[row][col][k].size() << ", ";
-                    for (auto i = F[row][col][k].size(); i --> 0; ) {
-                        std::cout << F[row][col][k].getAt(i);
-                    }
-                    std::cout << endl;
-                }
+        struct GraphNode {
+            i32 to;
+            f64 prob;
+        };
+        std::vector<std::vector<GraphNode>> graph(n + 1);
+
+        f64 constexpr eps = 1e-9;
+        for (auto _ = n - 1; _ --> 0; ) {
+            i32 x, y, percent;
+            std::cin >> x >> y >> percent;
+            auto prob = static_cast<f64>(percent) * 0.01;
+            if (prob < eps) prob = eps;
+            if (1 - prob < eps) prob = 1 - eps;
+            graph[x].push_back({y, prob});
+            graph[y].push_back({x, prob});
+        }
+
+        std::vector<f64> probOf(n + 1);
+        for (i32 i = 1; i <= n; i++) {
+            i32 percent;
+            std::cin >> percent;
+            probOf[i] = static_cast<f64>(percent) * 0.01;
+            if (probOf[i] < eps) probOf[i] = eps;
+            if (1 - probOf[i] < eps) probOf[i] = 1 - eps;
+        }
+
+        std::vector<f64> F(n + 1);
+        auto getInitF = [&](i32 u, i32 prev, auto &&getInitF) -> void {
+            F[u] = 1 - probOf[u];
+            for (auto edge: graph[u]) {
+                if (edge.to == prev) continue;
+                getInitF(edge.to, u, getInitF);
+
+                auto p1 = F[edge.to];
+                auto p2 = 1 - edge.prob;
+                F[u] *= (p1 + p2 - p1 * p2);
             }
+        };
+
+        getInitF(1, 0, getInitF);
+
+        std::vector<f64> G(n + 1);
+        // 当前根节点在 u，进行换根
+        auto modifyRoot = [&](i32 u, i32 prev, f64 F_u, auto &&modifyRoot) -> void {
+            G[u] = F_u;
+            for (auto edge: graph[u]) {
+                if (edge.to == prev) continue;
+
+                auto v = edge.to;
+                auto new_F_u = [&] -> f64 {
+                    auto p1 = F[v];
+                    auto p2 = 1 - edge.prob;
+                    return F_u / (p1 + p2 - p1 * p2);
+                }();
+                auto new_F_v = [&] -> f64 {
+                    auto p1 = new_F_u;
+                    auto p2 = 1 - edge.prob;
+                    return F[v] * (p1 + p2 - p1 * p2);
+                }();
+
+                modifyRoot(edge.to, u, new_F_v, modifyRoot);
+            }
+        };
+
+        modifyRoot(1, 0, F[1], modifyRoot);
+
+        f64 ans = 0;
+        for (i32 p = 1; p <= n; p++) {
+            ans += 1 - G[p];
         }
 
-        for (auto i = ans.size(); i --> 0; ) {
-            std::cout << ans.getAt(i);
+        std::cout << ans << endl;
+        debug for (i32 p = 1; p <= n; p++) {
+            ranges::fill(F, 0);
+            getInitF(p, 0, getInitF);
+
+            assert(std::abs(F[p] - G[p]) < 1e-6);
         }
-        std::cout << endl;
     }
 }
 
 auto main(int argc, char const *argv[]) -> int {
-    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
-    Solution_9523125753523414::solve();
+    DEBUG_MODE = (argc != 1) and (std::strcmp("d", argv[1]) == 0);
+
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr), std::cout.tie(nullptr);
+
+    i32 T; 
+    std::cin >> T;
+    while (T --> 0) {
+        Solution_2673123382433204::solve();
+    }
     return 0;
 }

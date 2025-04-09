@@ -16,26 +16,22 @@ F[i][j] 表示：从湖 i 开始钓鱼，经过 j 个单位时间的最优解（
 需要记录具体方案。
 */
 namespace Solution_6138187558929015 {
-    auto solve() -> void {
+    auto flag = false;
+    auto solve(i32 n) -> void {
+        if (flag) std::cout << endl;
         using Clock = i32;
-        i32 n;
         Clock timeLimit;
-        std::cin >> n;
-        if (n == 0) std::exit(0);
         std::cin >> timeLimit;
 
         timeLimit *= 12;  // 小时 -> 单位时间
 
         struct Lake {
             i32 init, decrease;
-
-            Lake(): init(0), decrease(0) {}
-            Lake(i32 init, i32 decrease): init(init), decrease(decrease) {}
         };
         std::vector<Lake> lakes(n);
 
-        for (auto l: lakes) std::cin >> l.init;
-        for (auto l: lakes) std::cin >> l.decrease;
+        for (auto &lake: lakes) std::cin >> lake.init;
+        for (auto &lake: lakes) std::cin >> lake.decrease;
 
         std::vector<Clock> dis(n - 1);
         for (auto &x: dis) std::cin >> x;
@@ -45,10 +41,8 @@ namespace Solution_6138187558929015 {
             i32 value = 0;
             std::pair<i32, i32> source{};
 
-            Item(): value(0), source({}) {}
-            Item(i32 value, std::pair<i32, i32> const &source): 
-                value(value), source(source) {}
-
+            Item(): value(), source() {}
+            Item(i32 value, std::pair<i32, i32> const &source): value(value), source(source) {}
             auto operator< (Item const &other) const -> bool {
                 return value < other.value;
             }
@@ -64,7 +58,7 @@ namespace Solution_6138187558929015 {
                 for (i32 k = 0; k <= j; k++) {
                     auto timeRemains = j - k;
                     if (timeRemains < 0) break;
-                    auto newItem = [&]() -> Item {
+                    auto newItem = [&] {
                         if (timeRemains >= dis[i]) {
                             return Item(
                                 F[i + 1][timeRemains - dis[i]].value + gotFish, 
@@ -110,6 +104,7 @@ namespace Solution_6138187558929015 {
         }
         std::cout << endl;
         std::cout << "Number of fish expected: " << ans.value << endl;
+        flag = true;
     }
 }
 
@@ -121,7 +116,11 @@ auto main(int argc, char const *argv[]) -> int {
     std::cin.tie(nullptr), std::cout.tie(nullptr);
 
     while (true) {
-        Solution_6138187558929015::solve();
+        i32 n;
+        std::cin >> n;
+        if (n == 0) break;
+
+        Solution_6138187558929015::solve(n);
     }
     return 0;
 }
