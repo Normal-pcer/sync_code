@@ -8,7 +8,7 @@
 #define nullptr NULL
 #define true 1
 #define false 0
-#define bool int
+#define bool _Bool
 #define not !
 #define and &&
 #define or ||

@@ -38,7 +38,7 @@ namespace Solution_6138187558929015 {
             }
         }
 
-        for (i32 i = 0; i < len; i++) {
+        debug for (i32 i = 0; i < len; i++) {
             for (i32 j = 0; j < len; j++) {
                 std::cout << std::format("F[{}][{}] = {}", i, j, F[i][j]) << std::endl;
             }
