@@ -118,19 +118,15 @@ namespace Solution_5523585123640439 {
                 }
 
                 SparseTable st(values.size(), a);
-                for (i32 i = 0; i < n; i++) {
+                for (i32 i = 0; i < n + n; i++) {
                     auto [l, r] = mappedSegs[i];
                     auto ans = st.maxRange(l, r + 1);
                     assert(ans.first >= 0);
                     f[0][i] = ans.second;
                 }
-                for (i32 i = n; i < n + n; i++) {
-                    f[0][i] = f[0][i - n] + n;
-                }
             }
-                
             for (i32 t = 1; t <= logN; t++) {
-                for (i32 i = 0; i < n; i++) {
+                for (i32 i = 0; i < n + n; i++) {
                     f[t][i] = f[t - 1][f[t - 1][i]];
                 }
             }
