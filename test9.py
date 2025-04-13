@@ -119,9 +119,8 @@ class ArraySyncNode:
         # 新增管理员相关状态
         self.is_admin: bool = False
         self.admin_peers: List[Tuple[str, int]] = []
-        self.pending_requests: Dict[str, threading.Event] = {}
+        self.pending_requests: Dict[str, Tuple[threading.Event, int, int]] = {}
         self.request_results: Dict[str, bool] = {}
-        self.pending_requests: Dict[str, Tuple[int, int]] = {}  # 新增请求参数存储
 
         # 数据存储
         self.array: List[int] = [0] * 16
@@ -138,8 +137,12 @@ class ArraySyncNode:
         self.gui = ArrayGUI(self)
         self.current_request = None
 
+        self.lock = threading.Lock()  # 新增锁对象
+
         threading.Thread(target=self.accept_connections, daemon=True).start()
-        self.input_handler()
+        threading.Thread(target=self.input_handler, daemon=True).start()  # 改为后台线程
+
+        self.gui.mainloop()  # 新增：启动Tkinter主循环
 
     def load_data(self) -> None:
         try:
@@ -167,8 +170,6 @@ class ArraySyncNode:
                     break
 
                 print(data)
-                import os
-                os.system("start calc")
 
                 # 处理各种消息类型
                 if data.startswith("SYNC"):
@@ -183,26 +184,32 @@ class ArraySyncNode:
                     self.handle_update_response(data)
                 elif data.startswith("UPDATE"):
                     _, index, value = data.split()
-                    self.apply_update(int(index), int(value))
+                    self.apply_update(int(index), int(value), propagate=False)
                 elif data.startswith("REQUEST_APPROVE"):
                     _, req_id, index, value = data.split()
-                    if req_id in self.pending_requests:
-                        self.apply_update(int(index), int(value))
-                        del self.pending_requests[req_id]
+                    with self.lock:
+                        if req_id in self.pending_requests:
+                            event, stored_index, stored_value = self.pending_requests[req_id]
+                            self.apply_update(int(index), int(value), propagate=False)
+                            self.request_results[req_id] = True
+                            event.set()  # 关键：触发事件解除阻塞
                 elif data.startswith("REQUEST_REJECT"):
                     _, req_id = data.split()
-                    if req_id in self.pending_requests:
-                        print(f"请求 {req_id} 被拒绝")
-                        del self.pending_requests[req_id]
+                    with self.lock:
+                        if req_id in self.pending_requests:
+                            self.request_results[req_id] = False
+                            self.pending_requests[req_id].set()
         finally:
             client.close()
 
     def approve_request(self, req_id: str) -> None:
         """管理员同意请求"""
-        if req_id in self.pending_requests:
-            index, value = self.pending_requests[req_id]
-            self.apply_update(index, value)
-            self.propagate(f"REQUEST_APPROVE {req_id} {index} {value}")
+        with self.lock:
+            if req_id in self.pending_requests:
+                event, index, value = self.pending_requests[req_id]
+                self.apply_update(index, value)
+                self.propagate(f"REQUEST_APPROVE {req_id} {index} {value}")  # 必须包含参数
+                event.set()
 
     def reject_request(self, req_id: str) -> None:
         """管理员拒绝请求"""
@@ -228,9 +235,11 @@ class ArraySyncNode:
     def apply_update(self, index: int, value: int, propagate: bool = True) -> None:
         """应用数组修改"""
         if 0 <= index < 16 and value <= 100:
+            # 添加修改前检查
+            if self.array[index] == value:
+                return
             self.array[index] = value
             self.save_data()
-            print(f"数组已更新：{self.array}")
             if propagate:
                 self.propagate(f"UPDATE {index} {value}")
 
@@ -251,51 +260,62 @@ class ArraySyncNode:
             self.peers.remove(peer)
 
     def connect_to_peer(self, host: str, port: int) -> None:
-        """连接到其他节点并建立双向通信"""
-        if (host, port) == (self.host, self.port):
-            return  # 禁止连接自己
+        def _connect():
+            if (host, port) == (self.host, self.port):
+                return
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            sock.connect((host, port))
-            # 关键修复：将新连接加入peers列表
-            self.peers.append(sock)
-            threading.Thread(target=self.handle_client, args=(sock,)).start()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                sock.connect((host, port))
+                self.peers.append(sock)
+                threading.Thread(target=self.handle_client, args=(sock,)).start()
+                sock.send("SYNC".encode())
+                response = sock.recv(1024).decode()
+                if response.startswith("CURRENT"):
+                    new_array = list(map(int, response.split()[1:]))
+                    self.array = new_array
+                    self.save_data()
+            except Exception as e:
+                print(f"连接失败：{e}")
+            finally:
+                # 注意：不要关闭sock，因为它已被加入peers并由handle_client管理
+                pass
 
-            # 同步初始数据
-            sock.send("SYNC".encode())
-            response = sock.recv(1024).decode()
-            if response.startswith("CURRENT"):
-                new_array = list(map(int, response.split()[1:]))
-                self.array = new_array
-                self.save_data()
-        except Exception as e:
-            print(f"连接失败：{e}")
+        threading.Thread(target=_connect, daemon=True).start()
 
     def request_modification(self, index: int, value: int) -> None:
-        """发起修改请求"""
         req_id = str(uuid4())
-        self.pending_requests[req_id] = (index, value)  # 存储请求参数
         event = threading.Event()
-        self.pending_requests[req_id] = event
-        self.request_results[req_id] = False
+        
+        with self.lock:
+            # 存储事件和参数
+            self.pending_requests[req_id] = (event, index, value)
+            self.request_results[req_id] = False
+        try:
+            # 广播请求给所有节点
+            self.propagate(f"REQUEST_UPDATE {req_id} {index} {value}")
 
-        # 广播请求给所有节点
-        self.propagate(f"REQUEST_UPDATE {req_id} {index} {value}")
-
-        # 等待响应（最长10秒）
-        event.wait(10)
-        if self.request_results.get(req_id, False):
-            self.apply_update(index, value)
-            print("修改已通过")
-        else:
-            print("修改被拒绝或超时")
-
-        del self.pending_requests[req_id]
-        del self.request_results[req_id]
-
+            # 等待响应（最长10秒）
+            if not event.wait(10):
+                print("请求超时")
+            
+            # 获取结果时需要加锁
+            with self.lock:
+                result = self.request_results.get(req_id, False)
+                if result:
+                    self.apply_update(index, value)
+                    print("修改已通过")
+                else:
+                    print("修改被拒绝或超时")
+        finally:
+            # 确保最终清理资源
+            with self.lock:
+                if req_id in self.pending_requests:
+                    del self.pending_requests[req_id]
+                if req_id in self.request_results:
+                    del self.request_results[req_id]
     def input_handler(self) -> None:
-        time.sleep(0.5)
+        # time.sleep(0.5)
         while True:
             cmd = input(
                 "\n命令选项:\n"
@@ -334,9 +354,10 @@ class ArraySyncNode:
 if __name__ == "__main__":
     try:
         if len(sys.argv) != 3:
-            print("Usage: python script.py <IP> <PORT>")
-            sys.exit(1)
+            ip, port = input("ip, port: ").split()
+        else:
+            ip, port = sys.argv[1:]
 
-        ArraySyncNode(sys.argv[1], int(sys.argv[2]))
+        ArraySyncNode(ip, int(port))
     except EOFError:
         exit()
