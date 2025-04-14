@@ -103,7 +103,7 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 30;
+            i32 constexpr maxN = 8;
 
             auto n = maxN, m = maxN;
             out << n << " " << m << endl;
@@ -111,7 +111,7 @@ namespace Generator {
             // 随机选取起点
             auto sx = randint(1, n - 2), sy = randint(1, m - 2);
 
-            i32 constexpr pathCount = 10;
+            i32 constexpr pathCount = 5;
             i32 pathMaxLen = maxN * 5 / 2;
             std::set<std::pair<i32, i32>> s;
 
@@ -144,10 +144,12 @@ namespace Generator {
             }
 
             std::vector tmp(s.begin(), s.end());
+            ranges::sort(tmp, std::less{}, lam(x, std::hypot(x.first - sx, x.second - sy)));
             i32 tx, ty;
             while (true) {
-                std::tie(tx, ty) = tmp[randint(0, tmp.size() - 1)];
+                std::tie(tx, ty) = tmp.back();
                 if (tx == sx and ty == sy) {
+                    tmp.pop_back();
                     continue;
                 }
                 break;
