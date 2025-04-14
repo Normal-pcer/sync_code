@@ -11,7 +11,7 @@ char const constexpr *outputFormat = "{}.out";
 char const constexpr *dirName = "data_gen_result";
 char const constexpr *standardProgram = "check_arena0.exe";
 i32 const constexpr dataBegin = 1;
-i32 const constexpr dataEnd = 3;
+i32 const constexpr dataEnd = 51;
 int main() {
     std::filesystem::path cur_path{"."};
     for (i32 i = dataBegin; i < dataEnd; i++) {

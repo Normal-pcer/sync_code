@@ -1,25 +1,33 @@
+#include <array>
+#include <chrono>
+#include <cstring>
 #include <iostream>
-#include <vector>
+#include <random>
 
-struct A {
-    int x;
-    auto f(int y) const -> void {
-        std::cout << x + y << std::endl;
+int constexpr n = 2e8;
+std::array<unsigned int, n> a, b;
+
+auto f() -> unsigned {
+    unsigned ans = 0;
+    for (int i = 0; i + 1 < n; i += 64) {
+        ans += a[i] * b[i + 1];
     }
-};
-
-auto g() -> int {
-    static int cnt = 0;
-    return cnt++;
+    return ans;
 }
 
 auto main() -> int {
-    std::vector<A> v;
+    std::mt19937 rng{std::random_device{}()};
 
-    v.push_back(A{5});
-    v.push_back(A{4});
-    v.push_back(A{3});
+    for (int i = 0; i < n; i++) {
+        a[i] = rng();
+    }
 
-    v[g()].f(g());
+    auto t0 = std::chrono::system_clock::now();
+    // std::memcpy(b.data(), a.data(), sizeof(a));
+    auto ans = f();
+    auto t1 = std::chrono::system_clock::now();
+
+    std::cout << "ans = " << ans << std::endl;
+    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << "ms" << std::endl;
     return 0;
 }

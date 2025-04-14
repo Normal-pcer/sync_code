@@ -102,24 +102,74 @@ namespace Generator {
     using namespace Random;
 
     void generate(std::ostream &out) {
-        i32 constexpr maxT = 1e6;
-        auto T = maxT;
-        out << T << endl;
-        while (T --> 0)
         while (true) {
-            i32 constexpr maxN = 20;
-            auto N = maxN;
-            out << N << endl;
+            i32 constexpr maxN = 30;
 
-            std::vector v{0, 50, 100};
-            for (i32 i = 2; i <= N; i++) {
-                auto prev = randint(1, i - 1);
-                out << prev << " " << i << " " << v[randint(0, 2)] << endl;
+            auto n = maxN, m = maxN;
+            out << n << " " << m << endl;
+
+            // 随机选取起点
+            auto sx = randint(1, n - 2), sy = randint(1, m - 2);
+
+            i32 constexpr pathCount = 10;
+            i32 pathMaxLen = maxN * 5 / 2;
+            std::set<std::pair<i32, i32>> s;
+
+            std::array<i32, 5> constexpr dxs{ 0,  0,  0, +1, -1 };
+            std::array<i32, 5> constexpr dys{ 0, -1, +1,  0,  0 };
+
+            for (auto _ = pathCount; _ --> 0; ) {
+                i32 x = sx, y = sy;
+                auto dir = _ % 4;
+                auto dx = dxs[dir], dy = dys[dir];
+                
+                for (auto _ = randint(pathMaxLen / 2, pathMaxLen); _ --> 0; ) {
+                    if (x >= n or x < 0 or y >= m or y < 0) break;
+                    s.insert({x, y});
+                    x += dx;
+                    y += dy;
+                    if (randint(1, std::max(_, 3)) == 1) {
+                        i32 ndx, ndy;
+                        while (true) {
+                            auto dir = randint(0, 4);
+                            ndx = dxs[dir];
+                            ndy = dys[dir];
+                            if (ndx == -dx and ndy == -dy) continue;
+                            if (ndx == +dx and ndy == +dy) continue;
+                            break;
+                        }
+                        dx = ndx, dy = ndy;
+                    }
+                }
             }
-            for (auto _: range(N)) {
-                out << v[randint(0, 2)] << " ";
+
+            std::vector tmp(s.begin(), s.end());
+            i32 tx, ty;
+            while (true) {
+                std::tie(tx, ty) = tmp[randint(0, tmp.size() - 1)];
+                if (tx == sx and ty == sy) {
+                    continue;
+                }
+                break;
             }
-            out << endl;
+            std::vector<std::string> mat(n);
+            for (i32 i = 0; i < n; i++) {
+                mat[i].resize(m, '.');
+                for (i32 j = 0; j < m; j++) {
+                    if (i == sx and j == sy) {
+                        mat[i][j] = "NSWE"[randint(0, 3)];
+                    } else if (i == tx and j == ty) {
+                        mat[i][j] = 'F';
+                    }
+                }
+            }
+            for (auto [x, y]: s) {
+                if (mat[x][y] == '.') {
+                    mat[x][y] = '#';
+                }
+            }
+
+            for (auto const &line: mat) out << line << endl;
             break;
         }
     }

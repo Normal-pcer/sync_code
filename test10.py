@@ -104,7 +104,7 @@ class Message:
     class Type(Enum):
         First = "First"  # 节点首次连接，需要附带自己的地址和端口
         Second = "Second"  # 经过恰好一次转发的 First 消息
-        ConnectWith = "ConnectWith"  # 请求新节点和自己连接  
+        ConnectWith = "ConnectWith"  # 请求新节点和自己连接
         Modify = "Modify"  # 修改某个分数
 
         def __str__(self) -> str:
