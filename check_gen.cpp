@@ -101,29 +101,36 @@ namespace Generator {
     }
     using namespace Random;
 
+    struct C {
+        int a[10000005],b[10000005];
+        unsigned seed;
+        unsigned rnd(unsigned x){
+            x^=x<<13;
+            x^=x>>17;
+            x^=x<<5;
+            return x;
+        }
+        int rad(int x,int y){
+            seed=rnd(seed);
+            return seed%(y-x+1)+x;
+        }
+        void init_data(unsigned s, int n){
+            seed = s;
+            for(int i=1;i<=n;i++)
+                a[i]=1,b[i]=rad(1,500000);
+            for(int i=1;i<=n-2;i++)
+                a[rad(1,n)]++;
+        }
+    } c;
+
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 1e5, maxM = 1e5, maxVal = 1e9;
-            auto n = maxN, m = maxM;
+            i32 constexpr maxN = 10, maxV = 30000;
+            auto n = maxN;
 
-            out << n << ' ' << m << endl;
-            for (auto _: range(n)) {
-                out << randint(0, maxVal) << ' ';
-            }
+            out << n << endl;
+            for (auto _: range(n)) out << randint(1, maxV) << ' ';
             out << endl;
-            for (auto _: range(m)) {
-                char op = "QC"[randint(0, 1)];
-                out << op << ' ';
-                if (op == 'Q') {
-                    auto l = randint(1, n), r = randint(1, n);
-                    if (l > r) std::swap(l, r);
-                    auto q = randint(1, r - l + 1);
-                    out << l << ' ' << r << ' ' << q << endl;
-                } else {
-                    auto x = randint(1, n), y = randint(0, maxVal);
-                    out << x << ' ' << y << endl;
-                }
-            }
             break;
         }
     }

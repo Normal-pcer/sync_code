@@ -9,6 +9,15 @@ data_file = ".scoreboard"
 names: Set[str] = set()
 scores: Dict[str, float] = dict()
 history: Dict[str, deque[float]] = dict()  # 先前的扣分
+free_give: Dict[str, float] = dict()  # 剩余的免费额度
+prev_update = 0.0 # 上次统计免费额度的时间
+
+# 免费赠予额度，一周刷新一次
+FREE_GIVE_REFRESH = 7 * 24 * 60 * 60
+FREE_GIVE_AMOUNT = 10.0
+
+# 初始分数
+INIT_SCORE = 100.0
 
 def str_similar(s1: str, s2: str) -> float:
     if s1 == s2:
@@ -42,25 +51,45 @@ def save():
         data = json.dumps({
             "names": list(names),
             "scores": scores,
-            "history": {key: list(value) for key, value in history.items()}
+            "history": {key: list(value) for key, value in history.items()},
+            "free_give": free_give,
+            "prev_update": prev_update,
         })
         f.write(data)
 
 def load():
     try:
         with open(data_file, "r") as f:
+            global prev_update
             data = json.load(f)
             names.update(data["names"])
             scores.update(data["scores"])
+            free_give.update(data["free_give"])
+            prev_update = data["prev_update"]
 
             for key, value in data["history"].items():
                 history[key] = deque(value)
+        
+        # 补全不存在的值
+        for name in names:
+            if name not in free_give:
+                free_give[name] = FREE_GIVE_AMOUNT
+            if name not in history:
+                history[name] = deque()
+            if name not in scores:
+                scores[name] = INIT_SCORE
     except Exception as e:
-        print(e)
+        print(repr(e))
 
 
 if __name__ == '__main__':
     load()
+
+    if time() - prev_update > FREE_GIVE_REFRESH:
+        for name in names:
+            free_give[name] = FREE_GIVE_AMOUNT
+        prev_update = time()
+
     while True:
         print("""scoreboard
 reduce [user] [amount] 扣分
@@ -69,6 +98,7 @@ list 列出所有用户及其分数
 list [user] 列出指定用户的记录
 join [user] 添加用户
 delete [user] 删除用户
+give [source] [target] [amount] 赠予
 quit 退出程序""")
         try:
             cmd = input("> ").split()
@@ -93,7 +123,7 @@ quit 退出程序""")
                 amount = float(cmd[2])
 
                 scores[user] += amount
-                print(f"{user} 加分：{amount}")
+                print(f"{user} 加分：{amount:.2f}")
             elif op == "list":
                 if len(cmd) == 1:
                     # 所有用户
@@ -102,25 +132,43 @@ quit 退出程序""")
                 else:
                     # 指定用户
                     user = select_user(cmd[1])
-                    print("现在分数：", scores[user])
+                    print(f"现在分数：{scores[user]:.2f}")
                     print("近期扣分：")
                     for i in history[user]:
                         print(strftime("%Y-%m-%d %H:%M:%S", localtime(i)))
+                    print(f"剩余免费赠送额度：{free_give[user]:.2f}")
             elif op == "join":
                 user = cmd[1]
                 names.add(user)
-                scores[user] = 100.0
+                scores[user] = INIT_SCORE
                 history[user]= deque()
+                free_give[user] = FREE_GIVE_AMOUNT
             elif op == "delete":
                 user = select_user(cmd[1])
                 names.remove(user)
                 del scores[user]
                 del history[user]
+            elif op == "give":
+                source, target, amount = cmd[1], cmd[2], float(cmd[3])
+
+                source_prev_score, target_prev_score = scores[source], scores[target]
+
+                if source not in names or target not in names:
+                    print("用户不存在")
+                    continue
+                free = min(free_give[source], amount)
+                free_give[source] -= free
+                other = amount - free
+                scores[source] -= other / 3
+                scores[target] += amount
+
+                print(f"{source} 赠送了 {target} {amount} 分。")
+                print(f"{source}: {source_prev_score:.2f} -> {scores[source]:.2f}")
+                print(f"{target}: {target_prev_score:.2f} -> {scores[target]:.2f}")
+                print(f"{source} 剩余免费赠送额度：{free_give[source]:.2f}")
             elif op == "quit" or op == "q":
                 break
             save()
-            print()
-            print()
             print()
             print()
         except EOFError:
@@ -128,4 +176,4 @@ quit 退出程序""")
         except KeyboardInterrupt:
             break
         except Exception as e:
-            print(e)
+            print(repr(e))

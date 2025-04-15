@@ -2,6 +2,8 @@
 #include "./libs/fixed_int.hpp"
 using namespace lib;
 
+#define FILENAME "six"
+
 /*
 预处理出所有可能的 a*b + c 以及 (e+f) * d。
 放在 map 里。
@@ -43,6 +45,7 @@ namespace Solution_1585286303122099 {
         for (auto a: nums) {
             for (auto b: nums) {
                 for (auto c: nums) {
+                    if (c == 0) continue;
                     map[(a + b) * c]++;
                 }
             }
@@ -69,6 +72,9 @@ auto main(int argc, char const *argv[]) -> int {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr), std::cout.tie(nullptr);
 
-    Solution_1585286303122099::solveForce();
+    // std::freopen(FILENAME ".in", "r", stdin);
+    // std::freopen(FILENAME ".out", "w", stdout);
+
+    Solution_1585286303122099::solve();
     return 0;
 }
