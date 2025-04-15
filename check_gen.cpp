@@ -103,75 +103,27 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 8;
+            i32 constexpr maxN = 1e5, maxM = 1e5, maxVal = 1e9;
+            auto n = maxN, m = maxM;
 
-            auto n = maxN, m = maxN;
-            out << n << " " << m << endl;
-
-            // 随机选取起点
-            auto sx = randint(1, n - 2), sy = randint(1, m - 2);
-
-            i32 constexpr pathCount = 5;
-            i32 pathMaxLen = maxN * 5 / 2;
-            std::set<std::pair<i32, i32>> s;
-
-            std::array<i32, 5> constexpr dxs{ 0,  0,  0, +1, -1 };
-            std::array<i32, 5> constexpr dys{ 0, -1, +1,  0,  0 };
-
-            for (auto _ = pathCount; _ --> 0; ) {
-                i32 x = sx, y = sy;
-                auto dir = _ % 4;
-                auto dx = dxs[dir], dy = dys[dir];
-                
-                for (auto _ = randint(pathMaxLen / 2, pathMaxLen); _ --> 0; ) {
-                    if (x >= n or x < 0 or y >= m or y < 0) break;
-                    s.insert({x, y});
-                    x += dx;
-                    y += dy;
-                    if (randint(1, std::max(_, 3)) == 1) {
-                        i32 ndx, ndy;
-                        while (true) {
-                            auto dir = randint(0, 4);
-                            ndx = dxs[dir];
-                            ndy = dys[dir];
-                            if (ndx == -dx and ndy == -dy) continue;
-                            if (ndx == +dx and ndy == +dy) continue;
-                            break;
-                        }
-                        dx = ndx, dy = ndy;
-                    }
+            out << n << ' ' << m << endl;
+            for (auto _: range(n)) {
+                out << randint(0, maxVal) << ' ';
+            }
+            out << endl;
+            for (auto _: range(m)) {
+                char op = "QC"[randint(0, 1)];
+                out << op << ' ';
+                if (op == 'Q') {
+                    auto l = randint(1, n), r = randint(1, n);
+                    if (l > r) std::swap(l, r);
+                    auto q = randint(1, r - l + 1);
+                    out << l << ' ' << r << ' ' << q << endl;
+                } else {
+                    auto x = randint(1, n), y = randint(0, maxVal);
+                    out << x << ' ' << y << endl;
                 }
             }
-
-            std::vector tmp(s.begin(), s.end());
-            ranges::sort(tmp, std::less{}, lam(x, std::hypot(x.first - sx, x.second - sy)));
-            i32 tx, ty;
-            while (true) {
-                std::tie(tx, ty) = tmp.back();
-                if (tx == sx and ty == sy) {
-                    tmp.pop_back();
-                    continue;
-                }
-                break;
-            }
-            std::vector<std::string> mat(n);
-            for (i32 i = 0; i < n; i++) {
-                mat[i].resize(m, '.');
-                for (i32 j = 0; j < m; j++) {
-                    if (i == sx and j == sy) {
-                        mat[i][j] = "NSWE"[randint(0, 3)];
-                    } else if (i == tx and j == ty) {
-                        mat[i][j] = 'F';
-                    }
-                }
-            }
-            for (auto [x, y]: s) {
-                if (mat[x][y] == '.') {
-                    mat[x][y] = '#';
-                }
-            }
-
-            for (auto const &line: mat) out << line << endl;
             break;
         }
     }
