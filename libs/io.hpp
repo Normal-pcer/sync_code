@@ -1,3 +1,4 @@
+#include <bits/stdc++.h>
 // 是否支持 int128
 #ifdef __SIZEOF_INT128__
 #define IO_ENABLE_INT128

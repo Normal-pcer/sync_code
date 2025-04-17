@@ -101,36 +101,21 @@ namespace Generator {
     }
     using namespace Random;
 
-    struct C {
-        int a[10000005],b[10000005];
-        unsigned seed;
-        unsigned rnd(unsigned x){
-            x^=x<<13;
-            x^=x>>17;
-            x^=x<<5;
-            return x;
-        }
-        int rad(int x,int y){
-            seed=rnd(seed);
-            return seed%(y-x+1)+x;
-        }
-        void init_data(unsigned s, int n){
-            seed = s;
-            for(int i=1;i<=n;i++)
-                a[i]=1,b[i]=rad(1,500000);
-            for(int i=1;i<=n-2;i++)
-                a[rad(1,n)]++;
-        }
-    } c;
-
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 10, maxV = 30000;
-            auto n = maxN;
-
-            out << n << endl;
-            for (auto _: range(n)) out << randint(1, maxV) << ' ';
-            out << endl;
+            using ll = long long;
+            ll n = randint(1, 100000), m = randint(1, 100000), q = randint(1, 100000);
+            out << n << ' ' << m << ' ' << q << endl;
+            for(ll i = 1; i <= m; i++){
+                ll x = randint(1, n), y = randint(1, n);
+                if(x == y) y = y % n + 1;
+                out << x << ' ' << y << endl;
+            }
+            for(ll i = 1; i <= q; i++){
+                ll u = randint(1, n), v = randint(1, n);
+                if(u == v) v = v % n + 1;
+                out << u << ' ' << v << endl;
+            }
             break;
         }
     }

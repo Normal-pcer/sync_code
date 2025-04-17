@@ -10,8 +10,8 @@ char const constexpr *inputFormat = "{}.in";
 char const constexpr *outputFormat = "{}.out";
 char const constexpr *dirName = "data_gen_result";
 char const constexpr *standardProgram = "check_arena0.exe";
-i32 const constexpr dataBegin = 23;
-i32 const constexpr dataEnd = 31;
+i32 const constexpr dataBegin = 1;
+i32 const constexpr dataEnd = 11;
 int main() {
     std::filesystem::path cur_path{"."};
     for (i32 i = dataBegin; i < dataEnd; i++) {
@@ -26,7 +26,7 @@ int main() {
         to_in.close();
 
         std::string call = std::format("{} < {} > {}", standardProgram, input_path.string(), output_path.string());
-        std::cout << call << std::endl;
+        std::cout << call << '\n';
         std::system(call.c_str());
 
         std::fstream read_out(output_path, std::ios::in | std::ios::binary);

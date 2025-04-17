@@ -2,7 +2,6 @@
 #define LIB_INFINITY_NUMBER_LESS
 #include <type_traits>
 #include <limits>
-#include <iostream>
 #include <cmath>
 
 namespace lib {

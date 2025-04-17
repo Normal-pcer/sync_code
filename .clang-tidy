@@ -7,6 +7,11 @@ Checks: >
   performance-*,
   -modernize-use-trailing-return-type,
   -bugprone-reserved-identifier,
-  -bugprone-macro-parentheses
+  -bugprone-macro-parentheses,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -performance-avoid-endl,
+  -modernize-use-ranges,
+  -modernize-use-nodiscard,
 CheckOptions:
   readability-identifier-naming.StrictCase: 'true'

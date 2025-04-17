@@ -1,74 +1,37 @@
-#include "./lib_v6.hpp"
-#include "./libs/fixed_int.hpp"
-using namespace lib;
-
-/*
-预处理出所有可能的 a*b + c 以及 (e+f) * d。
-放在 map 里。
-*/
-namespace Solution_1585286303122099 {
-    auto solveForce() -> void {
-        i32 n;
-        std::cin >> n;
-
-        std::vector<i64> nums(n);
-        for (auto &x: nums) std::cin >> x;
-
-        i64 ans = 0;
-        for (auto a: nums) {
-            for (auto b: nums) {
-                for (auto c: nums) {
-                    for (auto d: nums) {
-                        for (auto e: nums) {
-                            for (auto f: nums) {
-                                if (a * b + c == d * (e + f)) {
-                                    ans++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        std::cout << ans << endl;
-    }
-    auto solve() -> void {
-        i32 n;
-        std::cin >> n;
-
-        std::vector<i32> nums(n);
-        for (auto &x: nums) std::cin >> x;
-
-        std::map<i32, i32> map;  // (a + b) * c
-        for (auto a: nums) {
-            for (auto b: nums) {
-                for (auto c: nums) {
-                    map[(a + b) * c]++;
-                }
-            }
-        }
-
-        i64 ans = 0;
-        for (auto a: nums) {
-            for (auto b: nums) {
-                for (auto c: nums) {
-                    auto it = map.find(a * b + c);
-                    if (it != map.end()) {
-                        auto cnt = it->second;
-                        ans += cnt;
-                    }
-                }
-            }
-        }
-        std::cout << ans << endl;
-    }
+#include <bits/stdc++.h>
+using namespace std;
+#define ll long long
+const ll N = 1e5 + 10;
+ll n, m, q, a, b, fa[N];
+set<ll> s[N], t[N];
+ll find(ll x){
+	return fa[x] == x ? x : fa[x] = find(fa[x]);
 }
-
-auto main(int argc, char const *argv[]) -> int {
-    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr), std::cout.tie(nullptr);
-
-    Solution_1585286303122099::solve();
-    return 0;
+void merge(ll a, ll b){
+	n--;
+	for(auto i : s[b]){
+		if(s[i].size() < n) s[i].insert(a);
+		s[i].erase(b);
+		if(s[a].size() < n) s[a].insert(i);
+	}
+	s[b].clear(), fa[b] = a;
+}
+int main(){
+//	freopen("1.in", "r", stdin);
+//	freopen("1.out", "w", stdout);
+	ios::sync_with_stdio(false);
+	cin.tie(0); cout.tie(0);
+	cin >> n >> m >> q;
+	for(ll i = 1; i <= n; i++) fa[i] = i;
+	for(ll i = 1; i <= m; i++) cin >> a >> b, s[a].insert(b), s[b].insert(a);
+	while(q--){
+		cin >> a >> b;
+		a = find(a), b = find(b);
+		if(!s[a].count(b) && a != b){
+			if(s[a].size() < s[b].size()) merge(b, a);
+			else merge(a, b);
+			cout << "agree." << endl;
+		}else cout << "no!" << endl;
+	}
+	return 0;
 }

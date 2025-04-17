@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <array>
 
 #ifndef INCLUDED_INPLACE_VECTOR
 #define INCLUDED_INPLACE_VECTOR

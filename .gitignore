@@ -5,3 +5,4 @@ build/
 .vscode/
 *.pdb
 *.ans
+data_gen_result.zip

@@ -15,7 +15,7 @@ public:
     using Iterator = T *;
     using ConstIterator = T const *;
 
-    InplaceVector() {}
+    InplaceVector() = default;
     explicit InplaceVector(std::size_t n): size_(n) {
         auto ptr = reinterpret_cast<T *>(data_.data());
         for (std::size_t i = 0; i != n; ++i, ++ptr) {
@@ -38,9 +38,9 @@ public:
     auto size() const -> std::size_t { return size_; }
     auto data() const -> T * { return reinterpret_cast<T *>(data_.data()); }
     auto begin() -> Iterator { return reinterpret_cast<T *>(data_.data()); }
-    auto begin() const -> ConstIterator { return reinterpret_cast<T *>(data_.data()); }
+    auto begin() const -> ConstIterator { return reinterpret_cast<T const *>(data_.data()); }
     auto end() -> Iterator { return reinterpret_cast<T *>(data_.data()) + size(); }
-    auto end() const -> ConstIterator { return reinterpret_cast<T *>(data_.data()) + size(); }
+    auto end() const -> ConstIterator { return reinterpret_cast<T const *>(data_.data()) + size(); }
 
     auto at(std::size_t index) const -> T const & {
         if (index >= size()) {
@@ -131,7 +131,6 @@ namespace Solution_7578310299915525 {
         std::deque<Node> nodes;
         i32 n;
         i32 rootBegin = 0, rootEnd = 0;
-        i32 root = 0;
 
         std::vector<i32> rootOfTree;
 
@@ -177,7 +176,7 @@ namespace Solution_7578310299915525 {
                 return findFirstOnTrees(val - leftX, add, sub, nodeMid, nodeEnd);
             }
         }
-        auto sumRangeOnTrees(i32 begin, i32 end, LogVector<i32> add, LogVector<i32> sub, i32 nodeBegin, i32 nodeEnd) -> i32 {
+        auto sumRangeOnTrees(i32 begin, i32 end, LogVector<i32> const &add, LogVector<i32> const &sub, i32 nodeBegin, i32 nodeEnd) -> i32 {
             if (nodeBegin >= begin and nodeEnd <= end) {
                 i32 res = 0;
                 for (auto x: add) res += nodes[x].sum;

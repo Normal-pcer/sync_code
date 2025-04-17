@@ -8,7 +8,7 @@
 using namespace lib;
 
 constexpr const int MaxTimes = inf;
-constexpr const int FileCount = 2;
+constexpr const int FileCount = 4;
 constexpr const char *FileNames[] = {
     "check_arena0.cpp",
     "check_arena1.cpp",
@@ -51,17 +51,17 @@ namespace Checker {
         public:
         struct ParseError: public std::exception {
             std::string message;
-            ParseError(std::string const &s): message(s) {}
+            ParseError(std::string s): message(std::move(s)) {}
             
-            auto what() const noexcept -> char const * override {
+            [[nodiscard]] auto what() const noexcept -> char const * override {
                 return message.c_str();
             }
         };
         struct KeyError: public std::exception {
             std::string message;
-            KeyError(std::string const &s): message(s) {}
+            KeyError(std::string s): message(std::move(s)) {}
             
-            auto what() const noexcept -> char const * override {
+            [[nodiscard]] auto what() const noexcept -> char const * override {
                 return message.c_str();
             }
         };
@@ -117,8 +117,8 @@ namespace Checker {
     }
 
     void pause() {
-        std::cout << "Press any to continue, 'q' to exit..." << std::endl;
-        char ch = getchar();
+        std::cout << "Press any to continue, 'q' to exit..." << '\n' << std::flush;
+        char ch = static_cast<char>(getchar());
         if (ch == 'q')  std::exit(0);
     }
 
@@ -136,7 +136,7 @@ namespace Checker {
 
     size_t hash(std::vector<std::string> &vec) {
         ranges::for_each(vec, process);
-        auto view_hash = vec | views::transform(lam(x, std::hash<std::string>{}(x)));
+        auto view_hash = vec | views::transform(lam(const &x, std::hash<std::string>{}(x)));
         size_t res = std::accumulate(view_hash.begin(), view_hash.end(), (size_t)0);
         return res;
     }
@@ -147,7 +147,7 @@ namespace Checker {
 
         lastTime -= std::filesystem::file_time_type::clock::now().time_since_epoch();
         lastTime += std::chrono::system_clock::now().time_since_epoch();
-        // std::cout << "* " << path << " " << lastTime << std::endl;
+        // std::cout << "* " << path << " " << lastTime << '\n' << std::flush;
         return std::chrono::duration_cast<std::chrono::seconds>(lastTime).count();
     }
     auto isFileModified(std::string const &path) -> bool {
@@ -166,11 +166,11 @@ namespace Checker {
         for (auto i: range(FileCount)) {
             if (isFileModified(FileNames[i])) {
                 *std::format_to(tmp, CompileCommand, FileNames[i], i) = 0;
-                std::cout << tmp << std::endl;
+                std::cout << tmp << '\n' << std::flush;
                 if (std::system(tmp))  throw std::string(FileNames[i]) + "compile error";
                 prevTimeConfig.setItem(FileNames[i], std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
         } else {
-                std::cout << std::format("File \"{}\" skipped compile!", FileNames[i]) << std::endl;
+                std::cout << std::format("File \"{}\" skipped compile!", FileNames[i]) << '\n' << std::flush;
             }
         }
         prevTimeConfig.save();
@@ -197,13 +197,12 @@ namespace Checker {
 
         for (auto i = 0; i != MaxTimes; i++) {
             if (ClearEachTime)  clear();
-            std::cout << std::format("Running on test {}", i) << std::endl;
+            std::cout << std::format("Running on test {}", i) << '\n' << std::flush;
             std::fstream in(InputFileName, std::ios::out | std::ios::trunc);
             if (not in.is_open())  throw "failed to open input";
             generate(in);
             in.close();
 
-            std::string line;
             std::vector<std::string> lines1, lines2;
 
             std::vector<Result> results;
@@ -247,12 +246,12 @@ namespace Checker {
                         else                    std::cout << std::format("#{} Wrong Answer  {:.2f}sec", i, dur);
                     }
                     if (i == best.second)  std::cout << " Best Solution!";
-                    std::cout << std::endl;
+                    std::cout << '\n' << std::flush;
                 }
 
                 if (InterruptOnMainConflict and (max_hash != results.at(0).ansHash or results.at(0).ret != 0))  pause();
             } else {
-                std::cout << std::format("Cannot infer answer on test {}", i) << std::endl;
+                std::cout << std::format("Cannot infer answer on test {}", i) << '\n' << std::flush;
             }
             if (InterruptOnConflict and (max_count.first != FileCount or some_runtime_error))  pause();
 
@@ -268,11 +267,11 @@ int main() {
     try {
         Checker::main();
     } catch (std::string str) {
-        std::cerr << "terminate called after throwing an instance of 'std::string': " << std::endl;
-        std::cerr << str << std::endl;
+        std::cerr << "terminate called after throwing an instance of 'std::string': " << '\n' << std::flush;
+        std::cerr << str << '\n' << std::flush;
     } catch (const char *str) {
-        std::cerr << "terminate called after throwing an instance of 'const char*': " << std::endl;
-        std::cerr << str << std::endl;
+        std::cerr << "terminate called after throwing an instance of 'const char*': " << '\n' << std::flush;
+        std::cerr << str << '\n' << std::flush;
     }
 
     return 0;

@@ -1,5 +1,5 @@
 CompileFlags:
-  Add: [-std=c++20]  # 指定 C++ 标准
+  Add: [-std=c++26]  # 指定 C++ 标准
 
 Diagnostics:
   ClangTidy: 
@@ -8,3 +8,9 @@ Diagnostics:
 
 Index:
   Background: Build
+
+InlayHints:
+  Designators: No
+  ParameterNames: No
+  DeducedTypes: No
+  
