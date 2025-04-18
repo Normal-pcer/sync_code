@@ -37,10 +37,10 @@ constexpr const char *RunCommand = "./{}.exe < {} > {}_{}";
 constexpr const char *RunCommand = "{}.exe < {} > {}_{}";
 #endif  // def linux
 
-namespace _Generator {
+namespace Generator_ {
 #include "check_gen.cpp"
 }
-namespace Generator = _Generator::Generator;
+namespace Generator = Generator_::Generator;
 
 namespace Checker {
     class Configure {

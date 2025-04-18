@@ -5,117 +5,18 @@ namespace Generator {
 #include "libs/range.hpp"
 #include "libs/fixed_int.hpp"
     using namespace lib;
-    namespace Random {
-        std::mt19937 rng{std::random_device{}()};
-
-        template <typename T, typename U>
-        auto randint(T min, U max) -> decltype(min + max) {
-            using ResultType = decltype(min + max);
-            ResultType min_ = min, max_ = max;
-            if (min_ > max_)  std::swap(min_, max_);
-            std::uniform_int_distribution<ResultType> rid{static_cast<ResultType>(min_), static_cast<ResultType>(max_)};
-            return rid(rng);
-        }
-
-        template <typename T, typename U>
-        auto randreal(T min, U max) -> decltype(min + max) {
-            using ResultType = decltype(min + max);
-            ResultType min_ = min, max_ = max;
-            if (min_ > max_)  std::swap(min_, max_);
-            std::uniform_real_distribution<ResultType> rrd{static_cast<ResultType>(min_), static_cast<ResultType>(max_)};
-            return rrd(rng);
-        }
-
-        template <typename T, typename U>
-        auto randrange(T first, U last) -> decltype(first + last) {
-            using ResultType = decltype(first + last);
-            assert(static_cast<ResultType>(first) != static_cast<ResultType>(last));
-            if constexpr (std::is_integral_v<ResultType>)  return randint(first, last - 1);
-            else if constexpr (std::is_floating_point_v<ResultType>)  return randreal(first, last);
-            else  static_assert(false, "first + last must be integral or floating point number.");
-        }
-
-        template <typename T>
-        auto sorted(T x) -> T {
-            ranges::sort(x);
-            return x;
-        }
-
-        template <typename T>
-        auto sample(T first, T last, i32 N) -> std::vector<T> {
-            auto cnt = last - first;
-            assert(N <= cnt);
-            if (cnt < N * 2) {
-                std::vector<T> tmp(cnt);
-                for (i32 i = 0; i < cnt; i++)  tmp[i] = first + i;
-                std::vector<T> res(N);
-                std::sample(tmp.begin(), tmp.end(), res.begin(), N, rng); 
-                std::shuffle(res.begin(), res.end(), rng);
-                return res;
-            } else {
-                std::set<T> s;
-                std::vector<T> res(N);
-                for (i32 i = 0; i < N; i++) {
-                    auto x = randrange(first, last);
-                    for (; s.contains(x); x++) {
-                        if (x == last)  x = first;
-                    }
-                    s.insert(x);
-                    res[i] = x;
-                }
-                return res;
-            }
-        }
-        template <typename T>
-        auto sample(T &&range, uz N) -> auto {
-            auto cnt = range.size();
-            using ResultType = std::remove_reference_t<decltype(*range.begin())>;
-            assert(N <= cnt);
-            if (cnt < N * 2) {
-                std::vector<ResultType> res(N);
-                std::sample(range.begin(), range.end(), res.begin(), N, rng); 
-                std::shuffle(res.begin(), res.end(), rng);
-                return res;
-            } else {
-                std::set<ResultType> s;
-                std::vector<ResultType> res(N);
-                for (uz i = 0; i < N; i++) {
-                    auto x = randrange(0, cnt);
-                    for (; s.contains(x); x++);
-                    s.insert(range[x]);
-                    res[i] = x;
-                }
-                return res;
-            }
-        }
-
-        template <typename T>
-        auto operator<< (std::ostream &os, std::vector<T> const &vec) -> std::ostream & {
-            for (uz i = 0; i != vec.size(); i++) {
-                if (i != 0)  os << " ";
-                os << vec[i];
-            }
-            return os;
-        }
-
-    }
+#include "randlib.hpp"
     using namespace Random;
 
     void generate(std::ostream &out) {
         while (true) {
-            using ll = long long;
-            ll n = randint(1, 100000), m = randint(1, 100000), q = randint(1, 100000);
-            out << n << ' ' << m << ' ' << q << endl;
-            for(ll i = 1; i <= m; i++){
-                ll x = randint(1, n), y = randint(1, n);
-                if(x == y) y = y % n + 1;
-                out << x << ' ' << y << endl;
-            }
-            for(ll i = 1; i <= q; i++){
-                ll u = randint(1, n), v = randint(1, n);
-                if(u == v) v = v % n + 1;
-                out << u << ' ' << v << endl;
-            }
+            auto constexpr helperExecutable = "test.exe";
+            std::system(std::filesystem::path{helperExecutable}.string().c_str());
+
+            std::fstream fin{std::filesystem::path{u8"2.in"}.string().c_str(), std::ios::in | std::ios::binary};
+            std::string s;
+            while (std::getline(fin, s)) out << s << '\n';
+            
             break;
         }
     }

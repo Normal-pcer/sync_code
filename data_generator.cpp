@@ -1,17 +1,17 @@
 // Do not expand includes
 #include <bits/stdc++.h>
 #include "libs/fixed_int.hpp"
-namespace _Generator {
+namespace Generator_ {
 #include "check_gen.cpp"
 }
-namespace Generator = _Generator::Generator;
+namespace Generator = Generator_::Generator;
 
 char const constexpr *inputFormat = "{}.in";
 char const constexpr *outputFormat = "{}.out";
 char const constexpr *dirName = "data_gen_result";
 char const constexpr *standardProgram = "check_arena0.exe";
 i32 const constexpr dataBegin = 1;
-i32 const constexpr dataEnd = 11;
+i32 const constexpr dataEnd = 21;
 int main() {
     std::filesystem::path cur_path{"."};
     for (i32 i = dataBegin; i < dataEnd; i++) {

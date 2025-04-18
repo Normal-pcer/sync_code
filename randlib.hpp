@@ -74,9 +74,12 @@ namespace Random {
             std::vector<ResultType> res(N);
             for (uz i = 0; i < N; i++) {
                 auto x = randrange(0, cnt);
-                for (; s.contains(x); x++);
+                for (; s.contains(range[x]); ) {
+                    x++;
+                    if (x == cnt) x = 0;
+                }
                 s.insert(range[x]);
-                res[i] = x;
+                res[i] = range[x];
             }
             return res;
         }

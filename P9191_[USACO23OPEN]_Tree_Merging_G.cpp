@@ -1,6 +1,6 @@
 /**
-* @link https://www.luogu.com.cn/problem/P9191
-*/
+ * @link https://www.luogu.com.cn/problem/P9191
+ */
 #include "./lib_v7.hpp"
 
 #include "./libs/fixed_int.hpp"
@@ -183,8 +183,8 @@ auto main(int argc, char const *argv[]) -> int {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr), std::cout.tie(nullptr);
 
-    i32 t = 1;
-    // std::cin >> t;
+    i32 t;
+    std::cin >> t;
 
     for (auto _ = t; _ --> 0; ) {
         Solution_7166223336083077::solve();
