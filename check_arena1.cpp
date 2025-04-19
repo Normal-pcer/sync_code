@@ -1,80 +1,72 @@
 #include<bits/stdc++.h>
-#define size size_________
 using namespace std;
-int fa[100010];
-int findfa(int x)
-{
-	return (fa[x]==x)?x:(x=fa[x]=findfa(fa[x]));
-}//并查集模板
-template< typename T > inline void read(T &x)//快读
-{
-    char c=getchar();x=0;int f=0;
-    for(;!isdigit(c);c=getchar()) f|=(c=='-');
-    for(;isdigit(c);c=getchar()) x=((x<<3)+(x<<1)+(c^48));
-    x=f?-x:x;
-}
-int size[100010];
-set<int>vis[100010];//用于存储敌对关系
-int n,m,q;
-int main()
-{
-	read(n);
-	for(int i=0;i<=n;i++)
-	{
-		fa[i]=i;
-		size[i]=1;
-	}//初始化并查集
-	read(m);
-	read(q);
-	while(m--)
-	{
-		int x,y;
-		read(x);
-		read(y);//存入敌对的点对
-		vis[x].insert(y);
-		vis[y].insert(x);
+typedef long long ll;
+const int N=2e5+5;
+struct tree{
+	vector<int> e[N];
+	int n;
+	int u,v;
+	int mxl;
+	int dep[N];
+	void dfs(int p,int fa){
+		dep[p]=dep[fa]+1;
+		for(int t:e[p])
+			if(t!=fa)dfs(t,p);
 	}
-	while(q--)
-	{
-		int x,y;
-		read(x);
-		read(y);
-		int mlf=findfa(x);//找到点对的祖先
-		int hcy=findfa(y);
-		if(size[mlf]<size[hcy])//启发式合并
-		{
-			if(vis[mlf].find(hcy)!=vis[mlf].end())//如果在敌对的点对中找到了对方，说明不会联盟
-			{
-				puts("no!");
-				goto egg;
-			}
-			for (auto i : vis[mlf])//遍历set
-			{
-				vis[hcy].insert(i);//联盟
-				vis[i].erase(mlf);//节省空间
-				vis[i].insert(hcy);//联盟
-			}
-			fa[mlf]=hcy;//合并并查集
-			size[hcy]+=size[mlf];//累加size
+	int a[N],b[N];
+	void init(){
+		scanf("%d",&n);int x,y;
+		for(int i=1;i<n;++i){
+			scanf("%d%d",&x,&y);
+			e[x].push_back(y);
+			e[y].push_back(x);
 		}
-		else//同上
-		{
-			if(vis[hcy].find(mlf)!=vis[hcy].end())
-			{
-				puts("no!");
-				goto egg;
-			}
-			for (auto i : vis[hcy])
-			{
-				vis[mlf].insert(i);
-				vis[i].erase(hcy);
-				vis[i].insert(mlf);
-			}
-			fa[hcy]=mlf;
-			size[mlf]+=size[hcy];
+		dep[0]=-1;
+		dfs(1,0);
+		for(int i=1;i<=n;++i)
+			if(dep[u]<dep[i])u=i;
+		dfs(u,0);
+		for(int i=1;i<=n;++i)
+			a[i]=dep[i];
+		for(int i=1;i<=n;++i)
+			if(dep[v]<dep[i])v=i;
+		dfs(v,0);
+		for(int i=1;i<=n;++i){
+			b[i]=dep[i];
+			if(i==u)mxl=dep[i];
+			if(a[i]<b[i])swap(a[i],b[i]);
 		}
-		puts("agree.");
-		egg:;
 	}
-	return 0;
+}t1,t2;
+ll s[N],c[N];
+int main(){
+	t1.init(),t2.init();
+	if(t1.mxl<t2.mxl)
+		swap(t1,t2);
+	
+	
+	for(int i=1;i<=t2.n;++i){
+		t2.a[i]++;
+		s[t2.a[i]]+=t2.a[i];
+		c[t2.a[i]]++;
+	}
+	int mx=max(t1.n,t2.n+1);
+	for(int i=1;i<=mx;++i)
+		s[i]+=s[i-1],c[i]+=c[i-1];
+	
+	ll ans=0;
+	
+//	for(int i=1;i<=t1.n;++i)
+//		for(int j=1;j<=t2.n;++j)
+//			ans+=max(t1.mxl,t1.a[i]+t2.a[j]);
+	
+	for(int i=1;i<=t1.n;++i){
+		auto tmp = ans;
+		int x=t1.mxl-t1.a[i];
+		ans+=(ll)t1.mxl*c[x];
+		ans+=(ll)t1.a[i]*(c[mx]-c[x])+(s[mx]-s[x]);
+		//max(t1.a[i]+t1.b[i],t1.a[i]+t2.a[j]+1)
+		std::cerr << "i = " << i << ": " << ans - tmp << std::endl;
+	}
+	cout<<ans;
 }

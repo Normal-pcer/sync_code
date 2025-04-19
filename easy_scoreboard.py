@@ -113,7 +113,7 @@ quit 退出程序""")
                 while len(history[user]) != 0 and history[user][0] < expired:
                     history[user].popleft()
                 
-                cnt = len(history[user])
+                cnt = min(10, len(history[user]))
                 real_amount = amount ** (1 + cnt / 10)
                 history[user].append(time())
                 scores[user] -= real_amount

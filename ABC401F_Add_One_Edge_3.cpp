@@ -1,6 +1,6 @@
 /**
-* @link https://atcoder.jp/contests/abc401/tasks/abc401_f
-*/
+ * @link https://atcoder.jp/contests/abc401/tasks/abc401_f
+ */
 #include "./lib_v7.hpp"
 #include "./libs/fixed_int.hpp"
 
@@ -111,9 +111,26 @@ namespace Solution_6152530545952873 {
         i64 ans = 0;
 
         // u 和 v 连接之后的直径，要么是 dis[0][u] + dis[1][v] + 1，要么是 originalMaxDiameter
-#if false
+#if true
         for (i32 u = 1; u <= n[0]; u++) {
             for (i32 v = 1; v <= n[1]; v++) {
+                std::cerr << std::format("u = {}, v = {}, ans += {}", u, v, std::max(dis[0][u] + dis[1][v] + 1, originalMaxDiameter)) << std::endl;
+                auto check = [&]() -> bool {
+                    Graph newGraph(n[0] + n[1] + 2);
+                    for (i32 i = 1; i <= n[0]; i++) {
+                        newGraph[i] = t[0][i];
+                    }
+                    for (i32 i = 1; i <= n[1]; i++) {
+                        newGraph[i + n[0]] = t[1][i];
+                        for (auto &x: newGraph[i + n[0]]) x += n[0];
+                    }
+                    newGraph[u].push_back(v + n[0]);
+                    newGraph[v + n[0]].push_back(u);
+
+                    auto tmp = getDiameter(newGraph);
+                    return std::max(dis[0][u] + dis[1][v] + 1, originalMaxDiameter) == tmp.value;
+                };
+                assert(check());
                 ans += std::max(dis[0][u] + dis[1][v] + 1, originalMaxDiameter);
             }
         }
@@ -143,6 +160,7 @@ namespace Solution_6152530545952873 {
                     : ps.back();
                 auto sumOther = cntGreater * (dis[0][u] + 1);
                 ans += sumOther + sumDis_1_v;
+                std::cerr << sumOther + sumDis_1_v << std::endl;
             }
         }
 #endif
