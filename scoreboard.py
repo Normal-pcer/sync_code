@@ -26,10 +26,25 @@ def set_default(value: Optional[T], default: T) -> T:
     else:
         return default
 
+class InvalidOperationException(Exception):
+    """
+    用于指示进行了无效操作
+    """
+    description: str
+
+    def __init__(self, description: Optional[str] = None):
+        self.description = set_default(description, "")
+    
+        super().__init__(self.description)
+    
+    def __str__(self) -> str:
+        return f"InvalidOperationException: {self.description}"
 
 class DataBase:
     """
     用于存储本地的数据
+
+    保证存储在 scores 中的分数为最新值，修改记录仅为辅助。
     """
     class Modification:
         """
@@ -64,40 +79,130 @@ class DataBase:
                 data["modify_id"],
             )
 
-    scores: Dict[str, Score]  # 用户名及其分数
-    modifications: Dict[str, Set[Modification]]  # 用户名及其修改记录
+        def __hash__(self) -> int:
+            return hash(self.modify_id)
+        
+        def __str__(self) -> str:
+            return f"Modification({self.amount}, {self.timestamp}, \"{self.modify_id}\")"
 
-    def __init__(self):
+    scores: Dict[str, Score]  # 用户名及其分数
+    modifications: Dict[str, List[Modification]]  # 用户名及其修改记录
+    name: str
+
+    def __init__(self, name: Optional[str] = None):
+        name = set_default(name, "anonymous")
         self.scores = {}
         self.modifications = {}
+        self.name = name
 
     def to_dict(self) -> Dict[str, any]:
         return {
             "scores": self.scores,
-            "modifications": self.modifications,
+            "modifications": {key: [
+                val.to_dict() for val in val_set
+            ] for key, val_set in self.modifications.items()},
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "DataBase":
         db = cls()
         db.scores = data["scores"]
+        db.modifications = {
+            key: {cls.Modification.from_dict(val) for val in val_list}
+            for key, val_list in data["modifications"].items()
+        }
+        print(f"from_dict() -> {db.scores}, {db.modifications}")
         return db
 
     def merge_with(self, other: "DataBase") -> None:
         """
         合并两个数据库，并就地修改当前对象
         """
-        for username, score in other.scores.items():
-            if username not in self.scores:
-                self.scores[username] = score
+        for name in other.scores.keys() | other.modifications.keys():
+            if name not in self.scores:
+                self.scores[name] = 0
+            if name not in self.modifications:
+                self.modifications[name] = set()
 
+        # 检查是否有没有做过的修改
         for username, mods in other.modifications.items():
             for mod in mods:
                 if mod not in self.modifications[username]:
                     self.modifications[username].add(mod)
                     self.scores[username] += mod.amount
+        
+        self.save()
 
+    def __eq__(self, other: "DataBase") -> bool:
+        return self.to_dict() == other.to_dict()
 
+    def __ne__(self, other: "DataBase") -> bool:
+        return not self.__eq__(other)
+
+    def save(self) -> None:
+        with open(f"{self.name}.scoreboard.json", "w") as f:
+            s = json.dumps(self.to_dict())
+            f.write(s)
+
+    def load(self) -> None:
+        try:
+            data = json.load(open(f"{self.name}.scoreboard.json", "r"))
+            data = DataBase.from_dict(data)
+            self.scores = data.scores
+            self.modifications = data.modifications
+            print(f"成功加载数据: {self.scores}, {self.modifications}")
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print(f"无法加载数据: {repr(e)}")
+
+    def modify(self, name: str, amount: Score) -> None:
+        """
+        修改分数（测试用）
+        """
+        if name not in self.scores:
+            self.scores[name] = 0
+        self.scores[name] += amount
+
+        if name not in self.modifications:
+            self.modifications[name] = set()
+        self.modifications[name].add(self.Modification(amount))
+        self.save()
+
+    def reduce_score(self, name: str, amount: Score) -> None:
+        """
+        给一个用户扣分
+
+        需要保证这个用户存在，否则抛出异常。
+        amount 为基准分数。实际的扣分为：amount ** (1 + cnt / 10)。
+        其中 cnt 为最近 72 小时内扣分次数与 10 的较小值。
+        """
+
+        print(f"reduce_score({name}, {amount})")
+
+        if name not in self.scores:
+            raise InvalidOperationException(f"用户 {name} 不存在")
+
+        # 计算扣分
+        current = time()
+        cnt = 0
+        for mod in self.modifications[name]:
+            if current - mod.timestamp < 72 * 3600 and mod.amount < 0:
+                cnt += 1
+
+        amount = amount ** (1 + min(cnt, 10) / 10)
+        self.scores[name] -= amount
+        assert name in self.modifications
+        self.modifications[name].add(self.Modification(-amount))
+        self.save()
+
+    def show(self) -> None:
+        """
+        显示当前的分数
+        """
+        print("分数表：")
+        for name, score in sorted(self.scores.items(), key=lambda x: x[1], reverse=True):
+            print(f"{name}: {score}")
 
 class Message:
     """
@@ -107,7 +212,10 @@ class Message:
         First = "First"  # 节点首次连接，需要附带自己的地址和端口
         Second = "Second"  # 经过恰好一次转发的 First 消息
         ConnectWith = "ConnectWith"  # 请求新节点和自己连接
+        SyncData = "SyncData"  # 同步所有数据，用于建立第一次连接时
+        UpdateData = "UpdateData"  # 更新数据，用于一个新的节点进入时合并信息
         Modify = "Modify"  # 修改某个分数
+        ReduceScore = "ReduceScore"  # 扣分
 
         def __str__(self) -> str:
             return self.name
@@ -130,6 +238,7 @@ class Message:
         if pos == -1:
             pos = len(message)
         return cls(Message.Type(message[:pos]), json.loads(message[pos+1:]))
+
 
 class MessageProcesser:
     """
@@ -165,6 +274,7 @@ class MessageProcesser:
 
         return Message.from_str(data.decode())
 
+
 class SyncNode:
     """
     用于和其他节点联通，并进行数据同步操作。
@@ -179,14 +289,17 @@ class SyncNode:
 
     sock: socket.socket
 
-    def __init__(self, host: str, port: int, username: str):
+    def __init__(self, host: str, port: int, username: Optional[str] = None):
+        username = set_default(username, f"{host}_{port}")
+
         self.host = host
         self.port = port
         self.username = username
         self.node_id = f"{host}:{port}"
 
         self.peers = {}
-        self.data = DataBase()
+        self.data = DataBase(username)
+        self.data.load()
 
         # 网络监听
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -199,25 +312,31 @@ class SyncNode:
 
     def input_handler(self) -> None:
         while True:
-            cmd = input()
+            try:
+                cmd = input()
 
-            if cmd == "quit":
-                self.sock.close()
-                sys.exit(0)
-            elif cmd == "list":
-                print(self.get_known_peers())
-            elif cmd.startswith("connect"):
-                host, port = cmd[8:].split()
-                self.connect(host, int(port))
-            elif cmd.startswith("modify"):
-                name, amount = cmd[7:].split()
-                if name not in self.data.scores:
-                    self.data.scores[name] = 0
-                self.data.scores[name] += float(amount)
-                self.send_message(Message(Message.Type.Modify, [name, amount]))
-            elif cmd == "query":
-                for name, score in self.data.scores.items():
-                    print(f"{name}: {score}")
+                if cmd == "quit":
+                    self.sock.close()
+                    sys.exit(0)
+                elif cmd == "list":
+                    print(self.get_known_peers())
+                elif cmd.startswith("connect"):
+                    host, port = cmd[8:].split()
+                    self.connect(host, int(port))
+                elif cmd.startswith("modify"):
+                    name, amount = cmd[7:].split()
+                    self.data.modify(name, float(amount))
+                    self.send_message(Message(Message.Type.Modify, [name, amount]))
+                elif cmd == "query":
+                    print(json.dumps(self.data.to_dict(), indent=4))
+                elif cmd.startswith("reduce"):
+                    name, amount = cmd[7:].split()
+                    self.data.reduce_score(name, float(amount))
+                    self.send_message(Message(Message.Type.ReduceScore, [name, float(amount)]))
+                elif cmd == "show":
+                    self.data.show()
+            except Exception as e:
+                print(f"发生错误: {repr(e)}")
 
     def accept_connections(self) -> None:
         """
@@ -274,6 +393,11 @@ class SyncNode:
                         sock = socket.create_connection((host, int(port)))
                         self.peers[new_id] = sock
 
+                        # 分享现在的数据
+                        data = self.data.to_dict()
+                        self.send_message(
+                            Message(Message.Type.SyncData, [json.dumps(data)]), [sock])
+
                     print("peers: ", self.peers)
                 case Message.Type.Second:
                     # 新节点，经过一次转发
@@ -300,22 +424,40 @@ class SyncNode:
                         self.peers[new_id] = sock
                     print("peers: ", self.peers)
                 case Message.Type.Modify:
-                    name, amount = message.data
-                    if name not in self.data.scores:
-                        self.data.scores[name] = 0
-                    self.data.scores[name] += float(amount)
+                    self.data.modify(message.data[0], float(message.data[1]))
+                case Message.Type.SyncData:
+                    # 同步数据
+                    data = json.loads(message.data[0])
+                    db = DataBase.from_dict(data)
+                    self.data.merge_with(db)
+
+                    if self.data != db:
+                        # 如果数据不同，则更新
+                        self.send_message(
+                            Message(Message.Type.UpdateData, [json.dumps(self.data.to_dict())]))
+                    self.data.save()
+                case Message.Type.UpdateData:
+                    # 当前会无条件信任对方的数据
+                    data = json.loads(message.data[0])
+                    db = DataBase.from_dict(data)
+                    self.data = db
+                    self.data.save()
+                case Message.Type.ReduceScore:
+                    # 扣分
+                    name = message.data[0]
+                    amount = float(message.data[1])
+                    self.data.reduce_score(name, amount)
                 case _:
-                    pass
+                    print(f"未知消息类型: {message.message_type}")
         try:
             while True:
                 try:
-                    data = MessageProcesser.recv(source)
+                    message = MessageProcesser.recv(source)
                 except ConnectionError:
                     print("连接已关闭")
                     break
 
-                print(f"data: {data}")
-                message = Message.from_str(data)
+                print(f"data: {message}")
                 response = handle_single_message(message)
                 if response is not None:
                     source.send(response.encode())
@@ -324,12 +466,14 @@ class SyncNode:
 
 
 if __name__ == "__main__":
+    node = None
     try:
         if len(sys.argv) != 3:
             ip, port = input("ip, port: ").split()
         else:
             ip, port = sys.argv[1:]
 
-        SyncNode(ip, int(port), "user")
+        node = SyncNode(ip, int(port))
     except EOFError:
+        del node
         exit()
