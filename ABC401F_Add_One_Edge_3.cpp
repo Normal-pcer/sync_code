@@ -1,8 +1,29 @@
 /**
  * @link https://atcoder.jp/contests/abc401/tasks/abc401_f
  */
-#include "./lib_v7.hpp"
-#include "./libs/fixed_int.hpp"
+#include <bits/stdc++.h>
+bool DEBUG_MODE = false;
+#define debug if (DEBUG_MODE)
+#define never if constexpr (false)
+template <typename T> inline auto chkMax(T &base, const T &cmp) -> T & { return (base = std::max(base, cmp)); }
+template <typename T> inline auto chkMin(T &base, const T &cmp) -> T & { return (base = std::min(base, cmp)); }
+#define _lambda_1(expr) [&]() { return expr; }
+#define _lambda_2(a, expr) [&](auto a) { return expr; }
+#define _lambda_3(a, b, expr) [&](auto a, auto b) { return expr; }
+#define _lambda_4(a, b, c, expr) [&](auto a, auto b, auto c) { return expr; }
+#define _lambda_overload(a, b, c, d, e, ...) _lambda_##e
+#define lambda(...) _lambda_overload(__VA_ARGS__, 4, 3, 2, 1)(__VA_ARGS__)
+#define lam lambda
+namespace lib {
+#if __cplusplus > 201703LL
+    namespace ranges = std::ranges;
+    namespace views = std::views;
+#endif
+}
+char constexpr endl = '\n';
+using namespace lib;
+using i16 = std::int16_t; using i32 = std::int32_t; using i64 = std::int64_t;
+using u16 = std::uint16_t; using u32 = std::uint32_t; using u64 = std::uint64_t; using uz = std::size_t;
 
 namespace Solution_6152530545952873 {
     template <typename T, typename U>
@@ -29,6 +50,27 @@ namespace Solution_6152530545952873 {
             }
         }
 
+        // 获取图上所有点到给定点的距离
+        auto getDistance = [&](i32 s, i32 n, Graph const &graph, std::vector<i32> &dis) -> void {
+            std::vector<char> vis(n + 1, false);
+
+            std::deque<i32> q;
+            q.push_back(s);
+            dis[s] = 0;
+            while (not q.empty()) {
+                auto u = q.front(); q.pop_front();
+                if (vis[u]) continue;
+                vis[u] = true;
+
+                for (auto v: graph[u]) {
+                    if (vis[v]) continue;
+                    dis[v] = dis[u] + 1;
+                    q.push_back(v);
+                }
+            }
+        };
+
+#if false  // 不会求树的直径导致的
         // 与直径相关的信息
         struct DiameterInfo {
             ItemSource<i32, std::pair<i32, i32>> total;  // 子树下的直径
@@ -67,28 +109,22 @@ namespace Solution_6152530545952873 {
         auto getDiameter = [&](Graph const &graph) -> ItemSource<i32, std::pair<i32, i32>> {
             return getDiameterRecursion(getDiameterRecursion, 1, 0, graph).total;
         };
+#else
+        auto getDiameter = [&](Graph const &graph, i32 n) -> ItemSource<i32, std::pair<i32, i32>> {
+            std::vector<i32> tmp(n + 1);
+            getDistance(1, n, graph, tmp);
 
-        std::array<ItemSource<i32, std::pair<i32, i32>>, 2> dm{{getDiameter(t[0]), getDiameter(t[1])}};
-
-        // 获取图上所有点到给定点的距离
-        auto getDistance = [&](i32 s, i32 n, Graph const &graph, std::vector<i32> &dis) -> void {
-            std::vector<char> vis(n + 1, false);
-
-            std::deque<i32> q;
-            q.push_back(s);
-            dis[s] = 0;
-            while (not q.empty()) {
-                auto u = q.front(); q.pop_front();
-                if (vis[u]) continue;
-                vis[u] = true;
-
-                for (auto v: graph[u]) {
-                    if (vis[v]) continue;
-                    dis[v] = dis[u] + 1;
-                    q.push_back(v);
-                }
-            }
+            auto first = static_cast<i32>(ranges::max_element(tmp.begin() + 1, tmp.end()) - tmp.begin());
+            getDistance(first, n, graph, tmp);
+            auto second = static_cast<i32>(ranges::max_element(tmp.begin() + 1, tmp.end()) - tmp.begin());
+            auto dis = tmp[second];
+            return {.value = dis, .source = {first, second}};
         };
+#endif
+
+        std::array<ItemSource<i32, std::pair<i32, i32>>, 2> dm{{getDiameter(t[0], n[0]), getDiameter(t[1], n[1])}};
+
+        
 
         // dis_g[i] 表示图 g 上 i 点距离直径上端点的较大值
         std::array<std::vector<i32>, 2> dis;
@@ -103,15 +139,15 @@ namespace Solution_6152530545952873 {
             ranges::transform(dis[p], tmp, dis[p].begin(), ranges::max);
         }
 
-        std::cerr << std::format("dm[{}] value = {}, source = ({}, {})", 0, dm[0].value, dm[0].source.first, dm[0].source.second) << std::endl;
-        std::cerr << std::format("dm[{}] value = {}, source = ({}, {})", 1, dm[1].value, dm[1].source.first, dm[1].source.second) << std::endl;
+        // std::cerr << std::format("dm[{}] value = {}, source = ({}, {})", 0, dm[0].value, dm[0].source.first, dm[0].source.second) << std::endl;
+        // std::cerr << std::format("dm[{}] value = {}, source = ({}, {})", 1, dm[1].value, dm[1].source.first, dm[1].source.second) << std::endl;
 
         auto originalMaxDiameter = std::max(dm[0], dm[1]).value;
         
         i64 ans = 0;
 
         // u 和 v 连接之后的直径，要么是 dis[0][u] + dis[1][v] + 1，要么是 originalMaxDiameter
-#if true
+#if false
         for (i32 u = 1; u <= n[0]; u++) {
             for (i32 v = 1; v <= n[1]; v++) {
                 std::cerr << std::format("u = {}, v = {}, ans += {}", u, v, std::max(dis[0][u] + dis[1][v] + 1, originalMaxDiameter)) << std::endl;
@@ -127,7 +163,7 @@ namespace Solution_6152530545952873 {
                     newGraph[u].push_back(v + n[0]);
                     newGraph[v + n[0]].push_back(u);
 
-                    auto tmp = getDiameter(newGraph);
+                    auto tmp = getDiameter(newGraph, n[0] + n[1]);
                     return std::max(dis[0][u] + dis[1][v] + 1, originalMaxDiameter) == tmp.value;
                 };
                 assert(check());

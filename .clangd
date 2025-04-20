@@ -1,5 +1,12 @@
 CompileFlags:
-  Add: [-std=c++26]  # 指定 C++ 标准
+  Add: [
+    -std=c++26,
+    -Wall,
+    -Wextra,
+    -Wpedantic,
+    -Isystem=C:\\msys64\\ucrt64\\include\\c++\\14.1.0,
+    -Isystem=C:\\msys64\\ucrt64\\include,
+  ]
 
 Diagnostics:
   ClangTidy: 

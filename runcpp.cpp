@@ -544,6 +544,10 @@ int main(int argc, char const *argv[]) {
     Configure config{getConfigPath() + configFileName};  // 其他配置项
     ArgumentManager am{argumentEncoding(argc, argv), &default_args};
 
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);  // 控制台输出格式为 UTF-8
+#endif  // def _WIN32
+
     if (am.has("help")) {
         showHelp();
     } else if (am.has("config-preset")) {
