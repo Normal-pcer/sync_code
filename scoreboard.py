@@ -6,12 +6,13 @@ Scoreboard
 
 
 from enum import Enum
-import sys
 from time import time
 from typing import TypeVar, Dict, List, Optional, Set
 from uuid import uuid4
+import sys
 import json
 import socket
+import struct
 import threading
 
 # 类型别名
@@ -97,6 +98,7 @@ class DataBase:
                     self.scores[username] += mod.amount
 
 
+
 class Message:
     """
     用于节点之间的通信
@@ -129,6 +131,39 @@ class Message:
             pos = len(message)
         return cls(Message.Type(message[:pos]), json.loads(message[pos+1:]))
 
+class MessageProcesser:
+    """
+    用于传输消息。
+
+    为了避免过长的消息被以外截断，编码为如下格式：
+    <长度> <数据>
+    长度为 32 位整数，数据为 UTF-8 编码的字符串。
+    """
+
+    @staticmethod
+    def send(sock: socket.socket, message: Message) -> None:
+        data = str(message).encode()
+        length = struct.pack("!I", len(data))
+        sock.sendall(length + data)
+
+    @staticmethod
+    def recv(sock: socket.socket) -> Message:
+        """
+        阻塞式接收数据，直到接收到完整的消息。
+        """
+        length_data = sock.recv(4)
+        if not length_data:
+            raise ConnectionError("连接已关闭")
+
+        length = struct.unpack("!I", length_data)[0]
+        data = b""
+        while len(data) < length:
+            chunk = sock.recv(length - len(data))
+            if not chunk:
+                raise ConnectionError("连接已关闭")
+            data += chunk
+
+        return Message.from_str(data.decode())
 
 class SyncNode:
     """
@@ -183,13 +218,15 @@ class SyncNode:
             elif cmd == "query":
                 for name, score in self.data.scores.items():
                     print(f"{name}: {score}")
+
     def accept_connections(self) -> None:
         """
         接受来自其他节点的连接。
         """
         while True:
             client, _ = self.sock.accept()
-            threading.Thread(target=self.handle_message_from, args=(client,)).start()
+            threading.Thread(target=self.handle_message_from,
+                             args=(client,)).start()
 
     def send_message(self, message: Message, targets: Optional[List[socket.socket]] = None) -> None:
         """
@@ -198,8 +235,8 @@ class SyncNode:
         """
         targets = set_default(targets, self.peers.values())
         for target in targets:
-            target.send(str(message).encode())
-    
+            MessageProcesser.send(target, message)
+
     def get_known_peers(self) -> List[str]:
         """获取已知的节点列表"""
         return list(self.peers.keys())
@@ -217,7 +254,7 @@ class SyncNode:
             self.send_message(Message(Message.Type.First, [self.node_id]))
         except socket.error as e:
             print(f"无法连接到 {host}:{port}: {e}")
-    
+
     def handle_message_from(self, source: socket.socket) -> None:
         """相应来自其他客户端的消息"""
         def handle_single_message(message: Message) -> None | str:
@@ -229,20 +266,21 @@ class SyncNode:
                         return
                     if new_id not in self.peers:
                         # 转发，告诉其他节点
-                        self.send_message(Message(Message.Type.Second, [new_id]))
+                        self.send_message(
+                            Message(Message.Type.Second, [new_id]))
 
                         # 自己与其建立连接
                         host, port = new_id.split(":")
                         sock = socket.create_connection((host, int(port)))
                         self.peers[new_id] = sock
-                    
+
                     print("peers: ", self.peers)
                 case Message.Type.Second:
                     # 新节点，经过一次转发
                     new_id: str = message.data[0]
                     if new_id == self.node_id:
                         return
-                    
+
                     # 正向联系
                     if new_id not in self.peers:
                         host, port = new_id.split(":")
@@ -250,7 +288,8 @@ class SyncNode:
                         self.peers[new_id] = sock
 
                         # 请求反向联系
-                        self.send_message(Message(Message.Type.ConnectWith, [self.node_id]), [sock])
+                        self.send_message(
+                            Message(Message.Type.ConnectWith, [self.node_id]), [sock])
                     print("peers: ", self.peers)
                 case Message.Type.ConnectWith:
                     # 和给定的节点连接
@@ -269,8 +308,10 @@ class SyncNode:
                     pass
         try:
             while True:
-                data = source.recv(1024).decode()
-                if not data:
+                try:
+                    data = MessageProcesser.recv(source)
+                except ConnectionError:
+                    print("连接已关闭")
                     break
 
                 print(f"data: {data}")
@@ -280,6 +321,7 @@ class SyncNode:
                     source.send(response.encode())
         finally:
             source.close()
+
 
 if __name__ == "__main__":
     try:
