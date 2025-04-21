@@ -56,11 +56,13 @@ class ScoreboardGUI:
         self.root = Tk()
         self.root.title(f"Scoreboard - {node.username} ({node.host}:{node.port})")
         
+        # 初始化UI组件
         self.create_widgets()
         self.setup_refresh()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def create_widgets(self):
+        # 主布局框架
         main_frame = ttk.Frame(self.root, padding=10)
         main_frame.grid(row=0, column=0, sticky=(N, S, E, W))
 
@@ -91,6 +93,7 @@ class ScoreboardGUI:
         
         ttk.Button(conn_frame, text="连接", command=self.connect_node).grid(row=0, column=4, padx=5)
         
+        # 已连接节点列表
         self.peer_list = Listbox(conn_frame, width=40, height=4)
         self.peer_list.grid(row=1, column=0, columnspan=5, pady=5)
 
@@ -100,10 +103,6 @@ class ScoreboardGUI:
         self.root.after(2000, self.setup_refresh)
 
     def refresh_scores(self):
-        # 保存当前选中状态
-        selected = self.tree.selection()
-        selected_name = self.tree.item(selected[0], 'text') if selected else None
-        
         # 清空现有数据
         for item in self.tree.get_children():
             self.tree.delete(item)
@@ -111,9 +110,7 @@ class ScoreboardGUI:
         # 插入新数据
         for name, score in sorted(self.node.data.scores.items(), 
                                  key=lambda x: x[1], reverse=True):
-            item = self.tree.insert('', 'end', text=name, values=(f"{score:.2f}",))
-            if selected_name and name == selected_name:
-                self.tree.selection_set(item)  # 恢复选中状态
+            self.tree.insert('', 'end', text=name, values=(f"{score:.2f}",))
 
     def refresh_peers(self):
         self.peer_list.delete(0, END)
@@ -157,22 +154,15 @@ class ScoreboardGUI:
                 messagebox.showerror("错误", str(e))
 
     def give_score(self):
-        selected = self.tree.selection()
-        if not selected:
-            messagebox.showwarning("提示", "请先选择接收方用户")
-            return
-        
-        target = self.tree.item(selected[0], 'text')
         source = simpledialog.askstring("赠送分数", "请输入赠送方用户名:")
-        if not source:
-            return
-            
-        amount = simpledialog.askfloat("赠送分数", f"请输入要赠送的分数（给 {target}）:")
-        if amount is not None:
+        target = simpledialog.askstring("赠送分数", "请输入接收方用户名:")
+        amount = simpledialog.askfloat("赠送分数", "请输入赠送分数:")
+        
+        if source and target and amount:
             try:
                 self.node.data.give_score(source, target, amount)
                 self.node.send_message(Message(Message.Type.GiveScore, 
-                                      [source, target, str(amount)]))
+                                            [source, target, str(amount)]))
             except InvalidOperationException as e:
                 messagebox.showerror("错误", str(e))
 
