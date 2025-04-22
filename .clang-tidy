@@ -14,5 +14,7 @@ Checks: >
   -modernize-use-ranges,
   -modernize-use-nodiscard,
   -modernize-use-emplace,
+  -bugprone-branch-clone,
+  -modernize-use-designated-initializers,
 CheckOptions:
   readability-identifier-naming.StrictCase: 'true'

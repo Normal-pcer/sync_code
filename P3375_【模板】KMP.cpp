@@ -60,6 +60,8 @@ namespace Solution_6314180276493067 {
                 }
                 if (j == m) {
                     std::cout << i - m + 2 << endl;
+                    j = 0;
+                    i -= m - 1;
                 }
             }
         };

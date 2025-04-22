@@ -10,19 +10,11 @@ namespace Generator {
 
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 5;
-            auto n = maxN;
-            out << 1 << ' ' << i64(1e18) << ' ' << n << endl;
+            i32 constexpr maxN = 10, maxM = 6;
+            auto n = maxN, m = maxM;
 
-            for (auto _: range(n)) {
-                char ch = static_cast<char>(randint('a', 'd'));
-                out << ch << ' ';
-                auto len = randint(1, 3);
-                for (auto _: range(len)) {
-                    out << static_cast<char>(randint('a', 'd'));
-                }
-                out << endl;
-            }
+            for (auto _: range(n)) { out << static_cast<char>(randint('A', 'B')); } out << endl;
+            for (auto _: range(m)) { out << static_cast<char>(randint('A', 'B')); } out << endl;
             break;
         }
     }
