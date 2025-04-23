@@ -1,5 +1,7 @@
-#include <cstddef>
 #include <array>
+#include <cstddef>
+#include <format>
+#include <stdexcept>
 
 #ifndef INCLUDED_INPLACE_VECTOR
 #define INCLUDED_INPLACE_VECTOR
@@ -12,7 +14,7 @@ public:
     using Iterator = T *;
     using ConstIterator = T const *;
 
-    InplaceVector() {}
+    InplaceVector() = default;
     explicit InplaceVector(std::size_t n): size_(n) {
         auto ptr = reinterpret_cast<T *>(data_.data());
         for (std::size_t i = 0; i != n; ++i, ++ptr) {
