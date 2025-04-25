@@ -27,18 +27,17 @@ namespace Solution_4329982060672190 {
         Graph(i32 n): n(n), edges(2), firstEdge(n + 1, 0) {}
 
         auto addEdge(i32 u, i32 v, i32 val) -> void {
-            std::cerr << u << " " << v << endl;
             edges.push_back({.to = v, .flow = val, .next = firstEdge[u]});
             firstEdge[u] = static_cast<i32>(edges.size()) - 1;
             edges.push_back({.to = u, .flow = 0, .next = firstEdge[v]});
             firstEdge[v] = static_cast<i32>(edges.size()) - 1;
         }
 
+        std::vector<i32> level;
         auto getFlow(i32 s, i32 t) -> i32 {
-            std::vector<i32> level(n + 1, -1);
             // 获取层次图，返回是否可以 from -> to。
             auto getSliced = [&](i32 from, i32 to) -> bool {
-                std::fill(level.begin(), level.end(), -1);
+                level = std::vector<i32>(n + 1, -1);
                 std::deque<i32> q;
                 level[from] = 1;
                 q.push_back(from);
@@ -144,17 +143,15 @@ namespace Solution_4329982060672190 {
         }
 
         auto ans = std::accumulate(rewards.begin(), rewards.end(), 0) - g.getFlow(startNode, targetNode);
-        for (i32 i = g.firstEdge[startNode], flag = true; i != 0; i = g.edges[i].next) {
-            auto const &e = g.edges[i];
-            if (e.flow != 0) std::cout << " "[flag] << e.to, flag = false;
+        for (i32 i = 1; i <= m; i++) {
+            if (g.level[getRewardNode(i)] != -1) {
+                std::cout << i << " ";
+            }
         }
         std::cout << endl;
-
-        for (i32 tool = 1, flag = true; tool <= n; tool++) {
-            for (auto i = g.firstEdge[getCostNode(tool)]; i != 0; i = g.edges[i].next) {
-                if (auto const &e = g.edges[i]; e.flow == 0 and e.to == targetNode) {
-                    std::cout << " "[flag] << tool, flag = false;
-                }
+        for (i32 i = 1; i <= n; i++) {
+            if (g.level[getCostNode(i)] != -1) {
+                std::cout << i << " ";
             }
         }
         std::cout << endl;
