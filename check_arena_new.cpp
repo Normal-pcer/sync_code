@@ -18,7 +18,7 @@ using Filename = std::filesystem::path;
 using Clock = std::chrono::system_clock;
 using Duration = Clock::duration;
 
-i32 constexpr fileCount = 2;
+i32 constexpr fileCount = 3;
 std::array<std::string_view, 6> constexpr filenames{{
 	"check_arena0.cpp",
     "check_arena1.cpp",
@@ -37,7 +37,7 @@ class Configure {
 	Filename filename;
 	std::unordered_map<std::string, std::string> items;
 
-	public:
+public:
 	struct ParseError: public std::exception {
 		std::string message;
 		ParseError(std::string s): message(std::move(s)) {}
@@ -265,11 +265,12 @@ public:
 	auto static update(Filename const &file) -> void {
 		config.setItem(file.string(), std::chrono::duration_cast<std::chrono::nanoseconds>(
 			Clock::now().time_since_epoch()).count());
+        config.save();
 	}
 };
 
 class Compiler {
-	std::string_view static constexpr format = "g++ {0} -o {0}.exe -std=c++23 -O2 -Wl,-stack=2147483647 -Wall -Wextra";
+	std::string_view static constexpr format = "g++ {0}.cpp -o {0}.exe -std=c++23 -O2 -Wl,-stack=2147483647 -Wall -Wextra";
 public:
 	struct CompileError: std::exception {
 		[[nodiscard]] auto what() const noexcept -> char const * override {
@@ -283,7 +284,9 @@ public:
 
 		Filename executable{noExt + ".exe"};
 		if (FileUtils::isModified(file) or not std::filesystem::exists(executable)) {
-			auto code = std::system(std::format(format, noExt).c_str());
+            auto cmd = std::format(format, noExt);
+            std::cout << cmd << std::endl;
+			auto code = std::system(cmd.c_str());
 			FileUtils::update(file);
 			if (code != 0) throw CompileError{};
 		}

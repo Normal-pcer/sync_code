@@ -16,5 +16,6 @@ Checks: >
   -modernize-use-emplace,
   -bugprone-branch-clone,
   -modernize-use-designated-initializers,
+  -bugprone-suspicious-include,
 CheckOptions:
   readability-identifier-naming.StrictCase: 'true'
