@@ -1,8 +1,6 @@
-#include <map>
 #include <ranges>
 #include <chrono>
 #include <cstdio>
-#include <random>
 #include <string>
 #include <vector>
 #include <cassert>
@@ -30,7 +28,14 @@
 namespace views = std::views;
 namespace ranges = std::ranges;
 
-#include "./libs/fixed_int.hpp"
+using i16 = std::int16_t;
+using i32 = std::int32_t;
+using i64 = std::int64_t;
+using iz = std::ptrdiff_t;
+using u16 = std::uint16_t;
+using u32 = std::uint32_t;
+using u64 = std::uint64_t;
+using uz = std::size_t;
 
 char const constexpr endl = '\n';
 
@@ -214,7 +219,7 @@ auto replace_string(std::string const &base, std::string const &match, std::stri
         it = find;
         if (find != base.end()) {
             res += replace;
-            it += match.size();
+            it += static_cast<iz>(match.size());
         }
     }
     return res;
@@ -229,7 +234,7 @@ auto replace_string_generate(std::string const &base, std::string const &match, 
         it = find;
         if (find != base.end()) {
             res += f();
-            it += match.size();
+            it += static_cast<iz>(match.size());
         }
     }
     return res;
@@ -249,7 +254,7 @@ auto get_file_content(std::string const &filename) -> std::string {
     return content;
 }
 
-auto set_file_content(std::string const &filename, std::string const content) -> void {
+auto set_file_content(std::string const &filename, std::string const &content) -> void {
     std::fstream fout(std::filesystem::path(stringToU8(filename)), std::ios::out);
     assert(fout);
     fout << content;
@@ -444,7 +449,7 @@ auto matchFileName(std::string const &x) -> std::string {
 
     std::vector<std::string> files;
     for (auto const &entry: dir_it) {
-        auto path = entry.path();
+        auto const &path = entry.path();
         auto str = path.filename().string();
         if (str.ends_with(".cpp")) {
             auto processed = processFileName(str);
@@ -476,7 +481,7 @@ auto matchFileName(std::string const &x) -> std::string {
             }
         }
 
-        auto similar = [&](std::string s) -> i32 {
+        auto similar = [&](std::string const &s) -> i32 {
             i32 res = 0;
             for (auto ch: match) {
                 if (s.find(ch) != std::string::npos) {
@@ -486,7 +491,7 @@ auto matchFileName(std::string const &x) -> std::string {
             return res;
         };
 
-        auto remains = std::min<i32>(maxCount - options.size(), other.size());
+        auto remains = static_cast<i32>(std::min(maxCount - options.size(), other.size()));
         ranges::partial_sort(other, other.begin() + remains, std::greater{}, similar);
 
         for (i32 j = 0; j < remains; j++) {
@@ -510,7 +515,7 @@ auto matchFileName(std::string const &x) -> std::string {
 /**
  * 自动识别程序参数的字符集，如果需要，转换为 UTF-8 编码的 std::string
  */
-auto argumentEncoding(int argc, char const *argv[]) -> std::vector<std::string> {
+auto argumentEncoding(int argc, char const **argv) -> std::vector<std::string> {
     std::vector<std::string> res;
 #ifdef _WIN32
     for (int i = 0; i < argc; i++) {
@@ -518,12 +523,12 @@ auto argumentEncoding(int argc, char const *argv[]) -> std::vector<std::string> 
         auto wide_char_len = MultiByteToWideChar(CP_ACP, 0, arg, -1, nullptr, 0);  // 通过 Windows API 将入参从本地编码转换为宽字符
         if (wide_char_len > 0) {
             std::vector<wchar_t> buf(wide_char_len);
-            MultiByteToWideChar(CP_ACP, 0, arg, -1, buf.data(), buf.size());
+            MultiByteToWideChar(CP_ACP, 0, arg, -1, buf.data(), static_cast<int>(buf.size()));
 
             auto utf8_len = WideCharToMultiByte(CP_UTF8, 0, buf.data(), -1, nullptr, 0, nullptr, nullptr);
             if (utf8_len > 0) {
                 std::vector<char> bytes(utf8_len);
-                WideCharToMultiByte(CP_UTF8, 0, buf.data(), -1, bytes.data(), bytes.size(), nullptr, nullptr);
+                WideCharToMultiByte(CP_UTF8, 0, buf.data(), -1, bytes.data(), static_cast<int>(bytes.size()), nullptr, nullptr);
                 res.emplace_back(bytes.data());
             }
         }

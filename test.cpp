@@ -100,7 +100,6 @@ class Configure {
 	}
 };
 
-
 struct ProgramOutput {
 	i32 		exitCode;
 	Filename 	filename;
