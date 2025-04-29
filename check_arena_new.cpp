@@ -19,7 +19,7 @@ using Filename = std::filesystem::path;
 using Clock = std::chrono::system_clock;
 using Duration = Clock::duration;
 
-i32 constexpr fileCount = 3;
+i32 constexpr fileCount = 2;
 std::array<std::string_view, 6> constexpr filenames{{
     "check_arena0.cpp",
     "check_arena1.cpp",

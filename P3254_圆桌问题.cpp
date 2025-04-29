@@ -2,8 +2,8 @@
  * @link https://www.luogu.com.cn/problem/P3254
  * @link https://neooj.com:8082/oldoj/problem.php?id=2492
  */
-#include "lib"
-#include "libs/fixed_int.hpp"
+#include "./lib_v7.hpp"
+#include "./libs/fixed_int.hpp"
 using namespace lib;
 
 namespace Solution_4668616589250339 {
@@ -14,6 +14,8 @@ namespace Solution_4668616589250339 {
             i32 to = 0;
             i32 flow = 0;
             i32 next = 0;
+
+            EdgeNode(i32 to = 0, i32 flow = 0, i32 next = 0): to(to), flow(flow), next(next) {}
         };
         i32 n;
         std::vector<EdgeNode> edges;
@@ -23,9 +25,9 @@ namespace Solution_4668616589250339 {
 
         auto addEdge(i32 u, i32 v, i32 val) -> void {
             edges.emplace_back(v, val, firstEdge[u]);
-            firstEdge[u] = static_cast<i32>(edges.size());
+            firstEdge[u] = static_cast<i32>(edges.size()) - 1;
             edges.emplace_back(u, 0, firstEdge[v]);
-            firstEdge[v] = static_cast<i32>(edges.size());
+            firstEdge[v] = static_cast<i32>(edges.size()) - 1;
         }
 
         auto getFlow(i32 s, i32 t) -> i32 {
@@ -44,6 +46,7 @@ namespace Solution_4668616589250339 {
                         if (e.flow == 0) continue;
                         if (level[e.to] != -1) continue;
                         q.push_back(e.to);
+                        level[e.to] = level[u] + 1;
                     }
                 }
                 return level[to] != -1;
@@ -66,8 +69,9 @@ namespace Solution_4668616589250339 {
                     e.flow -= current;
                     rev.flow += current;
                     flowLimit -= current;
+                    totalFlow += current;
 
-                    if (current == 0) level[current] = -1;
+                    if (current == 0) level[e.to] = -1;
                     if (flowLimit == 0) break;
                 }
                 return totalFlow;
@@ -123,7 +127,29 @@ namespace Solution_4668616589250339 {
                 std::cout << 0 << endl;
                 return;
             }
-            // To be done...
+            std::cout << 1 << endl;
+
+            
+            std::vector<std::vector<i32>> ans(companies);
+            // 统计答案
+            // 如果一个公司到一个桌子的连边被切断即可
+            for (i32 c = 0; c < companies; c++) {
+                for (auto i = firstEdge[nodeOfCompany(c)]; i != 0; i = edges[i].next) {
+                    auto const &e = edges[i];
+                    if (e.flow != 0) continue;
+                    if (e.to == start) continue;
+                    auto t = e.to - companies - 1;
+                    ans[c].emplace_back(t + 1);
+                }
+            }
+
+            for (auto const &line: ans) {
+                for (auto first = true; auto const &item: line) {
+                    if (not first) std::cout << " ";
+                    std::cout << item, first = false;
+                }
+                std::cout << endl;
+            }
         }
     }
 }
