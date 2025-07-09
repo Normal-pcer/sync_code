@@ -1,91 +1,104 @@
-#include "testlib.h"
-#include "./libs/fixed_int.hpp"
+#include <array>
+#include <deque>
+#include <vector>
+#include <functional>
+#include <iostream>
+#include <set>
 
-class Graph {
+// 用于存储类型 T 的未初始化内存
+template <typename T>
+struct Uninitialized {
+    alignas(alignof(T)) std::array<std::byte, sizeof(T)> storage;
+
+    Uninitialized() {} // 不执行 storage 的初始化
+
+    // 构造对象
+    template <typename ...Ts>
+    auto construct(Ts &&...args) -> T * {
+        return new (storage.data()) T(std::forward<Ts>(args)...);
+    }
+
+    auto get() -> T * {
+        return std::launder(reinterpret_cast<T *>(storage.data()));
+    }
+
+    auto destroy() -> void {
+        get()->~T();
+    }
+
+    Uninitialized(const Uninitialized &) = delete;
+    auto operator=(const Uninitialized &) = delete;
+};
+
+// 一个数据结构，可以 O(1) 插入删除无序的数据
+template <typename T>
+class Pool {
+    // 使用 std::deque 来作为底层容器
+    std::deque<std::optional<T>> items;
+    std::vector<std::optional<T> *> deleted; // 被删除的空位
+
+    struct Iterator {
+        std::optional<T> *it;
+    };
+
 public:
-    i32 root;
-    std::vector<std::set<i32>> graph;
-    std::vector<i32> parent;
-    Graph(i32 n, std::vector<std::pair<i32, i32>> const &edges): graph(n + 1), parent(n + 1) {
-        std::vector<char> hasParent(n + 1);
-        for (auto [child, parent]: edges) {
-            hasParent[child] = true;
-            graph[child].insert(parent);
-            graph[parent].insert(child);
-        }
+    Pool() {}
 
-        root = static_cast<i32>(
-            std::find(hasParent.begin() + 1, hasParent.end(), false) - hasParent.begin());
+    // 构造一个元素，返回迭代器
+    template <typename ...Ts>
+    auto emplace(Ts &&...args) -> Iterator {
+        if (deleted.empty()) {  // 不可以回收空间了
+            auto &item = items.emplace_back(std::in_place, std::forward<Ts>(args)...);
+            return {std::addressof(item)};
+        }
+        auto collected = deleted.back(); deleted.pop_back();
+        collected->emplace(std::forward<Ts>(args)...);
+        return {collected};
+    }
 
-        dfs(root, 0);
+    auto erase(Iterator it) -> void {
+        it.it->reset();
+        deleted.emplace_back(it.it);
     }
-    auto merge(i32 x, i32 y) -> void {
-        // x 的儿子合并到 y 上
-        for (auto v: graph[x]) {
-            if (v == parent[x]) continue;
-            graph[y].insert(v);
-            graph[v].erase(x);
-            graph[v].insert(y);
-            parent[v] = y;
-        }
-        graph[x].clear();
-    }
-    auto getEdges() -> auto {
-        std::vector<std::pair<i32, i32>> ans;
-        getEdgesRecursion(root, 0, ans);
-        return ans;
-    }
-private:
-    auto dfs(i32 u, i32 fa) -> void {
-        parent[u] = fa;
-        for (auto v: graph[u]) {
-            if (v == fa) continue;
-            dfs(v, u);
-        }
-    }
-    auto getEdgesRecursion(i32 u, i32 prev, std::vector<std::pair<i32, i32>> &out) -> void {
-        for (auto v: graph[u]) {
-            if (v == prev) continue;
-            out.push_back({v, u});
-            getEdgesRecursion(v, u, out);
+
+    template <typename Func>
+    auto traverse(Func &&func) -> void {
+        for (auto &x: items) {
+            if (x.has_value()) {
+                std::invoke(std::forward<Func>(func), *x);
+            }
         }
     }
 };
 
-auto main(int argc, char *argv[]) -> int {
-    registerTestlibCmd(argc, argv);
+template <typename ...Ts>
+class Signal {
+    using Handler = std::function<void(Ts...)>;
+    std::set<Handler> handlers;
 
-    auto &in = inf;  // 源输入
-    auto &user = ouf;  // 选手输出
-
-    i32 n = in.readInt();
-    std::vector<std::pair<i32, i32>> edges(n - 1);
-    for (auto &[x, y]: edges) x = in.readInt(), y = in.readInt();
-
-    Graph g{n, edges};  // 听取用户操作的图
-    i32 ansCount = user.readInt();
-    std::vector<std::pair<i32, i32>> ops(ansCount);
-    for (auto &[x, y]: ops) {
-        x = user.readInt(), y = user.readInt();
-        if (x > y) std::swap(x, y);
-        g.merge(x, y);
-        g.graph[g.parent[x]].erase(x);
+    // 采用特殊的“锁”机制，在锁被销毁时，自动移除对应的 handler
+    struct HandlerLock {
+        std::set<Handler>::iterator it; // 所在的迭代器
+    };
+public:
+    auto addHandler(Handler action) -> void {
+        
     }
+};
 
-    i32 newN = in.readInt();
-    std::vector<std::pair<i32, i32>> newEdges(newN - 1);
-    for (auto &[x, y]: newEdges) x = in.readInt(), y = in.readInt();
 
-    Graph ansGraph{n, newEdges};
+auto main() -> int {
+    Pool<int> pool;
+    auto _ = pool.emplace(5);
+    auto p2 = pool.emplace(7);
+    _ = pool.emplace(8);
+    _ = pool.emplace(9);
 
-    if (ansGraph.graph == g.graph) {
-        quitf(_ok, "Accepted.");
-    } else {
-        if (ansCount != newN) {
-            quitf(_wa, "Wrong Answer with wrong length.");
-        } else {
-            quitf(_wa, "Wrong Answer.");
-        }
-    }
-    // assert(cp.graph == g.graph);
+    pool.erase(p2);
+    pool.emplace(10);
+
+    pool.traverse([&](int x) { std::cout << x << ' '; });
+
+
+    return 0;
 }

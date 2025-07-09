@@ -51,7 +51,7 @@ namespace AntKiller {
         }
         auto operator== (Vec2i const &other) -> bool { return x == other.x and y == other.y; }
     };
-    
+
 
     struct Position {
         i32 x = -1, y = -1;

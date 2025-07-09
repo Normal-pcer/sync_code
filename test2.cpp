@@ -1,42 +1,21 @@
-#include <iostream>
-#include <string>
-using namespace std;
-class Account
-{  
-    string userName;
-public:
-    Account(){};
-    Account( string name );
-    void  PrintUserName();
-};
-class CreditAccount : public Account
-{
-public:
-    CreditAccount( string name, int credit);
-    void PrintInfo();
-private:
-    int credit;
-};
-Account::Account(string name){
-    userName=name;
-}
-//请实现Account构造函数Account(char *name)
-void Account::PrintUserName(){
-    cout<<userName<<endl;
-}
-//请实现Account的PrintUserName()函数
-CreditAccount::CreditAccount(string name, int number): Account(name), credit(number) {}
+/**
+ * @link https://www.luogu.com.cn/problem/P2482
+ * 第 2 版猪国杀
+ */
+#include "lib"
+using namespace lib;
 
-//请实现CreditAccount类的构造函数CreditAccount(char* name, long number)
-void CreditAccount::PrintInfo(){
-    PrintUserName();
-    cout<<credit<<endl;
-}
-//请实现CreditAccount类的PrintInfo()函数
+namespace Solution_4157617279219657 {
+    auto solve() -> void {
 
-int main()
-{
-    CreditAccount a("I Love CPP", 10000);
-    a.PrintInfo();
+    }
+}
+
+auto main(int argc, char const *argv[]) -> int {
+    DEBUG_MODE = (argc != 1) and (std::strcmp("-d", argv[1]) == 0);
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr), std::cout.tie(nullptr);
+
+    Solution_4157617279219657::solve();
     return 0;
 }

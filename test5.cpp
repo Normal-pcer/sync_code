@@ -1,10 +1,19 @@
-#include <bits/stdc++.h>
+#include <algorithm>
+#include <vector>
 
-struct A {
-	int x, y;
-};
+auto main() -> int {
+    std::vector<int> vec{1, 2, 3, 4, 5};
 
-int main() {
-	std::vector<A> v;
-	std::ranges::sort(v.begin(), v.end(), std::less{}, [&](A a) { return std::pair{a.x, a.y}; });
+    int sum{};
+    struct Func {
+        int &sum;
+        auto operator() (int x) -> void {
+            sum += x;
+        }
+    };
+    Func func{sum};
+
+    std::for_each(vec.begin(), vec.end(), func);
+
+    return 0;
 }

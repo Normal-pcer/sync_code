@@ -1,23 +1,6 @@
 CompileFlags:
-  Add: [
-    -std=c++26,
-    -Wall,
-    -Wextra,
-    -Wpedantic,
-    -Isystem=C:\\msys64\\ucrt64\\include\\c++\\14.1.0,
-    -Isystem=C:\\msys64\\ucrt64\\include,
-  ]
-
-Diagnostics:
-  ClangTidy: 
-    CheckOptions:
-      readability-identifier-naming.StrictCase: true
-
-Index:
-  Background: Build
-
-InlayHints:
-  Designators: No
-  ParameterNames: No
-  DeducedTypes: No
-  
+  Compiler: C:/mingw64-ucrt-15/bin/g++.exe
+  Add: 
+    - --gcc-toolchain=C:/mingw64-ucrt-15
+    - --target=x86_64-w64-windows-gnu
+    - -std=c++26  # 根据需求修改标准版本
