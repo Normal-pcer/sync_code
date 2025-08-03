@@ -77,12 +77,10 @@ struct QuickSortImpl<T, first, nums...> {
     using result = typename Concat<T, typename Concat<T, Part1, Part2>::result, Part3>::result;
 };
 
-
 template <typename T, T ...nums>
 struct QuickSort<std::integer_sequence<T, nums...>> {
     using result = typename QuickSortImpl<T, nums...>::result;
 };
-
 
 auto main() -> int {
     using qwq = QuickSort<std::integer_sequence<int, 3, 4, 7, 6, 9, 2, 4>>::result;

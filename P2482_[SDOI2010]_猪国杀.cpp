@@ -25,7 +25,7 @@ namespace views { using namespace std::ranges::views; }
 #endif
 }
 
-#include "./libs/io.hpp"
+#include "./libs/io_legecy.hpp"
 
 #define log(...)
 #define rg std::ranges

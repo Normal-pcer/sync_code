@@ -11,7 +11,6 @@
 #include <memory>
 #include <algorithm>
 
-
 template <typename T>
 class PoolAllocator {
 public:
@@ -94,7 +93,6 @@ private:
 // 静态成员初始化
 template <typename T>
 typename PoolAllocator<T>::Pool PoolAllocator<T>::pool_;
-
 
 // 插入 PoolAllocator 实现（前面已提供）
 

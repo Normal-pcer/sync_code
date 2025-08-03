@@ -86,7 +86,6 @@ public:
     }
 };
 
-
 auto main() -> int {
     Pool<int> pool;
     auto _ = pool.emplace(5);
@@ -98,7 +97,6 @@ auto main() -> int {
     pool.emplace(10);
 
     pool.traverse([&](int x) { std::cout << x << ' '; });
-
 
     return 0;
 }

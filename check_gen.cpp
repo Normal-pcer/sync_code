@@ -12,12 +12,13 @@ namespace Generator {
 #include "randlib.hpp"
     using namespace Random;
 
+#define cout  // 避免误用 std::cout 输出
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 8, maxV = 10;
-            auto n = maxN;
+            i32 constexpr maxN = 100, maxV = 100, maxT = 1e5;
 
-            out << n << endl;
+            auto n = randint(1, maxN), t = randint(1, maxT);
+            out << n << ' ' << t << endl;
             for (auto _: range(n)) {
                 out << randint(1, maxV) << ' ';
             }
@@ -25,6 +26,7 @@ namespace Generator {
             break;
         }
     }
+#undef cout
 }
 
 int main() {

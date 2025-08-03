@@ -1,10 +1,17 @@
-#include <stdlib.h>
+// hook.c
 #include <stdio.h>
 
-// void srand(unsigned) {
-//     printf("I AK IOI!\n");
-// }
+// 覆盖普通函数
+void normal_func() { 
+    printf("!!! HIJACKED normal_func !!!\n"); 
+}
 
-int main() {
-    srand(1u);
+// 尝试覆盖弱符号
+void weak_func() { 
+    printf("!!! Attempt to hijack weak_func !!!\n"); 
+}
+
+// 无法覆盖静态函数（不在符号表）
+void static_func() { 
+    printf("This won't be called\n"); 
 }

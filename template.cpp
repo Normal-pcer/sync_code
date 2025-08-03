@@ -5,9 +5,11 @@
 using namespace lib;
 
 namespace Solution_/*hashName*/ {
+namespace {
     auto solve() -> void {
 
     }
+}
 }
 
 auto main(int argc, char const *argv[]) -> int {

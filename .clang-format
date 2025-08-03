@@ -1,0 +1,32 @@
+---
+BasedOnStyle: LLVM
+Language: Cpp
+
+# 缩进设置
+TabWidth: 4
+UseTab: Never
+IndentWidth: 4
+NamespaceIndentation: All     # 命名空间内容自动缩进
+
+# 大括号风格（K&R/Stroustrup 风格，花括号不换行）
+BreakBeforeBraces: Stroustrup
+
+# 函数/控制语句换行控制
+AllowShortFunctionsOnASingleLine: Empty  # 仅空函数允许单行
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+# 其他关键配置
+ColumnLimit: 120
+PointerAlignment: Left
+SpaceBeforeParens: ControlStatements  # if/for等控制语句后加空格
+SortIncludes: false
+
+# 示例效果：
+# namespace foo {
+#     void bar() {
+#         if (cond) {
+#             // ...
+#         }
+#     }
+# }
