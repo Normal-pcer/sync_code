@@ -4,9 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
-#include <random>
 #include <sstream>
-#include <vector>
 
 namespace Windows {
 #ifdef _WIN32
@@ -19,7 +17,6 @@ namespace lib {
 #ifdef _WIN32
         struct __Initializer {
             __Initializer() {
-                Windows::SetConsoleCP(65001);
                 Windows::SetConsoleOutputCP(65001);
             }
         } __initializer;
@@ -294,38 +291,3 @@ struct std::iterator_traits<lib::Unicode::UnicodeString::iterator> {
     using value_type = Iter::value_type;
     using iterator_category = Iter::iterator_category;
 };
-
-using namespace lib::Unicode;
-using namespace lib::Unicode::Literals;
-
-int main() {
-    std::vector lines { 
-        "做个文明中国人"_utf8,
-        "长江 黄河 还有黑龙江"_utf8,
-        "男人 女人 还有变性人"_utf8,
-        "拉屎不洗手 根本不是人"_utf8,
-        "随地吐痰 吐中爸爸有可能"_utf8,
-        "塞车 插队"_utf8,
-        "xx的过分"_utf8,
-        "电梯抽烟"_utf8,
-        "小心x无能"_utf8,
-        "下雨收衣服"_utf8,
-        "上下爽一爽"_utf8,
-        "不要逃税 我们共建新香港"_utf8
-    };
-    std::mt19937 rnd{745184};
-    for (auto &line: lines) {
-        std::vector<UnicodeChar> chars(line.begin(), line.end());
-        std::vector<UnicodeChar> no_space(chars);
-        std::erase(no_space, ' ');
-        std::shuffle(no_space.begin(), no_space.end(), rnd);
-        int i = 0;
-        for (auto &x: chars) {
-            if (x == ' ')  continue;
-            x = no_space[i], i++;
-        }
-        for (auto ch: chars)  std::cout << ch;
-        std::cout << std::endl;
-    }
-    return 0;
-}

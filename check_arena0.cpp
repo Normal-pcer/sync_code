@@ -1,18 +1,35 @@
-#include<bits/stdc++.h>
-using namespace std;
-int n , T , tree[20000010] , a[110] , dp[10000010] , ans;
-inline int lowbit(int x) {return x & -x;}
-void update(int x , int val) {for(x ++ ; x <= 300 ; x += lowbit(x)) tree[x] = max(tree[x] , val);}
-int query(int x) {int ans = 0; for(x ++ ; x >= 1 ; x -= lowbit(x)) ans = max(ans , tree[x]); return ans;}
-int main()
-{
-//    freopen("data.in" , "r" , stdin);
-    scanf("%d%d" , &n , &T);
-    for(int i = 1 ; i <= n ; i ++) scanf("%d" , &a[i]);
-    vector<int> v;
-    for(int i = 1 ; i <= T ; i ++) for(int j = 1 ; j <= n ; j ++) v.push_back(a[j]);
-    for(int i = 0 ; i < (int)v.size() ; i ++) dp[i] = query(v[i]) + 1 , update(v[i] , dp[i]);
-    for(int i = 0 ; i < (int)v.size() ; i ++) ans = max(ans , dp[i]);
-    printf("%d" , ans);
-    return 0;
+#include <algorithm>
+#include <cstdint>
+#include <iostream>
+#include <vector>
+
+#include "./libs/fixed_int.hpp"
+
+auto main() -> int {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+
+    i32 n, x, y; std::cin >> n >> x >> y;
+    std::vector<i32> a(n);
+    for (auto &x: a) std::cin >> x;
+
+    auto min_max = [&](i32 l, i32 r) {
+        auto [p, q] = std::minmax_element(a.begin() + l, a.begin() + r + 1);
+        return std::pair(*p, *q);
+    };
+
+    auto check = [&](i32 l, i32 r) {
+        auto [min, max] = min_max(l, r);
+        return min == y && max == x;
+    };
+
+    i32 ans = 0;
+    for (i32 i = 0; i < n; ++i) {
+        for (i32 j = i; j < n; ++j) {
+            ans += i32(check(i, j));
+        }
+    }
+
+    std::cout << ans << '\n';
 }
+

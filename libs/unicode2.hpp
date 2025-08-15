@@ -21,65 +21,143 @@ inline auto is_blank_char(char ch) -> bool {
     std::uint8_t x = ch;
     return x <= ' ' || x == '\x7f';
 }
-class unicode_char {
-public:
+
+struct unicode_char {
+    // 按照 UTF-8 编码存储一个 Unicode 字符（码点）
+    // 低字节的位置在高位存储，但整体始终占据最低的 width 字节
+    std::uint32_t data{};
+
     std::size_t static constexpr max_width = sizeof(std::uint32_t);
-    std::size_t static constexpr utf8_max_bytes = 4;
-    using u8_seq = std::array<std::uint8_t, utf8_max_bytes>;
 
     constexpr unicode_char() = default;
-    template <std::integral T>  // 从任意整数类型显式转换
-    explicit constexpr unicode_char(T data) : data_(data) {}
+    explicit constexpr unicode_char(std::uint32_t data) : data(data) {}
 
-    // char/char32_t 允许隐式转换
-    constexpr unicode_char(char data) : data_(data) {}
-    constexpr unicode_char(char32_t data): data_(data) {}
+    // 初始化一个 ascii 字符，允许隐式转换
+    constexpr unicode_char(char data) : data(data) {}
 
-    auto constexpr ord() const -> std::uint32_t {
-        return data_;
+    // 从 char32_t 转换，允许隐式转换
+    constexpr unicode_char(char32_t data) {
+        *this = chr(static_cast<std::uint32_t>(data));  // 直接作为 Unicode 编码转换
     }
-    auto static constexpr chr(std::uint32_t code) -> unicode_char {
-        return unicode_char{code};
-    }
+
     auto constexpr width() const -> std::size_t {
-        if (data_ == 0) return 1;
+        if (data == 0) return 1;
 
-        auto clz = std::countl_zero(data_);
+        auto clz = std::countl_zero(data);
         return sizeof(std::uint32_t) - (clz >> 3);
     }
-    auto constexpr to_bytes() const -> std::array<std::uint32_t, max_width> {
-        std::array<std::uint32_t, max_width> res{};
-        auto x = data_;
-        for (std::size_t i = max_width; i --> 0; ) {
-            res[i] = x & 0xffU;
-            x >>= 8;
+
+    // 因为 UTF-8 编码处理需要较多计算，为了方便，使用 std::uint8_t 而不是 std::byte
+    auto constexpr to_bytes() const -> std::array<std::uint8_t, max_width> {
+        std::array<std::uint8_t, max_width> bytes{};
+        auto top = bytes.end();
+
+        for (auto x = data; x != 0; x >>= 8) {
+            *--top = x & 0xFF;
         }
+
+        return bytes;
+    }
+
+    // 转换为 Unicode 编码
+    // 由 o4-mini 生成
+    auto constexpr ord() const -> std::uint32_t {
+        std::uint32_t constexpr bad_char = 0xfffd;
+
+        auto bytes = to_bytes();
+        std::size_t n = width();
+        if (n == 0 || n > max_width) return bad_char; // 不支持 0 或 >4 字节
+
+        std::size_t start = max_width - n;
+        auto get = [&](std::size_t i) -> std::uint8_t {
+            return bytes[start + i];
+        };
+
+        // 单字节
+        std::uint8_t b0 = get(0);
+        if (n == 1) {
+            if ((b0 & 0x80) == 0) return b0;
+            return bad_char;
+        }
+
+        if (n == 2) {
+            if ((b0 >> 5U) != 0b110U) return bad_char; // 110xxxxx
+        } else if (n == 3) {
+            if ((b0 >> 4U) != 0b1110U) return bad_char; // 1110xxxx
+        } else { // n == 4
+            if ((b0 >> 3U) != 0b11110U) return bad_char; // 11110xxx
+        }
+
+        std::uint32_t res = 0;
+
+        // 首字节保留有效位
+        auto first_mask = std::uint8_t((1U << (7 - n)) - 1);
+        res = static_cast<std::uint32_t>(b0 & first_mask);
+
+        for (std::size_t i = 1; i < n; ++i) {
+            std::uint8_t bi = get(i);
+            if ((bi >> 6U) != 0b10) return bad_char; // 续字节必须是 10xxxxxx
+            res = (res << 6) | static_cast<std::uint32_t>(bi & 0x3fU);
+        }
+
         return res;
     }
-    auto constexpr to_utf8_bytes() const -> u8_seq {
-        return unicode_to_utf8_(data_);
+
+    // 工厂函数，从 Unicode 编码获取字符，ord() 的逆运算
+    // 由 o4-mini 生成
+    auto static constexpr chr(std::uint32_t code) -> unicode_char {
+        // 找到需要的字节数 n（1..4）
+        constexpr std::array<std::uint32_t, 4> limits = { 0x80U, 0x800U, 0x10000U, 0x110000U };
+        std::size_t n = 1;
+        for (; n <= 4; ++n) {
+            if (code < limits[n - 1]) break;
+        }
+
+        // 首字节前缀（按 n 索引）
+        constexpr std::array<std::uint8_t, 5> prefix = { 0, 0x00U, 0xc0U, 0xe0U, 0xf0U };
+
+        std::array<std::uint8_t, 4> bytes{};
+
+        // 填充续字节（从后向前）
+        for (std::size_t i = n; i --> 1; ) {
+            bytes[i] = static_cast<std::uint8_t>(0x80U | (code & 0x3fU));
+            code >>= 6;
+        }
+
+        // 首字节（剩余的 cp 放在首字节低位，再加上前缀）
+        bytes[0] = static_cast<std::uint8_t>(prefix[n] | static_cast<std::uint8_t>(code));
+
+        // 打包为整数
+        std::uint32_t data = 0;
+        for (std::size_t i = 0; i < n; ++i) {
+            data = (data << 8) | bytes[i];
+        }
+        return unicode_char{data};
     }
-    auto constexpr utf8_width() const -> std::size_t {
-        return utf8_char_width_(unicode_to_utf8_(data_));
-    }
+
     auto operator== (unicode_char const &other) const -> bool {
         return ord() == other.ord();
     }
+
     auto operator<=> (unicode_char const &other) const -> std::strong_ordering {
         return ord() <=> other.ord();
     }
+
     // 重载的输入输出
     friend auto operator<< (std::ostream &os, unicode_char const &ch) -> auto & {
-        auto bytes = unicode_to_utf8_(ch.data_);
+        std::array<std::uint8_t, sizeof(std::uint32_t)> bytes;
+        auto top = bytes.end();
 
-        if (bytes[0] == 0) os << '\0';
-        else for (std::uint8_t ch: bytes) {
-            if (ch == 0) break;
-            os << static_cast<char>(ch);
+        for (auto data = ch.data; data != 0; data >>= 8) {
+            *--top = data & 0xFF;
         }
 
+        for (; top != bytes.end(); ++top) {
+            os << static_cast<char>(*top);
+        }
         return os;
     }
+
     friend auto operator>> (std::istream &is, unicode_char &ch) -> std::istream & {
         // 获取第一个字节
         char cur{};
@@ -93,15 +171,10 @@ public:
         ch.take_from_stream_(is, cur);
         return is;
     }
-    friend class unicode_string;
-private:
-    // 存储一个 Unicode 字符（码点）的数值
-    std::uint32_t data_{};
 
     auto take_from_stream_(std::istream &is, char first_ch) -> std::istream & {
         std::uint8_t first = first_ch;
-        u8_seq val{};
-        val[0] = first;
+        std::uint32_t val = first; // 完整字符的值
 
         char cur{};
         std::size_t byte_cnt = 1;
@@ -117,56 +190,12 @@ private:
             if ((this_byte >> 6) != 0b10) {
                 return is.setstate(std::ios::failbit), is;
             }
-            val[i] = this_byte;
+            val = (val << 8) | this_byte;
         }
 
-        data_ = utf8_to_unicode_(val);
+        data = val;
+
         return is;
-    }
-    auto static utf8_char_width_(u8_seq bytes) -> std::size_t {
-        auto first = bytes[0];
-        if ((first >> 7) != 0) {
-            return std::countl_zero(std::uint8_t(~first));
-        } else {
-            return 1;
-        }
-    }
-    auto static utf8_to_unicode_(u8_seq bytes) -> std::uint32_t {
-        std::size_t n = utf8_char_width_(bytes);
-
-        std::uint8_t b0 = bytes[0];
-        if (n == 1) {
-            return b0;
-        }
-
-        std::uint32_t res = b0 & ((1U << (7 - n)) - 1);
-        for (std::size_t i = 1; i != n; ++i) {
-            std::uint8_t cur = bytes[i];
-            res = (res << 6) | (cur & 0x3fU);
-        }
-
-        return res;
-    }
-    auto static unicode_to_utf8_(std::uint32_t code) -> u8_seq {
-        u8_seq res{};
-        if (code < 0x80U) {
-            res[0] = code;
-            return res;
-        }
-        // 通过结论计算需要的字符数
-        std::uint32_t bits = std::bit_width(code);
-        std::uint32_t utf8_width = (bits + 3) / 5;
-        if (utf8_width > res.size()) return res;
-        // 填充续字节
-        for (std::size_t i = utf8_width - 1; i != 0; --i) {
-            res[i] = code & 0x3fU;
-            res[i] |= 0x80U;
-            code >>= 6;
-        }
-        // 填充首字节
-        res[0] = code;
-        res[0] |= 0xffU << (8 - utf8_width);
-        return res;
     }
 };
 
@@ -179,9 +208,8 @@ class unicode_string_mut_wrapper;
 class unicode_string {
     // 存储原理：
     // 内部使用 std::vector<std::uint8_t> 存储原始字节。
-    // 存储数据：字符 Unicode 编码的字节序列，低地址存储高位（大端）
-    // “对齐”到最宽的一个字符，如果本身长度不够，就填充 0。
-    // 例如，“abc”占用 3 字节，“abc中”占用 8 字节。
+    // 将每个“对齐”到最宽的一个字符，如果本身长度不够，就填充 0。
+    // 例如，“abc”占用 3 字节，“abc中”占用 12 字节。
 private:
     std::vector<std::uint8_t> data_;
     std::size_t align_ = 1;
@@ -193,13 +221,6 @@ public:
     struct iterator;
 
     unicode_string() = default;
-    unicode_string(unicode_string const &other) = default;
-    unicode_string(unicode_string &&other) noexcept {
-        using std::swap;
-        swap(data_, other.data_);
-        swap(align_, other.align_);
-        swap(size_, other.size_);
-    }
     unicode_string(std::string const &str) {
         std::istringstream ss(str);
         from_istream_(ss, false);
@@ -236,7 +257,6 @@ public:
             static_assert(sizeof(InputIt) == 0);  // 触发编译错误
         }
     }
-    ~unicode_string() = default;
 
     std::size_t static constexpr max_align = 4;
 
@@ -252,8 +272,6 @@ public:
     auto constexpr end() const -> const_iterator;
 
     auto constexpr access_at(std::size_t index) const -> unicode_char {
-        if (index >= size()) throw std::out_of_range("index out of range");
-
         std::uint32_t val = 0;
         std::size_t offset = index * align();
 
@@ -343,16 +361,6 @@ public:
 
     auto constexpr operator== (unicode_string const &other) const -> bool;
     auto constexpr operator<=> (unicode_string const &other) const -> std::strong_ordering;
-
-    auto constexpr operator= (unicode_string const &other) -> unicode_string & {
-        if (this == &other) return *this;
-        unicode_string(other).swap(*this);
-        return *this;
-    }
-    auto constexpr operator= (unicode_string &&other) noexcept -> unicode_string & {
-        unicode_string(std::move(other)).swap(*this);
-        return *this;
-    }
 private:
     bool static windows_init_;
 
@@ -411,15 +419,11 @@ private:
 
         for (std::size_t i = 0; i != size(); ++i) {
             auto ch = access_at(i);
-            auto bytes = ch.to_utf8_bytes();
-            
-            if (bytes[0] == 0) {
-                res.push_back(T(0));
-                continue;
-            }
-            for (std::uint8_t ch: bytes) {
-                if (ch == 0) break;
-                res.push_back(T(ch));
+            auto bytes = ch.to_bytes();
+            auto width = ch.width();
+
+            for (auto it = bytes.end() - width; it != bytes.end(); ++it) {
+                res.push_back(static_cast<T>(*it));
             }
         }
 
@@ -497,7 +501,7 @@ struct unicode_string::iterator {
 
         reference() = default;
         reference(std::size_t idx, unicode_string *ptr) : index(idx), str_ptr(ptr) {}
-        reference(const reference &) = default;
+        reference(const reference&) = default;
 
         auto get() const -> unicode_char {
             return str_ptr->access_at(index);
@@ -658,7 +662,7 @@ namespace unicode_literals {
         return {std::string(str, len)}; // 假设其他平台不会出现非 UTF-8 编码
     #endif
     }
-} // namespace unicode::unicode_literals
+}
 
 auto constexpr unicode_string::mut_begin() -> iterator {
     return {0, this};
@@ -704,7 +708,7 @@ namespace std {
 template <>
 struct hash<unicode::unicode_char> {
     auto operator() (unicode::unicode_char const &ch) const -> std::size_t {
-        return ch.ord();
+        return ch.data;
     }
 };
 

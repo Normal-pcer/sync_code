@@ -33,5 +33,10 @@ Checks: >
   -bugprone-branch-clone,
   -modernize-use-designated-initializers,
   -bugprone-suspicious-include,
+  -cert-err33-c,
+  -readability-simplify-boolean-expr,
+  -readability-math-missing-parentheses,
+  -readability-avoid-return-with-void-value,
+  -cert-err34-c,
 CheckOptions:
   readability-identifier-naming.StrictCase: 'true'

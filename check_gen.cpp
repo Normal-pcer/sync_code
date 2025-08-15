@@ -15,14 +15,21 @@ namespace Generator {
 #define cout  // 避免误用 std::cout 输出
     void generate(std::ostream &out) {
         while (true) {
-            i32 constexpr maxN = 100, maxV = 100, maxT = 1e5;
+            i32 constexpr maxN = 1000, maxV = 100;
 
-            auto n = randint(1, maxN), t = randint(1, maxT);
-            out << n << ' ' << t << endl;
-            for (auto _: range(n)) {
-                out << randint(1, maxV) << ' ';
-            }
+            auto min = randint(1, maxV), max = randint(1, maxV);
+            if (min > max) std::swap(min, max);
+            if (randint(1, 10) == 1) min = max;
+
+            auto n = randint(1, maxN);
+            out << n << ' ' << max << ' ' << min << endl;
+
+            std::vector<i32> a(n);
+            for (auto &x: a) x = randint(1, maxV);
+
+            for (auto x: a) out << x << ' ';
             out << endl;
+
             break;
         }
     }
