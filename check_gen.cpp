@@ -12,25 +12,34 @@ namespace Generator {
 #include "randlib.hpp"
     using namespace Random;
 
-#define cout  // 避免误用 std::cout 输出
+#define cout  // 避免误用 cout 输出
     void generate(std::ostream &out) {
-        while (true) {
-            i32 constexpr maxN = 1000, maxV = 100;
+        i32 constexpr maxN = 5e4, maxM = 1e5, maxQ = 5e4, maxVal = 1e6;
+        auto n = maxN, m = maxM, q = maxQ;
 
-            auto min = randint(1, maxV), max = randint(1, maxV);
-            if (min > max) std::swap(min, max);
-            if (randint(1, 10) == 1) min = max;
+        std::set<std::pair<i32, i32>> s;
+        out << n << ' ' << m << ' ' << q << endl;
 
-            auto n = randint(1, maxN);
-            out << n << ' ' << max << ' ' << min << endl;
+        for (i32 p = 2; p <= n; ++p) {
+            auto prev = randint(1, p - 1);
+            s.emplace(prev, p);
+            out << prev << ' ' << p << endl;
+        }
 
-            std::vector<i32> a(n);
-            for (auto &x: a) x = randint(1, maxV);
+        while (s.size() < u32(m)) {
+            auto x = randint(1, n), y = randint(1, n);
+            if (x > y) std::swap(x, y);
+            if (x == y) continue;
+            if (s.contains({x, y})) continue;
+            s.emplace(x, y);
+            out << x << ' ' << y << ' ' << randint(1, maxVal) << endl;
+        }
 
-            for (auto x: a) out << x << ' ';
-            out << endl;
-
-            break;
+        for (i32 _ = 0; _ < q; ++_) {
+            auto x = randint(1, n), y = randint(1, n);
+            auto k = randint(1, n);
+            auto c = randint(0, k - 1);
+            out << x << ' ' << y << ' ' << k << ' ' << c << endl;
         }
     }
 #undef cout

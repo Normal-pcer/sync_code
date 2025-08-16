@@ -38,5 +38,6 @@ Checks: >
   -readability-math-missing-parentheses,
   -readability-avoid-return-with-void-value,
   -cert-err34-c,
+  -readability-implicit-bool-conversion,
 CheckOptions:
   readability-identifier-naming.StrictCase: 'true'
