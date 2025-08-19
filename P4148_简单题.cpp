@@ -84,7 +84,7 @@ namespace {
                 if (ch == 0) continue;
                 for (u32 dim: {0, 1}) {
                     chkMin(nodes[p].min[dim], nodes[ch].min[dim]);
-                    chkMax(nodes[p].max[dim], nodes[ch].min[dim]);
+                    chkMax(nodes[p].max[dim], nodes[ch].max[dim]);
                 }
             }
             nodes[p].sum = nodes[nodes[p].lch].sum + nodes[nodes[p].rch].sum + nodes[p].point.count;
@@ -160,7 +160,7 @@ namespace {
             seq.reserve(size);
 
             pia_(root, seq);
-            build_(seq.begin(), seq.end(), 0);
+            root = build_(seq.begin(), seq.end(), 0);
         }
     };
     auto solve() -> void {
@@ -168,6 +168,7 @@ namespace {
 
         KDTree kdt{};
         i32 last_ans{};
+        i32 cnt{};
 
         while (true) {
             i32 op{}; std::cin >> op;
@@ -181,6 +182,12 @@ namespace {
                 std::cin >> x1 >> y1 >> x2 >> y2;
                 x1 ^= last_ans, x2 ^= last_ans, y1 ^= last_ans, y2 ^= last_ans;
                 std::cout << (last_ans = kdt.query(x1, y1, x2, y2)) << endl;
+
+                ++cnt;
+                if (cnt > limit) {
+                    cnt = 0;
+                    kdt.rebuild();
+                }
             } else {
                 break;
             }
