@@ -27,7 +27,7 @@ using namespace lib;
 
 namespace Solution_6561858409154546 {
 namespace {
-    i32 constexpr max_val = 1e9;
+    i32 constexpr max_val = 1e6;
 
     using u8 = std::uint8_t;
     class SegTree {
@@ -159,7 +159,7 @@ namespace {
                 root = v;
             
                 move_root();
-                res.emplace_back(u, v);
+                res.emplace_back(u, root);
                 make_cdt_impl(root, res);
             }
         }
@@ -242,7 +242,7 @@ namespace {
         auto query_nearby(u32 u, i32 limit) -> u32 {
             return query_nearby_impl(u, limit);
         }
-        auto modify_point_val(u32 u, i32 to) -> void {
+        auto assign_point_val(u32 u, i32 to) -> void {
             auto delta = to - val[u];
             add_point_val(u, delta);
             val[u] = to;
@@ -254,6 +254,7 @@ namespace {
         edges.reserve(total_size);
         get_info();
 
+        move_root();
         make_cdt_impl(root, edges);
 
         // 恢复原树形态
@@ -278,7 +279,7 @@ namespace {
         auto cdt = tr.make_cdt();
 
         for (i32 u = 0; u < n; ++u) {
-            cdt.add_point_val(u32(u + 1), init[u]);
+            cdt.assign_point_val(u32(u + 1), init[u]);
         }
 
         i32 last_ans = 0;
@@ -293,7 +294,7 @@ namespace {
                 last_ans = static_cast<i32>(ans);
                 std::cout << ans << endl;
             } else {
-                cdt.modify_point_val(u32(x), y);
+                cdt.assign_point_val(u32(x), y);
             }
         }
     }
