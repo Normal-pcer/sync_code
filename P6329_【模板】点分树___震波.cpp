@@ -38,7 +38,7 @@ namespace {
 
         u32 root{}, root_begin{}, root_end{};
 
-        std::deque<Node> inline static nodes;
+        std::vector<Node> inline static nodes;
         auto static push_up(u32 p) -> void {
             nodes[p].sum = nodes[nodes[p].lch].sum + nodes[nodes[p].rch].sum;
         }
@@ -65,7 +65,7 @@ namespace {
         }
     public:
         SegTree(): root_end(max_val + 1) {
-            [[maybe_unused]] auto static &_ = nodes.emplace_back();
+            [[maybe_unused]] auto static _ = (nodes.emplace_back(), nodes.reserve(100000000), 0);
         }
         auto add_at(u32 pos, i32 val) -> void {
             return add_at_impl(pos, val, root, root_begin, root_end);
