@@ -65,7 +65,7 @@ namespace {
         }
     public:
         SegTree(): root_end(max_val + 1) {
-            [[maybe_unused]] auto static _ = (nodes.emplace_back(), nodes.reserve(100000000), 0);
+            [[maybe_unused]] auto static _ = (nodes.emplace_back(), nodes.reserve(1000000000ULL), 0);
         }
         auto add_at(u32 pos, i32 val) -> void {
             return add_at_impl(pos, val, root, root_begin, root_end);
@@ -206,10 +206,8 @@ namespace {
         }
         auto query_nearby_impl(u32 u, i32 limit) -> i32 {
             i32 ans = 0;
-            // 子树内侧的贡献
-            ans += buc[u].sum_range(0, limit + 1);
-            // 子树外侧的贡献
-            for (auto r = parent[u], prev = u; r != 0; prev = r, r = parent[r]) {
+
+            for (u32 r = u, prev = 0; r != 0; prev = r, r = parent[r]) {
                 // 从 u 到 lca 的距离
                 auto d1 = static_cast<i32>(source->dis(u, r));
                 // 设 d2 表示从 v 到 lca 的距离，应当满足 d1 + d2 <= k，d2 <= k - d1
@@ -221,7 +219,7 @@ namespace {
 
                 // 去除重复情况
                 // 如果两条链隶属于同一个子树，则它一定被重复计算了
-                ans -= buc_to_parent[prev].sum_range(0, d2_lim + 1);
+                if (prev != 0) ans -= buc_to_parent[prev].sum_range(0, d2_lim + 1);
             }
 
             return ans;
@@ -239,7 +237,7 @@ namespace {
         auto add_point_val(u32 u, i32 delta) -> void {
             return add_point_val_impl(u, delta);
         }
-        auto query_nearby(u32 u, i32 limit) -> u32 {
+        auto query_nearby(u32 u, i32 limit) -> i32 {
             return query_nearby_impl(u, limit);
         }
         auto assign_point_val(u32 u, i32 to) -> void {
@@ -251,8 +249,8 @@ namespace {
 
     auto Tree::make_cdt() -> CDT {
         std::vector<std::pair<u32, u32>> edges;
-        edges.reserve(total_size);
         get_info();
+        edges.reserve(total_size);
 
         move_root();
         make_cdt_impl(root, edges);
@@ -291,7 +289,7 @@ namespace {
 
             if (op == 0) {
                 auto ans = cdt.query_nearby(u32(x), y);
-                last_ans = static_cast<i32>(ans);
+                last_ans = ans;
                 std::cout << ans << endl;
             } else {
                 cdt.assign_point_val(u32(x), y);

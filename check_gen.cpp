@@ -14,32 +14,28 @@ namespace Generator {
 
 #define cout  // 避免误用 cout 输出
     void generate(std::ostream &out) {
-        i32 constexpr maxN = 5e4, maxM = 1e5, maxQ = 5e4, maxVal = 1e6;
-        auto n = maxN, m = maxM, q = maxQ;
+        i32 constexpr maxN = 10, maxM = 10, maxVal = 10;
+        auto n = maxN, m = maxM;
+        out << n << ' ' << m << endl;
 
-        std::set<std::pair<i32, i32>> s;
-        out << n << ' ' << m << ' ' << q << endl;
+        for (auto _ = n; _ --> 0; ) out << randint(1, maxVal) << ' ';
+        out << endl;
 
         for (i32 p = 2; p <= n; ++p) {
             auto prev = randint(1, p - 1);
-            s.emplace(prev, p);
             out << prev << ' ' << p << endl;
         }
 
-        while (s.size() < u32(m)) {
-            auto x = randint(1, n), y = randint(1, n);
-            if (x > y) std::swap(x, y);
-            if (x == y) continue;
-            if (s.contains({x, y})) continue;
-            s.emplace(x, y);
-            out << x << ' ' << y << ' ' << randint(1, maxVal) << endl;
-        }
+        auto max_lim = static_cast<i32>(std::sqrt(n));
+        for (auto _ = m; _ --> 0; ) {
+            auto op = randint(0, 1);
 
-        for (i32 _ = 0; _ < q; ++_) {
-            auto x = randint(1, n), y = randint(1, n);
-            auto k = randint(1, n);
-            auto c = randint(0, k - 1);
-            out << x << ' ' << y << ' ' << k << ' ' << c << endl;
+            if (op == 0) {
+                auto lim = randint(1, max_lim);
+                out << 0 << ' ' << randint(1, n) << ' ' << lim << endl;
+            } else {
+                out << 1 << ' ' << randint(1, n) << ' ' << randint(1, maxVal) << endl;
+            }
         }
     }
 #undef cout
